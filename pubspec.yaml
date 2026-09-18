@@ -1,0 +1,22 @@
+name: hela_service
+description: HelaService — on-demand home services app (Sri Lanka). Frontend only.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.2.1   # Plus Jakarta Sans, same as the Stitch export
+  provider: ^6.1.2       # just for the Customer/Provider role switch
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

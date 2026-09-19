@@ -1,29 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hela_service/main.dart';
+import 'package:hela_service/features/admin/admin_shell.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('HelaServiceApp loads AuthScreen smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const HelaServiceApp());
+    expect(find.text('Get Started'), findsOneWidget);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('AdminShell renders Operations Core and Dashboard', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AdminShell(),
+      ),
+    );
+    expect(find.text('OPERATIONS CORE'), findsOneWidget);
+    expect(find.text('Island Operations & Live Dispatch'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Verifications'));
+    await tester.pumpAndSettle();
+    expect(find.text('Technician Identity Verification Desk'), findsOneWidget);
+
+    await tester.tap(find.text('Coverage & Categories'));
+    await tester.pumpAndSettle();
+    expect(find.text('Service Categories & District Coverage'), findsOneWidget);
   });
 }

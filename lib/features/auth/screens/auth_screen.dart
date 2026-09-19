@@ -218,18 +218,21 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLowest,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10)
-              ],
+          GestureDetector(
+            onLongPress: () => Navigator.of(context).pushNamed('/admin'),
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLowest,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10)
+                ],
+              ),
+              child:
+                  const Icon(Icons.handyman, color: AppColors.primary, size: 34),
             ),
-            child:
-                const Icon(Icons.handyman, color: AppColors.primary, size: 34),
           ),
           const SizedBox(height: 12),
           const PillBadgeRow(),

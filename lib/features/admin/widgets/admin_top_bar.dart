@@ -1,3 +1,4 @@
+import '../../../shared/widgets/role_switch_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 
@@ -52,18 +53,26 @@ class AdminTopBar extends StatelessWidget {
           const Spacer(),
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none, color: AppColors.onSurfaceVariant)),
           const SizedBox(width: 6),
-          const CircleAvatar(radius: 16, backgroundColor: AppColors.surfaceHigh, child: Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant)),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Kavinda Perera', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              Text('Operations Lead', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
-            ],
+          GestureDetector(
+            onTap: () => showRoleSwitchSheet(context),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircleAvatar(radius: 16, backgroundColor: AppColors.surfaceHigh, child: Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant)),
+                SizedBox(width: 8),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Kavinda Perera', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    Text('Operations Lead', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                  ],
+                ),
+                SizedBox(width: 6),
+                Icon(Icons.expand_more, size: 16, color: AppColors.onSurfaceVariant),
+              ],
+            ),
           ),
-          const SizedBox(width: 6),
-          const Icon(Icons.expand_more, size: 16, color: AppColors.onSurfaceVariant),
         ],
       ),
     );

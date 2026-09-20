@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as pv;
 import 'app_router.dart';
-import 'theme/app_theme.dart';
 import 'state/role_provider.dart';
-import 'features/auth/screens/auth_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const HelaServiceApp());
@@ -14,14 +13,14 @@ class HelaServiceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return pv.ChangeNotifierProvider<RoleProvider>(
       create: (_) => RoleProvider(),
       child: MaterialApp(
         title: 'HelaService',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
+        initialRoute: AppRoutes.login,
         routes: appRoutes,
-        home: const AuthScreen(),
       ),
     );
   }

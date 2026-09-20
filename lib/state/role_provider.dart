@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-enum AppRole { customer, provider }
+enum AppRole { customer, provider, admin }
 
 class RoleProvider extends ChangeNotifier {
   AppRole _role = AppRole.customer;
@@ -8,8 +8,18 @@ class RoleProvider extends ChangeNotifier {
   AppRole get role => _role;
 
   void setRole(AppRole role) {
-    if (_role == role) return;
     _role = role;
     notifyListeners();
+  }
+
+  String get roleLabel {
+    switch (_role) {
+      case AppRole.customer:
+        return 'Customer';
+      case AppRole.provider:
+        return 'Service Provider';
+      case AppRole.admin:
+        return 'Admin';
+    }
   }
 }

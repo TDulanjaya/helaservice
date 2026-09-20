@@ -1,10 +1,8 @@
+import '../../../shared/widgets/role_switch_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../data/mock_data.dart';
-import '../../../state/role_provider.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
-import '../../customer/screens/home_discovery_screen.dart';
 import 'job_alert_screen.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -77,15 +75,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 ),
               ),
               TextButton.icon(
-                onPressed: () {
-                  pv.Provider.of<RoleProvider>(context, listen: false)
-                      .setRole(AppRole.customer);
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (_) => const HomeDiscoveryScreen()));
-                },
+                onPressed: () => showRoleSwitchSheet(context),
                 icon: const Icon(Icons.sync, size: 14),
-                label:
-                    const Text('Customer Mode', style: TextStyle(fontSize: 11)),
+                label: const Text('Switch Role', style: TextStyle(fontSize: 11)),
               ),
             ]),
             const SizedBox(height: 14),

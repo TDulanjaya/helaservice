@@ -1,3 +1,4 @@
+import '../../../shared/widgets/role_switch_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../data/mock_data.dart';
@@ -80,10 +81,26 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            const Text('Ayubowan, Sanduni! 👋',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Text('Find certified local artisans ready to help today.',
-                style: TextStyle(color: AppColors.onSurfaceVariant)),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Ayubowan, Sanduni! 👋',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      Text('Find certified local artisans ready to help today.',
+                          style: TextStyle(color: AppColors.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => showRoleSwitchSheet(context),
+                  icon: Icon(Icons.swap_horiz, color: AppColors.onSurfaceVariant),
+                  tooltip: 'Switch role',
+                ),
+              ],
+            ),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),

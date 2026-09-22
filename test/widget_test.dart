@@ -4,12 +4,14 @@ import 'package:hela_service/main.dart';
 import 'package:hela_service/features/admin/admin_shell.dart';
 
 void main() {
-  testWidgets('HelaServiceApp loads AuthScreen smoke test', (WidgetTester tester) async {
+  testWidgets('HelaServiceApp loads AuthScreen smoke test',
+      (WidgetTester tester) async {
     await tester.pumpWidget(const HelaServiceApp());
     expect(find.text('Get Started'), findsOneWidget);
   });
 
-  testWidgets('AdminShell renders Operations Core and Dashboard', (WidgetTester tester) async {
+  testWidgets('AdminShell renders Operations Core and Dashboard',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1440, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {

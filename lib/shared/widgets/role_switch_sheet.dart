@@ -12,7 +12,8 @@ void showRoleSwitchSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
     builder: (sheetContext) {
       return SafeArea(
         child: Padding(
@@ -21,11 +22,13 @@ void showRoleSwitchSheet(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Switch role', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              const Text('Switch role',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
               Text(
                 'Same account, different way of using HelaService',
-                style: TextStyle(fontSize: 12.5, color: AppColors.onSurfaceVariant),
+                style: TextStyle(
+                    fontSize: 12.5, color: AppColors.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               _RoleTile(
@@ -33,21 +36,24 @@ void showRoleSwitchSheet(BuildContext context) {
                 title: 'Customer',
                 subtitle: 'Book and track home services',
                 selected: roleProvider.role == AppRole.customer,
-                onTap: () => _switchTo(sheetContext, context, roleProvider, AppRole.customer),
+                onTap: () => _switchTo(
+                    sheetContext, context, roleProvider, AppRole.customer),
               ),
               _RoleTile(
                 icon: Icons.build_outlined,
                 title: 'Service Provider',
                 subtitle: 'Go online and take job requests',
                 selected: roleProvider.role == AppRole.provider,
-                onTap: () => _switchTo(sheetContext, context, roleProvider, AppRole.provider),
+                onTap: () => _switchTo(
+                    sheetContext, context, roleProvider, AppRole.provider),
               ),
               _RoleTile(
                 icon: Icons.admin_panel_settings_outlined,
                 title: 'Admin',
                 subtitle: 'Platform back-office tools',
                 selected: roleProvider.role == AppRole.admin,
-                onTap: () => _switchTo(sheetContext, context, roleProvider, AppRole.admin),
+                onTap: () => _switchTo(
+                    sheetContext, context, roleProvider, AppRole.admin),
               ),
             ],
           ),
@@ -57,7 +63,8 @@ void showRoleSwitchSheet(BuildContext context) {
   );
 }
 
-void _switchTo(BuildContext sheetContext, BuildContext rootContext, RoleProvider roleProvider, AppRole role) {
+void _switchTo(BuildContext sheetContext, BuildContext rootContext,
+    RoleProvider roleProvider, AppRole role) {
   roleProvider.setRole(role);
   Navigator.of(sheetContext).pop();
 
@@ -103,24 +110,37 @@ class _RoleTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.08) : Colors.transparent,
+          color: selected
+              ? AppColors.primary.withOpacity(0.08)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.outline.withOpacity(0.2)),
+          border: Border.all(
+              color: selected
+                  ? AppColors.primary
+                  : AppColors.outline.withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: selected ? AppColors.primary : AppColors.onSurfaceVariant),
+            Icon(icon,
+                size: 20,
+                color:
+                    selected ? AppColors.primary : AppColors.onSurfaceVariant),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                  Text(subtitle, style: TextStyle(fontSize: 11.5, color: AppColors.onSurfaceVariant)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 11.5, color: AppColors.onSurfaceVariant)),
                 ],
               ),
             ),
-            if (selected) Icon(Icons.check_circle, color: AppColors.primary, size: 18),
+            if (selected)
+              Icon(Icons.check_circle, color: AppColors.primary, size: 18),
           ],
         ),
       ),

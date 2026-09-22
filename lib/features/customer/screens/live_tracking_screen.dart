@@ -8,7 +8,13 @@ import 'rating_completion_screen.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
   final Technician technician;
-  const LiveTrackingScreen({super.key, required this.technician});
+  final bool showBottomNav;
+
+  const LiveTrackingScreen({
+    super.key,
+    required this.technician,
+    this.showBottomNav = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -236,18 +242,21 @@ class LiveTrackingScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 2,
-        items: const [
-          NavItem(Icons.explore, 'Explore'),
-          NavItem(Icons.calendar_month, 'Bookings'),
-          NavItem(Icons.near_me, 'Tracking'),
-          NavItem(Icons.person, 'Profile'),
-        ],
-      ),
+      bottomNavigationBar: showBottomNav
+          ? AppBottomNav(
+              currentIndex: 2,
+              items: const [
+                NavItem(Icons.explore, 'Explore'),
+                NavItem(Icons.calendar_month, 'Bookings'),
+                NavItem(Icons.near_me, 'Tracking'),
+                NavItem(Icons.person, 'Profile'),
+              ],
+            )
+          : null,
     );
   }
 }
+
 
 class _RoundIconButton extends StatelessWidget {
   final IconData icon;

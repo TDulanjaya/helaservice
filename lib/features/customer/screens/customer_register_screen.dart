@@ -19,7 +19,14 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
   String _district = 'Colombo';
   bool _agreed = false;
 
-  final _districts = const ['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala', 'Jaffna'];
+  final _districts = const [
+    'Colombo',
+    'Gampaha',
+    'Kandy',
+    'Galle',
+    'Kurunegala',
+    'Jaffna'
+  ];
 
   @override
   void dispose() {
@@ -30,7 +37,8 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
   }
 
   void _createAccount() {
-    pv.Provider.of<RoleProvider>(context, listen: false).setRole(AppRole.customer);
+    pv.Provider.of<RoleProvider>(context, listen: false)
+        .setRole(AppRole.customer);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
       (route) => false,
@@ -44,7 +52,8 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('Create Customer Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        title: const Text('Create Customer Account',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -54,10 +63,14 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
             children: [
               Text(
                 'Book trusted home services in a few taps',
-                style: TextStyle(fontSize: 13.5, color: AppColors.onSurfaceVariant),
+                style: TextStyle(
+                    fontSize: 13.5, color: AppColors.onSurfaceVariant),
               ),
               const SizedBox(height: 22),
-              _Field(label: 'Full name', controller: _nameController, hint: 'Sanduni Perera'),
+              _Field(
+                  label: 'Full name',
+                  controller: _nameController,
+                  hint: 'Sanduni Perera'),
               const SizedBox(height: 14),
               _Field(
                 label: 'Phone number',
@@ -67,9 +80,16 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                 prefixText: '+94 ',
               ),
               const SizedBox(height: 14),
-              _Field(label: 'Home address', controller: _addressController, hint: 'No. 12, Lake Road'),
+              _Field(
+                  label: 'Home address',
+                  controller: _addressController,
+                  hint: 'No. 12, Lake Road'),
               const SizedBox(height: 14),
-              Text('District', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
+              Text('District',
+                  style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -82,8 +102,11 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                   child: DropdownButton<String>(
                     value: _district,
                     isExpanded: true,
-                    items: _districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-                    onChanged: (v) => setState(() => _district = v ?? _district),
+                    items: _districts
+                        .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _district = v ?? _district),
                   ),
                 ),
               ),
@@ -95,11 +118,14 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'I agree to the Terms of Service and Privacy Policy',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 12.5, color: AppColors.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 8),
-              PrimaryButton(label: 'Create Account', onPressed: _agreed ? _createAccount : null),
+              PrimaryButton(
+                  label: 'Create Account',
+                  onPressed: _agreed ? _createAccount : null),
               const SizedBox(height: 14),
               Center(
                 child: TextButton(
@@ -134,7 +160,11 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurfaceVariant)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,

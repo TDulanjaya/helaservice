@@ -20,8 +20,22 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
   String _district = 'Colombo';
   bool _agreed = false;
 
-  final _categories = const ['Electrical', 'Plumbing', 'AC Repair', 'Carpentry', 'Masonry', 'Appliance Repair'];
-  final _districts = const ['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala', 'Jaffna'];
+  final _categories = const [
+    'Electrical',
+    'Plumbing',
+    'AC Repair',
+    'Carpentry',
+    'Masonry',
+    'Appliance Repair'
+  ];
+  final _districts = const [
+    'Colombo',
+    'Gampaha',
+    'Kandy',
+    'Galle',
+    'Kurunegala',
+    'Jaffna'
+  ];
 
   @override
   void dispose() {
@@ -32,7 +46,8 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
   }
 
   void _createAccount() {
-    pv.Provider.of<RoleProvider>(context, listen: false).setRole(AppRole.provider);
+    pv.Provider.of<RoleProvider>(context, listen: false)
+        .setRole(AppRole.provider);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const NicVerificationScreen()),
       (route) => false,
@@ -46,7 +61,8 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('Become a Service Provider', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        title: const Text('Become a Service Provider',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -56,10 +72,14 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
             children: [
               Text(
                 'Earn island-wide by taking verified jobs near you',
-                style: TextStyle(fontSize: 13.5, color: AppColors.onSurfaceVariant),
+                style: TextStyle(
+                    fontSize: 13.5, color: AppColors.onSurfaceVariant),
               ),
               const SizedBox(height: 22),
-              _Field(label: 'Full name (as on NIC)', controller: _nameController, hint: 'Kasun Perera'),
+              _Field(
+                  label: 'Full name (as on NIC)',
+                  controller: _nameController,
+                  hint: 'Kasun Perera'),
               const SizedBox(height: 14),
               _Field(
                 label: 'Phone number',
@@ -69,7 +89,10 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 prefixText: '+94 ',
               ),
               const SizedBox(height: 14),
-              _Field(label: 'NIC number', controller: _nicController, hint: '200012345678'),
+              _Field(
+                  label: 'NIC number',
+                  controller: _nicController,
+                  hint: '200012345678'),
               const SizedBox(height: 14),
               _Dropdown(
                 label: 'Primary service category',
@@ -92,11 +115,14 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'I agree to the Provider Terms and Police Vetting process',
-                  style: TextStyle(fontSize: 12.5, color: AppColors.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 12.5, color: AppColors.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: 8),
-              PrimaryButton(label: 'Create Account & Verify NIC', onPressed: _agreed ? _createAccount : null),
+              PrimaryButton(
+                  label: 'Create Account & Verify NIC',
+                  onPressed: _agreed ? _createAccount : null),
               const SizedBox(height: 14),
               Center(
                 child: TextButton(
@@ -131,7 +157,11 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurfaceVariant)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -157,14 +187,22 @@ class _Dropdown extends StatelessWidget {
   final String value;
   final List<String> items;
   final ValueChanged<String?> onChanged;
-  const _Dropdown({required this.label, required this.value, required this.items, required this.onChanged});
+  const _Dropdown(
+      {required this.label,
+      required this.value,
+      required this.items,
+      required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurfaceVariant)),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -177,7 +215,9 @@ class _Dropdown extends StatelessWidget {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              items: items.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+              items: items
+                  .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                  .toList(),
               onChanged: onChanged,
             ),
           ),

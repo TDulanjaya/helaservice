@@ -4,7 +4,9 @@ import '../../theme/app_theme.dart';
 class NavItem {
   final IconData icon;
   final String label;
-  const NavItem(this.icon, this.label);
+  final String? badge;
+
+  const NavItem(this.icon, this.label, {this.badge});
 }
 
 class AppBottomNav extends StatelessWidget {
@@ -12,42 +14,105 @@ class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
 
-  const AppBottomNav(
-      {super.key, required this.items, required this.currentIndex, this.onTap});
+  const AppBottomNav({
+    super.key,
+    required this.items,
+    required this.currentIndex,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.95),
+        color: AppColors.surfaceLowest,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.outline.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, -2))
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, -3),
+          ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: SafeArea(
         top: false,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(items.length, (i) {
             final active = i == currentIndex;
-            final color =
-                active ? AppColors.primary : AppColors.onSurfaceVariant;
-            return InkWell(
-              onTap: () => onTap?.call(i),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(items[i].icon, color: color, size: 24),
-                    const SizedBox(height: 2),
-                    Text(items[i].label,
-                        style: TextStyle(color: color, fontSize: 11)),
-                  ],
+            final item = items[i];
+
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onTap?.call(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: active
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(
+                            item.icon,
+                            color: active
+                                ? AppColors.primary
+                                : AppColors.onSurfaceVariant,
+                            size: 22,
+                          ),
+                          if (item.badge != null)
+                            Positioned(
+                              top: -4,
+                              right: -8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  item.badge!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          color: active
+                              ? AppColors.primary
+                              : AppColors.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight:
+                              active ? FontWeight.w800 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

@@ -3,7 +3,10 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
+import '../../../data/models/user_profile.dart';
+import '../../../data/services/auth_service.dart';
 import '../../../app_router.dart';
+import 'complete_profile_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../admin/admin_shell.dart';
@@ -16,7 +19,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  AppRole _selectedRole = AppRole.customer;
+  bool _isAdminMode = false;
+  bool _isGoogleLoading = false;
+
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -29,40 +34,170 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _continue() {
-    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    roleProvider.setRole(_selectedRole);
+  /// Handles role-agnostic Google Sign-In
+  Future<void> _handleGoogleSignIn({String? simulateEmail}) async {
+    setState(() => _isGoogleLoading = true);
 
-    Widget destination;
-    switch (_selectedRole) {
-      case AppRole.customer:
-        destination = const HomeDiscoveryScreen();
-        break;
-      case AppRole.provider:
-        destination = const ProviderDashboardScreen();
-        break;
-      case AppRole.admin:
-        destination = const AdminShell();
-        break;
+    try {
+      final authService = AuthService();
+      final user = await authService.signInWithGoogle(testEmail: simulateEmail);
+
+      if (!mounted) return;
+
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+      roleProvider.setUser(user);
+
+      // Check if user is registered with a completed role
+      if (user.isProfileComplete && user.role != null) {
+        // Returning user -> Navigate straight to their destination without asking for role
+        Widget destination;
+        switch (user.role!) {
+          case AppRole.customer:
+            destination = const HomeDiscoveryScreen();
+            break;
+          case AppRole.provider:
+            destination = const ProviderDashboardScreen();
+            break;
+          case AppRole.admin:
+            destination = const AdminShell();
+            break;
+        }
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => destination),
+          (route) => false,
+        );
+      } else {
+        // New Google User -> Navigate to Role Selection & Profile Completion Form
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CompleteProfileScreen(initialProfile: user),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+      }
+    }
+  }
+
+  /// Quick dialog/sheet to test different Google personas
+  void _showGoogleAccountSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surfaceLowest,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const _GoogleMark(),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Choose Google Account',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Test how the role-agnostic authentication behaves with different account states:',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Option 1: New Account (First time -> Choose role & fill form)
+              _AccountTile(
+                title: 'Kasun Fernando (New Account)',
+                subtitle: 'First time user -> prompts role selection form',
+                badgeText: 'New User Flow',
+                badgeColor: AppColors.primary,
+                avatarInitials: 'KF',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handleGoogleSignIn(simulateEmail: 'kasun.fernando95@gmail.com');
+                },
+              ),
+              const SizedBox(height: 10),
+              // Option 2: Existing Customer (No role choice needed)
+              _AccountTile(
+                title: 'Sanduni Perera (Existing Customer)',
+                subtitle: 'Directly opens Customer Home Discovery',
+                badgeText: 'Saved Customer',
+                badgeColor: const Color(0xFF008378),
+                avatarInitials: 'SP',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handleGoogleSignIn(simulateEmail: 'customer.sample@gmail.com');
+                },
+              ),
+              const SizedBox(height: 10),
+              // Option 3: Existing Service Provider (No role choice needed)
+              _AccountTile(
+                title: 'Sunil Bandara (Existing Electrician)',
+                subtitle: 'Directly opens Provider Job Dashboard',
+                badgeText: 'Saved Provider',
+                badgeColor: const Color(0xFFFEA619),
+                avatarInitials: 'SB',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handleGoogleSignIn(simulateEmail: 'provider.sample@gmail.com');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _continueWithPhone() {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your mobile phone number'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
     }
 
+    // Default to customer home or route to registration
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    roleProvider.setRole(AppRole.customer);
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => destination),
+      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
       (route) => false,
     );
   }
 
-  void _goToRegister() {
-    final route = _selectedRole == AppRole.provider
-        ? AppRoutes.providerRegister
-        : AppRoutes.customerRegister;
-    Navigator.of(context).pushNamed(route);
+  void _loginAdmin() {
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    roleProvider.setRole(AppRole.admin);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AdminShell()),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = _selectedRole == AppRole.admin;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -71,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // App Brand Header
               Row(
                 children: [
                   Container(
@@ -80,7 +216,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.bolt, color: Colors.white, size: 22),
+                    child:
+                        const Icon(Icons.bolt, color: Colors.white, size: 22),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -90,123 +227,252 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              const Text(
-                'Welcome back',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Log in to continue as a customer, provider or admin',
-                style: TextStyle(fontSize: 13.5, color: AppColors.onSurfaceVariant),
-              ),
-              const SizedBox(height: 22),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFEDE4),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    _RolePill(
-                      label: 'Customer',
-                      selected: _selectedRole == AppRole.customer,
-                      onTap: () => setState(() => _selectedRole = AppRole.customer),
-                    ),
-                    _RolePill(
-                      label: 'Provider',
-                      selected: _selectedRole == AppRole.provider,
-                      onTap: () => setState(() => _selectedRole = AppRole.provider),
-                    ),
-                    _RolePill(
-                      label: 'Admin',
-                      selected: _selectedRole == AppRole.admin,
-                      onTap: () => setState(() => _selectedRole = AppRole.admin),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              if (!isAdmin) ...[
-                OutlinedButton(
-                  onPressed: _continue,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: AppColors.outline.withOpacity(0.4)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      _GoogleMark(),
-                      SizedBox(width: 10),
-                      Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                    ],
+              if (!_isAdminMode) ...[
+                // Main User / Provider Screen (Role-Agnostic)
+                const Text(
+                  'Welcome to HelaService',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Find verified home service professionals or manage your service jobs across Sri Lanka.',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.onSurfaceVariant,
+                    height: 1.35,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 28),
+
+                // Primary Google Sign-In Button
+                OutlinedButton(
+                  onPressed: _isGoogleLoading
+                      ? null
+                      : () => _handleGoogleSignIn(),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(
+                        color: AppColors.outline.withOpacity(0.35), width: 1.2),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    elevation: 1,
+                    shadowColor: Colors.black.withOpacity(0.04),
+                  ),
+                  child: _isGoogleLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            _GoogleMark(),
+                            SizedBox(width: 12),
+                            Text(
+                              'Continue with Google',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14.5,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Helper trigger to switch accounts / simulate existing vs new
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _showGoogleAccountSelector,
+                    icon: const Icon(Icons.swap_horiz, size: 16),
+                    label: const Text(
+                      'Test Google Personas (New vs Returning)',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Divider: "or continue with phone"
                 Row(
                   children: [
-                    Expanded(child: Divider(color: AppColors.outline.withOpacity(0.3))),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text('or', style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12)),
+                    Expanded(
+                        child:
+                            Divider(color: AppColors.outline.withOpacity(0.3))),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        'or continue with phone',
+                        style: TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    Expanded(child: Divider(color: AppColors.outline.withOpacity(0.3))),
+                    Expanded(
+                        child:
+                            Divider(color: AppColors.outline.withOpacity(0.3))),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
+
+                // Phone Input Field
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(14),
-                      child: Text('🇱🇰 +94', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text('🇱🇰 +94',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                     hintText: '77 123 4567',
                     filled: true,
                     fillColor: AppColors.surfaceLowest,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.outline.withOpacity(0.3)),
+                      borderSide:
+                          BorderSide(color: AppColors.outline.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          BorderSide(color: AppColors.outline.withOpacity(0.25)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          const BorderSide(color: AppColors.primary, width: 1.8),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                PrimaryButton(label: 'Get Started', onPressed: _continue),
-                const SizedBox(height: 18),
-                Center(
-                  child: TextButton(
-                    onPressed: _goToRegister,
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'New here? ',
-                        style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+                const SizedBox(height: 16),
+
+                PrimaryButton(
+                  label: 'Get Started with Phone',
+                  onPressed: _continueWithPhone,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Manual Registration Links
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLow,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Want to register with a dedicated form?',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          TextSpan(
-                            text: _selectedRole == AppRole.provider
-                                ? 'Register as a service provider'
-                                : 'Create a customer account',
-                            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.customerRegister),
+                            child: const Text(
+                              'Register as Customer',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
+                          ),
+                          const Text('•',
+                              style:
+                                  TextStyle(color: AppColors.onSurfaceVariant)),
+                          TextButton(
+                            onPressed: () => Navigator.pushNamed(
+                                context, AppRoutes.providerRegister),
+                            child: const Text(
+                              'Register as Provider',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Link to Admin Portal
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _isAdminMode = true),
+                    icon: const Icon(Icons.admin_panel_settings_outlined,
+                        size: 18),
+                    label: const Text(
+                      'Admin Console Access',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.outline,
                     ),
                   ),
                 ),
               ] else ...[
+                // Admin Mode Screen
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => setState(() => _isAdminMode = false),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Admin Console Login',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Access operations dashboard, verification pipeline, and platform metrics.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Work email',
+                    hintText: 'admin@helaservice.lk',
                     filled: true,
                     fillColor: AppColors.surfaceLowest,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.outline.withOpacity(0.3)),
+                      borderSide:
+                          BorderSide(color: AppColors.outline.withOpacity(0.3)),
                     ),
                   ),
                 ),
@@ -220,18 +486,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     fillColor: AppColors.surfaceLowest,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.outline.withOpacity(0.3)),
+                      borderSide:
+                          BorderSide(color: AppColors.outline.withOpacity(0.3)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                PrimaryButton(label: 'Log In to Admin Console', onPressed: _continue),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
+                PrimaryButton(
+                  label: 'Log In to Admin Console',
+                  onPressed: _loginAdmin,
+                ),
+                const SizedBox(height: 16),
                 Center(
-                  child: Text(
-                    'Lost access? Contact your operations lead for a reset link.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
+                  child: TextButton(
+                    onPressed: () => setState(() => _isAdminMode = false),
+                    child: const Text('Back to Customer & Provider Sign In'),
                   ),
                 ),
               ],
@@ -243,36 +512,98 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _RolePill extends StatelessWidget {
-  final String label;
-  final bool selected;
+class _AccountTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String badgeText;
+  final Color badgeColor;
+  final String avatarInitials;
   final VoidCallback onTap;
-  const _RolePill({required this.label, required this.selected, required this.onTap});
+
+  const _AccountTile({
+    required this.title,
+    required this.subtitle,
+    required this.badgeText,
+    required this.badgeColor,
+    required this.avatarInitials,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(11),
-            boxShadow: selected
-                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6, offset: const Offset(0, 2))]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              color: selected ? AppColors.onSurface : AppColors.onSurfaceVariant,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.outline.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: badgeColor.withOpacity(0.15),
+              child: Text(
+                avatarInitials,
+                style: TextStyle(
+                  color: badgeColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: badgeColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 20, color: AppColors.outline),
+          ],
         ),
       ),
     );
@@ -281,11 +612,12 @@ class _RolePill extends StatelessWidget {
 
 class _GoogleMark extends StatelessWidget {
   const _GoogleMark();
+
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
-      width: 18,
-      height: 18,
+      width: 20,
+      height: 20,
       child: Stack(
         children: [
           _Dot(color: Color(0xFF4285F4), alignment: Alignment.topLeft),
@@ -302,11 +634,16 @@ class _Dot extends StatelessWidget {
   final Color color;
   final Alignment alignment;
   const _Dot({required this.color, required this.alignment});
+
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: alignment,
-      child: Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      child: Container(
+        width: 9,
+        height: 9,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
     );
   }
 }

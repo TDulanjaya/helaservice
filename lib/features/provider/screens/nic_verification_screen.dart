@@ -5,7 +5,9 @@ import '../../../shared/widgets/app_bottom_nav.dart';
 import 'provider_dashboard_screen.dart';
 
 class NicVerificationScreen extends StatefulWidget {
-  const NicVerificationScreen({super.key});
+  final bool showBottomNav;
+
+  const NicVerificationScreen({super.key, this.showBottomNav = true});
 
   @override
   State<NicVerificationScreen> createState() => _NicVerificationScreenState();
@@ -164,18 +166,21 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: 3,
-        items: const [
-          NavItem(Icons.radar, 'Jobs'),
-          NavItem(Icons.payments, 'Earnings'),
-          NavItem(Icons.calendar_today, 'Schedule'),
-          NavItem(Icons.manage_accounts, 'Profile'),
-        ],
-      ),
+      bottomNavigationBar: widget.showBottomNav
+          ? AppBottomNav(
+              currentIndex: 2,
+              items: const [
+                NavItem(Icons.radar, 'Jobs'),
+                NavItem(Icons.payments, 'Earnings'),
+                NavItem(Icons.verified_user, 'Verification'),
+                NavItem(Icons.manage_accounts, 'Profile'),
+              ],
+            )
+          : null,
     );
   }
 }
+
 
 class PillBadgeChip extends StatelessWidget {
   final String label;

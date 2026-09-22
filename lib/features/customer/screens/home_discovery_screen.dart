@@ -1,10 +1,14 @@
-import '../../../shared/widgets/role_switch_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../data/mock_data.dart';
+import '../../../data/models/technician.dart';
 import '../../../shared/widgets/technician_card.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/role_switch_sheet.dart';
+import '../widgets/customer_bookings_view.dart';
 import 'provider_detail_screen.dart';
+import 'customer_profile_screen.dart';
+import 'live_tracking_screen.dart';
 
 class HomeDiscoveryScreen extends StatefulWidget {
   const HomeDiscoveryScreen({super.key});
@@ -24,13 +28,37 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
     NavItem(Icons.person, 'Profile'),
   ];
 
-  void _openTechnician(context, tech) {
+  void _openTechnician(BuildContext context, Technician tech) {
     Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => ProviderDetailScreen(technician: tech)));
   }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _navIndex,
+        children: [
+          _buildExploreView(context),
+          CustomerBookingsView(
+            onTrackPressed: () => setState(() => _navIndex = 2),
+          ),
+          LiveTrackingScreen(
+            technician: MockData.kasun,
+            showBottomNav: false,
+          ),
+          const CustomerProfileScreen(),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNav(
+        items: _navItems,
+        currentIndex: _navIndex,
+        onTap: (i) => setState(() => _navIndex = i),
+      ),
+    );
+  }
+
+  Widget _buildExploreView(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -69,11 +97,14 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ]),
           ),
           const SizedBox(width: 8),
-          const CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.surfaceHigh,
-              child: Icon(Icons.person,
-                  size: 18, color: AppColors.onSurfaceVariant)),
+          GestureDetector(
+            onTap: () => setState(() => _navIndex = 3),
+            child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.surfaceHigh,
+                child: Icon(Icons.person,
+                    size: 18, color: AppColors.onSurfaceVariant)),
+          ),
           const SizedBox(width: 12),
         ],
       ),
@@ -88,7 +119,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text('Ayubowan, Sanduni! 👋',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold)),
                       Text('Find certified local artisans ready to help today.',
                           style: TextStyle(color: AppColors.onSurfaceVariant)),
                     ],
@@ -96,7 +128,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 ),
                 IconButton(
                   onPressed: () => showRoleSwitchSheet(context),
-                  icon: Icon(Icons.swap_horiz, color: AppColors.onSurfaceVariant),
+                  icon:
+                      Icon(Icons.swap_horiz, color: AppColors.onSurfaceVariant),
                   tooltip: 'Switch role',
                 ),
               ],
@@ -109,7 +142,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 borderRadius: BorderRadius.circular(999),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.04), blurRadius: 16)
+                      color: Colors.black.withValues(alpha: 0.04), blurRadius: 16)
                 ],
               ),
               child: Row(children: [
@@ -127,7 +160,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 ),
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                       color: AppColors.surfaceContainer,
                       shape: BoxShape.circle),
                   child: const Icon(Icons.tune,
@@ -169,10 +202,10 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(cat.icon,
-                            color: selected
-                                ? Colors.white
-                                : AppColors.onSurfaceVariant,
-                            size: 26),
+                          color: selected
+                              ? Colors.white
+                              : AppColors.onSurfaceVariant,
+                          size: 26),
                       ),
                       const SizedBox(height: 6),
                       Text(cat.label,
@@ -215,7 +248,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            _MapRadarPreview(),
+            const _MapRadarPreview(),
             const SizedBox(height: 22),
             const Text('Top Rated Technicians',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -239,7 +272,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                       color: AppColors.surfaceHighest, shape: BoxShape.circle),
                   child: const Icon(Icons.health_and_safety,
                       color: AppColors.primary),
@@ -263,11 +296,6 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: AppBottomNav(
-        items: _navItems,
-        currentIndex: _navIndex,
-        onTap: (i) => setState(() => _navIndex = i),
-      ),
     );
   }
 }
@@ -283,98 +311,59 @@ class _PulsingDot extends StatelessWidget {
 }
 
 class _MapRadarPreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 170,
-        color: AppColors.surfaceLow,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CustomPaint(painter: _RoadPainter()),
-            ),
-            Center(
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3)),
-              ),
-            ),
-            Positioned(
-                top: 20,
-                left: 20,
-                child: _PinBadge(icon: Icons.ac_unit, label: '8 mins away')),
-            Positioned(
-                bottom: 30,
-                right: 24,
-                child: _PinBadge(icon: Icons.bolt, label: '12 mins away')),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(999)),
-                child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.explore, size: 14, color: AppColors.primary),
-                  SizedBox(width: 4),
-                  Text('Expand Radar',
-                      style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PinBadge extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _PinBadge({required this.icon, required this.label});
+  const _MapRadarPreview();
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      height: 140,
       decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(999)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 13, color: AppColors.primary),
-        const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-      ]),
+        color: AppColors.surfaceLowest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.15)),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.04),
+                    AppColors.primaryContainer.withValues(alpha: 0.1),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.radar, color: AppColors.primary, size: 30),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Instant Dispatch Radar Active',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Average arrival time: 14 mins in Colombo 03',
+                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
-}
-
-class _RoadPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.surfaceHighest
-      ..strokeWidth = 8
-      ..style = PaintingStyle.stroke;
-    final path = Path()
-      ..moveTo(-10, size.height * 0.3)
-      ..quadraticBezierTo(size.width * 0.3, size.height * 0.1, size.width * 0.6,
-          size.height * 0.35)
-      ..quadraticBezierTo(size.width * 0.85, size.height * 0.5, size.width + 10,
-          size.height * 0.3);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

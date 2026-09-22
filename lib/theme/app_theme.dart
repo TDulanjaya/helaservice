@@ -58,4 +58,35 @@ class AppTheme {
       dividerTheme: const DividerThemeData(color: AppColors.surfaceHighest),
     );
   }
+
+  static ThemeData dark() {
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.primary,
+        onPrimary: AppColors.onPrimary,
+        secondary: AppColors.secondaryContainer,
+        surface: Color(0xFF14181A),
+        error: AppColors.error,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0E1112),
+      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+    );
+
+    return base.copyWith(
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0E1112),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
+      dividerTheme: const DividerThemeData(color: Color(0xFF2A2F31)),
+    );
+  }
 }
+

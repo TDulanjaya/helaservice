@@ -11,7 +11,7 @@ import 'features/admin/admin_shell.dart';
 import 'features/admin/screens/admin_profile_screen.dart';
 
 class AppRoutes {
-  static const login = '/';
+  static const login = '/login';
   static const completeProfile = '/complete-profile';
   static const customerRegister = '/register/customer';
   static const customerProfile = '/customer/profile';

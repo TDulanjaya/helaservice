@@ -222,29 +222,34 @@ class AdminProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _HealthItem(
-                        label: 'Core Services',
-                        value: '99.8%',
-                        color: Color(0xFF008378),
-                        icon: Icons.check_circle_outline,
+                      const Expanded(
+                        child: _HealthItem(
+                          label: 'Core Services',
+                          value: '99.8%',
+                          color: Color(0xFF008378),
+                          icon: Icons.check_circle_outline,
+                        ),
                       ),
                       Container(width: 1, height: 28, color: AppColors.outline.withValues(alpha: 0.2)),
-                      _HealthItem(
-                        label: 'LankaQR Clearing',
-                        value: 'Active',
-                        color: Color(0xFF008378),
-                        icon: Icons.qr_code,
+                      const Expanded(
+                        child: _HealthItem(
+                          label: 'LankaQR',
+                          value: 'Active',
+                          color: Color(0xFF008378),
+                          icon: Icons.qr_code,
+                        ),
                       ),
                       Container(width: 1, height: 28, color: AppColors.outline.withValues(alpha: 0.2)),
-                      GestureDetector(
-                        onTap: onNavigateToVerifications,
-                        child: const _HealthItem(
-                          label: 'Pending KYC',
-                          value: '7 queued',
-                          color: Color(0xFFFEA619),
-                          icon: Icons.pending_actions,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: onNavigateToVerifications,
+                          child: const _HealthItem(
+                            label: 'Pending KYC',
+                            value: '7 queued',
+                            color: AppColors.secondaryContainer,
+                            icon: Icons.assignment_late,
+                          ),
                         ),
                       ),
                     ],

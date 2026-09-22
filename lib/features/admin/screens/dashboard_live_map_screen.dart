@@ -122,8 +122,14 @@ class DashboardLiveMapScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: const [
-                  Text('All Sri Lanka — Live Traffic', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Spacer(),
+                  Expanded(
+                    child: Text(
+                      'All Sri Lanka — Live Traffic',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                  SizedBox(width: 8),
                   Text('Heatmap', style: TextStyle(fontSize: 12, color: AppColors.primary)),
                 ]),
                 const SizedBox(height: 10),

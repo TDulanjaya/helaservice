@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "289261218124",
+    "project_id": "helaservice-25817",
+    "storage_bucket": "helaservice-25817.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:289261218124:android:245612f904887b529187e9",
+        "android_client_info": {
+          "package_name": "com.helaservice.helaservice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSAJBX19LtDmDniX4CHLxqKOWpwFOYgNA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

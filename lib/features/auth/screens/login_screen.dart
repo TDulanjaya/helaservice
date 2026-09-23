@@ -7,6 +7,7 @@ import '../../../data/models/user_profile.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../app_router.dart';
 import 'complete_profile_screen.dart';
+import 'otp_verification_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../admin/admin_shell.dart';
@@ -21,6 +22,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isAdminMode = false;
   bool _isGoogleLoading = false;
+  bool _isPhoneLoading = false;
 
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -72,6 +74,17 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => CompleteProfileScreen(initialProfile: user),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      if (!msg.contains('cancelled') && !msg.contains('ABORTED')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: $msg'),
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -166,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _continueWithPhone() {
+  Future<void> _continueWithPhone() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,12 +191,67 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Default to customer home or route to registration
-    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    roleProvider.setRole(AppRole.customer);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-      (route) => false,
+    setState(() => _isPhoneLoading = true);
+
+    final authService = AuthService();
+    final cleanPhone = AuthService.formatSriLankanPhoneNumber(phone);
+
+    await authService.sendPhoneOtp(
+      phoneNumber: cleanPhone,
+      onCodeSent: (verificationId) {
+        if (!mounted) return;
+        setState(() => _isPhoneLoading = false);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OtpVerificationScreen(
+              phoneNumber: cleanPhone,
+              initialVerificationId: verificationId,
+            ),
+          ),
+        );
+      },
+      onError: (errorMsg) {
+        if (!mounted) return;
+        setState(() => _isPhoneLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      onAutoVerified: (user) {
+        if (!mounted) return;
+        setState(() => _isPhoneLoading = false);
+        final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+        roleProvider.setUser(user);
+
+        if (user.isProfileComplete && user.role != null) {
+          Widget destination;
+          switch (user.role!) {
+            case AppRole.customer:
+              destination = const HomeDiscoveryScreen();
+              break;
+            case AppRole.provider:
+              destination = const ProviderDashboardScreen();
+              break;
+            case AppRole.admin:
+              destination = const AdminShell();
+              break;
+          }
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => destination),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CompleteProfileScreen(initialProfile: user),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -365,6 +433,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 PrimaryButton(
                   label: 'Get Started with Phone',
+                  loading: _isPhoneLoading,
                   onPressed: _continueWithPhone,
                 ),
 

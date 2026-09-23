@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../state/role_provider.dart';
 
 class UserProfile {
@@ -15,8 +16,8 @@ class UserProfile {
 
   const UserProfile({
     required this.id,
-    required this.email,
-    required this.displayName,
+    this.email = '',
+    this.displayName = '',
     this.photoUrl,
     this.role,
     this.isProfileComplete = false,
@@ -26,6 +27,27 @@ class UserProfile {
     this.nic,
     this.serviceCategory,
   });
+
+  factory UserProfile.fromFirebaseUser(fb.User user, {AppRole? role, bool isComplete = false}) {
+    final phone = user.phoneNumber;
+    final fallbackName = phone != null && phone.isNotEmpty
+        ? 'User ($phone)'
+        : (user.email != null && user.email!.isNotEmpty
+            ? user.email!.split('@').first
+            : 'Hela User');
+
+    return UserProfile(
+      id: user.uid,
+      email: user.email ?? '',
+      displayName: (user.displayName != null && user.displayName!.isNotEmpty)
+          ? user.displayName!
+          : fallbackName,
+      photoUrl: user.photoURL,
+      phone: phone,
+      role: role,
+      isProfileComplete: isComplete,
+    );
+  }
 
   UserProfile copyWith({
     String? id,

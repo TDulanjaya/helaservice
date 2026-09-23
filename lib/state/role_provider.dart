@@ -47,8 +47,8 @@ class RoleProvider extends ChangeNotifier {
     }
   }
 
-  void logout() {
-    AuthService().signOut();
+  Future<void> logout() async {
+    await AuthService().signOut();
     _currentUser = null;
     _role = AppRole.customer;
     notifyListeners();

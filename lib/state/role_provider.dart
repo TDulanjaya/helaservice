@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../data/models/user_profile.dart';
-import '../data/services/auth_service.dart';
+import '../models/user_profile.dart';
+import '../services/auth_service.dart';
 
 enum AppRole { customer, provider, admin }
 
@@ -65,4 +65,3 @@ class RoleProvider extends ChangeNotifier {
     }
   }
 }
-

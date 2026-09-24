@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
-import '../../../data/models/technician.dart';
+import '../../../models/technician.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
@@ -256,7 +256,6 @@ class LiveTrackingScreen extends StatelessWidget {
     );
   }
 }
-
 
 class _RoundIconButton extends StatelessWidget {
   final IconData icon;

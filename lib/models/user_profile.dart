@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-import '../../state/role_provider.dart';
+import '../state/role_provider.dart';
 
 class UserProfile {
   final String id;
@@ -10,9 +10,9 @@ class UserProfile {
   final bool isProfileComplete;
   final String? phone;
   final String? district;
-  final String? address; // For customers
-  final String? nic; // For providers
-  final String? serviceCategory; // For providers
+  final String? address;
+  final String? nic;
+  final String? serviceCategory;
 
   const UserProfile({
     required this.id,
@@ -28,7 +28,8 @@ class UserProfile {
     this.serviceCategory,
   });
 
-  factory UserProfile.fromFirebaseUser(fb.User user, {AppRole? role, bool isComplete = false}) {
+  factory UserProfile.fromFirebaseUser(fb.User user,
+      {AppRole? role, bool isComplete = false}) {
     final phone = user.phoneNumber;
     final fallbackName = phone != null && phone.isNotEmpty
         ? 'User ($phone)'

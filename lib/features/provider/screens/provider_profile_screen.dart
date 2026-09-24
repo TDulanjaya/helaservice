@@ -152,7 +152,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            // Provider Header Card
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -247,8 +246,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
 
             const SizedBox(height: 16),
-
-            // NIC & Verification Status Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -313,8 +310,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
 
             const SizedBox(height: 14),
-
-            // Earnings & Instant Cashout Banner
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -377,8 +372,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
 
             const SizedBox(height: 18),
-
-            // Work Settings & Dispatch
             const Text(
               'Job Dispatch Settings',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -428,8 +421,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
 
             const SizedBox(height: 14),
-
-            // Switch to Customer Mode Card
             InkWell(
               onTap: () => showRoleSwitchSheet(context),
               borderRadius: BorderRadius.circular(16),
@@ -482,8 +473,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
 
             const SizedBox(height: 18),
-
-            // Log Out Button
             OutlinedButton.icon(
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout, color: AppColors.error, size: 18),

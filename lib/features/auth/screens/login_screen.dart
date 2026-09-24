@@ -3,8 +3,7 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
-import '../../../data/models/user_profile.dart';
-import '../../../data/services/auth_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../app_router.dart';
 import 'complete_profile_screen.dart';
 import 'otp_verification_screen.dart';
@@ -36,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  /// Handles role-agnostic Google Sign-In
   Future<void> _handleGoogleSignIn({String? simulateEmail}) async {
     setState(() => _isGoogleLoading = true);
 
@@ -49,9 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
       roleProvider.setUser(user);
 
-      // Check if user is registered with a completed role
       if (user.isProfileComplete && user.role != null) {
-        // Returning user -> Navigate straight to their destination without asking for role
         Widget destination;
         switch (user.role!) {
           case AppRole.customer:
@@ -70,7 +66,6 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       } else {
-        // New Google User -> Navigate to Role Selection & Profile Completion Form
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => CompleteProfileScreen(initialProfile: user),
@@ -95,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Quick dialog/sheet to test different Google personas
   void _showGoogleAccountSelector() {
     showModalBottomSheet(
       context: context,
@@ -134,7 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Option 1: New Account (First time -> Choose role & fill form)
               _AccountTile(
                 title: 'Kasun Fernando (New Account)',
                 subtitle: 'First time user -> prompts role selection form',
@@ -143,11 +136,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 avatarInitials: 'KF',
                 onTap: () {
                   Navigator.pop(ctx);
-                  _handleGoogleSignIn(simulateEmail: 'kasun.fernando95@gmail.com');
+                  _handleGoogleSignIn(
+                      simulateEmail: 'kasun.fernando95@gmail.com');
                 },
               ),
               const SizedBox(height: 10),
-              // Option 2: Existing Customer (No role choice needed)
               _AccountTile(
                 title: 'Sanduni Perera (Existing Customer)',
                 subtitle: 'Directly opens Customer Home Discovery',
@@ -156,11 +149,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 avatarInitials: 'SP',
                 onTap: () {
                   Navigator.pop(ctx);
-                  _handleGoogleSignIn(simulateEmail: 'customer.sample@gmail.com');
+                  _handleGoogleSignIn(
+                      simulateEmail: 'customer.sample@gmail.com');
                 },
               ),
               const SizedBox(height: 10),
-              // Option 3: Existing Service Provider (No role choice needed)
               _AccountTile(
                 title: 'Sunil Bandara (Existing Electrician)',
                 subtitle: 'Directly opens Provider Job Dashboard',
@@ -169,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 avatarInitials: 'SB',
                 onTap: () {
                   Navigator.pop(ctx);
-                  _handleGoogleSignIn(simulateEmail: 'provider.sample@gmail.com');
+                  _handleGoogleSignIn(
+                      simulateEmail: 'provider.sample@gmail.com');
                 },
               ),
             ],
@@ -223,7 +217,8 @@ class _LoginScreenState extends State<LoginScreen> {
       onAutoVerified: (user) {
         if (!mounted) return;
         setState(() => _isPhoneLoading = false);
-        final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+        final roleProvider =
+            pv.Provider.of<RoleProvider>(context, listen: false);
         roleProvider.setUser(user);
 
         if (user.isProfileComplete && user.role != null) {
@@ -274,7 +269,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // App Brand Header
               Row(
                 children: [
                   Container(
@@ -297,7 +291,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 28),
 
               if (!_isAdminMode) ...[
-                // Main User / Provider Screen (Role-Agnostic)
                 const Text(
                   'Welcome to HelaService',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
@@ -312,12 +305,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-
-                // Primary Google Sign-In Button
                 OutlinedButton(
-                  onPressed: _isGoogleLoading
-                      ? null
-                      : () => _handleGoogleSignIn(),
+                  onPressed:
+                      _isGoogleLoading ? null : () => _handleGoogleSignIn(),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -355,8 +345,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 8),
-
-                // Helper trigger to switch accounts / simulate existing vs new
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
@@ -364,7 +352,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: const Icon(Icons.swap_horiz, size: 16),
                     label: const Text(
                       'Test Google Personas (New vs Returning)',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,
@@ -374,8 +363,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 12),
-
-                // Divider: "or continue with phone"
                 Row(
                   children: [
                     Expanded(
@@ -398,8 +385,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 18),
-
-                // Phone Input Field
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
@@ -419,13 +404,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide:
-                          BorderSide(color: AppColors.outline.withOpacity(0.25)),
+                      borderSide: BorderSide(
+                          color: AppColors.outline.withOpacity(0.25)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide:
-                          const BorderSide(color: AppColors.primary, width: 1.8),
+                      borderSide: const BorderSide(
+                          color: AppColors.primary, width: 1.8),
                     ),
                   ),
                 ),
@@ -438,8 +423,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Manual Registration Links
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -488,8 +471,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // Link to Admin Portal
                 Center(
                   child: TextButton.icon(
                     onPressed: () => setState(() => _isAdminMode = true),
@@ -506,7 +487,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ] else ...[
-                // Admin Mode Screen
                 Row(
                   children: [
                     IconButton(

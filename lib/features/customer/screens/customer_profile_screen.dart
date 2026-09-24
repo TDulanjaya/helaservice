@@ -178,7 +178,6 @@ class CustomerProfileScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            // User Avatar Card
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -265,8 +264,6 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-
-            // Contact & Delivery Address Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -337,8 +334,6 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 14),
-
-            // HelaCare Guarantee Banner
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -387,8 +382,6 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
-
-            // Settings & Preferences
             const Text(
               'Account & Services',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -415,8 +408,6 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 14),
-
-            // Switch to Provider Tile
             InkWell(
               onTap: () => showRoleSwitchSheet(context),
               borderRadius: BorderRadius.circular(16),
@@ -469,8 +460,6 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
-
-            // Log Out Button
             OutlinedButton.icon(
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout, color: AppColors.error, size: 18),

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
-import '../../../data/services/auth_service.dart';
+import '../../../services/auth_service.dart';
 import 'complete_profile_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
@@ -189,7 +189,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Security shield badge
               Center(
                 child: Container(
                   width: 64,
@@ -227,7 +226,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     height: 1.4,
                   ),
                   children: [
-                    const TextSpan(text: 'Enter the 6-digit code sent via SMS to\n'),
+                    const TextSpan(
+                        text: 'Enter the 6-digit code sent via SMS to\n'),
                     TextSpan(
                       text: formattedDisplayPhone,
                       style: const TextStyle(
@@ -255,8 +255,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
 
               const SizedBox(height: 32),
-
-              // 6-digit input boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (index) {
@@ -314,7 +312,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
@@ -351,8 +350,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
 
               const SizedBox(height: 20),
-
-              // Resend countdown
               Center(
                 child: _countdown > 0
                     ? Text(

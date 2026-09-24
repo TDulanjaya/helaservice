@@ -130,7 +130,6 @@ class AdminProfileScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            // Admin Identity Card
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -174,7 +173,7 @@ class AdminProfileScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           email,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.onSurfaceVariant,
                           ),
@@ -204,8 +203,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-
-            // Platform Health Overview
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -259,8 +256,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-
-            // Operations Tools Section
             const Text(
               'Operations Controls',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -299,8 +294,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 14),
-
-            // Switch to Customer / Provider Cards
             const Text(
               'Switch Operational View',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -358,8 +351,6 @@ class AdminProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
-
-            // Logout Button
             OutlinedButton.icon(
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
@@ -411,7 +402,7 @@ class _HealthItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
+          style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
         ),
       ],
     );
@@ -451,7 +442,7 @@ class _AdminActionTile extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(fontSize: 11.5, color: AppColors.onSurfaceVariant),
+          style: const TextStyle(fontSize: 11.5, color: AppColors.onSurfaceVariant),
         ),
         trailing: const Icon(Icons.chevron_right,
             size: 18, color: AppColors.outline),

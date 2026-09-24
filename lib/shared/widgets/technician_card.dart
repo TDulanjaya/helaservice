@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../data/models/technician.dart';
+import '../../models/technician.dart';
 import 'pill_badge.dart';
 
 class TechnicianCard extends StatelessWidget {

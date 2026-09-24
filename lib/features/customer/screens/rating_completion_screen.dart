@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
-import '../../../data/models/technician.dart';
+import '../../../models/technician.dart';
 import '../../../shared/widgets/rating_stars.dart';
 import '../../../shared/widgets/primary_button.dart';
 import 'home_discovery_screen.dart';

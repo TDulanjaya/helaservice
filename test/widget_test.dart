@@ -1,3 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
+// ignore: depend_on_referenced_packages
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +10,13 @@ import 'package:hela_service/state/role_provider.dart';
 import 'package:hela_service/state/theme_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setupFirebaseCoreMocks();
+
+  setUpAll(() async {
+    await Firebase.initializeApp();
+  });
+
   testWidgets('HelaServiceApp boots splash screen and routes to LoginScreen',
       (WidgetTester tester) async {
     await tester.pumpWidget(const HelaServiceApp());
@@ -22,7 +32,8 @@ void main() {
     expect(find.text('Continue with Google'), findsOneWidget);
   });
 
-  testWidgets('AdminShell renders desktop sidebar, dashboard, and switches tabs',
+  testWidgets(
+      'AdminShell renders desktop sidebar, dashboard, and switches tabs',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1440, 900);
     tester.view.devicePixelRatio = 1.0;
@@ -55,7 +66,8 @@ void main() {
     expect(find.text('Service Categories & District Coverage'), findsOneWidget);
   });
 
-  testWidgets('AdminShell renders mobile layout with BottomNavigationBar below 768px',
+  testWidgets(
+      'AdminShell renders mobile layout with BottomNavigationBar below 768px',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1.0;

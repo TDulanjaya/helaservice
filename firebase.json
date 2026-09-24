@@ -1,1 +1,35 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"helaservice-25817","appId":"1:289261218124:android:245612f904887b529187e9","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"helaservice-25817","configurations":{"android":"1:289261218124:android:245612f904887b529187e9","web":"1:289261218124:web:03c80b463cdb66bc9187e9"}}}}}}
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "helaservice-25817",
+          "appId": "1:289261218124:android:245612f904887b529187e9",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "helaservice-25817",
+          "configurations": {
+            "android": "1:289261218124:android:245612f904887b529187e9",
+            "web": "1:289261218124:web:03c80b463cdb66bc9187e9"
+          }
+        }
+      }
+    }
+  }
+}

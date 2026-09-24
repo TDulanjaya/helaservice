@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
-import '../../../data/mock_data.dart';
-import '../../../data/models/technician.dart';
+import '../../../models/technician.dart';
+import '../../../models/category_item.dart';
+import '../../../repositories/category_repository.dart';
+import '../../../repositories/technician_repository.dart';
 import '../../../shared/widgets/technician_card.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
@@ -18,8 +20,37 @@ class HomeDiscoveryScreen extends StatefulWidget {
 }
 
 class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
+  final CategoryRepository _categoryRepo = CategoryRepository();
+  final TechnicianRepository _technicianRepo = TechnicianRepository();
+
   int _selectedCategory = 0;
   int _navIndex = 0;
+
+  static const _defaultTechnician = Technician(
+    id: 'kasun',
+    name: 'Kasun Perera',
+    initials: 'KP',
+    avatarColor: Color(0xFF00685F),
+    title: 'Master Electrician & Senior Plumber',
+    nicVerified: true,
+    online: true,
+    rating: 4.9,
+    reviewCount: 142,
+    etaLabel: 'Instant (8 min)',
+    baseRateLkr: 1500,
+    responseTimeLabel: 'Usually responds in 5 mins',
+    jobsCount: 142,
+    yearsExperience: '10+ Yrs',
+    onTimePercent: '99.2%',
+    hourlyRateLkr: 1200,
+    emergencyRateLkr: 1800,
+    about: '',
+    languages: 'Sinhala & English',
+    serviceArea: 'Colombo 01-15 & Gampaha',
+    certification: 'NVQ-4 Certified',
+    recentWork: [],
+    reviews: [],
+  );
 
   static const _navItems = [
     NavItem(Icons.explore, 'Explore'),
@@ -27,6 +58,22 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
     NavItem(Icons.near_me, 'Tracking'),
     NavItem(Icons.person, 'Profile'),
   ];
+
+  Stream<List<CategoryItem>> get _categoryStream {
+    try {
+      return _categoryRepo.streamCategories();
+    } catch (_) {
+      return const Stream.empty();
+    }
+  }
+
+  Stream<List<Technician>> get _technicianStream {
+    try {
+      return _technicianRepo.streamTechnicians();
+    } catch (_) {
+      return const Stream.empty();
+    }
+  }
 
   void _openTechnician(BuildContext context, Technician tech) {
     Navigator.of(context).push(MaterialPageRoute(
@@ -43,8 +90,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
           CustomerBookingsView(
             onTrackPressed: () => setState(() => _navIndex = 2),
           ),
-          LiveTrackingScreen(
-            technician: MockData.kasun,
+          const LiveTrackingScreen(
+            technician: _defaultTechnician,
             showBottomNav: false,
           ),
           const CustomerProfileScreen(),
@@ -142,7 +189,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 borderRadius: BorderRadius.circular(999),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04), blurRadius: 16)
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 16)
                 ],
               ),
               child: Row(children: [
@@ -169,58 +217,80 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               ]),
             ),
             const SizedBox(height: 22),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text('Categories',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text('View all (18)',
-                    style: TextStyle(color: AppColors.primary, fontSize: 13)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 84,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: MockData.categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 14),
-                itemBuilder: (context, i) {
-                  final cat = MockData.categories[i];
-                  final selected = i == _selectedCategory;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedCategory = i),
-                    child: Column(children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.surfaceHigh,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(cat.icon,
-                          color: selected
-                              ? Colors.white
-                              : AppColors.onSurfaceVariant,
-                          size: 26),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(cat.label,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: selected
-                                ? AppColors.primary
-                                : AppColors.onSurfaceVariant,
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w500,
-                          )),
-                    ]),
-                  );
-                },
-              ),
+            StreamBuilder<List<CategoryItem>>(
+              stream: _categoryStream,
+              builder: (context, snapshot) {
+                final categories = snapshot.data ?? [];
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Categories',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('View all (${categories.length})',
+                            style: const TextStyle(
+                                color: AppColors.primary, fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 84,
+                      child: categories.isEmpty
+                          ? (snapshot.connectionState == ConnectionState.waiting
+                              ? const Center(child: CircularProgressIndicator())
+                              : const Center(
+                                  child: Text('No categories available',
+                                      style: TextStyle(
+                                          color: AppColors.onSurfaceVariant,
+                                          fontSize: 12))))
+                          : ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: categories.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 14),
+                              itemBuilder: (context, i) {
+                                final cat = categories[i];
+                                final selected = i == _selectedCategory;
+                                return GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _selectedCategory = i),
+                                  child: Column(children: [
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: selected
+                                            ? AppColors.primary
+                                            : AppColors.surfaceHigh,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(cat.icon,
+                                          color: selected
+                                              ? Colors.white
+                                              : AppColors.onSurfaceVariant,
+                                          size: 26),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(cat.label,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: selected
+                                              ? AppColors.primary
+                                              : AppColors.onSurfaceVariant,
+                                          fontWeight: selected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                        )),
+                                  ]),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 22),
             Row(
@@ -256,12 +326,38 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 style:
                     TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 12),
-            ...MockData.technicians.map((tech) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TechnicianCard(
-                      technician: tech,
-                      onTap: () => _openTechnician(context, tech)),
-                )),
+            StreamBuilder<List<Technician>>(
+              stream: _technicianStream,
+              builder: (context, snapshot) {
+                final technicians = snapshot.data ?? [];
+                if (technicians.isEmpty &&
+                    snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (technicians.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: Text('No technicians available',
+                          style: TextStyle(color: AppColors.onSurfaceVariant)),
+                    ),
+                  );
+                }
+                return Column(
+                  children: technicians
+                      .map((tech) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: TechnicianCard(
+                                technician: tech,
+                                onTap: () => _openTechnician(context, tech)),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.all(14),
@@ -348,7 +444,8 @@ class _MapRadarPreview extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.radar, color: AppColors.primary, size: 30),
+                child:
+                    const Icon(Icons.radar, color: AppColors.primary, size: 30),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -358,7 +455,8 @@ class _MapRadarPreview extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 'Average arrival time: 14 mins in Colombo 03',
-                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
             ],
           ),

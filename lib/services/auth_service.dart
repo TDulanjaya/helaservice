@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile.dart';
-import '../../state/role_provider.dart';
+import '../state/role_provider.dart';
+import '../constants/firestore_paths.dart';
 
-/// Authentication Service
-/// Handles Firebase Authentication (Google Sign-In & Phone OTP verification),
-/// session management, and user profile persistence.
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -16,29 +15,27 @@ class AuthService {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Web-only confirmation result for Phone OTP
   fb.ConfirmationResult? _webConfirmationResult;
 
-  // In-memory cache of registered profiles (keyed by user email, phone, or id)
   final Map<String, UserProfile> _userStore = {
-    // Pre-registered customer example
     'customer.sample@gmail.com': const UserProfile(
       id: 'g_cust_101',
       email: 'customer.sample@gmail.com',
       displayName: 'Sanduni Perera',
-      photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+      photoUrl:
+          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
       role: AppRole.customer,
       isProfileComplete: true,
       phone: '+94771234567',
       district: 'Colombo',
       address: 'No. 12, Flower Road, Colombo 07',
     ),
-    // Pre-registered provider example
     'provider.sample@gmail.com': const UserProfile(
       id: 'g_pro_202',
       email: 'provider.sample@gmail.com',
       displayName: 'Sunil Bandara',
-      photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
+      photoUrl:
+          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
       role: AppRole.provider,
       isProfileComplete: true,
       phone: '+94714567890',
@@ -46,12 +43,12 @@ class AuthService {
       nic: '198812345678',
       serviceCategory: 'Electrical',
     ),
-    // Sample phone user
     '+94771234567': const UserProfile(
       id: 'p_cust_303',
       email: 'sanduni.phone@helaservice.lk',
       displayName: 'Sanduni Perera',
-      photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+      photoUrl:
+          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
       role: AppRole.customer,
       isProfileComplete: true,
       phone: '+94771234567',
@@ -64,10 +61,8 @@ class AuthService {
   UserProfile? get currentUser => _currentUser;
   fb.User? get currentFirebaseUser => _auth.currentUser;
 
-  /// Stream of Firebase Auth state changes
   Stream<fb.User?> get authStateChanges => _auth.authStateChanges();
 
-  /// Formats raw input into an E.164 Sri Lankan phone number (+94XXXXXXXXX)
   static String formatSriLankanPhoneNumber(String input) {
     String clean = input.replaceAll(RegExp(r'[\s\-()]'), '');
     if (clean.startsWith('+94')) {
@@ -82,14 +77,7 @@ class AuthService {
     return '+94$clean';
   }
 
-  // ---------------------------------------------------------------------------
-  // Google Sign-In
-  // ---------------------------------------------------------------------------
-
-  /// Initiates Google Sign-In with Firebase Auth.
-  /// If [testEmail] is provided, uses local mocked persona for quick offline/UI testing.
   Future<UserProfile> signInWithGoogle({String? testEmail}) async {
-    // 1. Check if test persona is explicitly selected
     if (testEmail != null) {
       await Future.delayed(const Duration(milliseconds: 500));
       if (_userStore.containsKey(testEmail)) {
@@ -100,7 +88,8 @@ class AuthService {
         id: 'mock_${DateTime.now().millisecondsSinceEpoch}',
         email: testEmail,
         displayName: 'Kasun Fernando',
-        photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
+        photoUrl:
+            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80',
         role: null,
         isProfileComplete: false,
       );
@@ -109,7 +98,6 @@ class AuthService {
       return newUser;
     }
 
-    // 2. Production Firebase Google Sign-In
     try {
       fb.UserCredential userCredential;
 
@@ -127,7 +115,8 @@ class AuthService {
           );
         }
 
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
@@ -141,19 +130,12 @@ class AuthService {
         throw Exception('Firebase user data is not available.');
       }
 
-      return _resolveOrCreateProfile(fbUser);
+      return await _resolveOrCreateProfile(fbUser);
     } catch (e) {
-      // If error occurs, rethrow clean exception
       rethrow;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Phone Number OTP Authentication
-  // ---------------------------------------------------------------------------
-
-  /// Sends a one-time SMS verification code to [phoneNumber].
-  /// Calls [onCodeSent] with the `verificationId` when the SMS is dispatched.
   Future<void> sendPhoneOtp({
     required String phoneNumber,
     required void Function(String verificationId) onCodeSent,
@@ -180,7 +162,8 @@ class AuthService {
           try {
             final userCredential = await _auth.signInWithCredential(credential);
             if (userCredential.user != null) {
-              final profile = _resolveOrCreateProfile(userCredential.user!);
+              final profile =
+                  await _resolveOrCreateProfile(userCredential.user!);
               if (onAutoVerified != null) {
                 onAutoVerified(profile);
               }
@@ -195,16 +178,13 @@ class AuthService {
         codeSent: (String verificationId, int? resendToken) {
           onCodeSent(verificationId);
         },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          // Auto retrieval timed out; user will enter code manually
-        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
       );
     } catch (e) {
       onError(_readableAuthError(e));
     }
   }
 
-  /// Verifies the 6-digit SMS OTP against Firebase Auth.
   Future<UserProfile> verifyOtp({
     required String verificationId,
     required String smsCode,
@@ -223,62 +203,113 @@ class AuthService {
 
     final fb.User? fbUser = userCredential.user;
     if (fbUser == null) {
-      throw Exception('Verification succeeded, but user profile could not be loaded.');
+      throw Exception(
+          'Verification succeeded, but user profile could not be loaded.');
     }
 
-    return _resolveOrCreateProfile(fbUser);
+    return await _resolveOrCreateProfile(fbUser);
   }
 
-  // ---------------------------------------------------------------------------
-  // Profile Management & Helper Methods
-  // ---------------------------------------------------------------------------
+  Future<UserProfile?> fetchCurrentUserProfile() async {
+    final fbUser = _auth.currentUser;
+    if (fbUser == null) return null;
+    return await _resolveOrCreateProfile(fbUser);
+  }
 
-  UserProfile _resolveOrCreateProfile(fb.User fbUser) {
-    final emailKey = fbUser.email;
-    final phoneKey = fbUser.phoneNumber;
-    final idKey = fbUser.uid;
+  Future<UserProfile> _resolveOrCreateProfile(fb.User fbUser) async {
+    final uid = fbUser.uid;
+    final userDocRef =
+        FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
 
-    if (emailKey != null && _userStore.containsKey(emailKey)) {
-      _currentUser = _userStore[emailKey]!;
-      return _currentUser!;
-    }
-
-    if (phoneKey != null && _userStore.containsKey(phoneKey)) {
-      _currentUser = _userStore[phoneKey]!;
-      return _currentUser!;
-    }
-
-    if (_userStore.containsKey(idKey)) {
-      _currentUser = _userStore[idKey]!;
-      return _currentUser!;
+    try {
+      final doc = await userDocRef.get();
+      if (doc.exists && doc.data() != null) {
+        final profile = UserProfile.fromMap(doc.data()!);
+        _currentUser = profile;
+        _userStore[uid] = profile;
+        return profile;
+      }
+    } catch (_) {
+      if (_userStore.containsKey(uid)) {
+        _currentUser = _userStore[uid]!;
+        return _currentUser!;
+      }
     }
 
     final newProfile = UserProfile.fromFirebaseUser(fbUser);
     _currentUser = newProfile;
-    if (emailKey != null && emailKey.isNotEmpty) _userStore[emailKey] = newProfile;
-    if (phoneKey != null && phoneKey.isNotEmpty) _userStore[phoneKey] = newProfile;
-    _userStore[idKey] = newProfile;
+    _userStore[uid] = newProfile;
+
+    try {
+      await userDocRef.set(newProfile.toMap(), SetOptions(merge: true));
+    } catch (_) {}
+
     return newProfile;
   }
 
-  /// Updates and completes the user's profile with chosen role and required details
   Future<UserProfile> saveUserProfile(UserProfile updatedProfile) async {
-    await Future.delayed(const Duration(milliseconds: 300));
     final completed = updatedProfile.copyWith(isProfileComplete: true);
+    final uid = completed.id.isNotEmpty
+        ? completed.id
+        : (_auth.currentUser?.uid ?? '');
+    final profileWithId = completed.copyWith(id: uid);
 
-    if (completed.email.isNotEmpty) {
-      _userStore[completed.email] = completed;
-    }
-    if (completed.phone != null && completed.phone!.isNotEmpty) {
-      _userStore[completed.phone!] = completed;
-    }
-    _userStore[completed.id] = completed;
+    if (uid.isNotEmpty) {
+      final batch = FirebaseFirestore.instance.batch();
 
-    _currentUser = completed;
-    return completed;
+      final userDoc =
+          FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
+      batch.set(userDoc, profileWithId.toMap(), SetOptions(merge: true));
+
+      if (profileWithId.role == AppRole.provider) {
+        final techDoc = FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
+            .doc(uid);
+
+        final initials = profileWithId.displayName.isNotEmpty
+            ? profileWithId.displayName
+                .split(' ')
+                .where((e) => e.isNotEmpty)
+                .map((e) => e[0])
+                .take(2)
+                .join()
+                .toUpperCase()
+            : 'SP';
+
+        batch.set(
+          techDoc,
+          {
+            'name': profileWithId.displayName,
+            'initials': initials,
+            'avatarColor': 0xFF00685F,
+            'title': profileWithId.serviceCategory != null
+                ? '${profileWithId.serviceCategory} Specialist'
+                : 'Service Technician',
+            'nicVerified': false,
+            'online': true,
+            'rating': 5.0,
+            'reviewCount': 0,
+            'etaLabel': 'Available Today',
+            'baseRateLkr': 1500,
+            'responseTimeLabel': 'Usually responds in 10 mins',
+            'jobsCount': 0,
+            'yearsExperience': 'Verified',
+            'serviceArea': profileWithId.district ?? 'Sri Lanka',
+            'phone': profileWithId.phone,
+            'nic': profileWithId.nic,
+          },
+          SetOptions(merge: true),
+        );
+      }
+
+      await batch.commit();
+    }
+
+    _currentUser = profileWithId;
+    _userStore[uid] = profileWithId;
+    return profileWithId;
   }
 
-  /// Signs the user out from both Firebase and Google
   Future<void> signOut() async {
     try {
       await _auth.signOut();

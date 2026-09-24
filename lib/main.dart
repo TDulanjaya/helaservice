@@ -7,12 +7,14 @@ import 'state/role_provider.dart';
 import 'state/theme_provider.dart';
 import 'theme/app_theme.dart';
 import 'features/splash/splash_screen.dart';
+import 'repositories/seed_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await seedInitialDataIfEmpty();
   runApp(const HelaServiceApp());
 }
 

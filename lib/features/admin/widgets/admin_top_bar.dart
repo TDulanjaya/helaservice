@@ -67,7 +67,6 @@ class AdminTopBar extends StatelessWidget {
       );
     }
 
-    // Desktop & Tablet View
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 20),

@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     final user = roleProvider.currentUser;
 
-    Widget destination;
+    Widget destination = const LoginScreen();
     if (user == null) {
       destination = const LoginScreen();
     } else if (!roleProvider.isProfileCompleted || user.role == null) {

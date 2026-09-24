@@ -117,3 +117,12 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Environment and secrets
+secrets.env
+*.env
+*.local
+!secrets.env.example
+functions/.secret.local
+functions/lib/
+functions/node_modules/

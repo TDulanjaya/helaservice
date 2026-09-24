@@ -3,7 +3,7 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
-import '../../../data/models/user_profile.dart';
+import '../../../models/user_profile.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/nic_verification_screen.dart';
 
@@ -107,8 +107,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         nic: _selectedRole == AppRole.provider
             ? _nicController.text.trim()
             : null,
-        serviceCategory:
-            _selectedRole == AppRole.provider ? _category : null,
+        serviceCategory: _selectedRole == AppRole.provider ? _category : null,
       );
 
       await roleProvider.completeUserProfile(updatedProfile);
@@ -121,7 +120,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           (route) => false,
         );
       } else {
-        // Service providers proceed directly to identity check
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const NicVerificationScreen()),
           (route) => false,
@@ -157,13 +155,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Google Account Header Banner
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLowest,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.outline.withOpacity(0.2)),
+                    border:
+                        Border.all(color: AppColors.outline.withOpacity(0.2)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.03),
@@ -176,7 +174,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: AppColors.primaryContainer.withOpacity(0.15),
+                        backgroundColor:
+                            AppColors.primaryContainer.withOpacity(0.15),
                         backgroundImage: profile?.photoUrl != null
                             ? NetworkImage(profile!.photoUrl!)
                             : null,
@@ -266,8 +265,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Role Selection Cards
                 Row(
                   children: [
                     Expanded(
@@ -320,8 +317,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-
-                // Full Name field
                 _TextFormField(
                   label: _selectedRole == AppRole.customer
                       ? 'Full Name'
@@ -333,8 +328,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       v == null || v.trim().isEmpty ? 'Name is required' : null,
                 ),
                 const SizedBox(height: 14),
-
-                // Phone number field
                 _TextFormField(
                   label: 'Phone Number',
                   controller: _phoneController,
@@ -353,10 +346,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   },
                 ),
                 const SizedBox(height: 14),
-
-                // Dynamic Fields: Customer vs Provider
                 if (_selectedRole == AppRole.customer) ...[
-                  // Customer Address
                   _TextFormField(
                     label: 'Home or Work Address',
                     controller: _addressController,
@@ -368,7 +358,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                   const SizedBox(height: 14),
                 ] else ...[
-                  // Provider NIC
                   _TextFormField(
                     label: 'National Identity Card (NIC)',
                     controller: _nicController,
@@ -386,8 +375,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     },
                   ),
                   const SizedBox(height: 14),
-
-                  // Provider Service Category
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -435,7 +422,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(height: 14),
                 ],
 
-                // District Dropdown (Both Roles)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -484,8 +470,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // Terms agreement
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -524,8 +508,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Submit Button
                 PrimaryButton(
                   label: _selectedRole == AppRole.customer
                       ? 'Complete & Explore Services'
@@ -575,7 +557,9 @@ class _RoleSelectCard extends StatelessWidget {
               : AppColors.surfaceLowest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outline.withOpacity(0.25),
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.outline.withOpacity(0.25),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -602,15 +586,15 @@ class _RoleSelectCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.surfaceLow,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.surfaceLow,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
                     size: 22,
-                    color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+                    color:
+                        isSelected ? Colors.white : AppColors.onSurfaceVariant,
                   ),
                 ),
                 if (isSelected)
@@ -622,7 +606,8 @@ class _RoleSelectCard extends StatelessWidget {
                     height: 18,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.outline.withOpacity(0.4)),
+                      border:
+                          Border.all(color: AppColors.outline.withOpacity(0.4)),
                     ),
                   ),
               ],
@@ -641,7 +626,9 @@ class _RoleSelectCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                 ),
               ),
             ),
@@ -728,11 +715,13 @@ class _TextFormField extends StatelessWidget {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.outline.withOpacity(0.25)),
+              borderSide:
+                  BorderSide(color: AppColors.outline.withOpacity(0.25)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.8),
             ),
           ),
         ),

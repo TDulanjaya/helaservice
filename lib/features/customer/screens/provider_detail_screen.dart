@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
-import '../../../data/models/technician.dart';
+import '../../../models/technician.dart';
+import '../../../models/booking.dart';
+import '../../../repositories/booking_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/primary_button.dart';
@@ -237,11 +239,28 @@ class ProviderDetailScreen extends StatelessWidget {
               child: PrimaryButton(
                 label: 'Request Service · From LKR ${technician.baseRateLkr}',
                 trailingIcon: Icons.event_available,
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          LiveTrackingScreen(technician: technician)),
-                ),
+                onPressed: () {
+                  BookingRepository().createBooking(
+                    Booking(
+                      customerId: 'customer_1',
+                      providerId: technician.id,
+                      status: 'confirmed',
+                      time: 'Now',
+                      relativeTime: 'Just now',
+                      title: technician.title,
+                      estRate: 'LKR ${technician.baseRateLkr}',
+                      customerName: 'Current User',
+                      customerInitials: 'CU',
+                      location: 'Colombo 03',
+                      distance: '2.4 km',
+                    ),
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            LiveTrackingScreen(technician: technician)),
+                  );
+                },
               ),
             ),
           ]),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../theme/app_theme.dart';
-import '../../../data/mock_data.dart';
+import '../../../models/booking.dart';
+import '../../../repositories/booking_repository.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import 'job_alert_screen.dart';
@@ -109,7 +111,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               TextButton.icon(
                 onPressed: () => showRoleSwitchSheet(context),
                 icon: const Icon(Icons.sync, size: 14),
-                label: const Text('Switch Role', style: TextStyle(fontSize: 11)),
+                label:
+                    const Text('Switch Role', style: TextStyle(fontSize: 11)),
               ),
             ]),
             const SizedBox(height: 14),
@@ -183,79 +186,113 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                Text('Scheduled Bookings · 2 today',
+                Text('Scheduled Bookings',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text('View All',
                     style: TextStyle(color: AppColors.primary, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 10),
-            ...MockData.bookings.map((b) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
+            StreamBuilder<List<Booking>>(
+              stream: BookingRepository().streamBookingsForProvider(
+                  FirebaseAuth.instance.currentUser?.uid ?? 'kasun'),
+              builder: (context, snapshot) {
+                final bookings = snapshot.data ?? [];
+                if (bookings.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                        color: AppColors.surfaceLowest,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10)
-                        ]),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                  '${b.time}${b.relativeTime.isNotEmpty ? " (${b.relativeTime})" : ""}',
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.onSurfaceVariant)),
-                              Text(b.estRate,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                            ]),
-                        Text(b.title,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 6),
-                        Row(children: [
-                          CircleAvatar(
-                              radius: 14,
-                              backgroundColor: AppColors.surfaceHigh,
-                              child: Text(b.customerInitials,
-                                  style: const TextStyle(fontSize: 10))),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(b.customerName,
-                                    style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600)),
-                                Text('${b.location} (${b.distance})',
-                                    style: const TextStyle(
-                                        fontSize: 10,
-                                        color: AppColors.onSurfaceVariant)),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.call,
-                                  size: 18, color: AppColors.primary)),
-                          IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.directions,
-                                  size: 18, color: AppColors.primary)),
-                        ]),
-                      ],
+                      color: AppColors.surfaceLowest,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  ),
-                )),
+                    child: const Center(
+                      child: Text('No active bookings right now',
+                          style: TextStyle(
+                              color: AppColors.onSurfaceVariant, fontSize: 13)),
+                    ),
+                  );
+                }
+                return Column(
+                  children: bookings
+                      .map((b) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                  color: AppColors.surfaceLowest,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.04),
+                                        blurRadius: 10)
+                                  ]),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                            '${b.time}${b.relativeTime.isNotEmpty ? " (${b.relativeTime})" : ""}',
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: AppColors
+                                                    .onSurfaceVariant)),
+                                        Text(b.estRate,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ]),
+                                  Text(b.title,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14)),
+                                  const SizedBox(height: 6),
+                                  Row(children: [
+                                    CircleAvatar(
+                                        radius: 14,
+                                        backgroundColor: AppColors.surfaceHigh,
+                                        child: Text(b.customerInitials,
+                                            style:
+                                                const TextStyle(fontSize: 10))),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(b.customerName,
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600)),
+                                          Text('${b.location} (${b.distance})',
+                                              style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: AppColors
+                                                      .onSurfaceVariant)),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Icons.call,
+                                            size: 18,
+                                            color: AppColors.primary)),
+                                    IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(Icons.directions,
+                                            size: 18,
+                                            color: AppColors.primary)),
+                                  ]),
+                                ],
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(14),
@@ -330,7 +367,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                       Text('11 Jobs Completed',
                           style: TextStyle(color: Colors.white, fontSize: 12)),
                       Text('Avg LKR 3,490 / job',
-                          style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ],
@@ -363,7 +401,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               amount: '+ LKR 3,200',
               payoutStatus: 'Settled via LankaQR',
             ),
-
           ],
         ),
       ),

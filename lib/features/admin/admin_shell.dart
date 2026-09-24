@@ -64,7 +64,6 @@ class _AdminShellState extends State<AdminShell> {
       );
     }
 
-    // Tablet & Desktop Layout with Sidebar + TopBar
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Row(
@@ -73,7 +72,6 @@ class _AdminShellState extends State<AdminShell> {
             selectedIndex: _navIndex == 3 ? 6 : _navIndex,
             onSelect: (i) {
               if (i == 6) {
-                // Platform Settings
                 setState(() => _navIndex = 3);
               } else if (i <= 2) {
                 setState(() => _navIndex = i);

@@ -25,16 +25,16 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.themeSurface,
         border: Border(
           top: BorderSide(
-            color: AppColors.outline.withValues(alpha: 0.15),
+            color: context.themeBorder,
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
             blurRadius: 16,
             offset: const Offset(0, -3),
           ),
@@ -59,7 +59,7 @@ class AppBottomNav extends StatelessWidget {
                       const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                   decoration: BoxDecoration(
                     color: active
-                        ? AppColors.primary.withValues(alpha: 0.1)
+                        ? AppColors.primary.withValues(alpha: 0.15)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -73,7 +73,7 @@ class AppBottomNav extends StatelessWidget {
                             item.icon,
                             color: active
                                 ? AppColors.primary
-                                : AppColors.onSurfaceVariant,
+                                : context.themeTextSecondary,
                             size: 22,
                           ),
                           if (item.badge != null)
@@ -102,11 +102,14 @@ class AppBottomNav extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: active
                               ? AppColors.primary
-                              : AppColors.onSurfaceVariant,
-                          fontSize: 11,
+                              : context.themeTextSecondary,
+                          fontSize: 10.5,
                           fontWeight:
                               active ? FontWeight.w800 : FontWeight.w500,
                         ),

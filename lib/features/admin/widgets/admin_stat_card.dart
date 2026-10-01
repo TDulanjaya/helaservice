@@ -21,11 +21,12 @@ class AdminStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.themeSurface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.themeBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: 10,
           ),
         ],
@@ -41,7 +42,7 @@ class AdminStatCard extends StatelessWidget {
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 11, color: context.themeTextSecondary, fontWeight: FontWeight.w600),
               ),
             ),
           ]),
@@ -51,7 +52,7 @@ class AdminStatCard extends StatelessWidget {
               child: Text(
                 value,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: context.themeTextPrimary),
               ),
             ),
             if (trailingBadge != null) ...[
@@ -68,7 +69,7 @@ class AdminStatCard extends StatelessWidget {
             subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10.5, color: AppColors.onSurfaceVariant),
+            style: TextStyle(fontSize: 10.5, color: context.themeTextSecondary),
           ),
         ],
       ),

@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
 import '../../../shared/widgets/rating_stars.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/map_launcher.dart';
+import '../../../services/review_service.dart';
+import '../../../state/role_provider.dart';
 import 'home_discovery_screen.dart';
 
 class RatingCompletionScreen extends StatefulWidget {
   final Technician technician;
-  const RatingCompletionScreen({super.key, required this.technician});
+  final String bookingId;
+  final String jobRequestId;
+  final String jobTitle;
+  final double? totalPrice;
+
+  const RatingCompletionScreen({
+    super.key,
+    required this.technician,
+    this.bookingId = '',
+    this.jobRequestId = '',
+    this.jobTitle = '',
+    this.totalPrice,
+  });
 
   @override
   State<RatingCompletionScreen> createState() => _RatingCompletionScreenState();
@@ -23,26 +40,81 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
     (Icons.sell, 'Fair Price'),
   ];
   String? _tipLabel;
+  final _commentController = TextEditingController();
+  bool _isSaving = false;
 
-  String get _ratingLabel {
+  String _getRatingLabel(BuildContext context) {
     switch (_rating) {
       case 5:
-        return 'Exceptional! 5.0';
+        return context.l10n.ratingExceptional;
       case 4:
-        return 'Great, 4.0';
+        return context.l10n.ratingGreat;
       case 3:
-        return 'Good, 3.0';
+        return context.l10n.ratingGood;
       case 2:
-        return 'Okay, 2.0';
+        return context.l10n.ratingOkay;
       default:
-        return 'Needs work, 1.0';
+        return context.l10n.ratingNeedsWork;
     }
+  }
+
+  String _getTagLabel(BuildContext context, String key) {
+    switch (key) {
+      case 'Punctual':
+        return context.l10n.tagPunctual;
+      case 'Polite':
+        return context.l10n.tagPolite;
+      case 'Clean Work':
+        return context.l10n.tagCleanWork;
+      case 'Fair Price':
+        return context.l10n.tagFairPrice;
+      default:
+        return key;
+    }
+  }
+
+  Future<void> _submitReview() async {
+    setState(() => _isSaving = true);
+
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final currentUser = roleProvider.currentUser;
+
+    int tipAmount = 0;
+    if (_tipLabel == '200') tipAmount = 200;
+    if (_tipLabel == '500') tipAmount = 500;
+
+    try {
+      await ReviewService.instance.submitReview(
+        customerId: currentUser?.id ?? '',
+        customerName: currentUser?.displayName ?? '',
+        providerId: widget.technician.id,
+        jobRequestId: widget.jobRequestId,
+        bookingId: widget.bookingId,
+        rating: _rating,
+        tags: _tags.toList(),
+        comment: _commentController.text.trim(),
+        tipAmountLkr: tipAmount,
+      );
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+      (route) => false,
+    );
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout Booking')),
+      appBar: AppBar(title: Text(context.l10n.checkoutBooking)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -51,60 +123,65 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
               Container(
                 width: 64,
                 height: 64,
-                decoration: const BoxDecoration(
-                    color: AppColors.surfaceHigh, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                    color: context.themeSurfaceContainer, shape: BoxShape.circle),
                 child: const Icon(Icons.check_circle,
                     color: AppColors.primary, size: 34),
               ),
               const SizedBox(height: 10),
-              const Text('Service Completed! 🎉',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+              Text(context.l10n.serviceCompleted,
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
               Text(
-                  'Water Pump & Valve Overhaul finished by ${widget.technician.name.split(' ').first}',
+                  widget.jobTitle.isNotEmpty
+                      ? '${widget.jobTitle} • ${widget.technician.name.split(' ').first}'
+                      : widget.technician.name,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.onSurfaceVariant)),
-              const Text('Job ID #HL-89421',
-                  style: TextStyle(color: AppColors.outline, fontSize: 11)),
+                  style: TextStyle(color: context.themeTextSecondary)),
+              if (widget.jobRequestId.isNotEmpty)
+                Text('Job #${widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()}',
+                    style: TextStyle(color: context.themeTextSecondary, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-                color: AppColors.surfaceLowest,
+                color: context.themeSurface,
                 borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.04), blurRadius: 12)
+                      color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 12)
                 ]),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Row(children: [
-                        Icon(Icons.receipt_long,
+                        const Icon(Icons.receipt_long,
                             size: 18, color: AppColors.primary),
-                        SizedBox(width: 6),
-                        Text('Cost Breakdown',
-                            style: TextStyle(fontWeight: FontWeight.bold))
+                        const SizedBox(width: 6),
+                        Text(context.l10n.costBreakdown,
+                            style: const TextStyle(fontWeight: FontWeight.bold))
                       ]),
-                      Text('PAID',
-                          style: TextStyle(
+                      Text(context.l10n.paid,
+                          style: const TextStyle(
                               color: AppColors.primary,
                               fontSize: 11,
                               fontWeight: FontWeight.bold)),
                     ]),
                 const Divider(height: 20),
-                const _CostRow('Base diagnostic & visit', 'LKR 1,500'),
-                const _CostRow('Parts & labor', 'LKR 2,200'),
-                const Divider(height: 20),
-                const _CostRow('Total Paid', 'LKR 3,700', bold: true),
+                if (widget.totalPrice != null) ...[              
+                  _CostRow(context.l10n.totalPaid, 'LKR ${widget.totalPrice!.toStringAsFixed(0)}', bold: true),
+                ] else ...[                  
+                  _CostRow(context.l10n.totalPaid, 'Settled directly', bold: true),
+                ],
                 const SizedBox(height: 6),
-                const Text('Settled via LankaQR / Cash on site',
+                Text(context.l10n.settledDirectlyCash,
                     style: TextStyle(
-                        fontSize: 11, color: AppColors.onSurfaceVariant)),
+                        fontSize: 11, color: context.themeTextSecondary)),
               ],
             ),
           ),
@@ -113,26 +190,23 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
             children: [
               const Icon(Icons.handyman, color: AppColors.primary, size: 28),
               const SizedBox(height: 6),
-              Text("Rate ${widget.technician.name.split(' ').first}'s Service",
+              Text('${context.l10n.rateExperience} (${widget.technician.name.split(' ').first})',
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
-              const Text('Tap a star to rate your overall repair experience',
-                  style: TextStyle(
-                      color: AppColors.onSurfaceVariant, fontSize: 12)),
+                      fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(height: 10),
               RatingStars(
                   rating: _rating.toDouble(),
                   size: 34,
                   onChanged: (v) => setState(() => _rating = v)),
               const SizedBox(height: 6),
-              Text(_ratingLabel,
+              Text(_getRatingLabel(context),
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, color: AppColors.primary)),
             ],
           ),
           const SizedBox(height: 18),
-          const Text('What went especially well?',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(context.l10n.whatWentWell,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -140,77 +214,123 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
             children: _tagOptions.map((opt) {
               final selected = _tags.contains(opt.$2);
               return FilterChip(
-                label: Text(opt.$2),
+                label: Text(_getTagLabel(context, opt.$2)),
                 avatar: Icon(opt.$1,
                     size: 16,
                     color:
-                        selected ? Colors.white : AppColors.onSurfaceVariant),
+                        selected ? AppColors.onPrimary : context.themeTextSecondary),
                 selected: selected,
                 onSelected: (v) => setState(
                     () => v ? _tags.add(opt.$2) : _tags.remove(opt.$2)),
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
-                    color: selected ? Colors.white : AppColors.onSurface,
+                    color: selected ? AppColors.onPrimary : context.themeTextPrimary,
                     fontSize: 12),
-                backgroundColor: AppColors.surfaceContainer,
+                backgroundColor: context.themeSurfaceContainer,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999)),
               );
             }).toList(),
           ),
           const SizedBox(height: 18),
-          const TextField(
+          TextField(
+            controller: _commentController,
             maxLines: 3,
+            style: TextStyle(color: context.themeTextPrimary),
             decoration: InputDecoration(
-              hintText: 'Leave a detailed review (optional)',
+              hintText: context.l10n.leaveReviewOptional,
+              hintStyle: TextStyle(color: context.themeTextSecondary),
+              filled: true,
+              fillColor: context.themeSurface,
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(14))),
+                borderRadius: const BorderRadius.all(Radius.circular(14)),
+                borderSide: BorderSide(color: context.themeBorder),
+              ),
             ),
           ),
           const SizedBox(height: 18),
-          Row(children: const [
-            Icon(Icons.volunteer_activism, color: AppColors.secondaryContainer),
-            SizedBox(width: 6),
-            Text('Tip Kasun — 100% goes to provider',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          Row(children: [
+            const Icon(Icons.volunteer_activism, color: AppColors.secondaryContainer),
+            const SizedBox(width: 6),
+            Text(context.l10n.tipProvider,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 8),
           Row(
             children: [
               _TipChip(
                   label: '+LKR 200',
-                  sub: 'Small Tea',
+                  sub: context.l10n.tipSmallTea,
                   selected: _tipLabel == '200',
                   onTap: () => setState(() => _tipLabel = '200')),
               const SizedBox(width: 8),
               _TipChip(
                   label: '+LKR 500',
-                  sub: 'Generous',
+                  sub: context.l10n.tipGenerous,
                   selected: _tipLabel == '500',
                   onTap: () => setState(() => _tipLabel = '500')),
               const SizedBox(width: 8),
               _TipChip(
-                  label: 'Custom',
-                  sub: 'Enter amount',
+                  label: context.l10n.tipCustom,
+                  sub: context.l10n.tipEnterAmount,
                   selected: _tipLabel == 'custom',
                   onTap: () => setState(() => _tipLabel = 'custom')),
             ],
           ),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Done',
+            label: _isSaving ? context.l10n.savingProgress : context.l10n.done,
             trailingIcon: Icons.arrow_forward,
-            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-              (route) => false,
-            ),
+            onPressed: _isSaving ? null : _submitReview,
           ),
           const SizedBox(height: 12),
           Center(
             child: TextButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: context.themeSurface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (ctx) => SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.orderPaymentSupport,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            context.l10n.orderSupportDesc,
+                            style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                          ),
+                          const SizedBox(height: 16),
+                          ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: AppColors.primary,
+                              child: Icon(Icons.call, color: AppColors.onPrimary, size: 18),
+                            ),
+                            title: Text(context.l10n.callSupportHotline,
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                            subtitle: Text(context.l10n.tollFreeCare, style: const TextStyle(fontSize: 11)),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              MapLauncher.openPhoneCall('1340');
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
               icon: const Icon(Icons.support_agent, size: 16),
-              label: const Text('Need help with this order?'),
+              label: Text(context.l10n.needHelpOrder),
             ),
           ),
         ],
@@ -232,10 +352,13 @@ class _CostRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(label,
-            style: style.copyWith(
-                color:
-                    bold ? AppColors.onSurface : AppColors.onSurfaceVariant)),
+        Expanded(
+          child: Text(label,
+              style: style.copyWith(
+                  color:
+                      bold ? context.themeTextPrimary : context.themeTextSecondary)),
+        ),
+        const SizedBox(width: 8),
         Text(value, style: style),
       ]),
     );
@@ -261,21 +384,25 @@ class _TipChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primary.withOpacity(0.1)
-                : AppColors.surfaceLowest,
+                ? AppColors.primary.withValues(alpha: 0.15)
+                : context.themeSurface,
             border: Border.all(
-                color: selected ? AppColors.primary : AppColors.surfaceHighest),
+                color: selected ? AppColors.primary : context.themeBorder),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(children: [
             Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: selected ? AppColors.primary : AppColors.onSurface)),
+                    color: selected ? AppColors.primary : context.themeTextPrimary)),
             Text(sub,
-                style: const TextStyle(
-                    fontSize: 10, color: AppColors.onSurfaceVariant)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 10, color: context.themeTextSecondary)),
           ]),
         ),
       ),

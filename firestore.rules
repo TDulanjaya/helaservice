@@ -1,0 +1,389 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Auth and role helpers.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Checks if the user is a super admin.
+    function isSuperAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.email_verified == true &&
+             exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid));
+    }
+
+    function getAdminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Checks if the user is an active staff admin.
+    function isOpsOrSupportAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.email_verified == true &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             getAdminDoc().data.status == 'active';
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || isOpsOrSupportAdmin();
+    }
+
+    // Checks if an admin has a specific permission.
+    function hasAdminPermission(permission) {
+      return isSuperAdmin() ||
+             (isOpsOrSupportAdmin() &&
+              ('permissions' in getAdminDoc().data) &&
+              permission in getAdminDoc().data.permissions);
+    }
+
+    // Only the owner can view their super admin doc. Writes must be done from Console.
+    match /superAdmins/{uid} {
+      allow read: if isUser(uid);
+      allow write: if false;
+    }
+
+    // Super admins manage staff. Staff can only edit their own basic info.
+    match /admins/{adminId} {
+      allow read: if isSuperAdmin() || (isAuthenticated() && request.auth.uid == adminId);
+      allow create, delete: if isSuperAdmin() && request.auth.uid != adminId;
+      allow update: if (
+        // Super admin editing another admin:
+        (isSuperAdmin() && request.auth.uid != adminId &&
+         request.resource.data.role in ['ops_admin', 'support_admin'] &&
+         request.resource.data.permissions.hasOnly(['verify_nic', 'manage_categories', 'broadcast_alerts', 'view_finances'])) ||
+        // Staff updating their own contact details:
+        (isAuthenticated() && request.auth.uid == adminId &&
+         request.auth.token.email_verified == true &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'phone', 'lastActiveAt']) &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.status == resource.data.status &&
+         request.resource.data.permissions == resource.data.permissions)
+      );
+    }
+
+    // Only super admins can read audit logs. No client writes.
+    match /adminAuditLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    // Users manage their own profile. Admins can view and ban accounts.
+    match /users/{userId} {
+      function isAllowedUserUpdate() {
+        let diff = request.resource.data.diff(resource.data);
+        return !diff.affectedKeys().hasAny(['adminRole', 'permissions']) &&
+               (!('role' in diff.affectedKeys()) || request.resource.data.role == null || request.resource.data.role in ['customer', 'provider']);
+      }
+
+      allow read: if isUser(userId) || isAdmin();
+      allow create: if isUser(userId) &&
+                    (!('role' in request.resource.data) || request.resource.data.role == null || request.resource.data.role in ['customer', 'provider']) &&
+                    !('adminRole' in request.resource.data) &&
+                    !('permissions' in request.resource.data);
+      allow update: if (isUser(userId) && isAllowedUserUpdate()) ||
+                    (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['banned', 'status', 'banReason']));
+      allow delete: if isSuperAdmin();
+    }
+
+    // Public technician profiles. Providers edit their own details.
+    match /technicians/{techId} {
+      allow read: if true;
+      allow create: if isUser(techId) &&
+                    (!('nicVerified' in request.resource.data) || request.resource.data.nicVerified == false) &&
+                    (!('rating' in request.resource.data) || request.resource.data.rating == 5.0) &&
+                    (!('reviewCount' in request.resource.data) || request.resource.data.reviewCount == 0) &&
+                    (!('jobsCount' in request.resource.data) || request.resource.data.jobsCount == 0) &&
+                    (!('banned' in request.resource.data) || request.resource.data.banned == false) &&
+                    (!('isBanned' in request.resource.data) || request.resource.data.isBanned == false);
+      allow update: if (isUser(techId) &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                          'name', 'initials', 'avatarColor', 'title', 'online', 'emergencyAvailable',
+                          'etaLabel', 'baseRateLkr', 'responseTimeLabel', 'yearsExperience',
+                          'serviceArea'
+                        ])) ||
+                    (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                      'isBanned', 'banned', 'banReason', 'online', 'statusUpdatedAt'
+                    ])) ||
+                    hasAdminPermission('verify_nic');
+      allow delete: if isSuperAdmin();
+
+      // Private contact info, readable only by the tech and verification staff.
+      match /private/details {
+        allow read: if isUser(techId) || hasAdminPermission('verify_nic');
+        allow write: if isUser(techId) || isSuperAdmin();
+      }
+    }
+
+    // Techs submit verification here. Only staff can review or decide.
+    match /verificationQueue/{queueId} {
+      allow read: if queueId == request.auth.uid ||
+                  hasAdminPermission('verify_nic');
+      allow create: if queueId == request.auth.uid &&
+                    request.resource.data.providerId == request.auth.uid &&
+                    request.resource.data.status == 'pending';
+      allow update: if (queueId == request.auth.uid &&
+                        resource.data.providerId == request.auth.uid &&
+                        request.resource.data.providerId == request.auth.uid &&
+                        resource.data.status in ['pending', 'rejected'] &&
+                        request.resource.data.status == 'pending') ||
+                    hasAdminPermission('verify_nic');
+      allow delete: if hasAdminPermission('verify_nic');
+    }
+
+    // ID photos, uploaded once and locked after approval.
+    match /nicImages/{uid}/files/{docType} {
+      allow read: if isAuthenticated() && (request.auth.uid == uid || hasAdminPermission('verify_nic'));
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == uid &&
+        docType in ['front', 'back', 'selfie'] &&
+        request.resource.data.docType == docType &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.keys().hasOnly(['data', 'contentType', 'docType', 'uid', 'uploadedAt']) &&
+        request.resource.data.data is bytes &&
+        request.resource.data.data.size() < 650000 &&
+        request.resource.data.contentType in ['image/jpeg', 'image/png', 'image/webp'] &&
+        !(exists(/databases/$(database)/documents/verificationQueue/$(uid)) &&
+          get(/databases/$(database)/documents/verificationQueue/$(uid)).data.status == 'approved');
+      allow delete: if hasAdminPermission('verify_nic');
+    }
+
+    // Anyone signed in can view photos. Only the owner can edit their own.
+    match /profileImages/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['data', 'contentType', 'updatedAt']) &&
+        request.resource.data.data is bytes &&
+        request.resource.data.data.size() < 160000 &&
+        request.resource.data.contentType in ['image/jpeg', 'image/png', 'image/webp'] &&
+        request.resource.data.updatedAt == request.time;
+      allow delete: if isAuthenticated() && (request.auth.uid == uid || isSuperAdmin());
+    }
+
+    // Categories and district stats, editable by staff.
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if hasAdminPermission('manage_categories');
+    }
+
+    match /districtStats/{districtId} {
+      allow read: if true;
+      allow write: if hasAdminPermission('manage_categories');
+    }
+
+    // Bookings between a customer and provider.
+    function isValidBookingCreate() {
+      let data = request.resource.data;
+      let jobRequestId = data.jobRequestId;
+      let jobReqPath = /databases/$(database)/documents/jobRequests/$(jobRequestId);
+      let jobReqExists = (jobRequestId is string) && existsAfter(jobReqPath);
+      let acceptedQuoteId = jobReqExists && ('acceptedQuoteId' in getAfter(jobReqPath).data) ?
+                            getAfter(jobReqPath).data.acceptedQuoteId : null;
+      let quotePath = /databases/$(database)/documents/jobRequests/$(jobRequestId)/quotes/$(acceptedQuoteId);
+      let quoteExists = (acceptedQuoteId is string) && existsAfter(quotePath);
+
+      return data.customerId == request.auth.uid &&
+             (data.providerId is string) &&
+             data.customerId != data.providerId &&
+             !('providerAcceptedAt' in data) &&
+             jobReqExists &&
+             getAfter(jobReqPath).data.customerId == request.auth.uid &&
+             quoteExists &&
+             getAfter(quotePath).data.providerId == data.providerId;
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.providerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        isValidBookingCreate() ||
+        (isAdmin() && request.resource.data.customerId != request.resource.data.providerId)
+      );
+      allow update: if isAuthenticated() && (
+        // Provider accepting the direct booking:
+        (resource.data.providerId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['providerAcceptedAt', 'status']) &&
+         ('providerAcceptedAt' in request.resource.data)) ||
+        // Customer or provider regular updates:
+        ((resource.data.customerId == request.auth.uid || resource.data.providerId == request.auth.uid) &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+           'customerId', 'providerId', 'jobRequestId', 'agreedPrice', 'estRate', 'providerAcceptedAt'
+         ])) ||
+        isAdmin()
+      );
+      allow delete: if isSuperAdmin();
+    }
+
+    // Job posts, managed by the customer.
+    match /jobRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                    request.resource.data.customerId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isSuperAdmin();
+
+      // Customer contact info, visible only to the assigned provider.
+      match /private/contact {
+        allow read: if isAuthenticated() && (
+          resource.data.customerId == request.auth.uid ||
+          (exists(/databases/$(database)/documents/jobRequests/$(requestId)) &&
+           get(/databases/$(database)/documents/jobRequests/$(requestId)).data.selectedProviderId == request.auth.uid) ||
+          isAdmin()
+        );
+        allow create: if isAuthenticated() &&
+          request.resource.data.customerId == request.auth.uid &&
+          existsAfter(/databases/$(database)/documents/jobRequests/$(requestId)) &&
+          getAfter(/databases/$(database)/documents/jobRequests/$(requestId)).data.customerId == request.auth.uid;
+        allow update: if isAuthenticated() &&
+          exists(/databases/$(database)/documents/jobRequests/$(requestId)) &&
+          get(/databases/$(database)/documents/jobRequests/$(requestId)).data.customerId == request.auth.uid &&
+          request.resource.data.customerId == resource.data.customerId;
+        allow delete: if isSuperAdmin();
+      }
+
+      // Quotes on a job request.
+      match /quotes/{quoteId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() &&
+          request.resource.data.createdBy == request.auth.uid && (
+            // Provider submitting a quote:
+            (request.resource.data.providerId == request.auth.uid &&
+             request.resource.data.providerId != get(/databases/$(database)/documents/jobRequests/$(requestId)).data.customerId &&
+             request.resource.data.status in ['pending', 'open']) ||
+            // Customer requesting a direct booking:
+            (existsAfter(/databases/$(database)/documents/jobRequests/$(requestId)) &&
+             getAfter(/databases/$(database)/documents/jobRequests/$(requestId)).data.customerId == request.auth.uid &&
+             getAfter(/databases/$(database)/documents/jobRequests/$(requestId)).data.acceptedQuoteId == quoteId &&
+             request.resource.data.providerId != request.auth.uid &&
+             request.resource.data.status == 'pending_provider')
+          );
+        allow update: if isAuthenticated() && (
+          // Customer accepting or rejecting a quote:
+          (get(/databases/$(database)/documents/jobRequests/$(requestId)).data.customerId == request.auth.uid &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+           request.resource.data.status in ['accepted', 'declined'] &&
+           resource.data.status in ['pending', 'open']) ||
+          // Provider accepting a direct booking:
+          (resource.data.providerId == request.auth.uid &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+           resource.data.status == 'pending_provider' &&
+           request.resource.data.status == 'accepted') ||
+          isAdmin()
+        );
+        allow delete: if isSuperAdmin();
+      }
+    }
+
+    // 1-on-1 chat rooms, private to the two participants.
+    match /chatRooms/{chatId} {
+      function isChatParticipant() {
+        return request.auth.uid in resource.data.participants;
+      }
+      function willBeParticipant() {
+        return request.auth.uid in request.resource.data.participants;
+      }
+
+      allow read: if isAuthenticated() && (isChatParticipant() || isAdmin());
+      allow create: if isAuthenticated() && (willBeParticipant() || isAdmin());
+      allow update: if isAuthenticated() && (isChatParticipant() || isAdmin());
+
+      match /messages/{msgId} {
+        allow read: if isAuthenticated() &&
+                    (isAdmin() || request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(chatId)).data.participants);
+        allow create: if isAuthenticated() &&
+                      (request.resource.data.senderId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // Customer complaints, reviewed and handled by admins.
+    match /complaints/{complaintId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.customerId == request.auth.uid
+      );
+      allow create: if isAuthenticated() &&
+                    request.resource.data.customerId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Completed job reviews, one review per booking.
+    match /reviews/{bookingId} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
+        existsAfter(/databases/$(database)/documents/bookings/$(bookingId)) &&
+        getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid &&
+        getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.resource.data.providerId &&
+        getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId != request.resource.data.providerId &&
+        getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'completed' &&
+        (
+          // Direct booking accepted by provider:
+          ('providerAcceptedAt' in getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data &&
+           getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.providerAcceptedAt != null) ||
+          // Quote flow where provider won the job:
+          (
+            'jobRequestId' in getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data &&
+            getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId != null &&
+            exists(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)) &&
+            'acceptedQuoteId' in get(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)).data &&
+            exists(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)/quotes/$(get(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)).data.acceptedQuoteId)) &&
+            get(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)/quotes/$(get(/databases/$(database)/documents/jobRequests/$(getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.jobRequestId)).data.acceptedQuoteId)).data.createdBy == getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId
+          )
+        );
+
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Technician shares live location during an active job.
+    match /liveLocations/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isAdmin() ||
+        (('allowedViewers' in resource.data) && request.auth.uid in resource.data.allowedViewers)
+      );
+      allow write: if isUser(userId);
+    }
+
+    // Internal email verification records. No client access.
+    match /email_verifications/{email} {
+      allow read, write: if false;
+    }
+
+    // Outgoing email queue. No client access.
+    match /mail/{mailId} {
+      allow read, write: if false;
+    }
+
+    // Emergency alerts broadcast to technicians.
+    match /dispatchEvents/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if hasAdminPermission('broadcast_alerts');
+    }
+
+    // Internal rate limit counters. No client access.
+    match /rateLimits/{limitId} {
+      allow read, write: if false;
+    }
+
+    // Block everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

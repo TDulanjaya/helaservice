@@ -35,9 +35,12 @@ class Technician {
   final String about;
   final String languages;
   final String serviceArea;
+  final String phone;
   final String certification;
   final List<RecentWork> recentWork;
   final List<Review> reviews;
+  final bool isBanned;
+  final String? banReason;
 
   const Technician({
     required this.id,
@@ -60,15 +63,18 @@ class Technician {
     required this.about,
     required this.languages,
     required this.serviceArea,
+    this.phone = '',
     required this.certification,
     required this.recentWork,
     required this.reviews,
+    this.isBanned = false,
+    this.banReason,
   });
 
   Map<String, dynamic> toMap() => {
         'name': name,
         'initials': initials,
-        'avatarColor': avatarColor.value,
+        'avatarColor': avatarColor.toARGB32(),
         'title': title,
         'nicVerified': nicVerified,
         'online': online,
@@ -85,7 +91,10 @@ class Technician {
         'about': about,
         'languages': languages,
         'serviceArea': serviceArea,
+        'phone': phone,
         'certification': certification,
+        'isBanned': isBanned,
+        if (banReason != null) 'banReason': banReason,
         'recentWork': recentWork.map((w) => w.toMap()).toList(),
         'reviews': reviews.map((r) => r.toMap()).toList(),
       };
@@ -95,7 +104,7 @@ class Technician {
       id: id,
       name: map['name'] ?? '',
       initials: map['initials'] ?? '',
-      avatarColor: Color((map['avatarColor'] ?? 0xFF00685F) as int),
+      avatarColor: Color((map['avatarColor'] ?? 0xFFD6900F) as int),
       title: map['title'] ?? '',
       nicVerified: map['nicVerified'] ?? false,
       online: map['online'] ?? false,
@@ -112,7 +121,10 @@ class Technician {
       about: map['about'] ?? '',
       languages: map['languages'] ?? '',
       serviceArea: map['serviceArea'] ?? '',
+      phone: map['phone'] ?? '',
       certification: map['certification'] ?? '',
+      isBanned: (map['isBanned'] == true) || (map['banned'] == true),
+      banReason: map['banReason'] as String?,
       recentWork: ((map['recentWork'] as List?) ?? [])
           .map((w) => RecentWork.fromMap(Map<String, dynamic>.from(w as Map)))
           .toList(),

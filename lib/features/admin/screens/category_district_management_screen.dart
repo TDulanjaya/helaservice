@@ -1,100 +1,344 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
+import '../../../state/role_provider.dart';
+import '../../../models/admin_user.dart';
 import '../../../models/admin_models.dart';
+import '../../../models/complaint.dart';
 import '../../../repositories/category_repository.dart';
-import '../../../repositories/district_repository.dart';
+import '../../../repositories/complaint_repository.dart';
+import '../../../repositories/technician_repository.dart';
+import '../../../models/technician.dart';
+import '../../../utils/location_utils.dart';
+import '../../../utils/map_launcher.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/app_localizations_helpers.dart';
 
-class CategoryDistrictManagementScreen extends StatelessWidget {
+List<String> get kAllSriLankanDistricts =>
+    LocationUtils.districtCoordinates.keys.toList();
+
+class CategoryDistrictManagementScreen extends StatefulWidget {
   const CategoryDistrictManagementScreen({super.key});
+
+  @override
+  State<CategoryDistrictManagementScreen> createState() =>
+      _CategoryDistrictManagementScreenState();
+}
+
+class _CategoryDistrictManagementScreenState
+    extends State<CategoryDistrictManagementScreen> {
+  int _selectedTab = 0;
+  String _artisanSearch = '';
+  String _artisanFilter = 'all';
+  final TextEditingController _artisanSearchController =
+      TextEditingController();
+
+  @override
+  void dispose() {
+    _artisanSearchController.dispose();
+    super.dispose();
+  }
 
   void _openAddCategoryDialog(BuildContext context) {
     final titleController = TextEditingController();
-    final baseFeeController = TextEditingController(text: '1500');
-    final hourlyCapController = TextEditingController(text: '1200');
+    final descriptionController = TextEditingController();
+    String selectedIconKey = 'handyman';
+    IconData selectedIcon = Icons.handyman;
+
+    final iconChoices = <String, IconData>{
+      'handyman': Icons.handyman,
+      'electrical_services': Icons.electrical_services,
+      'plumbing': Icons.plumbing,
+      'hvac': Icons.hvac,
+      'carpenter': Icons.carpenter,
+      'microwave': Icons.microwave,
+      'format_paint': Icons.format_paint,
+      'roofing': Icons.roofing,
+      'cleaning_services': Icons.cleaning_services,
+      'pest_control': Icons.pest_control,
+      'yard': Icons.yard,
+      'security': Icons.security,
+      'local_shipping': Icons.local_shipping,
+      'solar_power': Icons.solar_power,
+    };
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Service Category'),
-        content: SizedBox(
-          width: 380,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: context.themeSurface,
+          title: Row(
             children: [
-              const Text('Define default tariff caps and operational bounds.',
-                  style: TextStyle(
-                      fontSize: 12, color: AppColors.onSurfaceVariant)),
-              const SizedBox(height: 14),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                    labelText: 'Trade Title (English / Sinhala / Tamil)'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.add_circle_outline,
+                    color: AppColors.primary, size: 20),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: baseFeeController,
-                decoration:
-                    const InputDecoration(labelText: 'Base Inspection (LKR)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: hourlyCapController,
-                decoration:
-                    const InputDecoration(labelText: 'Hourly Labor Cap (LKR)'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              const Text('Initial Districts Scope',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const Wrap(spacing: 6, children: [
-                Chip(label: Text('Colombo')),
-                Chip(label: Text('Gampaha')),
-                Chip(label: Text('Kandy')),
-                Chip(label: Text('Galle')),
-              ]),
-              const SizedBox(height: 6),
-              const CheckboxListTile(
-                value: true,
-                onChanged: null,
-                contentPadding: EdgeInsets.zero,
-                title: Text('Enable LankaQR Dynamic Tariffs',
-                    style: TextStyle(fontSize: 13)),
-                subtitle: Text('Enforce Central Bank LankaQR standard checkout',
-                    style: TextStyle(fontSize: 10)),
+              const SizedBox(width: 10),
+              Text(
+                'Add Service Category',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                ),
               ),
             ],
           ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 480,
+              maxHeight: MediaQuery.of(dialogCtx).size.height * 0.8,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline,
+                            color: AppColors.primary, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.',
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                color: context.themeTextPrimary,
+                                height: 1.35),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Category Title',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Solar PV Maintenance',
+                      hintStyle: TextStyle(color: context.themeTextSecondary),
+                      prefixIcon: Icon(selectedIcon,
+                          size: 20, color: AppColors.primary),
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text('Service Description',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 2,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      hintText:
+                          'Brief summary of the trade services offered...',
+                      hintStyle: TextStyle(color: context.themeTextSecondary),
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text('Select Trade Icon',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: iconChoices.entries.map((entry) {
+                      final isSelected = selectedIconKey == entry.key;
+                      return InkWell(
+                        onTap: () {
+                          setDialogState(() {
+                            selectedIconKey = entry.key;
+                            selectedIcon = entry.value;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : context.themeSurfaceLow,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : context.themeBorder,
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Icon(
+                            entry.value,
+                            color: isSelected
+                                ? AppColors.primary
+                                : context.themeTextSecondary,
+                            size: 22,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text('Cancel',
+                  style: TextStyle(color: context.themeTextSecondary)),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final title = titleController.text.trim();
+                if (title.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a category title'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+
+                final desc = descriptionController.text.trim().isNotEmpty
+                    ? descriptionController.text.trim()
+                    : 'Certified domestic $title services across Sri Lanka.';
+
+                final cat = CategoryRow(
+                  icon: selectedIcon,
+                  name: title,
+                  description: desc,
+                  registered: '0 Registered',
+                  onlineNow: '0 Online Now',
+                  baseFee: 'Dynamic Quote',
+                  hourlyCap: 'Artisan Bid',
+                  districts: kAllSriLankanDistricts,
+                  surge: 'Market Rate',
+                  status: 'Active',
+                  iconKey: selectedIconKey,
+                );
+
+                await CategoryRepository().addCategory(cat);
+                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline,
+                              color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                              'Category "$title" saved and published successfully'),
+                        ],
+                      ),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Save & Publish Category'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteCategory(BuildContext context, CategoryRow c) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: context.themeSurface,
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.error, size: 22),
+            const SizedBox(width: 8),
+            Text('Delete Category',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: context.themeTextPrimary)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete "${c.name}"? This will disable dispatch for this category island-wide.',
+          style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('Cancel',
+                style: TextStyle(color: context.themeTextSecondary)),
+          ),
           ElevatedButton(
             onPressed: () async {
-              final title = titleController.text.trim();
-              if (title.isNotEmpty) {
-                final cat = CategoryRow(
-                  icon: Icons.handyman,
-                  name: title,
-                  description: 'Certified domestic $title services across Sri Lanka.',
-                  registered: '0 Registered',
-                  onlineNow: '0 Online Now',
-                  baseFee: 'LKR ${baseFeeController.text.trim()}',
-                  hourlyCap: 'LKR ${hourlyCapController.text.trim()} /hr',
-                  districts: const ['Colombo', 'Gampaha', 'Kandy'],
-                  surge: '1.0x Normal',
-                  status: 'Active',
+              await CategoryRepository().deleteCategory(c.id);
+              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Category "${c.name}" deleted'),
+                    backgroundColor: AppColors.error,
+                  ),
                 );
-                await CategoryRepository().addCategory(cat);
               }
-              if (context.mounted) Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white),
-            child: const Text('Save & Publish Category'),
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -105,332 +349,1426 @@ class CategoryDistrictManagementScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
+    final roleProvider = pv.Provider.of<RoleProvider>(context);
+    final canManageCategories =
+        roleProvider.hasAdminPermission(AdminPermission.manageCategories);
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isMobile) ...[
+          if (_selectedTab == 0) ...[
+            if (isMobile) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.tradeCategoriesTitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (canManageCategories)
+                    ElevatedButton.icon(
+                      onPressed: () => _openAddCategoryDialog(context),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(context.l10n.addNewCategoryAction,
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(44),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lock_outline,
+                              size: 16, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              context.l10n.readOnlyOpsGovernance,
+                              style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.tradeCategoriesTitle,
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: context.themeTextPrimary),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  if (canManageCategories)
+                    ElevatedButton.icon(
+                      onPressed: () => _openAddCategoryDialog(context),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(context.l10n.addNewCategoryAction),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_outline,
+                              size: 16, color: AppColors.primary),
+                          SizedBox(width: 8),
+                          Text(
+                            'Read-Only Mode (Ops Governance)',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ] else ...[
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Service Categories & Coverage',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                const Text(
-                  'Manage home service pricing, surge thresholds, and active technician coverage across Sri Lankan districts.',
+                Text(
+                  'Active Artisan Fleet',
                   style: TextStyle(
-                      fontSize: 12, color: AppColors.onSurfaceVariant),
+                    fontSize: isMobile ? 18 : 20,
+                    fontWeight: FontWeight.bold,
+                    color: context.themeTextPrimary,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.file_download, size: 14),
-                        label: const Text('Export Tariff',
-                            style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openAddCategoryDialog(context),
-                        icon: const Icon(Icons.add, size: 15),
-                        label: const Text('Add Category',
-                            style: TextStyle(fontSize: 11)),
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  'Audit verified service technicians, moderate access, and enforce suspensions',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.themeTextSecondary,
+                  ),
                 ),
               ],
             ),
-          ] else ...[
-            Row(children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Service Categories & District Coverage',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 4),
-                    Text(
-                        'Manage home service pricing, surge thresholds, and active technician coverage across Sri Lankan districts.',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.file_download, size: 14),
-                  label: const Text('Export Tariff Matrix')),
-              const SizedBox(width: 10),
-              ElevatedButton.icon(
-                onPressed: () => _openAddCategoryDialog(context),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add New Category'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white),
-              ),
-            ]),
           ],
           SizedBox(height: isMobile ? 16 : 20),
-          if (isMobile)
-            const Column(
-              children: [
-                _MiniCard(
-                    icon: Icons.category,
-                    value: '14 Services',
-                    label: 'Catalog Density',
-                    sub:
-                        '8 Active — provincial districts covered with SLSI compliance'),
-                SizedBox(height: 10),
-                _MiniCard(
-                    icon: Icons.engineering,
-                    value: '1,892 Vetted Pros',
-                    label: 'Active Artisan Fleet',
-                    sub: '98.2% fulfillment SLA — 412 Live on Map'),
-                SizedBox(height: 10),
-                _MiniCard(
-                    icon: Icons.bolt,
-                    value: '1.2x Peak',
-                    label: 'Real-Time Tariff Dynamic',
-                    sub: 'Triggered in Colombo 03, 04, 07 (Rainfall surge)'),
-              ],
-            )
-          else
-            const Row(children: [
-              Expanded(
-                  child: _MiniCard(
-                      icon: Icons.category,
-                      value: '14 Services',
-                      label: 'Catalog Density',
-                      sub:
-                          '8 Active — provincial districts covered with SLSI compliance')),
-              SizedBox(width: 12),
-              Expanded(
-                  child: _MiniCard(
-                      icon: Icons.engineering,
-                      value: '1,892 Vetted Pros',
-                      label: 'Active Artisan Fleet',
-                      sub: '98.2% fulfillment SLA — 412 Live on Map')),
-              SizedBox(width: 12),
-              Expanded(
-                  child: _MiniCard(
-                      icon: Icons.bolt,
-                      value: '1.2x Peak',
-                      label: 'Real-Time Tariff Dynamic',
-                      sub: 'Triggered in Colombo 03, 04, 07 (Rainfall surge)')),
-            ]),
+          _CatalogMetricsBar(
+            isMobile: isMobile,
+            selectedTab: _selectedTab,
+            onTabSelected: (tab) => setState(() => _selectedTab = tab),
+          ),
           SizedBox(height: isMobile ? 16 : 20),
-          Container(
-            padding: EdgeInsets.all(isMobile ? 14 : 16),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLowest,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
-              ],
-            ),
-            child: StreamBuilder<List<CategoryRow>>(
-              stream: CategoryRepository().streamCategoryRows(),
-              builder: (context, snapshot) {
-                final categories = snapshot.data ?? [];
-                return Column(
+          if (_selectedTab == 0)
+            Container(
+              padding: EdgeInsets.all(isMobile ? 14 : 16),
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.themeBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                    blurRadius: 10,
+                  )
+                ],
+              ),
+              child: StreamBuilder<List<Technician>>(
+                stream: TechnicianRepository().streamTechnicians(),
+                builder: (context, techSnapshot) {
+                  final technicians = techSnapshot.data ?? [];
+                  return StreamBuilder<List<CategoryRow>>(
+                    stream: CategoryRepository().streamCategoryRows(),
+                    builder: (context, snapshot) {
+                      final categories = snapshot.data ?? [];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              context.l10n.publishedTradeCategories,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: context.themeTextPrimary,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              context.l10n.categoriesCount('${categories.length}'),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      if (categories.isEmpty &&
+                          snapshot.connectionState == ConnectionState.waiting)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.primary),
+                          ),
+                        )
+                      else if (categories.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: context.themeSurfaceLow,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: context.themeBorder),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.category_outlined,
+                                    size: 32, color: AppColors.primary),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No Categories in Database',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.themeTextPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Add your service trades to publish them to Firebase so customers can discover and book technicians.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.themeTextSecondary),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () =>
+                                    _openAddCategoryDialog(context),
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text('Add First Category',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (isMobile)
+                        Column(
+                          children: categories.map((c) {
+                            final catNameLower = c.name.toLowerCase().trim();
+                            final matchingTechs = technicians.where((t) {
+                              final title = t.title.toLowerCase().trim();
+                              return title == catNameLower ||
+                                  (title.isNotEmpty &&
+                                      (title.contains(catNameLower) ||
+                                          catNameLower.contains(title)));
+                            }).toList();
+                            final registeredCount = matchingTechs.length;
+                            final onlineCount =
+                                matchingTechs.where((t) => t.online).length;
+                            return _MobileCategoryCard(
+                              c: c,
+                              registeredCount: registeredCount,
+                              onlineCount: onlineCount,
+                              onToggleStatus: () async {
+                                await CategoryRepository()
+                                    .toggleCategoryStatus(c.id, c.status);
+                              },
+                              onDelete: () =>
+                                  _confirmDeleteCategory(context, c),
+                            );
+                          }).toList(),
+                        )
+                      else
+                        Column(
+                          children: categories.map((c) {
+                            final isActive = c.status.toLowerCase() == 'active';
+                            final catNameLower = c.name.toLowerCase().trim();
+                            final matchingTechs = technicians.where((t) {
+                              final title = t.title.toLowerCase().trim();
+                              return title == catNameLower ||
+                                  (title.isNotEmpty &&
+                                      (title.contains(catNameLower) ||
+                                          catNameLower.contains(title)));
+                            }).toList();
+                            final registeredCount = matchingTechs.length;
+                            final onlineCount =
+                                matchingTechs.where((t) => t.online).length;
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: context.themeSurfaceLow,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(c.icon,
+                                        color: AppColors.primary, size: 24),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    flex: 4,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          LocalizedData.getCategory(context, c.name),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                            color: context.themeTextPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          c.description,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: context.themeTextSecondary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          context.l10n.registeredOnlineCount(
+                                            '$registeredCount',
+                                            '$onlineCount',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 10.5,
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: context.themeSurface,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: context.themeBorder),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.gavel_rounded,
+                                              size: 14,
+                                              color: AppColors.primary),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Dynamic Quotes',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 11,
+                                                    color: context
+                                                        .themeTextPrimary,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Artisans Bid Per Job',
+                                                  style: TextStyle(
+                                                    fontSize: 9.5,
+                                                    color: context
+                                                        .themeTextSecondary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.public,
+                                            size: 12, color: AppColors.primary),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          context.l10n.islandWideBadge,
+                                          style: const TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  InkWell(
+                                    onTap: () async {
+                                      await CategoryRepository()
+                                          .toggleCategoryStatus(c.id, c.status);
+                                    },
+                                    borderRadius: BorderRadius.circular(999),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: (isActive
+                                                ? AppColors.primary
+                                                : AppColors.error)
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isActive
+                                                ? Icons.check_circle
+                                                : Icons.pause_circle_outline,
+                                            size: 13,
+                                            color: isActive
+                                                ? AppColors.primary
+                                                : AppColors.error,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            LocalizedData.getStatus(context, c.status),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: isActive
+                                                  ? AppColors.primary
+                                                  : AppColors.error,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert,
+                                        size: 18,
+                                        color: context.themeTextSecondary),
+                                    onSelected: (val) {
+                                      if (val == 'toggle') {
+                                        CategoryRepository()
+                                            .toggleCategoryStatus(
+                                                c.id, c.status);
+                                      } else if (val == 'delete') {
+                                        _confirmDeleteCategory(context, c);
+                                      }
+                                    },
+                                    itemBuilder: (ctx) => [
+                                      PopupMenuItem(
+                                        value: 'toggle',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isActive
+                                                  ? Icons.pause_outlined
+                                                  : Icons.play_arrow_outlined,
+                                              size: 16,
+                                              color: context.themeTextPrimary,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(isActive
+                                                ? 'Pause Category'
+                                                : 'Activate Category'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_outline,
+                                                size: 16,
+                                                color: AppColors.error),
+                                            SizedBox(width: 8),
+                                            Text('Delete Category',
+                                                style: TextStyle(
+                                                    color: AppColors.error)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ),
+          if (_selectedTab == 1) _buildArtisanFleetView(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArtisanFleetView(BuildContext context, bool isMobile) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 14 : 16),
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.themeBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      child: StreamBuilder<List<Technician>>(
+        stream: TechnicianRepository().streamTechnicians(),
+        builder: (context, snapshot) {
+          final technicians = snapshot.data ?? [];
+
+          final filtered = technicians.where((t) {
+            if (_artisanFilter == 'active' && (t.isBanned || !t.online)) {
+              return false;
+            }
+            if (_artisanFilter == 'suspended' && !t.isBanned) {
+              return false;
+            }
+            if (_artisanFilter == 'offline' && (t.isBanned || t.online)) {
+              return false;
+            }
+
+            if (_artisanSearch.isNotEmpty) {
+              final q = _artisanSearch.toLowerCase();
+              final name = t.name.toLowerCase();
+              final title = t.title.toLowerCase();
+              final area = t.serviceArea.toLowerCase();
+              final phone = t.phone.toLowerCase();
+              return name.contains(q) ||
+                  title.contains(q) ||
+                  area.contains(q) ||
+                  phone.contains(q);
+            }
+            return true;
+          }).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.activeArtisanFleetTitle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      context.l10n.artisansCount('${technicians.length}'),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _artisanSearchController,
+                onChanged: (val) => setState(() => _artisanSearch = val.trim()),
+                style: TextStyle(color: context.themeTextPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchFleetHint,
+                  hintStyle: TextStyle(
+                    color: context.themeTextSecondary.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                  prefixIcon: Icon(Icons.search,
+                      color: context.themeTextSecondary, size: 18),
+                  suffixIcon: _artisanSearch.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 16),
+                          onPressed: () {
+                            _artisanSearchController.clear();
+                            setState(() => _artisanSearch = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: context.themeSurfaceLow,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: context.themeBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: context.themeBorder),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildArtisanFilterChip(
+                        'all', 'All (${technicians.length})'),
+                    const SizedBox(width: 8),
+                    _buildArtisanFilterChip('active',
+                        'Online (${technicians.where((t) => !t.isBanned && t.online).length})'),
+                    const SizedBox(width: 8),
+                    _buildArtisanFilterChip('suspended',
+                        'Suspended (${technicians.where((t) => t.isBanned).length})'),
+                    const SizedBox(width: 8),
+                    _buildArtisanFilterChip('offline',
+                        'Offline (${technicians.where((t) => !t.isBanned && !t.online).length})'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (technicians.isEmpty &&
+                  snapshot.connectionState == ConnectionState.waiting)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                )
+              else if (filtered.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.engineering_outlined,
+                          size: 36, color: context.themeTextSecondary),
+                      const SizedBox(height: 8),
+                      Text(
+                        _artisanSearch.isNotEmpty
+                            ? 'No artisans match the search criteria'
+                            : 'No artisans registered in this filter view',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: context.themeTextPrimary),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Column(
+                  children: filtered.map((t) {
+                    return _buildArtisanCard(context, t, isMobile);
+                  }).toList(),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildArtisanFilterChip(String key, String label) {
+    final isSelected = _artisanFilter == key;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _artisanFilter = key),
+      selectedColor: AppColors.primary,
+      backgroundColor: context.themeSurfaceLow,
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+        color: isSelected ? Colors.black : context.themeTextSecondary,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : context.themeBorder,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArtisanCard(BuildContext context, Technician t, bool isMobile) {
+    final isBanned = t.isBanned;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: context.themeSurfaceLow,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isBanned
+              ? AppColors.error.withValues(alpha: 0.5)
+              : context.themeBorder,
+          width: isBanned ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: isBanned
+                    ? AppColors.error.withValues(alpha: 0.2)
+                    : t.avatarColor,
+                child: Text(
+                  t.initials,
+                  style: TextStyle(
+                    color: isBanned ? AppColors.error : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Expanded(
-                          child: Text(
-                            'Service Category',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 13),
+                        Expanded(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  t.name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.5,
+                                    color: context.themeTextPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (t.nicVerified) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified,
+                                    size: 14, color: AppColors.primary),
+                              ],
+                            ],
                           ),
                         ),
-                        Text(
-                          '${categories.length} Categories',
-                          style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: (isBanned
+                                    ? AppColors.error
+                                    : (t.online ? Colors.teal : AppColors.outline))
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: (isBanned
+                                      ? AppColors.error
+                                      : (t.online
+                                          ? Colors.teal
+                                          : AppColors.outline))
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            isBanned
+                                ? 'SUSPENDED'
+                                : (t.online ? 'ONLINE' : 'OFFLINE'),
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: isBanned
+                                  ? AppColors.error
+                                  : (t.online ? Colors.teal : AppColors.outline),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    if (categories.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Center(
-                          child: Text(
-                              'No categories available. Click "Add New Category" above to create one.',
-                              style: TextStyle(
-                                  fontSize: 12, color: AppColors.outline)),
-                        ),
-                      )
-                    else if (isMobile)
-                      Column(
-                        children: categories
-                            .map((c) => _MobileCategoryCard(c: c))
-                            .toList(),
-                      )
-                    else
-                      ...categories.map((c) => Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                      color: AppColors.surfaceContainer,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: Icon(c.icon,
-                                      color: AppColors.primary, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                SizedBox(
-                                  width: 220,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(c.name,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 12.5)),
-                                      Text(c.description,
-                                          style: const TextStyle(
-                                              fontSize: 10.5,
-                                              color:
-                                                  AppColors.onSurfaceVariant)),
-                                      Text('${c.registered} • ${c.onlineNow}',
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.primary)),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 120,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(c.baseFee,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 12)),
-                                      Text(c.hourlyCap,
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color:
-                                                  AppColors.onSurfaceVariant)),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Wrap(
-                                    spacing: 4,
-                                    runSpacing: 4,
-                                    children: [
-                                      ...c.districts
-                                          .map((d) => _DistrictTag(label: d)),
-                                      ...c.districtsOff.map((d) => _DistrictTag(
-                                          label: '$d [OFF]', muted: true)),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 90,
-                                  child: Text(c.surge,
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600)),
-                                ),
-                                SizedBox(
-                                  width: 80,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: (c.status == 'Active'
-                                              ? AppColors.primary
-                                              : AppColors.secondaryContainer)
-                                          .withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: Text(c.status,
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: c.status == 'Active'
-                                                ? AppColors.primary
-                                                : AppColors
-                                                    .onSecondaryContainer)),
-                                  ),
-                                ),
-                                IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.more_vert, size: 16),
-                                    color: AppColors.onSurfaceVariant),
-                              ],
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Flexible(
+                          flex: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                          )),
+                            child: Text(
+                              t.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(Icons.location_on_outlined,
+                            size: 12, color: context.themeTextSecondary),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            t.serviceArea.isNotEmpty
+                                ? t.serviceArea
+                                : 'Sri Lanka',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      runSpacing: 2,
+                      children: [
+                        const Icon(Icons.star, size: 13, color: Colors.amber),
+                        Text(
+                          '${t.rating}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        Text(
+                          '(${t.jobsCount} jobs)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        Text(
+                          '· Base: LKR ${t.baseRateLkr}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: isMobile ? 18 : 24),
-          const Text('District Expansion & Waitlist Matrix',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          const Text(
-              'Prospective artisan intake & customer demand telemetry across pipeline provinces.',
-              style:
-                  TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
-          const SizedBox(height: 12),
-          StreamBuilder<List<ExpansionDistrict>>(
-            stream: DistrictRepository().streamExpansionDistricts(),
-            builder: (context, snapshot) {
-              final districts = snapshot.data ?? [];
-              if (districts.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                      'No prospective expansion districts currently listed.',
-                      style: TextStyle(fontSize: 11, color: AppColors.outline)),
-                );
-              }
-              if (isMobile) {
-                return Column(
-                  children: districts
-                      .map((d) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ExpansionCard(d: d, isMobile: true),
-                          ))
-                      .toList(),
-                );
-              }
-              return Row(
-                  children: districts
-                      .map((d) => Expanded(child: _ExpansionCard(d: d)))
-                      .toList());
-            },
+          if (isBanned && t.banReason != null && t.banReason!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.errorContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(6),
+                border:
+                    Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                'Suspension Reason: "${t.banReason}"',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (t.phone.isNotEmpty)
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(
+                        color: AppColors.primary.withValues(alpha: 0.4)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.phone, size: 14),
+                  label: Text(t.phone, style: const TextStyle(fontSize: 11)),
+                  onPressed: () => MapLauncher.openPhoneCall(t.phone),
+                ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.themeTextPrimary,
+                  side: BorderSide(color: context.themeBorder),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: const Icon(Icons.flag_outlined, size: 14),
+                label: const Text('Complaints', style: TextStyle(fontSize: 11)),
+                onPressed: () => _showProviderComplaintsModal(context, t),
+              ),
+              if (!isBanned)
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.gavel, size: 14),
+                  label: const Text('Suspend',
+                      style:
+                          TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  onPressed: () => _confirmBanTechnician(context, t),
+                )
+              else
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 14),
+                  label: const Text('Restore / Unban',
+                      style:
+                          TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  onPressed: () => _confirmUnbanTechnician(context, t),
+                ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: AppColors.error),
+                tooltip: 'Delete Artisan Permanently',
+                onPressed: () => _confirmDeleteTechnician(context, t),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _confirmBanTechnician(BuildContext context, Technician t) {
+    final reasonController = TextEditingController(
+      text: 'Administrative suspension due to policy violations',
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.gavel_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            Text(
+              'Suspend ${t.name}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: context.themeTextPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to suspend this artisan? They will be locked offline, hidden from customer searches, and prevented from submitting quotes.',
+                style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Reason for Suspension:',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: reasonController,
+                minLines: 2,
+                maxLines: 4,
+                style: TextStyle(color: context.themeTextPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: context.themeSurfaceLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: context.themeBorder),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('Cancel',
+                style: TextStyle(color: context.themeTextSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await TechnicianRepository().toggleBanStatus(
+                t.id,
+                true,
+                reason: reasonController.text.trim(),
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${t.name} has been suspended.'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('Confirm Suspension'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmUnbanTechnician(BuildContext context, Technician t) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.teal),
+            const SizedBox(width: 8),
+            Text(
+              'Restore ${t.name}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: context.themeTextPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Reactivate this artisan\'s profile? They will be allowed to go online and accept customer service requests.',
+          style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('Cancel',
+                style: TextStyle(color: context.themeTextSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await TechnicianRepository().toggleBanStatus(t.id, false);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text('${t.name} has been restored to active status.'),
+                    backgroundColor: Colors.teal,
+                  ),
+                );
+              }
+            },
+            child: const Text('Restore Access'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteTechnician(BuildContext context, Technician t) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            Text(
+              'Delete Artisan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: context.themeTextPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to permanently delete "${t.name}" from the technician database? This operation cannot be reversed.',
+          style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('Cancel',
+                style: TextStyle(color: context.themeTextSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              await TechnicianRepository().deleteTechnician(t.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${t.name} deleted from database.'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProviderComplaintsModal(BuildContext context, Technician t) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetCtx).size.height * 0.8,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: sheetCtx.themeBorder,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    const Icon(Icons.flag_outlined,
+                        color: AppColors.error, size: 22),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Complaints for ${t.name}',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: sheetCtx.themeTextPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: StreamBuilder<List<Complaint>>(
+                    stream:
+                        ComplaintRepository().streamComplaintsForProvider(t.id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      }
+
+                      final complaints = snapshot.data ?? [];
+                      if (complaints.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle_outline,
+                                  size: 40, color: Colors.teal),
+                              const SizedBox(height: 10),
+                              Text(
+                                'No complaints filed',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: sheetCtx.themeTextPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'This service provider has no recorded customer disputes.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: sheetCtx.themeTextSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        itemCount: complaints.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (ctx, i) {
+                          final c = complaints[i];
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: sheetCtx.themeSurfaceLow,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: sheetCtx.themeBorder),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        c.reason,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: sheetCtx.themeTextPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: c.status == 'resolved'
+                                            ? Colors.teal
+                                                .withValues(alpha: 0.15)
+                                            : AppColors.error
+                                                .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        c.status.toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: c.status == 'resolved'
+                                              ? Colors.teal
+                                              : AppColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'By ${c.customerName}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: sheetCtx.themeTextSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  c.description,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: sheetCtx.themeTextPrimary,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -438,16 +1776,30 @@ class CategoryDistrictManagementScreen extends StatelessWidget {
 
 class _MobileCategoryCard extends StatelessWidget {
   final CategoryRow c;
-  const _MobileCategoryCard({required this.c});
+  final int registeredCount;
+  final int onlineCount;
+  final VoidCallback onToggleStatus;
+  final VoidCallback onDelete;
+
+  const _MobileCategoryCard({
+    required this.c,
+    this.registeredCount = 0,
+    this.onlineCount = 0,
+    required this.onToggleStatus,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isActive = c.status.toLowerCase() == 'active';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLow,
+        color: context.themeSurfaceLow,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.themeBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,119 +1807,160 @@ class _MobileCategoryCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(c.icon, color: AppColors.primary, size: 18),
+                child: Icon(c.icon, color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(c.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13)),
-                    Text('${c.registered} • ${c.onlineNow}',
-                        style: const TextStyle(
-                            fontSize: 10.5,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      LocalizedData.getCategory(context, c.name),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.registeredOnlineCount(
+                        '$registeredCount',
+                        '$onlineCount',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (c.status == 'Active'
-                          ? AppColors.primary
-                          : AppColors.secondaryContainer)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  c.status,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: c.status == 'Active'
-                        ? AppColors.primary
-                        : AppColors.onSecondaryContainer,
+              InkWell(
+                onTap: onToggleStatus,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: (isActive ? AppColors.primary : AppColors.error)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isActive
+                            ? Icons.check_circle
+                            : Icons.pause_circle_outline,
+                        size: 11,
+                        color: isActive ? AppColors.primary : AppColors.error,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        LocalizedData.getStatus(context, c.status),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isActive ? AppColors.primary : AppColors.error,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.more_vert,
-                  size: 16, color: AppColors.onSurfaceVariant),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert,
+                    size: 18, color: context.themeTextSecondary),
+                padding: EdgeInsets.zero,
+                onSelected: (val) {
+                  if (val == 'toggle') onToggleStatus();
+                  if (val == 'delete') onDelete();
+                },
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'toggle',
+                    child: Row(
+                      children: [
+                        Icon(
+                            isActive
+                                ? Icons.pause_outlined
+                                : Icons.play_arrow_outlined,
+                            size: 16),
+                        const SizedBox(width: 8),
+                        Text(isActive ? 'Pause Category' : 'Activate Category'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline,
+                            size: 16, color: AppColors.error),
+                        SizedBox(width: 8),
+                        Text('Delete Category',
+                            style: TextStyle(color: AppColors.error)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(c.description,
-              style: const TextStyle(
-                  fontSize: 11, color: AppColors.onSurfaceVariant)),
+          Text(
+            c.description,
+            style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.surfaceLowest,
+              color: context.themeSurface,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: context.themeBorder),
             ),
             child: Row(
               children: [
+                const Icon(Icons.gavel_rounded,
+                    size: 14, color: AppColors.primary),
+                const SizedBox(width: 6),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Base Inspection',
-                          style: TextStyle(
-                              fontSize: 9.5, color: AppColors.outline)),
-                      Text(c.baseFee,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 11.5)),
-                    ],
+                  child: Text(
+                    context.l10n.dynamicBiddingBadge,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: context.themeTextPrimary,
+                    ),
                   ),
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Hourly Cap',
-                          style: TextStyle(
-                              fontSize: 9.5, color: AppColors.outline)),
-                      Text(c.hourlyCap,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 11)),
-                    ],
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text('Surge',
-                        style:
-                            TextStyle(fontSize: 9.5, color: AppColors.outline)),
-                    Text(c.surge,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            color: AppColors.primary)),
-                  ],
+                  child: Text(
+                    context.l10n.islandWideBadge,
+                    style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              ...c.districts.map((d) => _DistrictTag(label: d)),
-              ...c.districtsOff
-                  .map((d) => _DistrictTag(label: '$d [OFF]', muted: true)),
-            ],
           ),
         ],
       ),
@@ -580,128 +1973,182 @@ class _MiniCard extends StatelessWidget {
   final String value;
   final String label;
   final String sub;
-  const _MiniCard(
-      {required this.icon,
-      required this.value,
-      required this.label,
-      required this.sub});
+  final bool isSelected;
+  final VoidCallback? onTap;
+
+  const _MiniCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.sub,
+    this.isSelected = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(icon, size: 15, color: AppColors.primary),
-            const SizedBox(width: 5),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 10.5, color: AppColors.onSurfaceVariant)),
-          ]),
-          const SizedBox(height: 6),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-          Text(sub,
-              style: const TextStyle(
-                  fontSize: 10, color: AppColors.onSurfaceVariant)),
-        ],
-      ),
-    );
-  }
-}
-
-class _DistrictTag extends StatelessWidget {
-  final String label;
-  final bool muted;
-  const _DistrictTag({required this.label, this.muted = false});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-          color: muted ? AppColors.surfaceLow : AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(999)),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 9.5,
-              color: muted ? AppColors.outline : AppColors.onSurface)),
-    );
-  }
-}
-
-class _ExpansionCard extends StatelessWidget {
-  final ExpansionDistrict d;
-  final bool isMobile;
-  const _ExpansionCard({required this.d, this.isMobile = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: isMobile ? EdgeInsets.zero : const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Expanded(
-                child: Text(d.hubName,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 12.5))),
-            Text('${(d.readiness * 100).round()}%',
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary)),
-          ]),
-          const SizedBox(height: 4),
-          ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                  value: d.readiness,
-                  minHeight: 5,
-                  backgroundColor: AppColors.surfaceHigh,
-                  color: AppColors.primary)),
-          const SizedBox(height: 6),
-          Text(d.location,
-              style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          Text(d.description,
-              style: const TextStyle(
-                  fontSize: 10, color: AppColors.onSurfaceVariant)),
-          const SizedBox(height: 8),
-          Text('Signups: ${d.signups}', style: const TextStyle(fontSize: 10)),
-          Text('Pre-registrations: ${d.preregistrations}',
-              style: const TextStyle(fontSize: 10)),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: Icon(d.ctaIcon, size: 13),
-              label: Text(d.ctaLabel, style: const TextStyle(fontSize: 10.5)),
-              style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 8)),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                    .withValues(alpha: context.isDark ? 0.12 : 0.06)
+                : context.themeSurface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : context.themeBorder,
+              width: isSelected ? 1.8 : 1.0,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : Colors.black
+                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                blurRadius: isSelected ? 12 : 8,
+              )
+            ],
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? AppColors.primary
+                              : context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (isSelected)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        context.l10n.viewingBadge,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              Text(
+                sub,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: context.themeTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _CatalogMetricsBar extends StatelessWidget {
+  final bool isMobile;
+  final int selectedTab;
+  final ValueChanged<int> onTabSelected;
+
+  const _CatalogMetricsBar({
+    required this.isMobile,
+    required this.selectedTab,
+    required this.onTabSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<CategoryRow>>(
+      stream: CategoryRepository().streamCategoryRows(),
+      builder: (context, catSnap) {
+        final categories = catSnap.data ?? [];
+        final activeCount =
+            categories.where((c) => c.status.toLowerCase() == 'active').length;
+
+        return StreamBuilder<List<Technician>>(
+          stream: TechnicianRepository().streamTechnicians(),
+          builder: (context, techSnap) {
+            final technicians = techSnap.data ?? [];
+
+            final cards = [
+              _MiniCard(
+                icon: Icons.category,
+                value: context.l10n.categoriesCount('${categories.length}'),
+                label: context.l10n.catalogDensityTitle,
+                sub: categories.isEmpty
+                    ? context.l10n.noCategoriesInDb
+                    : context.l10n.activeTradeServicesPublished('$activeCount'),
+                isSelected: selectedTab == 0,
+                onTap: () => onTabSelected(0),
+              ),
+              _MiniCard(
+                icon: Icons.engineering,
+                value: context.l10n.artisansCount('${technicians.length}'),
+                label: context.l10n.activeArtisanFleetTitle,
+                sub: technicians.isEmpty
+                    ? context.l10n.noActiveArtisansFleet
+                    : context.l10n.vettedTechniciansAvailable('${technicians.length}'),
+                isSelected: selectedTab == 1,
+                onTap: () => onTabSelected(1),
+              ),
+            ];
+
+            if (isMobile) {
+              return Column(
+                children: [
+                  cards[0],
+                  const SizedBox(height: 10),
+                  cards[1],
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: cards[0]),
+                const SizedBox(width: 12),
+                Expanded(child: cards[1]),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

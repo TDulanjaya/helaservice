@@ -3,9 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../models/admin_models.dart';
 import '../../../models/technician.dart';
+import '../../../models/job_request.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../repositories/job_request_repository.dart';
 import '../../../theme/app_theme.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../../../shared/widgets/app_map_view.dart';
 import '../widgets/admin_stat_card.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/location_utils.dart';
+import '../../../utils/app_localizations_helpers.dart';
 
 class DashboardLiveMapScreen extends StatelessWidget {
   const DashboardLiveMapScreen({super.key});
@@ -19,297 +27,38 @@ class DashboardLiveMapScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isMobile) ...[
-            const Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              children: [
-                Text('Island Operations & Live Dispatch',
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                _LiveBadge(),
-              ],
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Real-time telematics, auto-dispatch logs, and LankaQR clearing across Western, Central, & Southern Provinces.',
-              style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                      color: AppColors.surfaceLow,
-                      borderRadius: BorderRadius.circular(999)),
-                  child: const Text('Synced 12s ago',
-                      style: TextStyle(fontSize: 11, color: AppColors.outline)),
-                ),
-                OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.download, size: 14),
-                    label: const Text('Export CSV')),
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.tune, size: 14),
-                  label: const Text('Dispatch Matrix'),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white),
-                ),
-              ],
-            ),
-          ] else ...[
-            Row(
-              children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8,
-                        children: [
-                          Text('Island Operations & Live Dispatch',
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-                          _LiveBadge(),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Real-time telematics, auto-dispatch logs, and LankaQR clearing across Western, Central, & Southern Provinces.',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Text('Synced 12s ago',
-                    style: TextStyle(fontSize: 11, color: AppColors.outline)),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.download, size: 14),
-                    label: const Text('Export CSV')),
-                const SizedBox(width: 10),
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.tune, size: 14),
-                  label: const Text('Dispatch Matrix'),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white),
-                ),
-              ],
-            ),
-          ],
-          SizedBox(height: isMobile ? 16 : 20),
-          if (isMobile)
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.35,
-              children: const [
-                AdminStatCard(
-                    icon: Icons.engineering,
-                    label: 'Active Providers',
-                    value: '342',
-                    trailingBadge: '+12%',
-                    subtitle: '218 Col • 74 Kdy • 50 Gle'),
-                AdminStatCard(
-                    icon: Icons.receipt_long,
-                    label: 'Total Bookings',
-                    value: '1,248',
-                    subtitle: 'LKR 2.45M Gross GMV • 94% On-time'),
-                AdminStatCard(
-                    icon: Icons.assignment_late,
-                    label: 'NIC Screening',
-                    value: '7',
-                    subtitle: 'Pending • Avg 18 mins • SLA 99.1%'),
-                AdminStatCard(
-                    icon: Icons.qr_code_2,
-                    label: 'LankaQR Settlements',
-                    value: 'LKR 1.84M',
-                    trailingBadge: '99.4%',
-                    subtitle: 'Direct Clear • BOC & COMB Healthy'),
-              ],
-            )
-          else
-            const Row(children: [
-              Expanded(
-                  child: AdminStatCard(
-                      icon: Icons.engineering,
-                      label: 'Active Providers',
-                      value: '342',
-                      trailingBadge: '+12%',
-                      subtitle: '218 Col • 74 Kdy • 50 Gle')),
-              SizedBox(width: 12),
-              Expanded(
-                  child: AdminStatCard(
-                      icon: Icons.receipt_long,
-                      label: 'Total Bookings',
-                      value: '1,248',
-                      subtitle: 'LKR 2.45M Gross GMV • 94% On-time')),
-              SizedBox(width: 12),
-              Expanded(
-                  child: AdminStatCard(
-                      icon: Icons.assignment_late,
-                      label: 'NIC Screening',
-                      value: '7',
-                      subtitle: 'Pending • Avg 18 mins • SLA 99.1%')),
-              SizedBox(width: 12),
-              Expanded(
-                  child: AdminStatCard(
-                      icon: Icons.qr_code_2,
-                      label: 'LankaQR Settlements',
-                      value: 'LKR 1.84M',
-                      trailingBadge: '99.4%',
-                      subtitle: 'Direct Clear • BOC & COMB Healthy')),
-            ]),
-          SizedBox(height: isMobile ? 16 : 24),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-                color: AppColors.surfaceLowest,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 12)
-                ]),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(children: [
-                  Expanded(
-                    child: Text(
-                      'All Sri Lanka — Live Traffic',
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Heatmap',
-                      style: TextStyle(fontSize: 12, color: AppColors.primary)),
-                ]),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    height: isMobile ? 180 : 220,
-                    color: AppColors.surfaceLow,
-                    child: Stack(children: [
-                      const Positioned(
-                          top: 20,
-                          left: 40,
-                          child: _MapHub(count: 74, label: 'Kandy Hub')),
-                      const Positioned(
-                          bottom: 30,
-                          left: 100,
-                          child: _MapHub(count: 50, label: 'Galle Fort Zone')),
-                      const Positioned(
-                          top: 90,
-                          right: 60,
-                          child: _MapHub(
-                              count: 218,
-                              label: 'Colombo Metro 01-15',
-                              big: true)),
-                      Positioned(
-                        bottom: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                              color: AppColors.secondaryContainer
-                                  .withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(999)),
-                          child: const Text('High Surge 1.4x',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.onSecondaryContainer,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ]),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                    '218 Verified Artisans online. 48 En Route, 142 On Active Job, 28 Available for Instant Booking.',
-                    style: TextStyle(
-                        fontSize: 12, color: AppColors.onSurfaceVariant)),
-                const SizedBox(height: 10),
-                const Wrap(spacing: 14, runSpacing: 6, children: [
-                  _LegendDot(color: AppColors.primary, label: 'On Job (142)'),
-                  _LegendDot(
-                      color: AppColors.secondaryContainer,
-                      label: 'En Route (48)'),
-                  _LegendDot(
-                      color: AppColors.outline, label: 'Idle / Available (28)'),
-                ]),
-                const SizedBox(height: 14),
-                isMobile
-                    ? const Wrap(spacing: 18, runSpacing: 10, children: [
-                        _MiniStat(
-                            label: 'Colombo Avg Dispatch', value: '11.8 min'),
-                        _MiniStat(label: 'Kandy Valley ETA', value: '17.2 min'),
-                        _MiniStat(label: 'Galle Coast ETA', value: '14.0 min'),
-                        _MiniStat(label: 'Auto-Dispatch Rate', value: '96.4%'),
-                      ])
-                    : const Row(children: [
-                        _MiniStat(
-                            label: 'Colombo Avg Dispatch', value: '11.8 min'),
-                        _MiniStat(label: 'Kandy Valley ETA', value: '17.2 min'),
-                        _MiniStat(label: 'Galle Coast ETA', value: '14.0 min'),
-                        _MiniStat(label: 'Auto-Dispatch Rate', value: '96.4%'),
-                      ]),
-              ],
+          Text(
+            context.l10n.islandOperationsTitle,
+            style: TextStyle(
+              fontSize: isMobile ? 18 : 22,
+              fontWeight: FontWeight.bold,
+              color: context.themeTextPrimary,
             ),
           ),
+          SizedBox(height: isMobile ? 16 : 20),
+          _LiveDashboardStats(isMobile: isMobile),
           SizedBox(height: isMobile ? 16 : 24),
-          if (isMobile) ...[
-            const _DispatchStreamCard(),
-            const SizedBox(height: 16),
-            const _DistrictCapacityCard(),
-          ] else
-            const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: _DispatchStreamCard()),
-                SizedBox(width: 16),
-                Expanded(child: _DistrictCapacityCard()),
-              ],
-            ),
+          _LiveTrafficHeatmapCard(isMobile: isMobile),
           SizedBox(height: isMobile ? 16 : 24),
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-                color: AppColors.surfaceLowest,
+                color: context.themeSurface,
                 borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black
+                          .withValues(alpha: context.isDark ? 0.2 : 0.04),
                       blurRadius: 12)
                 ]),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Active Artisan Field Fleet — Live Top Roster',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const Text('Continuous GPS breadcrumb pings & job statuses',
+                Text(context.l10n.activeArtisanFleetLive,
                     style: TextStyle(
-                        fontSize: 11, color: AppColors.onSurfaceVariant)),
+                        fontWeight: FontWeight.bold,
+                        color: context.themeTextPrimary)),
                 const SizedBox(height: 12),
                 StreamBuilder<List<Technician>>(
                   stream: TechnicianRepository().streamTechnicians(),
@@ -332,9 +81,8 @@ class DashboardLiveMapScreen extends StatelessWidget {
 
                     if (isMobile) {
                       return Column(
-                        children: roster
-                            .map((r) => _MobileRosterCard(r: r))
-                            .toList(),
+                        children:
+                            roster.map((r) => _MobileRosterCard(r: r)).toList(),
                       );
                     }
 
@@ -352,7 +100,7 @@ class DashboardLiveMapScreen extends StatelessWidget {
                           _TableHeaderCell('Artisan'),
                           _TableHeaderCell('Assigned Zone'),
                           _TableHeaderCell('Status'),
-                          _TableHeaderCell('LankaQR Payout'),
+                          _TableHeaderCell('Payout'),
                           _TableHeaderCell('Rating'),
                           _TableHeaderCell('Quick Dispatch'),
                         ]),
@@ -429,7 +177,8 @@ class DashboardLiveMapScreen extends StatelessWidget {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 10),
                                 child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: () =>
+                                        _showDispatchDialog(context, r),
                                     child: Text(r.actionLabel,
                                         style: const TextStyle(fontSize: 11))),
                               ),
@@ -466,9 +215,7 @@ ArtisanRosterRow _technicianToRosterRow(Technician t) {
       : (t.nicVerified ? 'Active Verified' : 'Pending Verification');
   final statusCol = t.online
       ? AppColors.primary
-      : (t.nicVerified
-          ? AppColors.secondaryContainer
-          : AppColors.outline);
+      : (t.nicVerified ? AppColors.secondaryContainer : AppColors.outline);
 
   return ArtisanRosterRow(
     name: t.name,
@@ -485,207 +232,121 @@ ArtisanRosterRow _technicianToRosterRow(Technician t) {
   );
 }
 
-class _DispatchStreamCard extends StatelessWidget {
-  const _DispatchStreamCard();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), blurRadius: 12)
-          ]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Row(
         children: [
-          const Row(children: [
-            Icon(Icons.rss_feed, size: 16, color: AppColors.primary),
-            SizedBox(width: 6),
-            Text('Live Dispatch Stream',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ]),
-          const SizedBox(height: 10),
-          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance
-                .collection(FirestorePaths.dispatchEvents)
-                .snapshots(),
-            builder: (context, snapshot) {
-              final docs = snapshot.data?.docs ?? [];
-              final events = docs
-                  .map((d) => DispatchEvent.fromMap(d.id, d.data()))
-                  .toList();
-
-              events.sort((a, b) {
-                if (a.timestamp == null && b.timestamp == null) return 0;
-                if (a.timestamp == null) return 1;
-                if (b.timestamp == null) return -1;
-                return b.timestamp!.compareTo(a.timestamp!);
-              });
-
-              if (events.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('No active dispatch events recorded.',
-                      style: TextStyle(fontSize: 11, color: AppColors.outline)),
-                );
-              }
-
-              return Column(
-                children: events
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor:
-                                      e.iconColor.withValues(alpha: 0.12),
-                                  child: Icon(e.icon,
-                                      size: 14, color: e.iconColor)),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(children: [
-                                      Expanded(
-                                          child: Text(e.title,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 12.5))),
-                                      Text(e.timeAgo,
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.outline)),
-                                    ]),
-                                    Text(e.detail,
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.onSurfaceVariant)),
-                                    Text(e.tagLabel,
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w600)),
-                                  ],
+          Icon(r.tradeIcon, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${r.actionLabel}: ${r.name}',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.l10n.tradeAndZone(r.trade, r.zone),
+                style:
+                    TextStyle(fontSize: 12, color: context.themeTextSecondary)),
+            const SizedBox(height: 14),
+            const Text(
+              'Select Open Job Request to Dispatch:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            StreamBuilder<List<JobRequest>>(
+              stream: JobRequestRepository().streamOpenRequests(),
+              builder: (context, snapshot) {
+                final requests = snapshot.data ?? [];
+                if (requests.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: Text(
+                        'No open customer requests awaiting dispatch.',
+                        style: TextStyle(
+                            fontSize: 12, color: context.themeTextSecondary),
+                      ),
+                    ),
+                  );
+                }
+                return ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: requests.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, idx) {
+                      final req = requests[idx];
+                      return ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(req.title,
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                            '${req.address.isNotEmpty ? req.address : req.category} • ${req.quoteCount} quotes received',
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.onPrimary,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            await FirebaseFirestore.instance
+                                .collection(FirestorePaths.dispatchEvents)
+                                .add({
+                              'title': 'Manual Dispatch Assigned',
+                              'detail':
+                                  '${r.name} dispatched to "${req.title}" (${req.address.isNotEmpty ? req.address : req.category})',
+                              'tagLabel': 'DISPATCHED',
+                              'timeAgo': 'Just now',
+                              'iconKey': 'bolt',
+                              'colorValue': 0xFFD6900F,
+                              'timestamp': FieldValue.serverTimestamp(),
+                            });
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Dispatched ${r.name} to "${req.title}"'),
+                                  backgroundColor: AppColors.primary,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
-          ),
-          const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('View All Incident Logs',
-                  style: TextStyle(fontSize: 11, color: AppColors.primary))),
-        ],
-      ),
-    );
-  }
-}
-
-class _DistrictCapacityCard extends StatelessWidget {
-  const _DistrictCapacityCard();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), blurRadius: 12)
-          ]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('District Capacity — Real-time Load',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance
-                .collection(FirestorePaths.districtStats)
-                .snapshots(),
-            builder: (context, snapshot) {
-              final docs = snapshot.data?.docs ?? [];
-              final districts = docs
-                  .map((d) => DistrictLoad.fromMap(d.id, d.data()))
-                  .toList();
-
-              if (districts.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('District telemetry stream initializing...',
-                      style: TextStyle(fontSize: 11, color: AppColors.outline)),
+                              );
+                            }
+                          },
+                          child: const Text('Assign',
+                              style: TextStyle(fontSize: 11)),
+                        ),
+                      );
+                    },
+                  ),
                 );
-              }
-
-              return Column(
-                children: districts
-                    .map((d) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                Expanded(
-                                    child: Text(d.name,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 12.5))),
-                                Text(
-                                    '${(d.percent * 100).round()}% (${d.loadLabel})',
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700)),
-                              ]),
-                              const SizedBox(height: 4),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(999),
-                                child: LinearProgressIndicator(
-                                    value: d.percent,
-                                    minHeight: 6,
-                                    backgroundColor: AppColors.surfaceHigh,
-                                    color: AppColors.primary),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(d.detail,
-                                  style: const TextStyle(
-                                      fontSize: 10,
-                                      color: AppColors.onSurfaceVariant)),
-                            ],
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
-          ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
-                borderRadius: BorderRadius.circular(12)),
-            child: const Row(children: [
-              Icon(Icons.info, size: 14, color: AppColors.primary),
-              SizedBox(width: 6),
-              Expanded(
-                  child: Text(
-                      'Surge incentives active in Colombo 01-08 to recruit 25 additional electrical artisans.',
-                      style: TextStyle(fontSize: 10.5))),
-            ]),
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
 }
 
 class _MobileRosterCard extends StatelessWidget {
@@ -697,7 +358,9 @@ class _MobileRosterCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-          color: AppColors.surfaceLow, borderRadius: BorderRadius.circular(14)),
+          color: context.themeSurfaceLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.themeBorder)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -709,11 +372,13 @@ class _MobileRosterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(r.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 13)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: context.themeTextPrimary)),
                   Text(r.nic,
-                      style: const TextStyle(
-                          fontSize: 10, color: AppColors.outline)),
+                      style: TextStyle(
+                          fontSize: 10, color: context.themeTextSecondary)),
                 ],
               ),
             ),
@@ -730,21 +395,26 @@ class _MobileRosterCard extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 8),
-          Text(r.zone, style: const TextStyle(fontSize: 12)),
+          Text(r.zone,
+              style:
+                  TextStyle(fontSize: 12, color: context.themeTextSecondary)),
           const SizedBox(height: 6),
           Row(children: [
             Expanded(
                 child: Text(r.payoutToday,
-                    style: const TextStyle(
-                        fontSize: 11.5, fontWeight: FontWeight.w600))),
+                    style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextPrimary))),
             const Icon(Icons.star,
                 size: 13, color: AppColors.secondaryContainer),
             const SizedBox(width: 3),
             Text('${r.rating} (${r.reviews})',
-                style: const TextStyle(fontSize: 11)),
+                style:
+                    TextStyle(fontSize: 11, color: context.themeTextSecondary)),
             const SizedBox(width: 10),
             TextButton(
-              onPressed: () {},
+              onPressed: () => _showDispatchDialog(context, r),
               style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(0, 0),
@@ -758,89 +428,6 @@ class _MobileRosterCard extends StatelessWidget {
   }
 }
 
-class _LiveBadge extends StatelessWidget {
-  const _LiveBadge();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-          color: AppColors.primary, borderRadius: BorderRadius.circular(999)),
-      child: const Text('LIVE',
-          style: TextStyle(
-              color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-    );
-  }
-}
-
-class _MapHub extends StatelessWidget {
-  final int count;
-  final String label;
-  final bool big;
-  const _MapHub({required this.count, required this.label, this.big = false});
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Container(
-        width: big ? 40 : 28,
-        height: big ? 40 : 28,
-        decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2)),
-        alignment: Alignment.center,
-        child: Text('$count',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: big ? 13 : 10)),
-      ),
-      Text(label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-    ]);
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _LegendDot({required this.color, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-      const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontSize: 11)),
-    ]);
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final String value;
-  const _MiniStat({required this.label, required this.value});
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(value,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 10, color: AppColors.onSurfaceVariant)),
-          ]),
-    );
-  }
-}
-
 class _TableHeaderCell extends StatelessWidget {
   final String label;
   const _TableHeaderCell(this.label);
@@ -849,10 +436,289 @@ class _TableHeaderCell extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(label,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 10.5,
-              color: AppColors.outline,
+              color: context.themeTextSecondary,
               fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+class _LiveDashboardStats extends StatelessWidget {
+  final bool isMobile;
+  const _LiveDashboardStats({required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .snapshots(),
+      builder: (context, techSnap) {
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .snapshots(),
+          builder: (context, bookingSnap) {
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection(FirestorePaths.verificationQueue)
+                  .snapshots(),
+              builder: (context, queueSnap) {
+                final techs = techSnap.data?.docs ?? [];
+                final bookings = bookingSnap.data?.docs ?? [];
+                final queue = queueSnap.data?.docs ?? [];
+
+                final onlineCount =
+                    techs.where((t) => t.data()['online'] == true).length;
+                final verifiedCount =
+                    techs.where((t) => t.data()['nicVerified'] == true).length;
+                final totalTechs = techs.length;
+
+                final totalBookings = bookings.length;
+                final completedBookings = bookings
+                    .where((b) => b.data()['status'] == 'completed')
+                    .length;
+                final activeBookings = bookings
+                    .where((b) =>
+                        b.data()['status'] == 'in_progress' ||
+                        b.data()['status'] == 'pending')
+                    .length;
+
+                final pendingQueue = queue
+                    .where(
+                        (q) => (q.data()['status'] ?? 'pending') == 'pending')
+                    .length;
+
+                final cards = [
+                  AdminStatCard(
+                    icon: Icons.engineering,
+                    label: context.l10n.activeProvidersTitle,
+                    value: '$totalTechs',
+                    trailingBadge:
+                        onlineCount > 0 ? '+$onlineCount Live' : null,
+                    subtitle: context.l10n
+                        .onlineFleetSummary('$onlineCount', '$verifiedCount'),
+                  ),
+                  AdminStatCard(
+                    icon: Icons.receipt_long,
+                    label: context.l10n.totalBookingsTitle,
+                    value: '$totalBookings',
+                    trailingBadge:
+                        activeBookings > 0 ? '$activeBookings Active' : null,
+                    subtitle: context.l10n.completedInProgressSummary(
+                        '$completedBookings', '$activeBookings'),
+                  ),
+                  AdminStatCard(
+                    icon: Icons.assignment_late,
+                    label: context.l10n.nicScreeningTitle,
+                    value: '$pendingQueue',
+                    trailingBadge: pendingQueue > 0
+                        ? 'Action Req'
+                        : context.l10n.clearStatusBadge,
+                    subtitle: context.l10n
+                        .verificationDossiersLogged('${queue.length}'),
+                  ),
+                ];
+
+                if (isMobile) {
+                  return Column(
+                    children: [
+                      for (int i = 0; i < cards.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 10),
+                        cards[i],
+                      ],
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    for (int i = 0; i < cards.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: cards[i]),
+                    ],
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _LiveTrafficHeatmapCard extends StatefulWidget {
+  final bool isMobile;
+  const _LiveTrafficHeatmapCard({required this.isMobile});
+
+  @override
+  State<_LiveTrafficHeatmapCard> createState() => _LiveTrafficHeatmapCardState();
+}
+
+class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
+  bool _showAllDistricts = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final docs = snapshot.data?.docs ?? [];
+        final Map<String, int> counts = {
+          for (final d in LocationUtils.districtCoordinates.keys) d: 0,
+        };
+        int unknownCount = 0;
+
+        for (final d in docs) {
+          final data = d.data();
+          final lat = (data['latitude'] ?? data['lat']) as num?;
+          final lng = (data['longitude'] ?? data['lng']) as num?;
+          final districtStr = data['district'] as String?;
+          final serviceAreaStr = data['serviceArea'] as String?;
+
+          final matched = LocationUtils.resolveDistrict(
+            latitude: lat?.toDouble(),
+            longitude: lng?.toDouble(),
+            district: districtStr,
+            serviceArea: serviceAreaStr,
+          );
+
+          if (matched != null && counts.containsKey(matched)) {
+            counts[matched] = counts[matched]! + 1;
+          } else {
+            unknownCount++;
+          }
+        }
+
+        final markers = <AppMapMarker>[];
+        for (final entry in LocationUtils.districtCoordinates.entries) {
+          final districtName = entry.key;
+          final coords = entry.value;
+          final count = counts[districtName] ?? 0;
+          final localizedName = LocalizedData.getDistrict(context, districtName);
+
+          if (count > 0) {
+            markers.add(
+              AppMapMarker.hub(
+                point: LatLng(coords.lat, coords.lng),
+                label: localizedName,
+                count: count,
+                isLarge: count >= 5,
+              ),
+            );
+          } else if (_showAllDistricts) {
+            markers.add(
+              AppMapMarker.hub(
+                point: LatLng(coords.lat, coords.lng),
+                label: localizedName,
+                count: 0,
+              ),
+            );
+          }
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.themeSurface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: context.themeBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black
+                    .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                blurRadius: 12,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.allSriLankaLiveTraffic,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Show all districts',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Transform.scale(
+                        scale: 0.8,
+                        child: Switch.adaptive(
+                          value: _showAllDistricts,
+                          activeThumbColor: AppColors.primary,
+                          onChanged: (val) =>
+                              setState(() => _showAllDistricts = val),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: widget.isMobile ? 360 : 440,
+                child: AppMapView(
+                  initialCenter: const LatLng(7.85, 80.725),
+                  initialZoom: widget.isMobile ? 6.5 : 7.2,
+                  initialCameraFit: CameraFit.bounds(
+                    bounds: LatLngBounds(
+                      const LatLng(5.85, 79.5),
+                      const LatLng(9.85, 81.95),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
+                  ),
+                  interactive: true,
+                  markers: markers,
+                ),
+              ),
+              if (unknownCount > 0) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: context.themeTextSecondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$unknownCount active provider${unknownCount > 1 ? 's' : ''} in unmapped/unknown zones',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

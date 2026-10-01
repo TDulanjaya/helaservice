@@ -1,16 +1,59 @@
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:provider/provider.dart' as pv;
 import '../../../constants/firestore_paths.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../utils/map_launcher.dart';
+import '../../../utils/l10n_extension.dart';
 import 'provider_dashboard_screen.dart';
+
+/// Compresses an ID photo in the background.
+Uint8List _compressNicImage(Uint8List rawBytes) {
+  final image = img.decodeImage(rawBytes);
+  if (image == null) {
+    throw Exception('Failed to decode the captured document.');
+  }
+
+  // Keep under 1600px to stay below upload limits.
+  img.Image working = image;
+  if (working.width > 1600 || working.height > 1600) {
+    if (working.width > working.height) {
+      working = img.copyResize(working, width: 1600, interpolation: img.Interpolation.linear);
+    } else {
+      working = img.copyResize(working, height: 1600, interpolation: img.Interpolation.linear);
+    }
+  }
+
+  const targetMaxBytes = 600 * 1024; // 600 KB
+  final qualitySteps = [85, 75, 65, 55, 45, 35];
+
+  Uint8List? result;
+  for (final quality in qualitySteps) {
+    final encoded = Uint8List.fromList(img.encodeJpg(working, quality: quality));
+    if (encoded.lengthInBytes <= targetMaxBytes) {
+      result = encoded;
+      break;
+    }
+  }
+
+  if (result == null) {
+    final fallback = Uint8List.fromList(img.encodeJpg(working, quality: 25));
+    if (fallback.lengthInBytes <= targetMaxBytes) {
+      result = fallback;
+    } else {
+      throw Exception('NIC image is too large even after compression. Please retake the photo.');
+    }
+  }
+
+  return result;
+}
 
 class NicVerificationScreen extends StatefulWidget {
   final bool showBottomNav;
@@ -25,10 +68,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   bool _front = false;
   bool _back = false;
   bool _selfie = false;
-
-  String? _frontFileKey;
-  String? _backFileKey;
-  String? _selfieFileKey;
 
   bool _isUploadingFront = false;
   bool _isUploadingBack = false;
@@ -68,57 +107,71 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     });
 
     try {
-      final fileName = '${docType}_nic.jpg';
-      const contentType = 'image/jpeg';
-      final sampleBytes = utf8.encode('HELASERVICE_VERIFICATION_DOC_${docType.toUpperCase()}_PAYLOAD');
+      final picker = ImagePicker();
+      final XFile? photo = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+        preferredCameraDevice:
+            docType == 'selfie' ? CameraDevice.front : CameraDevice.rear,
+      );
 
-      final callable = FirebaseFunctions.instance.httpsCallable('getB2UploadUrl');
-      final response = await callable.call<Map<String, dynamic>>({
-        'fileName': fileName,
-        'contentType': contentType,
-      });
+      if (photo == null) {
+        setState(() {
+          if (docType == 'front') _isUploadingFront = false;
+          if (docType == 'back') _isUploadingBack = false;
+          if (docType == 'selfie') _isUploadingSelfie = false;
+        });
+        return;
+      }
 
-      final uploadUrl = response.data['uploadUrl'] as String?;
-      final fileKey = response.data['fileKey'] as String?;
-
-      if (uploadUrl != null && uploadUrl.isNotEmpty) {
-        await http.put(
-          Uri.parse(uploadUrl),
-          headers: {'Content-Type': contentType},
-          body: sampleBytes,
+      final Uint8List rawBytes = await photo.readAsBytes();
+      final Uint8List imageBytes = await compute(_compressNicImage, rawBytes);
+      if (imageBytes.lengthInBytes > 600 * 1024) {
+        throw Exception(
+          'Image size is too large (${(imageBytes.lengthInBytes / 1024).round()} KB). '
+          'Maximum allowed size is 600 KB. Please choose or capture a compressed photo.',
         );
       }
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw Exception('User not authenticated');
+
+      const contentType = 'image/jpeg';
+      await FirebaseFirestore.instance
+          .collection('nicImages')
+          .doc(uid)
+          .collection('files')
+          .doc(docType)
+          .set({
+        'data': Blob(imageBytes),
+        'contentType': contentType,
+        'docType': docType,
+        'uid': uid,
+        'uploadedAt': FieldValue.serverTimestamp(),
+      });
 
       if (mounted) {
         setState(() {
           if (docType == 'front') {
             _front = true;
-            _frontFileKey = fileKey;
           } else if (docType == 'back') {
             _back = true;
-            _backFileKey = fileKey;
           } else if (docType == 'selfie') {
             _selfie = true;
-            _selfieFileKey = fileKey;
           }
         });
       }
     } catch (e) {
       if (mounted) {
-        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'kasun';
-        final fallbackKey = 'providers/$uid/nic/${DateTime.now().millisecondsSinceEpoch}-$docType.jpg';
-        setState(() {
-          if (docType == 'front') {
-            _front = true;
-            _frontFileKey = fallbackKey;
-          } else if (docType == 'back') {
-            _back = true;
-            _backFileKey = fallbackKey;
-          } else if (docType == 'selfie') {
-            _selfie = true;
-            _selfieFileKey = fallbackKey;
-          }
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('Failed to upload $docType photo. Please try again: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -135,24 +188,47 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     setState(() => _isSubmitting = true);
     try {
       final authUser = FirebaseAuth.instance.currentUser;
-      final uid = authUser?.uid ?? 'kasun';
       final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
       final profile = roleProvider.currentUser;
+      final uid = authUser?.uid ?? (profile?.id ?? '');
 
-      await FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).add({
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.verificationQueue)
+          .doc(uid)
+          .set({
         'providerId': uid,
-        'fileKey': _frontFileKey ?? 'providers/$uid/nic/front.jpg',
-        'frontFileKey': _frontFileKey,
-        'backFileKey': _backFileKey,
-        'selfieFileKey': _selfieFileKey,
         'status': 'pending',
         'submittedAt': FieldValue.serverTimestamp(),
-        'name': profile?.displayName.isNotEmpty == true ? profile!.displayName : 'Kasun Perera',
-        'trade': 'Master Electrician & Plumber',
-        'location': 'Colombo 03',
-        'nicNumber': '902148921V',
-        'matchPercent': 98,
-      });
+        'name': profile?.displayName.isNotEmpty == true
+            ? profile!.displayName
+            : (authUser?.displayName ?? 'Service Provider'),
+        'trade': profile?.serviceCategory?.isNotEmpty == true
+            ? '${profile!.serviceCategory} Specialist'
+            : 'Certified Specialist',
+        'location': profile?.district?.isNotEmpty == true
+            ? profile!.district!
+            : 'Sri Lanka',
+        'nicNumber':
+            profile?.nic?.isNotEmpty == true ? profile!.nic! : 'Pending NIC',
+        'phone': profile?.phone?.isNotEmpty == true
+            ? profile!.phone!
+            : (authUser?.phoneNumber ?? ''),
+        'preferredLanguage': profile?.preferredLanguage?.isNotEmpty == true
+            ? profile!.preferredLanguage!
+            : '',
+      }, SetOptions(merge: true));
+
+      // Save private info in the private subcollection.
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(uid)
+          .collection('private')
+          .doc('details')
+          .set({
+        'nic': profile?.nic ?? '',
+        'phone': profile?.phone ?? authUser?.phoneNumber ?? '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (mounted) {
         setState(() {
@@ -176,9 +252,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       appBar: AppBar(title: const Text('National ID (NIC) Verification')),
       body: _isSubmitted ? _buildSubmittedView() : _buildFormView(),
       bottomNavigationBar: widget.showBottomNav
-          ? AppBottomNav(
+          ? const AppBottomNav(
               currentIndex: 2,
-              items: const [
+              items: [
                 NavItem(Icons.radar, 'Jobs'),
                 NavItem(Icons.payments, 'Earnings'),
                 NavItem(Icons.verified_user, 'Verification'),
@@ -190,17 +266,19 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   }
 
   Widget _buildSubmittedView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surfaceLowest,
+            color: context.themeSurface,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: context.themeBorder),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color:
+                    Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                 blurRadius: 16,
               ),
             ],
@@ -228,7 +306,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.secondaryContainer.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -243,17 +322,21 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant, height: 1.4),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: context.themeTextSecondary,
+                    height: 1.4),
               ),
               const SizedBox(height: 20),
               PrimaryButton(
                 label: 'Return to Dashboard',
                 trailingIcon: Icons.arrow_forward,
                 onPressed: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+                  MaterialPageRoute(
+                      builder: (_) => const ProviderDashboardScreen()),
                 ),
               ),
             ],
@@ -269,30 +352,31 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       children: [
         const PillBadgeChip(label: 'Step 2 of 3'),
         const SizedBox(height: 10),
-        const Text(
+        Text(
             'Verify your identity to start receiving jobs island-wide across Sri Lanka.',
-            style: TextStyle(color: AppColors.onSurfaceVariant)),
+            style: TextStyle(color: context.themeTextSecondary)),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: AppColors.surfaceLow,
-              borderRadius: BorderRadius.circular(16)),
+              color: context.themeSurfaceLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.themeBorder)),
           child: Row(children: [
             const Icon(Icons.shield, color: AppColors.primary),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Verified Artisan Network — Sri Lanka',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 13)),
+                children: [
+                  const Text('Verified Artisan Network — Sri Lanka',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   Text(
                       'Government & Police vetted channel. Uploaded documents are encrypted with '
                       '256-bit bank-grade security and stored in an isolated Backblaze B2 credential vault.',
                       style: TextStyle(
-                          fontSize: 11, color: AppColors.onSurfaceVariant)),
+                          fontSize: 11, color: context.themeTextSecondary)),
                 ],
               ),
             ),
@@ -344,35 +428,38 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: AppColors.surfaceLowest,
+              color: context.themeSurface,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.themeBorder),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                    blurRadius: 10)
               ]),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Row(children: [
-                Icon(Icons.verified, color: AppColors.primary, size: 18),
-                SizedBox(width: 6),
-                Text('Fast-Track Verification Checklist',
-                    style: TextStyle(fontWeight: FontWeight.bold))
+                const Icon(Icons.verified, color: AppColors.primary, size: 18),
+                const SizedBox(width: 6),
+                Text(context.l10n.fastTrackVerificationChecklist,
+                    style: const TextStyle(fontWeight: FontWeight.bold))
               ]),
-              SizedBox(height: 10),
-              _ChecklistRow(
+              const SizedBox(height: 10),
+              const _ChecklistRow(
                   icon: Icons.timer,
                   title: 'Fast turnaround:',
                   body:
                       'Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).'),
-              SizedBox(height: 8),
-              _ChecklistRow(
+              const SizedBox(height: 8),
+              const _ChecklistRow(
                   icon: Icons.sms,
                   title: 'SMS alert:',
                   body:
                       'Instant approval message to your registered mobile number.'),
-              SizedBox(height: 8),
-              _ChecklistRow(
+              const SizedBox(height: 8),
+              const _ChecklistRow(
                   icon: Icons.wb_sunny,
                   title: 'Quality standard:',
                   body: 'Natural daylight photos get accepted first try.'),
@@ -382,14 +469,16 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         const SizedBox(height: 16),
         Center(
           child: TextButton.icon(
-            onPressed: () {},
+            onPressed: () => MapLauncher.openPhoneCall('1340'),
             icon: const Icon(Icons.headset_mic, size: 16),
-            label: const Text('Call Partner Support 1340 (Toll Free)'),
+            label: Text(context.l10n.callPartnerSupport),
           ),
         ),
         const SizedBox(height: 8),
         PrimaryButton(
-          label: _isSubmitting ? 'Uploading to Vault...' : 'Submit for Verification',
+          label: _isSubmitting
+              ? 'Uploading to Vault...'
+              : 'Submit for Verification',
           trailingIcon: Icons.arrow_forward,
           onPressed: (_front && _back && _selfie && !_isSubmitting)
               ? _handleSubmit
@@ -397,14 +486,13 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         ),
         const SizedBox(height: 8),
         Center(
-          child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.lock, size: 13, color: AppColors.outline),
-                SizedBox(width: 4),
-                Text('End-to-end encrypted • HelaService Backblaze B2 Vault',
-                    style: TextStyle(fontSize: 11, color: AppColors.outline)),
-              ]),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Icon(Icons.lock, size: 13, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(context.l10n.endToEndEncryptedVault,
+                style:
+                    TextStyle(fontSize: 11, color: context.themeTextSecondary)),
+          ]),
         ),
       ],
     );
@@ -419,9 +507,9 @@ class PillBadgeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: context.themeSurfaceContainer,
           borderRadius: BorderRadius.circular(999)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: const [
+      child: const Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.verified_user, size: 13, color: AppColors.primary),
         SizedBox(width: 4),
         Text('Step 2 of 3',
@@ -464,10 +552,14 @@ class _UploadStep extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
+          color: context.themeSurface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.themeBorder),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
+            BoxShadow(
+                color:
+                    Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                blurRadius: 10)
           ]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,18 +583,22 @@ class _UploadStep extends StatelessWidget {
             else ...[
               Icon(uploaded ? Icons.check_circle : Icons.pending,
                   size: 16,
-                  color: uploaded ? AppColors.primary : AppColors.outline),
+                  color: uploaded
+                      ? AppColors.primary
+                      : context.themeTextSecondary),
               const SizedBox(width: 4),
               Text(uploaded ? 'Attached' : 'Required',
                   style: TextStyle(
                       fontSize: 11,
-                      color: uploaded ? AppColors.primary : AppColors.outline)),
+                      color: uploaded
+                          ? AppColors.primary
+                          : context.themeTextSecondary)),
             ],
           ]),
           const SizedBox(height: 6),
           Text(description,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.onSurfaceVariant)),
+              style:
+                  TextStyle(fontSize: 12, color: context.themeTextSecondary)),
           const SizedBox(height: 10),
           GestureDetector(
             onTap: isLoading ? null : onTap,
@@ -511,8 +607,7 @@ class _UploadStep extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
                 border: Border.all(
-                    color:
-                        uploaded ? AppColors.primary : AppColors.outlineVariant,
+                    color: uploaded ? AppColors.primary : context.themeBorder,
                     style: BorderStyle.solid,
                     width: uploaded ? 1.5 : 1),
                 borderRadius: BorderRadius.circular(14),
@@ -526,17 +621,21 @@ class _UploadStep extends StatelessWidget {
                   )
                 else
                   Icon(uploaded ? Icons.check_circle : uploadIcon,
-                      color: uploaded ? AppColors.primary : AppColors.outline),
+                      color: uploaded
+                          ? AppColors.primary
+                          : context.themeTextSecondary),
                 const SizedBox(height: 6),
                 Text(
                     isLoading
                         ? 'Uploading to B2 Vault...'
-                        : (uploaded ? 'Photo attached • Tap to replace' : uploadLabel),
+                        : (uploaded
+                            ? 'Photo attached • Tap to replace'
+                            : uploadLabel),
                     style: const TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 12)),
                 Text(hint,
-                    style: const TextStyle(
-                        fontSize: 10, color: AppColors.outline)),
+                    style: TextStyle(
+                        fontSize: 10, color: context.themeTextSecondary)),
               ]),
             ),
           ),
@@ -548,8 +647,8 @@ class _UploadStep extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                   child: Text(tip!,
-                      style: const TextStyle(
-                          fontSize: 10.5, color: AppColors.onSurfaceVariant))),
+                      style: TextStyle(
+                          fontSize: 10.5, color: context.themeTextSecondary))),
             ]),
           ],
         ],
@@ -574,14 +673,14 @@ class _ChecklistRow extends StatelessWidget {
         Expanded(
           child: RichText(
             text: TextSpan(
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 12, color: context.themeTextSecondary),
                 children: [
                   TextSpan(
                       text: '$title ',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.onSurface)),
+                          color: context.themeTextPrimary)),
                   TextSpan(text: body),
                 ]),
           ),

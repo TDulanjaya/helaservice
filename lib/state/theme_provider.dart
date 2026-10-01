@@ -1,17 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _mode = ThemeMode.system;
+  static const String _prefKey = 'app_theme_mode';
+  ThemeMode _mode;
+
+  ThemeProvider({ThemeMode initialMode = ThemeMode.system}) : _mode = initialMode;
+
+  static Future<ThemeMode> loadSavedMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedStr = prefs.getString(_prefKey);
+      if (savedStr == 'light') return ThemeMode.light;
+      if (savedStr == 'dark') return ThemeMode.dark;
+      if (savedStr == 'system') return ThemeMode.system;
+    } catch (_) {}
+    return ThemeMode.system;
+  }
 
   ThemeMode get mode => _mode;
 
-  void setMode(ThemeMode mode) {
-    _mode = mode;
-    notifyListeners();
+  bool isDark(BuildContext context) {
+    if (_mode == ThemeMode.system) {
+      return MediaQuery.of(context).platformBrightness == Brightness.dark;
+    }
+    return _mode == ThemeMode.dark;
   }
 
-  void toggle() {
-    _mode = _mode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+  Future<void> setMode(ThemeMode mode) async {
+    if (_mode == mode) return;
+    _mode = mode;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKey, mode.name);
+    } catch (_) {}
+  }
+
+  void setLight() => setMode(ThemeMode.light);
+  void setDark() => setMode(ThemeMode.dark);
+  void setSystem() => setMode(ThemeMode.system);
+
+  void toggle(BuildContext context) {
+    if (isDark(context)) {
+      setMode(ThemeMode.light);
+    } else {
+      setMode(ThemeMode.dark);
+    }
+  }
+
+  String getModeDisplayName(BuildContext context) {
+    switch (_mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
+  }
+
+  String get modeName {
+    switch (_mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
+  }
+
+  IconData get modeIcon {
+    switch (_mode) {
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+    }
+  }
+
+  static IconData getIconForMode(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+    }
+  }
+
+  static String getNameForMode(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
   }
 }

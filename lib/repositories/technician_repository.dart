@@ -19,4 +19,50 @@ class TechnicianRepository {
     if (!doc.exists || doc.data() == null) return null;
     return Technician.fromMap(doc.id, doc.data()!);
   }
+
+  Stream<Technician?> streamById(String id) {
+    if (id.isEmpty) return Stream.value(null);
+    return _col.doc(id).snapshots().map((snap) {
+      if (!snap.exists || snap.data() == null) return null;
+      return Technician.fromMap(snap.id, snap.data()!);
+    });
+  }
+
+  Future<void> updateOnlineStatus(String id, bool online) async {
+    if (id.isEmpty) return;
+    await _col.doc(id).update({'online': online}).catchError((_) {});
+  }
+
+  Future<void> updateEmergencyStatus(String id, bool emergencyAvailable) async {
+    if (id.isEmpty) return;
+    await _col.doc(id).update({'emergencyAvailable': emergencyAvailable}).catchError((_) {});
+  }
+
+  Future<void> toggleBanStatus(String id, bool isBanned, {String? reason}) async {
+    if (id.isEmpty) return;
+    final batch = FirebaseFirestore.instance.batch();
+    final techDoc = _col.doc(id);
+    batch.update(techDoc, {
+      'isBanned': isBanned,
+      'banned': isBanned,
+      if (reason != null) 'banReason': reason,
+      if (isBanned) 'online': false,
+      'statusUpdatedAt': FieldValue.serverTimestamp(),
+    });
+
+    final userDoc = FirebaseFirestore.instance.collection(FirestorePaths.users).doc(id);
+    batch.set(userDoc, {
+      'banned': isBanned,
+      'status': isBanned ? 'suspended' : 'active',
+      if (reason != null) 'banReason': reason,
+    }, SetOptions(merge: true));
+
+    await batch.commit();
+  }
+
+  Future<void> deleteTechnician(String id) async {
+    if (id.isEmpty) return;
+    await _col.doc(id).delete();
+  }
 }
+

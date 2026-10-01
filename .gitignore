@@ -2,10 +2,16 @@
 *.class
 *.lock
 *.log
+firestore-debug.log
 *.pyc
 *.swp
+*.apk
+*.aab
+*.png
+!assets/**
 .buildlog/
 .history
+backups/
 
 
 
@@ -120,9 +126,13 @@ app.*.symbols
 
 # Environment and secrets
 secrets.env
+.env
 *.env
 *.local
 !secrets.env.example
-functions/.secret.local
-functions/lib/
-functions/node_modules/
+
+# Service account keys and GCP credentials
+*service-account*.json
+*-adminsdk-*.json
+*credentials*.json
+*.key.json

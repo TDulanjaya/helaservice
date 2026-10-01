@@ -1,9 +1,14 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart' as pv;
 import '../../../constants/firestore_paths.dart';
 import '../../../models/admin_models.dart';
+import '../../../models/admin_user.dart';
+import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
+import '../../../utils/l10n_extension.dart';
 
 class NicVerificationWorkspaceScreen extends StatefulWidget {
   const NicVerificationWorkspaceScreen({super.key});
@@ -184,46 +189,9 @@ class _NicVerificationWorkspaceScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Technician Identity Verification Desk',
+                context.l10n.nicVerificationDeskTitle,
                 style: TextStyle(
                     fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Review National Identity Cards (NIC) and police records before activating artisan profiles on the island-wide HelaService network.',
-                style:
-                    TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-              ),
-              const SizedBox(height: 8),
-              const Wrap(
-                spacing: 12,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.verified_user,
-                          size: 14, color: AppColors.primary),
-                      SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          'e-DLS & SL Police Link Online',
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Avg Turnaround: 4.2 mins',
-                    style: TextStyle(
-                        fontSize: 11, color: AppColors.onSurfaceVariant),
-                  ),
-                ],
               ),
               SizedBox(height: isMobile ? 14 : 18),
 
@@ -237,19 +205,19 @@ class _NicVerificationWorkspaceScreenState
                   childAspectRatio: 2.2,
                   children: [
                     _QueueStat(
-                        label: 'Pending Review',
+                        label: context.l10n.statPendingReview,
                         value: '$pendingCount',
                         color: AppColors.secondaryContainer),
                     _QueueStat(
-                        label: 'Approved',
+                        label: context.l10n.statApproved,
                         value: '$approvedCount',
                         color: AppColors.primary),
                     _QueueStat(
-                        label: 'Needs Resubmission',
+                        label: context.l10n.statNeedsResubmission,
                         value: '$resubmitCount',
                         color: AppColors.outline),
                     _QueueStat(
-                        label: 'Flagged / Rejected',
+                        label: context.l10n.statFlaggedRejected,
                         value: '$rejectedCount',
                         color: AppColors.error),
                   ],
@@ -259,25 +227,25 @@ class _NicVerificationWorkspaceScreenState
                   children: [
                     Expanded(
                         child: _QueueStat(
-                            label: 'Pending Review',
+                            label: context.l10n.statPendingReview,
                             value: '$pendingCount',
                             color: AppColors.secondaryContainer)),
                     const SizedBox(width: 12),
                     Expanded(
                         child: _QueueStat(
-                            label: 'Approved',
+                            label: context.l10n.statApproved,
                             value: '$approvedCount',
                             color: AppColors.primary)),
                     const SizedBox(width: 12),
                     Expanded(
                         child: _QueueStat(
-                            label: 'Needs Resubmission',
+                            label: context.l10n.statNeedsResubmission,
                             value: '$resubmitCount',
                             color: AppColors.outline)),
                     const SizedBox(width: 12),
                     Expanded(
                         child: _QueueStat(
-                            label: 'Flagged / Rejected',
+                            label: context.l10n.statFlaggedRejected,
                             value: '$rejectedCount',
                             color: AppColors.error)),
                   ],
@@ -290,31 +258,24 @@ class _NicVerificationWorkspaceScreenState
                   padding: const EdgeInsets.symmetric(
                       vertical: 48, horizontal: 24),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLowest,
+                    color: context.themeSurface,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: context.themeBorder),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                           blurRadius: 10)
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Icon(Icons.task_alt,
+                      const Icon(Icons.task_alt,
                           size: 54, color: AppColors.primary),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       Text(
-                        'Verification Queue Clear',
+                        context.l10n.verificationQueueClear,
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'No artisan verification submissions are currently awaiting review.\nNew uploads from technicians will stream here in real time.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.onSurfaceVariant),
+                            fontSize: 16, fontWeight: FontWeight.bold, color: context.themeTextPrimary),
                       ),
                     ],
                   ),
@@ -323,11 +284,12 @@ class _NicVerificationWorkspaceScreenState
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLowest,
+                    color: context.themeSurface,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: context.themeBorder),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                           blurRadius: 10)
                     ],
                   ),
@@ -336,12 +298,12 @@ class _NicVerificationWorkspaceScreenState
                     children: [
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Incoming Verification Stream',
+                              context.l10n.incomingVerificationStream,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 13),
+                                  fontWeight: FontWeight.bold, fontSize: 13, color: context.themeTextPrimary),
                             ),
                           ),
                           Text('$pendingCount Pending',
@@ -351,9 +313,9 @@ class _NicVerificationWorkspaceScreenState
                                   fontWeight: FontWeight.bold)),
                         ],
                       ),
-                      const Text('Select an artisan to audit documents',
+                      Text(context.l10n.selectArtisanAudit,
                           style: TextStyle(
-                              fontSize: 10.5, color: AppColors.outline)),
+                              fontSize: 10.5, color: context.themeTextSecondary)),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 110,
@@ -373,12 +335,12 @@ class _NicVerificationWorkspaceScreenState
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: selected
-                                      ? AppColors.primary.withValues(alpha: 0.08)
-                                      : AppColors.surfaceLow,
+                                      ? AppColors.primary.withValues(alpha: 0.12)
+                                      : context.themeSurfaceLow,
                                   border: Border.all(
                                     color: selected
                                         ? AppColors.primary
-                                        : Colors.transparent,
+                                        : context.themeBorder,
                                     width: selected ? 1.5 : 1,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -396,23 +358,24 @@ class _NicVerificationWorkspaceScreenState
                                         child: Text(
                                           item.name,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontWeight: FontWeight.w700,
-                                              fontSize: 12),
+                                              fontSize: 12,
+                                              color: context.themeTextPrimary),
                                         ),
                                       ),
                                       Text(item.timeAgo,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 10,
-                                              color: AppColors.outline)),
+                                              color: context.themeTextSecondary)),
                                     ]),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${item.trade} • ${item.location}',
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 10.5,
-                                          color: AppColors.onSurfaceVariant),
+                                          color: context.themeTextSecondary),
                                     ),
                                     const SizedBox(height: 4),
                                     Row(
@@ -421,9 +384,9 @@ class _NicVerificationWorkspaceScreenState
                                           child: Text(
                                             item.nicNumber,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontSize: 10,
-                                                color: AppColors.outline),
+                                                color: context.themeTextSecondary),
                                           ),
                                         ),
                                         _buildStatusBadge(item),
@@ -452,11 +415,12 @@ class _NicVerificationWorkspaceScreenState
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceLowest,
+                            color: context.themeSurface,
                             borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: context.themeBorder),
                             boxShadow: [
                               BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
                                   blurRadius: 10)
                             ],
                           ),
@@ -465,11 +429,12 @@ class _NicVerificationWorkspaceScreenState
                             children: [
                               Row(
                                 children: [
-                                  const Expanded(
+                                  Expanded(
                                     child: Text('Incoming Verification Stream',
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 13)),
+                                            fontSize: 13,
+                                            color: context.themeTextPrimary)),
                                   ),
                                   Text('$pendingCount Pending',
                                       style: const TextStyle(
@@ -478,9 +443,9 @@ class _NicVerificationWorkspaceScreenState
                                           fontWeight: FontWeight.bold)),
                                 ],
                               ),
-                              const Text('Sorted by Most Recent',
+                              Text('Sorted by Most Recent',
                                   style: TextStyle(
-                                      fontSize: 10, color: AppColors.outline)),
+                                      fontSize: 10, color: context.themeTextSecondary)),
                               const SizedBox(height: 10),
                               ...List.generate(items.length, (i) {
                                 final item = items[i];
@@ -493,12 +458,12 @@ class _NicVerificationWorkspaceScreenState
                                     decoration: BoxDecoration(
                                       color: selected
                                           ? AppColors.primary
-                                              .withValues(alpha: 0.06)
-                                          : AppColors.surfaceLow,
+                                              .withValues(alpha: 0.12)
+                                          : context.themeSurfaceLow,
                                       border: Border.all(
                                           color: selected
                                               ? AppColors.primary
-                                              : Colors.transparent),
+                                              : context.themeBorder),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Column(
@@ -512,27 +477,26 @@ class _NicVerificationWorkspaceScreenState
                                           const SizedBox(width: 6),
                                           Expanded(
                                               child: Text(item.name,
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      fontSize: 12.5))),
+                                                      fontSize: 12.5,
+                                                      color: context.themeTextPrimary))),
                                           Text(item.timeAgo,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                   fontSize: 10,
-                                                  color: AppColors.outline)),
+                                                  color: context.themeTextSecondary)),
                                         ]),
                                         Text(
                                             '${item.trade} • ${item.location}',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontSize: 11,
-                                                color: AppColors
-                                                    .onSurfaceVariant)),
+                                                color: context.themeTextSecondary)),
                                         Text(
                                             '${item.nicNumber} — ${item.docNote}',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontSize: 10.5,
-                                                color: AppColors
-                                                    .onSurfaceVariant)),
+                                                color: context.themeTextSecondary)),
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
@@ -541,9 +505,9 @@ class _NicVerificationWorkspaceScreenState
                                                 item.fileKey.isNotEmpty
                                                     ? 'B2 Uploaded'
                                                     : 'Standard Doc',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 10,
-                                                    color: AppColors.outline),
+                                                    color: context.themeTextSecondary),
                                               ),
                                             ),
                                             _buildStatusBadge(item),
@@ -595,21 +559,22 @@ class _NicVerificationWorkspaceScreenState
           color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(4),
         ),
-        child: const Text('Rejected',
-            style: TextStyle(
+        child: Text(context.l10n.rejectedStatus,
+            style: const TextStyle(
                 fontSize: 10,
                 color: AppColors.error,
                 fontWeight: FontWeight.w700)),
       );
     }
     if (item.flagged || item.status == 'resubmit') {
-      return const Text('Review Required',
-          style: TextStyle(
+      return Text(context.l10n.reviewRequired,
+          style: const TextStyle(
               fontSize: 10.5,
               color: AppColors.error,
               fontWeight: FontWeight.w700));
     }
-    return Text('${item.matchPercent}% Match',
+    return Text(
+        item.hasComputedMatch ? '${item.matchPercent}% Match' : context.l10n.manualReview,
         style: const TextStyle(
             fontSize: 10.5,
             color: AppColors.primary,
@@ -617,17 +582,20 @@ class _NicVerificationWorkspaceScreenState
   }
 
   Widget _buildDetailCard(VerificationQueueItem selectedItem, bool isMobile) {
+    final roleProvider = pv.Provider.of<RoleProvider>(context);
+    final canVerifyNic = roleProvider.hasAdminPermission(AdminPermission.verifyNic);
     final isApproved = selectedItem.status == 'approved';
     final isRejected = selectedItem.status == 'rejected';
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.themeSurface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.themeBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
+              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 10)
         ],
       ),
       child: Column(
@@ -639,7 +607,8 @@ class _NicVerificationWorkspaceScreenState
                 selectedItem.name,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: isMobile ? 14 : 15),
+                    fontSize: isMobile ? 14 : 15,
+                    color: context.themeTextPrimary),
               ),
             ),
             const SizedBox(width: 8),
@@ -655,8 +624,8 @@ class _NicVerificationWorkspaceScreenState
               ),
               child: Text(
                 isApproved
-                    ? 'Active & Verified'
-                    : (isRejected ? 'Rejected' : 'Pending Verification'),
+                    ? context.l10n.activeAndVerified
+                    : (isRejected ? context.l10n.rejectedStatus : context.l10n.pendingVerificationStatus),
                 style: TextStyle(
                     fontSize: 10.5,
                     color: isRejected ? AppColors.error : AppColors.primary,
@@ -666,13 +635,21 @@ class _NicVerificationWorkspaceScreenState
           ]),
           const SizedBox(height: 8),
           Wrap(spacing: 12, runSpacing: 6, children: [
-            const _InfoRow(icon: Icons.call, text: '+94 77 482 1902'),
+            _InfoRow(
+                icon: Icons.call,
+                text: selectedItem.phone.isNotEmpty
+                    ? selectedItem.phone
+                    : context.l10n.notProvided),
             _InfoRow(
                 icon: Icons.home,
                 text: selectedItem.location.isNotEmpty
                     ? selectedItem.location
                     : 'Western Province, Sri Lanka'),
-            const _InfoRow(icon: Icons.translate, text: 'Sinhala, English'),
+            _InfoRow(
+                icon: Icons.translate,
+                text: selectedItem.preferredLanguage.isNotEmpty
+                    ? selectedItem.preferredLanguage
+                    : context.l10n.notSpecified),
           ]),
           const SizedBox(height: 8),
           Container(
@@ -686,7 +663,7 @@ class _NicVerificationWorkspaceScreenState
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'SL Police Clearance Portal — Ref: #SLP-2024-09881 • NIC: ${selectedItem.nicNumber}',
+                  '${context.l10n.manualNicReview} • NIC: ${selectedItem.nicNumber}',
                   style: const TextStyle(fontSize: 11),
                 ),
               ),
@@ -707,7 +684,7 @@ class _NicVerificationWorkspaceScreenState
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Backblaze B2 Storage Path: ${selectedItem.fileKey}',
+                      '${context.l10n.cloudStoragePath}: ${selectedItem.fileKey}',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 10.5, color: AppColors.outline),
@@ -718,14 +695,16 @@ class _NicVerificationWorkspaceScreenState
             ),
           ],
           const SizedBox(height: 16),
-          const Row(children: [
-            Icon(Icons.document_scanner, size: 16, color: AppColors.primary),
-            SizedBox(width: 6),
+          Row(children: [
+            const Icon(Icons.document_scanner, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'OCR Audit — All 4 Fields Concordant',
+                selectedItem.flagged
+                    ? context.l10n.ocrAuditFlagged
+                    : context.l10n.ocrAuditConcordant,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ),
           ]),
@@ -734,28 +713,30 @@ class _NicVerificationWorkspaceScreenState
               final ocrFields = [
                 OcrField(
                   icon: Icons.badge,
-                  field: 'Full Name',
+                  field: context.l10n.ocrFullName,
                   extracted: selectedItem.name.toUpperCase(),
                   registry: selectedItem.name,
-                  status: '${selectedItem.matchPercent}%',
+                  status: selectedItem.hasComputedMatch
+                      ? '${selectedItem.matchPercent}%'
+                      : context.l10n.manualReview,
                 ),
                 OcrField(
                   icon: Icons.credit_card,
-                  field: 'NIC Number',
+                  field: context.l10n.ocrNicNumber,
                   extracted: selectedItem.nicNumber,
                   registry: selectedItem.nicNumber,
                   status: selectedItem.flagged ? 'Flagged' : 'Match',
                 ),
                 OcrField(
                   icon: Icons.home,
-                  field: 'Electoral Address / Location',
+                  field: context.l10n.ocrLocation,
                   extracted: selectedItem.location,
                   registry: '${selectedItem.location} (Verified GN Division)',
                   status: 'Valid',
                 ),
                 OcrField(
                   icon: Icons.assignment_turned_in,
-                  field: 'Trade / Document Note',
+                  field: context.l10n.ocrTradeNote,
                   extracted: selectedItem.trade,
                   registry: selectedItem.docNote,
                   status: selectedItem.status.toUpperCase(),
@@ -823,11 +804,11 @@ class _NicVerificationWorkspaceScreenState
                   3: FlexColumnWidth(0.8)
                 },
                 children: [
-                  const TableRow(children: [
-                    _TCell('Data Field', header: true),
-                    _TCell('OCR Extracted', header: true),
-                    _TCell('Registry', header: true),
-                    _TCell('Status', header: true),
+                  TableRow(children: [
+                    _TCell(context.l10n.ocrDataField, header: true),
+                    _TCell(context.l10n.ocrExtracted, header: true),
+                    _TCell(context.l10n.ocrRegistry, header: true),
+                    _TCell(context.l10n.ocrStatus, header: true),
                   ]),
                   ...ocrFields.map((f) => TableRow(children: [
                         Padding(
@@ -858,19 +839,56 @@ class _NicVerificationWorkspaceScreenState
             },
           ),
           const SizedBox(height: 16),
-          const Row(children: [
-            _DocPreview(icon: Icons.badge, label: 'NIC Front', tag: 'UV PASS'),
-            SizedBox(width: 8),
-            _DocPreview(
-                icon: Icons.qr_code_scanner,
-                label: 'NIC Back',
-                tag: 'PDF417 OK'),
-            SizedBox(width: 8),
-            _DocPreview(
-                icon: Icons.face, label: 'Liveness', tag: '98.4% Match'),
+          Row(children: [
+            _NicDocImagePreview(
+              providerId: selectedItem.providerId,
+              docType: 'front',
+              label: context.l10n.docNicFront,
+              fallbackIcon: Icons.badge,
+            ),
+            const SizedBox(width: 8),
+            _NicDocImagePreview(
+              providerId: selectedItem.providerId,
+              docType: 'back',
+              label: context.l10n.docNicBack,
+              fallbackIcon: Icons.qr_code_scanner,
+            ),
+            const SizedBox(width: 8),
+            _NicDocImagePreview(
+              providerId: selectedItem.providerId,
+              docType: 'selfie',
+              label: context.l10n.docLiveness,
+              fallbackIcon: Icons.face,
+            ),
           ]),
           const SizedBox(height: 18),
-          if (isMobile)
+          if (!canVerifyNic)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lock_outline, size: 16, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (isMobile)
             Column(
               children: [
                 SizedBox(
@@ -887,8 +905,8 @@ class _NicVerificationWorkspaceScreenState
                                 strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.check_circle, size: 16),
                     label: Text(isApproved
-                        ? 'Artisan Activated'
-                        : 'Approve & Activate Artisan'),
+                        ? context.l10n.artisanActivated
+                        : context.l10n.approveAndActivateArtisan),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -907,7 +925,7 @@ class _NicVerificationWorkspaceScreenState
                         icon: const Icon(Icons.cancel,
                             size: 14, color: AppColors.error),
                         label: Text(
-                            isRejected ? 'Rejected' : 'Reject',
+                            isRejected ? context.l10n.rejectedStatus : context.l10n.rejectAction,
                             style: const TextStyle(
                                 color: AppColors.error, fontSize: 11)),
                         style: OutlinedButton.styleFrom(
@@ -921,8 +939,8 @@ class _NicVerificationWorkspaceScreenState
                             ? null
                             : () => _handleRequestResubmission(selectedItem),
                         icon: const Icon(Icons.replay, size: 14),
-                        label: const Text('Clearer Photo',
-                            style: TextStyle(fontSize: 11)),
+                        label: Text(context.l10n.requestClearerPhoto,
+                            style: const TextStyle(fontSize: 11)),
                       ),
                     ),
                   ],
@@ -938,7 +956,7 @@ class _NicVerificationWorkspaceScreenState
                       : () => _handleReject(selectedItem),
                   icon: const Icon(Icons.cancel,
                       size: 14, color: AppColors.error),
-                  label: Text(isRejected ? 'Rejected' : 'Reject',
+                  label: Text(isRejected ? context.l10n.rejectedStatus : context.l10n.rejectAction,
                       style: const TextStyle(color: AppColors.error)),
                   style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.error)),
@@ -951,7 +969,7 @@ class _NicVerificationWorkspaceScreenState
                         ? null
                         : () => _handleRequestResubmission(selectedItem),
                     icon: const Icon(Icons.replay, size: 14),
-                    label: const Text('Request Clearer Photo')),
+                    label: Text(context.l10n.requestClearerPhoto)),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -968,8 +986,8 @@ class _NicVerificationWorkspaceScreenState
                               strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.check_circle, size: 16),
                   label: Text(isApproved
-                      ? 'Artisan Activated'
-                      : 'Approve & Activate Artisan'),
+                      ? context.l10n.artisanActivated
+                      : context.l10n.approveAndActivateArtisan),
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white),
@@ -994,11 +1012,12 @@ class _QueueStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.themeSurface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.themeBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)
+              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 8)
         ],
       ),
       child: Column(
@@ -1010,8 +1029,8 @@ class _QueueStat extends StatelessWidget {
                   fontSize: 18, fontWeight: FontWeight.bold, color: color)),
           Text(label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  fontSize: 10.5, color: AppColors.onSurfaceVariant)),
+              style: TextStyle(
+                  fontSize: 10.5, color: context.themeTextSecondary)),
         ],
       ),
     );
@@ -1025,12 +1044,12 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 13, color: AppColors.onSurfaceVariant),
+      Icon(icon, size: 13, color: context.themeTextSecondary),
       const SizedBox(width: 4),
       Flexible(
           child: Text(text,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11))),
+              style: TextStyle(fontSize: 11, color: context.themeTextPrimary))),
     ]);
   }
 }
@@ -1047,7 +1066,7 @@ class _TCell extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: header ? 10.5 : 11,
-          color: header ? AppColors.outline : AppColors.onSurface,
+          color: header ? context.themeTextSecondary : context.themeTextPrimary,
           fontWeight: header ? FontWeight.w700 : FontWeight.w400,
         ),
       ),
@@ -1055,43 +1074,185 @@ class _TCell extends StatelessWidget {
   }
 }
 
-class _DocPreview extends StatelessWidget {
-  final IconData icon;
+class _NicDocImagePreview extends StatelessWidget {
+  final String providerId;
+  final String docType;
   final String label;
-  final String tag;
-  const _DocPreview(
-      {required this.icon, required this.label, required this.tag});
+  final IconData fallbackIcon;
+
+  const _NicDocImagePreview({
+    required this.providerId,
+    required this.docType,
+    required this.label,
+    required this.fallbackIcon,
+  });
+
+  void _showZoomDialog(BuildContext context, Uint8List bytes, String title) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                color: Colors.black87,
+                child: InteractiveViewer(
+                  maxScale: 4.0,
+                  child: Image.memory(bytes, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (providerId.isEmpty) {
+      return _buildFallback(context, 'No ID');
+    }
+
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('nicImages')
+          .doc(providerId)
+          .collection('files')
+          .doc(docType)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Expanded(
+            child: Container(
+              height: 110,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLow,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data?.data();
+        final rawBlob = data?['data'];
+        Uint8List? bytes;
+        if (rawBlob is Blob) {
+          bytes = rawBlob.bytes;
+        }
+
+        if (bytes == null || bytes.isEmpty) {
+          return _buildFallback(context, 'No image');
+        }
+
+        return Expanded(
+          child: InkWell(
+            onTap: () => _showZoomDialog(context, bytes!, label),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      height: 68,
+                      width: double.infinity,
+                      child: Image.memory(
+                        bytes,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(fallbackIcon,
+                            color: AppColors.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 10, fontWeight: FontWeight.w600),
+                  ),
+                  const Text(
+                    'Tap to zoom',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFallback(BuildContext context, String tag) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-            color: AppColors.surfaceLow,
-            borderRadius: BorderRadius.circular(12)),
-        child: Column(children: [
-          Container(
-            height: 52,
-            width: double.infinity,
-            decoration: BoxDecoration(
+          color: AppColors.surfaceLow,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 68,
+              width: double.infinity,
+              decoration: BoxDecoration(
                 color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, color: AppColors.onSurfaceVariant),
-          ),
-          const SizedBox(height: 6),
-          Text(label,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(fallbackIcon, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-          Text(tag,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              tag,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                  fontSize: 9.5,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700)),
-        ]),
+                fontSize: 9.5,
+                color: AppColors.outline,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+

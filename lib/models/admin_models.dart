@@ -82,7 +82,7 @@ class DispatchEvent {
     }
 
     final iconKey = map['iconKey'] as String? ?? '';
-    final colorVal = map['colorValue'] as int? ?? 0xFF00685F;
+    final colorVal = map['colorValue'] as int? ?? 0xFFD6900F;
 
     return DispatchEvent(
       id: id,
@@ -176,6 +176,10 @@ class VerificationQueueItem {
   final String docNote;
   final int matchPercent;
   final bool flagged;
+  final String phone;
+  final String preferredLanguage;
+
+  bool get hasComputedMatch => matchPercent > 0;
 
   const VerificationQueueItem({
     this.id = '',
@@ -192,8 +196,10 @@ class VerificationQueueItem {
     required this.location,
     required this.nicNumber,
     this.docNote = 'Front + Back Uploaded',
-    this.matchPercent = 95,
+    this.matchPercent = 0,
     this.flagged = false,
+    this.phone = '',
+    this.preferredLanguage = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -211,6 +217,8 @@ class VerificationQueueItem {
       'docNote': docNote,
       'matchPercent': matchPercent,
       'flagged': flagged,
+      if (phone.isNotEmpty) 'phone': phone,
+      if (preferredLanguage.isNotEmpty) 'preferredLanguage': preferredLanguage,
     };
   }
 
@@ -235,7 +243,11 @@ class VerificationQueueItem {
       final lower = tradeStr.toLowerCase();
       if (lower.contains('electr')) return Icons.bolt;
       if (lower.contains('plumb')) return Icons.plumbing;
-      if (lower.contains('ac') || lower.contains('hvac') || lower.contains('cool')) return Icons.ac_unit;
+      if (lower.contains('ac') ||
+          lower.contains('hvac') ||
+          lower.contains('cool')) {
+        return Icons.ac_unit;
+      }
       if (lower.contains('carpent')) return Icons.carpenter;
       return Icons.engineering;
     }
@@ -255,8 +267,10 @@ class VerificationQueueItem {
       location: map['location'] as String? ?? 'Sri Lanka',
       nicNumber: map['nicNumber'] as String? ?? 'Pending NIC',
       docNote: map['docNote'] as String? ?? 'NIC front + back',
-      matchPercent: (map['matchPercent'] as num?)?.toInt() ?? 95,
+      matchPercent: (map['matchPercent'] as num?)?.toInt() ?? 0,
       flagged: map['flagged'] as bool? ?? false,
+      phone: map['phone'] as String? ?? '',
+      preferredLanguage: map['preferredLanguage'] as String? ?? '',
     );
   }
 }

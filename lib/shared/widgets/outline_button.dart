@@ -5,7 +5,7 @@ class AppOutlineButton extends StatelessWidget {
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
-  final Color color;
+  final Color? color;
   final bool expand;
 
   const AppOutlineButton({
@@ -13,17 +13,18 @@ class AppOutlineButton extends StatelessWidget {
     required this.label,
     this.icon,
     this.onPressed,
-    this.color = AppColors.onSurface,
+    this.color,
     this.expand = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = color ?? context.themeTextPrimary;
     final button = OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: AppColors.surfaceHighest),
+        foregroundColor: effectiveColor,
+        side: BorderSide(color: context.themeBorder),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),

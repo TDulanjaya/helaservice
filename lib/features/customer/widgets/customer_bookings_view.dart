@@ -5,6 +5,8 @@ import '../../../models/technician.dart';
 import '../../../models/booking.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/app_localizations_helpers.dart';
 import '../screens/live_tracking_screen.dart';
 
 class CustomerBookingsView extends StatelessWidget {
@@ -15,14 +17,13 @@ class CustomerBookingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final customerId =
-        FirebaseAuth.instance.currentUser?.uid ?? 'g_cust_101';
+        FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'My Bookings',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+        title: Text(
+          context.l10n.myBookings,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
         ),
       ),
       body: SafeArea(
@@ -38,21 +39,24 @@ class CustomerBookingsView extends StatelessWidget {
                 .toList();
 
             if (bookings.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.calendar_month_outlined,
-                        size: 54, color: AppColors.outline),
-                    SizedBox(height: 12),
-                    Text('No bookings recorded yet',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 4),
-                    Text('Browse certified artisans on the Explore tab.',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.onSurfaceVariant)),
-                  ],
+              return Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_month_outlined,
+                          size: 54, color: context.themeTextSecondary),
+                      const SizedBox(height: 12),
+                      Text(context.l10n.noBookingsRecorded,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text(context.l10n.browseArtisansExplore,
+                          style: TextStyle(
+                              fontSize: 12, color: context.themeTextSecondary)),
+                    ],
+                  ),
                 ),
               );
             }
@@ -67,18 +71,18 @@ class CustomerBookingsView extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF008378),
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'ACTIVE SERVICE VISIT',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.activeServiceVisit,
+                        style: const TextStyle(
                           fontSize: 11,
                           letterSpacing: 0.8,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF008378),
+                          color: AppColors.primary,
                         ),
                       ),
                     ],
@@ -88,15 +92,15 @@ class CustomerBookingsView extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceLowest,
+                          color: context.themeSurface,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
+                            color: AppColors.primary.withValues(alpha: 0.35),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.08),
+                              color: AppColors.primary.withValues(alpha: context.isDark ? 0.2 : 0.08),
                               blurRadius: 14,
                               offset: const Offset(0, 4),
                             ),
@@ -112,17 +116,19 @@ class CustomerBookingsView extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE8F5E9),
+                                    color: context.isDark
+                                        ? const Color(0xFF1B382B)
+                                        : const Color(0xFFE8F5E9),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
-                                    b.status == 'pending'
-                                        ? 'Request Dispatched'
-                                        : 'Technician En Route',
-                                    style: const TextStyle(
+                                    LocalizedData.getStatus(context, b.status),
+                                    style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF2E7D32),
+                                      color: context.isDark
+                                          ? const Color(0xFF81C784)
+                                          : const Color(0xFF2E7D32),
                                     ),
                                   ),
                                 ),
@@ -141,24 +147,24 @@ class CustomerBookingsView extends StatelessWidget {
                             const SizedBox(height: 12),
                             Text(
                               b.title.isNotEmpty
-                                  ? b.title
+                                   ? b.title
                                   : 'Service Diagnostic',
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Provider: ${b.customerName.isNotEmpty ? b.customerName : b.providerId}',
-                              style: const TextStyle(
+                              '${context.l10n.roleProvider}: ${b.providerName.isNotEmpty ? b.providerName : (b.providerId.isNotEmpty ? b.providerId : "Technician")}',
+                              style: TextStyle(
                                 fontSize: 12.5,
-                                color: AppColors.onSurfaceVariant,
+                                color: context.themeTextSecondary,
                               ),
                             ),
                             const SizedBox(height: 14),
                             Row(
                               children: [
-                                const Icon(Icons.location_on_outlined,
-                                    size: 16, color: AppColors.outline),
+                                Icon(Icons.location_on_outlined,
+                                    size: 16, color: context.themeTextSecondary),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -187,22 +193,24 @@ class CustomerBookingsView extends StatelessWidget {
                             ElevatedButton.icon(
                               onPressed: onTrackPressed ??
                                   () async {
-                                    final tech = await TechnicianRepository()
-                                            .getById(b.providerId) ??
-                                        _defaultTech;
+                                    final Technician? tech =
+                                        await TechnicianRepository()
+                                            .getById(b.providerId);
                                     if (!context.mounted) return;
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => LiveTrackingScreen(
                                           technician: tech,
+                                          booking: b,
+                                          showBottomNav: false,
                                         ),
                                       ),
                                     );
                                   },
                               icon: const Icon(Icons.navigation_outlined,
                                   size: 18),
-                              label: const Text('Open Live GPS Tracking'),
+                              label: Text(context.l10n.openLiveGpsTracking),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
@@ -219,23 +227,25 @@ class CustomerBookingsView extends StatelessWidget {
                 ],
                 if (pastBookings.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Text(
-                    'Past Completed Services',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                  Text(
+                    context.l10n.pastCompletedServices,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
                   ...pastBookings.map((b) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: _PastBookingCard(
                           title: b.title.isNotEmpty ? b.title : 'Service',
-                          technician: b.customerName.isNotEmpty
-                              ? b.customerName
+                          technician: b.providerName.isNotEmpty
+                              ? b.providerName
                               : 'Technician',
                           date: b.time.isNotEmpty ? b.time : 'Completed',
                           amount:
                               b.estRate.isNotEmpty ? b.estRate : 'LKR 2,500',
-                          status: b.status,
-                          rating: 5,
+                          status: LocalizedData.getStatus(context, b.status),
+                          rating: b.status.toLowerCase() == 'completed'
+                              ? (b.rating ?? 5)
+                              : 0,
                         ),
                       )),
                 ],
@@ -270,9 +280,9 @@ class _PastBookingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.themeSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.12)),
+        border: Border.all(color: context.themeBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,15 +292,15 @@ class _PastBookingCard extends StatelessWidget {
             children: [
               Text(
                 date,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11.5,
-                  color: AppColors.onSurfaceVariant,
+                  color: context.themeTextSecondary,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLow,
+                  color: context.themeSurfaceContainer,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -312,21 +322,36 @@ class _PastBookingCard extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              Text(
-                'By $technician • ',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.onSurfaceVariant,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'By $technician',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (rating > 0) ...[
+                      const SizedBox(width: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(
+                          rating,
+                          (index) => const Icon(Icons.star,
+                              size: 13, color: AppColors.primary),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              Row(
-                children: List.generate(
-                  rating,
-                  (index) => const Icon(Icons.star,
-                      size: 13, color: Color(0xFFFEA619)),
-                ),
-              ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 amount,
                 style: const TextStyle(
@@ -341,29 +366,3 @@ class _PastBookingCard extends StatelessWidget {
     );
   }
 }
-
-const _defaultTech = Technician(
-  id: 'kasun',
-  name: 'Kasun Perera',
-  initials: 'KP',
-  avatarColor: Color(0xFF00685F),
-  title: 'Master Electrician & Senior Plumber',
-  nicVerified: true,
-  online: true,
-  rating: 4.9,
-  reviewCount: 142,
-  etaLabel: 'Instant (8 min)',
-  baseRateLkr: 1500,
-  responseTimeLabel: 'Usually responds in 5 mins',
-  jobsCount: 142,
-  yearsExperience: '10+ Yrs',
-  onTimePercent: '99.2%',
-  hourlyRateLkr: 1200,
-  emergencyRateLkr: 1800,
-  about: '',
-  languages: 'Sinhala & English',
-  serviceArea: 'Colombo 01-15',
-  certification: 'NVQ-4 Certified',
-  recentWork: [],
-  reviews: [],
-);

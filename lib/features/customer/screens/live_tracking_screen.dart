@@ -1,273 +1,636 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
+import '../../../repositories/technician_repository.dart';
+import '../../../repositories/booking_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import 'package:latlong2/latlong.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/location_utils.dart';
+import '../../../shared/widgets/app_map_view.dart';
+import '../../../services/routing_service.dart';
+import '../../../utils/map_launcher.dart';
+import '../../../models/booking.dart';
+import '../../../services/live_location_service.dart';
+import 'direct_chat_screen.dart';
 import 'rating_completion_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'home_discovery_screen.dart';
+import '../../../shared/widgets/user_avatar.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
-  final Technician technician;
+  final Technician? technician;
+  final Booking? booking;
   final bool showBottomNav;
 
   const LiveTrackingScreen({
     super.key,
-    required this.technician,
+    this.technician,
+    this.booking,
     this.showBottomNav = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (technician != null) {
+      return _buildScaffold(context, technician!, booking);
+    }
+
+    if (booking != null) {
+      return StreamBuilder<Technician?>(
+        stream: TechnicianRepository().streamById(booking!.providerId),
+        builder: (context, techSnap) {
+          final tech = techSnap.data;
+          if (tech == null) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return _buildScaffold(context, tech, booking);
+        },
+      );
+    }
+
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) {
+      return _buildEmptyState(context);
+    }
+
+    return StreamBuilder<List<Booking>>(
+      stream: BookingRepository().streamBookingsForCustomer(currentUid),
+      builder: (context, bSnapshot) {
+        if (bSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final bookings = bSnapshot.data ?? [];
+        final activeBooking = bookings
+            .where((b) => b.status != 'completed' && b.status != 'cancelled')
+            .firstOrNull;
+
+        if (activeBooking == null) {
+          return _buildEmptyState(context);
+        }
+
+        return StreamBuilder<Technician?>(
+          stream: TechnicianRepository().streamById(activeBooking.providerId),
+          builder: (context, techSnap) {
+            final tech = techSnap.data;
+            if (tech == null) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return _buildScaffold(context, tech, activeBooking);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Tracking'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-                child: PillBadge(label: 'Colombo 03', icon: Icons.location_on)),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                height: 190,
-                color: AppColors.surfaceLow,
-                child: Stack(children: [
-                  const Positioned(
-                      top: 14,
-                      left: 14,
-                      child: PillBadge(
-                          label: 'Technician on the way • Live GPS',
-                          background: Colors.white,
-                          foreground: AppColors.primary)),
-                  Positioned(
-                    top: 60,
-                    left: 40,
-                    child: Column(children: const [
-                      Icon(Icons.two_wheeler,
-                          color: AppColors.primary, size: 28),
-                      Text('38 km/h',
-                          style: TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.w700)),
-                    ]),
-                  ),
-                  const Positioned(
-                      bottom: 40,
-                      right: 50,
-                      child: Icon(Icons.home,
-                          color: AppColors.onSurface, size: 30)),
-                  Positioned(
-                    right: 12,
-                    bottom: 12,
-                    child: Column(children: const [
-                      _RoundIconButton(icon: Icons.my_location),
-                      SizedBox(height: 8),
-                      _RoundIconButton(icon: Icons.layers),
-                    ]),
-                  ),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                  color: AppColors.surfaceLowest,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.04), blurRadius: 10)
-                  ]),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(children: const [
-                    Icon(Icons.timer, color: AppColors.primary, size: 20),
-                    SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Estimated Arrival',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.onSurfaceVariant)),
-                        Text('Arriving in 11 mins',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ]),
-                  Row(children: const [
-                    Icon(Icons.navigation,
-                        size: 16, color: AppColors.onSurfaceVariant),
-                    SizedBox(width: 4),
-                    Text('2.1 km',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                  color: AppColors.surfaceLowest,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.04), blurRadius: 10)
-                  ]),
-              child: Column(
-                children: [
-                  Row(children: [
-                    CircleAvatar(
-                        radius: 24,
-                        backgroundColor: technician.avatarColor,
-                        child: Text(technician.initials,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold))),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            const Icon(Icons.star,
-                                size: 14, color: AppColors.secondaryContainer),
-                            Text(' ${technician.rating}  ',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700, fontSize: 12)),
-                            Expanded(
-                                child: Text(technician.name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                    overflow: TextOverflow.ellipsis)),
-                          ]),
-                          Row(children: const [
-                            Icon(Icons.verified,
-                                size: 12, color: AppColors.primary),
-                            SizedBox(width: 3),
-                            Text('Master Electrician • 642 Jobs',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.onSurfaceVariant)),
-                          ]),
-                          Row(children: const [
-                            Icon(Icons.motorcycle,
-                                size: 12, color: AppColors.onSurfaceVariant),
-                            SizedBox(width: 3),
-                            Text('WP BDF-8821 (Bajaj Pulsar)',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.onSurfaceVariant)),
-                          ]),
-                        ],
-                      ),
-                    ),
-                  ]),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    Expanded(
-                        child: AppOutlineButton(
-                            label: 'Call Tech',
-                            icon: Icons.call,
-                            onPressed: () {})),
-                    const SizedBox(width: 10),
-                    Expanded(
-                        child: AppOutlineButton(
-                            label: 'Chat (2)',
-                            icon: Icons.chat,
-                            onPressed: () {})),
-                  ]),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                  color: AppColors.surfaceLow,
-                  borderRadius: BorderRadius.circular(16)),
-              child: Row(children: [
-                const Icon(Icons.payments, color: AppColors.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Direct Pay at Site (Cash / LankaQR)',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 13)),
-                      Text(
-                          'LKR 2,400 standard inspection fee. No hidden platform charges.',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.onSurfaceVariant)),
-                    ],
-                  ),
+      appBar: AppBar(title: Text(context.l10n.liveTracking)),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-              ]),
-            ),
-            const SizedBox(height: 14),
-            Row(children: [
-              Expanded(
-                  child: AppOutlineButton(
-                      label: 'Cancel Request',
-                      icon: Icons.cancel,
-                      color: AppColors.error,
-                      onPressed: () => Navigator.of(context).pop())),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: AppOutlineButton(
-                      label: 'Share Trip',
-                      icon: Icons.share_location,
-                      onPressed: () {})),
-            ]),
-            const SizedBox(height: 14),
-            AppOutlineButton(
-              label: 'Simulate: Job Finished',
-              icon: Icons.check_circle,
-              color: AppColors.primary,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) =>
-                        RatingCompletionScreen(technician: technician)),
+                child: const Icon(Icons.near_me_outlined,
+                    size: 54, color: AppColors.primary),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.noActiveDispatch,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.noActiveDispatchSub,
+                style: TextStyle(
+                  color: context.themeTextSecondary,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.explore, size: 18),
+                label: Text(context.l10n.navExplore),
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const HomeDiscoveryScreen(initialIndex: 0),
+                    ),
+                    (route) => false,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: showBottomNav
           ? AppBottomNav(
               currentIndex: 2,
-              items: const [
-                NavItem(Icons.explore, 'Explore'),
-                NavItem(Icons.calendar_month, 'Bookings'),
-                NavItem(Icons.near_me, 'Tracking'),
-                NavItem(Icons.person, 'Profile'),
+              onTap: (i) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => HomeDiscoveryScreen(initialIndex: i),
+                  ),
+                  (route) => false,
+                );
+              },
+              items: [
+                NavItem(Icons.explore, context.l10n.navExplore),
+                NavItem(Icons.calendar_month, context.l10n.navBookings),
+                NavItem(Icons.near_me, context.l10n.navTracking),
+                NavItem(Icons.person, context.l10n.navProfile),
               ],
             )
           : null,
     );
   }
-}
 
-class _RoundIconButton extends StatelessWidget {
-  final IconData icon;
-  const _RoundIconButton({required this.icon});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration:
-          const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-      child: Icon(icon, size: 16, color: AppColors.onSurface),
+  Widget _buildScaffold(BuildContext context, Technician tech,
+      [Booking? overrideBooking]) {
+    final effectiveBooking = overrideBooking ?? booking;
+    return StreamBuilder<Booking?>(
+      stream: effectiveBooking != null && effectiveBooking.id.isNotEmpty
+          ? BookingRepository().streamBooking(effectiveBooking.id)
+          : Stream.value(effectiveBooking),
+      initialData: effectiveBooking,
+      builder: (context, bSnap) {
+        final currentBooking = bSnap.data ?? effectiveBooking;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(context.l10n.liveTracking),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Center(
+                    child: PillBadge(
+                        label: tech.serviceArea.isNotEmpty
+                            ? tech.serviceArea
+                            : 'Colombo 03',
+                        icon: Icons.location_on)),
+              ),
+            ],
+          ),
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                StreamBuilder<LatLng?>(
+                    stream: LiveLocationService.instance
+                        .streamUserLocation(tech.id),
+                    builder: (context, locSnapshot) {
+                      final liveTechPoint = locSnapshot.data;
+                      final isLive = liveTechPoint != null;
+
+                      final LatLng customerPoint;
+                      if (currentBooking?.customerLatitude != null &&
+                          currentBooking?.customerLongitude != null) {
+                        customerPoint = LatLng(
+                            currentBooking!.customerLatitude!,
+                            currentBooking.customerLongitude!);
+                      } else {
+                        final baseCoord = LocationUtils.getDistrictCoordinates(
+                            tech.serviceArea.isNotEmpty
+                                ? tech.serviceArea
+                                : 'Colombo');
+                        customerPoint = LatLng(baseCoord.lat, baseCoord.lng);
+                      }
+
+                      final techPoint = liveTechPoint ??
+                          LatLng(customerPoint.latitude - 0.008,
+                              customerPoint.longitude - 0.012);
+                      final midPoint = LatLng(
+                        (customerPoint.latitude + techPoint.latitude) / 2,
+                        (customerPoint.longitude + techPoint.longitude) / 2,
+                      );
+
+                      return FutureBuilder<RouteInfo>(
+                        future: RoutingService().getDrivingRoute(
+                          origin: techPoint,
+                          destination: customerPoint,
+                        ),
+                        builder: (context, snapshot) {
+                          final route = snapshot.data ??
+                              RouteInfo.fallback(techPoint, customerPoint);
+
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: 220,
+                                child: Stack(
+                                  children: [
+                                    AppMapView(
+                                      initialCenter: midPoint,
+                                      initialZoom: 14.2,
+                                      interactive: true,
+                                      routePoints: route.points,
+                                      markers: [
+                                        AppMapMarker.provider(
+                                          point: techPoint,
+                                          label: tech.name.isNotEmpty
+                                              ? tech.name
+                                              : 'Artisan',
+                                          enRoute: true,
+                                        ),
+                                        AppMapMarker.customer(
+                                          point: customerPoint,
+                                          label: 'Destination',
+                                        ),
+                                      ],
+                                    ),
+                                    Positioned(
+                                      top: 10,
+                                      left: 10,
+                                      child: PillBadge(
+                                        label: isLive
+                                            ? 'Live GPS • On the way'
+                                            : context.l10n.techOnTheWay,
+                                        icon: isLive ? Icons.sensors : null,
+                                        background: context.themeSurface,
+                                        foreground: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                    color: context.themeSurface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border:
+                                        Border.all(color: context.themeBorder),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black.withValues(
+                                              alpha:
+                                                  context.isDark ? 0.2 : 0.04),
+                                          blurRadius: 10)
+                                    ]),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(children: [
+                                      const Icon(Icons.timer,
+                                          color: AppColors.primary, size: 20),
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(context.l10n.estimatedArrival,
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: context
+                                                      .themeTextSecondary)),
+                                          Text(
+                                              '${context.l10n.arrivingIn} ${route.formattedDuration}',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ]),
+                                    Row(children: [
+                                      Icon(Icons.navigation,
+                                          size: 16,
+                                          color: context.themeTextSecondary),
+                                      const SizedBox(width: 4),
+                                      Text(route.formattedDistance,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600)),
+                                    ]),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }),
+                if (currentBooking?.delayReason != null &&
+                    currentBooking!.delayReason!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: AppColors.error, size: 24),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ETA Adjusted: +${currentBooking.delayMinutes ?? 10} Mins Delay',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: AppColors.error),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Artisan reported: ${currentBooking.delayReason}',
+                                style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: context.themeTextSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.themeBorder),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black
+                                .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                            blurRadius: 10)
+                      ]),
+                  child: Column(
+                    children: [
+                      Row(children: [
+                        UserAvatar(
+                          uid: tech.id,
+                          displayName: tech.name,
+                          radius: 24,
+                          backgroundColor: tech.avatarColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                const Icon(Icons.star,
+                                    size: 14,
+                                    color: AppColors.secondaryContainer),
+                                Text(' ${tech.rating}  ',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12)),
+                                Expanded(
+                                    child: Text(tech.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis)),
+                              ]),
+                              Row(children: [
+                                const Icon(Icons.verified,
+                                    size: 12, color: AppColors.primary),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    '${tech.title} • ${tech.jobsCount} ${context.l10n.completedJobs}',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.themeTextSecondary),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ]),
+                              Row(children: [
+                                Icon(Icons.motorcycle,
+                                    size: 12,
+                                    color: context.themeTextSecondary),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    tech.serviceArea.isNotEmpty
+                                        ? tech.serviceArea
+                                        : 'Western Province',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.themeTextSecondary),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ]),
+                            ],
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(
+                            child: AppOutlineButton(
+                                label: context.l10n.callTech,
+                                icon: Icons.call,
+                                onPressed: () {
+                                  final phone = tech.phone;
+                                  if (phone.isNotEmpty) {
+                                    MapLauncher.openPhoneCall(phone);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Provider phone not available')),
+                                    );
+                                  }
+                                })),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: AppOutlineButton(
+                                label: context.l10n.chat,
+                                icon: Icons.chat,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DirectChatScreen(
+                                        otherPartyId: tech.id,
+                                        otherPartyName: tech.name,
+                                        otherPartyRole: tech.title,
+                                        otherPartyPhone: tech.phone,
+                                      ),
+                                    ),
+                                  );
+                                })),
+                      ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.themeBorder)),
+                  child: Row(children: [
+                    const Icon(Icons.payments, color: AppColors.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(context.l10n.directPayCash,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 13)),
+                          Text(
+                              'LKR ${tech.baseRateLkr} ${context.l10n.inspectionFeeNotice}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.themeTextSecondary)),
+                        ],
+                      ),
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(
+                      child: AppOutlineButton(
+                          label: context.l10n.cancelRequest,
+                          icon: Icons.cancel,
+                          color: AppColors.error,
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Cancel Request'),
+                                content: const Text(
+                                    'Are you sure you want to cancel this booking request?'),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: const Text('No')),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.error,
+                                        foregroundColor: Colors.white),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Yes, Cancel'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true && context.mounted) {
+                              if (currentBooking != null &&
+                                  currentBooking.id.isNotEmpty) {
+                                await BookingRepository().updateStatus(
+                                    currentBooking.id, 'cancelled');
+                              }
+                              if (!context.mounted) return;
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Service request cancelled.')),
+                              );
+                            }
+                          })),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: AppOutlineButton(
+                          label: context.l10n.shareTrip,
+                          icon: Icons.share_location,
+                          onPressed: () {
+                            final trackingLink =
+                                'https://helaservice.lk/track/${currentBooking?.id ?? tech.id}';
+                            Clipboard.setData(ClipboardData(
+                                text:
+                                    'Track my HelaService artisan live here: $trackingLink'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Live tracking link copied to clipboard!'),
+                                backgroundColor: AppColors.primary,
+                              ),
+                            );
+                          })),
+                ]),
+                const SizedBox(height: 14),
+                AppOutlineButton(
+                  label: context.l10n.jobFinishedRatePay,
+                  icon: Icons.check_circle,
+                  color: AppColors.primary,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RatingCompletionScreen(
+                        technician: tech,
+                        bookingId: currentBooking?.id ?? '',
+                        jobRequestId: currentBooking?.jobRequestId ?? '',
+                        jobTitle: currentBooking?.title.isNotEmpty == true
+                            ? currentBooking!.title
+                            : tech.title,
+                        totalPrice: currentBooking?.agreedPrice ??
+                            tech.baseRateLkr.toDouble(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          bottomNavigationBar: showBottomNav
+              ? AppBottomNav(
+                  currentIndex: 2,
+                  onTap: (i) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => HomeDiscoveryScreen(initialIndex: i),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  items: [
+                    NavItem(Icons.explore, context.l10n.navExplore),
+                    NavItem(Icons.calendar_month, context.l10n.navBookings),
+                    NavItem(Icons.near_me, context.l10n.navTracking),
+                    NavItem(Icons.person, context.l10n.navProfile),
+                  ],
+                )
+              : null,
+        );
+      },
     );
   }
 }

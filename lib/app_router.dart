@@ -9,6 +9,7 @@ import 'features/provider/screens/provider_dashboard_screen.dart';
 import 'features/provider/screens/provider_profile_screen.dart';
 import 'features/admin/admin_shell.dart';
 import 'features/admin/screens/admin_profile_screen.dart';
+import 'features/admin/screens/admin_management_screen.dart';
 
 class AppRoutes {
   static const login = '/login';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const providerDashboard = '/pro/dashboard';
   static const admin = '/admin';
   static const adminProfile = '/admin/profile';
+  static const adminManagement = '/admin/management';
 }
 
 Map<String, WidgetBuilder> appRoutes = {
@@ -34,7 +36,5 @@ Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.providerDashboard: (_) => const ProviderDashboardScreen(),
   AppRoutes.admin: (_) => const AdminShell(),
   AppRoutes.adminProfile: (_) => const AdminProfileScreen(),
+  AppRoutes.adminManagement: (_) => const AdminManagementScreen(),
 };
-
-
-

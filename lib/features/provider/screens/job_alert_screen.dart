@@ -5,8 +5,12 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/outline_button.dart';
 import 'en_route_navigation_screen.dart';
 
+import '../../../models/booking.dart';
+import '../../../repositories/booking_repository.dart';
+
 class JobAlertScreen extends StatefulWidget {
-  const JobAlertScreen({super.key});
+  final Booking? booking;
+  const JobAlertScreen({super.key, this.booking});
 
   @override
   State<JobAlertScreen> createState() => _JobAlertScreenState();
@@ -40,7 +44,7 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
     return Scaffold(
       backgroundColor: AppColors.onSurface,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
@@ -60,14 +64,15 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                    color: AppColors.surfaceLowest,
-                    borderRadius: BorderRadius.circular(24)),
+                    color: context.themeSurface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: context.themeBorder)),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(children: const [
+                        const Row(children: [
                           Icon(Icons.bolt, color: AppColors.secondaryContainer),
                           SizedBox(width: 6),
                           Text('New Job Request',
@@ -102,116 +107,123 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(height: 14),
-                    Row(children: const [
-                      Icon(Icons.plumbing, size: 16, color: AppColors.primary),
-                      SizedBox(width: 6),
+                    Row(children: [
+                      const Icon(Icons.handyman, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
                       Expanded(
-                          child: Text('Plumbing & Water Pump Breakdown',
-                              style: TextStyle(fontWeight: FontWeight.w600))),
+                          child: Text(widget.booking?.title ?? 'Service Request',
+                              style: const TextStyle(fontWeight: FontWeight.w600))),
                     ]),
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                          color: AppColors.surfaceLow,
-                          borderRadius: BorderRadius.circular(14)),
+                          color: context.themeSurfaceLow,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: context.themeBorder)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
+                        children: [
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Guaranteed Base Payout',
                                   style: TextStyle(
                                       fontSize: 11,
-                                      color: AppColors.onSurfaceVariant)),
-                              Text('LKR 2,200',
-                                  style: TextStyle(
+                                      color: context.themeTextSecondary)),
+                              Text(widget.booking?.estRate.isNotEmpty == true ? widget.booking!.estRate : 'LKR 2,500',
+                                  style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17)),
                             ],
                           ),
-                          Text('Direct Settlement\nParts via LankaQR / Cash',
+                          Text('Direct Settlement\nCash at Service Site',
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                   fontSize: 10,
-                                  color: AppColors.onSurfaceVariant)),
+                                  color: context.themeTextSecondary)),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(children: const [
+                    Row(children: [
                       CircleAvatar(
                           radius: 16,
-                          backgroundColor: AppColors.surfaceHigh,
-                          child: Icon(Icons.person, size: 16)),
-                      SizedBox(width: 8),
+                          backgroundColor: context.themeSurfaceContainer,
+                          child: Text(widget.booking?.customerInitials.isNotEmpty == true ? widget.booking!.customerInitials : 'CU',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
+                      const SizedBox(width: 8),
                       Expanded(
-                          child: Text('Niroshan Jayawardena',
-                              style: TextStyle(fontWeight: FontWeight.w600))),
-                      Icon(Icons.star,
-                          size: 14, color: AppColors.secondaryContainer),
-                      Text(' 4.9 (14 jobs)', style: TextStyle(fontSize: 11)),
+                          child: Text(widget.booking?.customerName.isNotEmpty == true ? widget.booking!.customerName : 'Direct Customer',
+                              style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified_user, size: 12, color: AppColors.primary),
+                            SizedBox(width: 3),
+                            Text('Verified', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                          ],
+                        ),
+                      ),
                     ]),
                     const SizedBox(height: 6),
-                    Row(children: const [
+                    Row(children: [
                       Icon(Icons.navigation,
-                          size: 14, color: AppColors.onSurfaceVariant),
-                      SizedBox(width: 4),
-                      Text('2.4 km',
-                          style: TextStyle(
+                          size: 14, color: context.themeTextSecondary),
+                      const SizedBox(width: 4),
+                      Text(widget.booking?.distance.isNotEmpty == true ? widget.booking!.distance : 'Nearby',
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ]),
-                    Row(children: const [
+                    Row(children: [
                       Icon(Icons.location_on,
-                          size: 14, color: AppColors.onSurfaceVariant),
-                      SizedBox(width: 4),
+                          size: 14, color: context.themeTextSecondary),
+                      const SizedBox(width: 4),
                       Expanded(
-                          child: Text('No. 42/B, Havelock Road, Colombo 05',
-                              style: TextStyle(fontSize: 12))),
+                          child: Text(widget.booking?.location.isNotEmpty == true ? widget.booking!.location : 'Client Address',
+                              style: const TextStyle(fontSize: 12))),
                     ]),
-                    Row(children: const [
+                    Row(children: [
                       Icon(Icons.two_wheeler,
-                          size: 14, color: AppColors.onSurfaceVariant),
-                      SizedBox(width: 4),
+                          size: 14, color: context.themeTextSecondary),
+                      const SizedBox(width: 4),
                       Expanded(
                           child: Text(
-                              '~8 mins ride via baseline road • Low traffic',
+                              'Fastest direct route available',
                               style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.onSurfaceVariant))),
+                                  color: context.themeTextSecondary))),
                     ]),
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                          color: AppColors.errorContainer.withOpacity(0.5),
+                          color: AppColors.errorContainer.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(14)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Row(children: [
+                        children: [
+                          const Row(children: [
                             Icon(Icons.warning,
                                 size: 14, color: AppColors.error),
                             SizedBox(width: 4),
-                            Text('Reported Issue',
+                            Text('Service Note',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 12))
                           ]),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                              '"Water pump won\'t turn on and overhead tank is overflowing. Urgent repair needed before 1:00 PM."',
-                              style: TextStyle(
+                              widget.booking?.title ?? 'Service Request',
+                              style: const TextStyle(
                                   fontSize: 12, fontStyle: FontStyle.italic)),
-                          SizedBox(height: 6),
-                          Row(children: [
-                            Icon(Icons.photo_camera, size: 14),
-                            SizedBox(width: 4),
-                            Text('1 photo attached — tap to view',
-                                style: TextStyle(fontSize: 11))
-                          ]),
                         ],
                       ),
                     ),
@@ -222,11 +234,18 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
               PrimaryButton(
                 label: 'Accept Job ($_secondsLeft s)',
                 trailingIcon: Icons.check_circle,
-                onPressed: () {
+                onPressed: () async {
                   _timer?.cancel();
+                  if (widget.booking != null && widget.booking!.id.isNotEmpty) {
+                    await BookingRepository().acceptBookingByProvider(
+                      bookingId: widget.booking!.id,
+                      jobRequestId: widget.booking!.jobRequestId,
+                    );
+                  }
+                  if (!context.mounted) return;
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                        builder: (_) => const EnRouteNavigationScreen()),
+                        builder: (_) => EnRouteNavigationScreen(booking: widget.booking)),
                   );
                 },
               ),

@@ -49,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
             await AuthService().signOut();
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Your admin access is suspended.'),
+              SnackBar(
+                content: Text(context.l10n.adminAccessSuspended),
                 backgroundColor: AppColors.error,
               ),
             );
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!msg.contains('cancelled') && !msg.contains('ABORTED')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google Sign-In: $msg'),
+            content: Text('${context.l10n.googleSignIn}: $msg'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -288,7 +288,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'Password reset link sent to $email. Please check your inbox.'),
+                                context.l10n.passwordResetSent(email),
+                              ),
                               backgroundColor: AppColors.primary,
                             ),
                           );

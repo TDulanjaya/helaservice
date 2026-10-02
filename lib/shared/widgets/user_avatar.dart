@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/profile_image_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
+
 
 class UserAvatar extends StatefulWidget {
   final String? uid;
@@ -129,10 +131,10 @@ class _UserAvatarState extends State<UserAvatar> {
         setState(() => _cachedBytes = bytes);
         widget.onImageChanged?.call(bytes);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture updated successfully!'),
+          SnackBar(
+            content: Text(context.l10n.profilePictureUpdated),
             backgroundColor: AppColors.primary,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -162,9 +164,9 @@ class _UserAvatarState extends State<UserAvatar> {
         setState(() => _cachedBytes = null);
         widget.onImageChanged?.call(null);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture removed.'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(context.l10n.profilePictureRemoved),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -172,7 +174,7 @@ class _UserAvatarState extends State<UserAvatar> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to remove photo: $e'),
+            content: Text('${context.l10n.failedToRemovePhoto}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -207,23 +209,23 @@ class _UserAvatarState extends State<UserAvatar> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
-                title: const Text('Take photo', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(context.l10n.takePhoto, style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () => _handlePick(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-                title: const Text('Choose from gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(context.l10n.chooseFromGallery, style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () => _handlePick(ImageSource.gallery),
               ),
               if (hasDp)
                 ListTile(
                   leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                  title: const Text('Remove photo', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+                  title: Text(context.l10n.removePhoto, style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
                   onTap: _handleRemove,
                 ),
               ListTile(
                 leading: const Icon(Icons.close),
-                title: const Text('Cancel'),
+                title: Text(context.l10n.cancel),
                 onTap: () => Navigator.of(ctx).pop(),
               ),
             ],

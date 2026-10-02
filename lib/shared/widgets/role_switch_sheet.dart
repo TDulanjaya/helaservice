@@ -100,7 +100,7 @@ void _switchTo(
   if (role == AppRole.admin && !roleProvider.isAuthorizedAdmin) {
     Navigator.of(sheetContext).pop();
     ScaffoldMessenger.of(rootContext).showSnackBar(
-      const SnackBar(content: Text('Unauthorized: Admin access required.')),
+      SnackBar(content: Text(rootContext.l10n.unauthorizedAdminAccess)),
     );
     return;
   }

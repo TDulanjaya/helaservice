@@ -326,7 +326,7 @@ class LiveTrackingScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'ETA Adjusted: +${currentBooking.delayMinutes ?? 10} Mins Delay',
+                                context.l10n.etaDelayNotice(currentBooking.delayMinutes ?? 10),
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
@@ -334,7 +334,7 @@ class LiveTrackingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Artisan reported: ${currentBooking.delayReason}',
+                                context.l10n.artisanReportedDelay(currentBooking.delayReason ?? ''),
                                 style: TextStyle(
                                     fontSize: 11.5,
                                     color: context.themeTextSecondary),
@@ -424,9 +424,9 @@ class LiveTrackingScreen extends StatelessWidget {
                                     MapLauncher.openPhoneCall(phone);
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                           content: Text(
-                                              'Provider phone not available')),
+                                              context.l10n.providerPhoneNotAvailable)),
                                     );
                                   }
                                 })),
@@ -494,7 +494,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                     style:
                                         const TextStyle(fontWeight: FontWeight.w800)),
                                 content: Text(
-                                    'Are you sure you want to cancel this booking request?',
+                                    context.l10n.cancelBookingConfirm,
                                     style: TextStyle(
                                         color: context.themeTextSecondary)),
                                 actions: [
@@ -510,7 +510,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                             borderRadius:
                                                 BorderRadius.circular(12))),
                                     onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('Yes, Cancel'),
+                                    child: Text(context.l10n.yesCancel),
                                   ),
                                 ],
                               ),
@@ -524,9 +524,9 @@ class LiveTrackingScreen extends StatelessWidget {
                               if (!context.mounted) return;
                               Navigator.of(context).pop();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                     content:
-                                        Text('Service request cancelled.')),
+                                        Text(context.l10n.serviceRequestCancelled)),
                               );
                             }
                           })),
@@ -542,9 +542,9 @@ class LiveTrackingScreen extends StatelessWidget {
                                 text:
                                     'Track my HelaService artisan live here: $trackingLink'));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                    'Live tracking link copied to clipboard!'),
+                                    context.l10n.liveTrackingCopied),
                                 backgroundColor: AppColors.primary,
                               ),
                             );
@@ -654,7 +654,7 @@ class _CustomerLiveTrackingMapCardState
       ),
       AppMapMarker.customer(
         point: widget.customerPoint,
-        label: 'Destination',
+        label: context.l10n.destination,
       ),
     ];
   }
@@ -710,7 +710,7 @@ class _CustomerLiveTrackingMapCardState
               left: 12,
               child: PillBadge(
                 label: widget.isLive
-                    ? 'Live GPS • On the way'
+                    ? context.l10n.liveGpsOnTheWay
                     : context.l10n.techOnTheWay,
                 icon: widget.isLive ? Icons.sensors : null,
                 background: context.themeSurface,

@@ -48,7 +48,7 @@ class ProviderDetailScreen extends StatelessWidget {
             child: IconSquareButton.small(
               icon: Icons.flag_outlined,
               iconColor: AppColors.error,
-              tooltip: 'Report Provider',
+              tooltip: context.l10n.reportProvider,
               onTap: () => _showReportProviderSheet(context, technician),
             ),
           ),
@@ -129,7 +129,7 @@ class ProviderDetailScreen extends StatelessWidget {
                 _StatTile(
                   icon: Icons.work_history_rounded,
                   value: technician.yearsExperience,
-                  label: 'Experience',
+                  label: context.l10n.experience,
                 ),
                 _StatTile(
                   icon: Icons.timer_outlined,
@@ -392,7 +392,7 @@ class ProviderDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       child: Center(
                         child: Text(
-                          'No customer reviews recorded yet',
+                          context.l10n.noCustomerReviews,
                           style: TextStyle(
                             fontSize: 12,
                             color: context.themeTextSecondary,
@@ -641,6 +641,27 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
   final descController = TextEditingController();
   bool isSubmitting = false;
 
+  String getLocalizedComplaintReason(BuildContext ctx, String reason) {
+    switch (reason) {
+      case 'Unprofessional Conduct':
+        return ctx.l10n.complaintUnprofessionalConduct;
+      case 'Late or No-Show':
+        return ctx.l10n.complaintLateNoShow;
+      case 'Overcharging / Price Dispute':
+        return ctx.l10n.complaintPriceDispute;
+      case 'Poor Quality of Work':
+        return ctx.l10n.complaintPoorQuality;
+      case 'Safety or Harassment Concern':
+        return ctx.l10n.complaintSafetyConcern;
+      case 'Fraud or Identity Issue':
+        return ctx.l10n.complaintFraudIssue;
+      case 'Other Issue':
+        return ctx.l10n.complaintOtherIssue;
+      default:
+        return reason;
+    }
+  }
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -696,7 +717,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Report Service Provider',
+                              ctx.l10n.reportServiceProvider,
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -704,7 +725,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                               ),
                             ),
                             Text(
-                              'Reporting ${technician.name} (${technician.title})',
+                              ctx.l10n.reportingTechnician(technician.name, technician.title),
                               style:
                                   TextStyle(fontSize: 12, color: onSurfaceVar),
                             ),
@@ -715,7 +736,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Select Complaint Reason',
+                    ctx.l10n.selectComplaintReason,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -738,7 +759,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                         items: reasons.map((r) {
                           return DropdownMenuItem<String>(
                             value: r,
-                            child: Text(r,
+                            child: Text(getLocalizedComplaintReason(ctx, r),
                                 style:
                                     TextStyle(color: onSurface, fontSize: 14)),
                           );
@@ -753,7 +774,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Explain Incident Details',
+                    ctx.l10n.explainIncidentDetails,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -767,8 +788,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                     maxLines: 5,
                     style: TextStyle(color: onSurface, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText:
-                          'Please detail what happened, including any agreed fees or work that was not completed...',
+                      hintText: ctx.l10n.explainIncidentHint,
                       hintStyle: TextStyle(
                           color: onSurfaceVar.withValues(alpha: 0.6),
                           fontSize: 13),
@@ -802,9 +822,9 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                               final text = descController.text.trim();
                               if (text.isEmpty) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                       content: Text(
-                                          'Please describe the issue before submitting.')),
+                                          ctx.l10n.describeIssueBeforeSubmitting)),
                                 );
                                 return;
                               }
@@ -812,9 +832,9 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                               final user = FirebaseAuth.instance.currentUser;
                               if (user == null) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                       content: Text(
-                                          'Please sign in to submit a complaint.')),
+                                          ctx.l10n.signInToSubmitComplaint)),
                                 );
                                 return;
                               }
@@ -847,20 +867,20 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
 
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Row(
                                         children: [
-                                          Icon(Icons.check_circle,
+                                          const Icon(Icons.check_circle,
                                               color: Colors.white, size: 20),
-                                          SizedBox(width: 10),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: Text(
-                                                'Complaint submitted to Admin Support for review.'),
+                                                context.l10n.complaintSubmittedSuccess),
                                           ),
                                         ],
                                       ),
                                       backgroundColor: AppColors.primary,
-                                      duration: Duration(seconds: 4),
+                                      duration: const Duration(seconds: 4),
                                     ),
                                   );
                                 }
@@ -870,7 +890,7 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
                                     SnackBar(
                                         content: Text(
-                                            'Failed to submit report: $e')),
+                                            '${ctx.l10n.failedToSubmitReport}: $e')),
                                   );
                                 }
                               }
@@ -882,9 +902,9 @@ void _showReportProviderSheet(BuildContext context, Technician technician) {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white),
                             )
-                          : const Text(
-                              'Submit Official Report',
-                              style: TextStyle(
+                          : Text(
+                              ctx.l10n.submitOfficialReport,
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                     ),

@@ -165,7 +165,7 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    'Job #${widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()}',
+                    context.l10n.jobIdNumber(widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()),
                     style: TextStyle(color: context.themeTextSecondary, fontSize: 11),
                   ),
                 ),
@@ -216,7 +216,7 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                       'LKR ${widget.totalPrice!.toStringAsFixed(0)}',
                       bold: true),
                 ] else ...[
-                  _CostRow(context.l10n.totalPaid, 'Settled directly', bold: true),
+                  _CostRow(context.l10n.totalPaid, context.l10n.settledDirectly, bold: true),
                 ],
                 const SizedBox(height: 6),
                 Text(
@@ -326,13 +326,13 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
           Row(
             children: [
               _TipChip(
-                  label: '+LKR 200',
+                  label: context.l10n.tip200,
                   sub: context.l10n.tipSmallTea,
                   selected: _tipLabel == '200',
                   onTap: () => setState(() => _tipLabel = '200')),
               const SizedBox(width: 8),
               _TipChip(
-                  label: '+LKR 500',
+                  label: context.l10n.tip500,
                   sub: context.l10n.tipGenerous,
                   selected: _tipLabel == '500',
                   onTap: () => setState(() => _tipLabel = '500')),

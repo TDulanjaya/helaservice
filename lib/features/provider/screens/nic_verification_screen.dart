@@ -170,7 +170,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:
-                Text('Failed to upload $docType photo. Please try again: $e'),
+                Text(context.l10n.failedToUploadPhoto(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -242,7 +242,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit verification: $e')),
+          SnackBar(content: Text(context.l10n.failedToSubmitVerification(e.toString()))),
         );
       }
     }
@@ -278,9 +278,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
                   color: context.themeAmberTint,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
-                  'Step 2 of 3',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.step2Of3,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: AppColors.primary,
@@ -293,13 +293,13 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       ),
       body: _isSubmitted ? _buildSubmittedView() : _buildFormView(),
       bottomNavigationBar: widget.showBottomNav
-          ? const AppBottomNav(
+          ? AppBottomNav(
               currentIndex: 2,
               items: [
-                NavItem(Icons.radar, 'Jobs'),
-                NavItem(Icons.payments, 'Earnings'),
-                NavItem(Icons.verified_user, 'Verification'),
-                NavItem(Icons.manage_accounts, 'Profile'),
+                NavItem(Icons.radar, context.l10n.navJobs),
+                NavItem(Icons.payments, context.l10n.navEarnings),
+                NavItem(Icons.verified_user, context.l10n.navVerification),
+                NavItem(Icons.manage_accounts, context.l10n.navProfile),
               ],
             )
           : null,
@@ -341,9 +341,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Verification Under Review',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                context.l10n.verificationUnderReview,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Container(
@@ -353,9 +353,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
                   color: AppColors.secondaryContainer.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'STATUS: PENDING REVIEW',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.statusPendingReviewCaps,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: AppColors.secondaryContainer,
@@ -364,7 +364,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               ),
               const SizedBox(height: 14),
               Text(
-                'Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.',
+                context.l10n.nicUnderReviewDesc,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 12,
@@ -373,7 +373,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               ),
               const SizedBox(height: 20),
               PrimaryButton(
-                label: 'Return to Dashboard',
+                label: context.l10n.returnToDashboard,
                 trailingIcon: Icons.arrow_forward,
                 onPressed: () => Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
@@ -402,7 +402,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Verify your identity to start receiving jobs island-wide across Sri Lanka.',
+          context.l10n.verifyIdentitySubtitle,
           style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
@@ -458,44 +458,40 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         const SizedBox(height: 18),
         _UploadStep(
           index: 1,
-          title: 'NIC Front Side',
-          description:
-              'Clear photo of the front side showing your portrait and NIC number.',
+          title: context.l10n.nicFrontSide,
+          description: context.l10n.nicFrontSideDesc,
           uploaded: _front,
           isLoading: _isUploadingFront,
           uploadIcon: Icons.add_a_photo_outlined,
-          uploadLabel: 'Capture or Upload Front',
+          uploadLabel: context.l10n.captureOrUploadFront,
           hint: context.l10n.nicUploadFileLimitHint,
-          tip: 'Tip: Lay flat on a contrasting surface, avoid phone shadow.',
+          tip: context.l10n.nicFrontTip,
           onTap: () => _handleUpload('front'),
         ),
         const SizedBox(height: 14),
         _UploadStep(
           index: 2,
-          title: 'NIC Back Side',
-          description:
-              'Back side showing your registered residential address and clear barcode.',
+          title: context.l10n.nicBackSide,
+          description: context.l10n.nicBackSideDesc,
           uploaded: _back,
           isLoading: _isUploadingBack,
           uploadIcon: Icons.document_scanner_outlined,
-          uploadLabel: 'Capture or Upload Back',
+          uploadLabel: context.l10n.captureOrUploadBack,
           hint: context.l10n.nicUploadFileLimitHint,
-          tip: 'Ensure all 4 card corners are in frame',
+          tip: context.l10n.nicBackTip,
           onTap: () => _handleUpload('back'),
         ),
         const SizedBox(height: 14),
         _UploadStep(
           index: 3,
-          title: 'Selfie Holding Your NIC',
-          description:
-              'Hold your National ID card next to your face, both equally in focus.',
+          title: context.l10n.selfieHoldingNic,
+          description: context.l10n.selfieHoldingNicDesc,
           uploaded: _selfie,
           isLoading: _isUploadingSelfie,
           uploadIcon: Icons.photo_camera_front_outlined,
-          uploadLabel: 'Open Camera',
-          hint: 'Live portrait test',
-          tip:
-              'Do not wear sunglasses, caps, or masks. Do not cover your name or photo.',
+          uploadLabel: context.l10n.openCamera,
+          hint: context.l10n.livePortraitTest,
+          tip: context.l10n.selfieTip,
           onTap: () => _handleUpload('selfie'),
         ),
         const SizedBox(height: 18),
@@ -519,22 +515,22 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              const _ChecklistRow(
+              _ChecklistRow(
                 icon: Icons.timer_outlined,
-                title: 'Fast turnaround:',
-                body: 'Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).',
+                title: context.l10n.fastTurnaroundTitle,
+                body: context.l10n.fastTurnaroundBody,
               ),
               const SizedBox(height: 10),
-              const _ChecklistRow(
+              _ChecklistRow(
                 icon: Icons.chat_bubble_outline_rounded,
-                title: 'SMS alert:',
-                body: 'Instant approval message to your registered mobile number.',
+                title: context.l10n.smsAlertTitle,
+                body: context.l10n.smsAlertBody,
               ),
               const SizedBox(height: 10),
-              const _ChecklistRow(
+              _ChecklistRow(
                 icon: Icons.wb_sunny_outlined,
-                title: 'Quality standard:',
-                body: 'Natural daylight photos get accepted first try.',
+                title: context.l10n.qualityStandardTitle,
+                body: context.l10n.qualityStandardBody,
               ),
             ],
           ),
@@ -543,7 +539,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         PrimaryButton(
           label: _isSubmitting
               ? context.l10n.uploadingToVault
-              : 'Submit for Verification',
+              : context.l10n.submitForVerification,
           trailingIcon: Icons.arrow_forward_rounded,
           onPressed: (_front && _back && _selfie && !_isSubmitting)
               ? _handleSubmit
@@ -684,14 +680,14 @@ class _UploadStep extends StatelessWidget {
                     color: AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_rounded, size: 12, color: AppColors.primary),
-                      SizedBox(width: 4),
+                      const Icon(Icons.check_rounded, size: 12, color: AppColors.primary),
+                      const SizedBox(width: 4),
                       Text(
-                        'Attached',
-                        style: TextStyle(
+                        context.l10n.attachedStatus,
+                        style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary,
@@ -707,9 +703,9 @@ class _UploadStep extends StatelessWidget {
                     color: AppColors.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
-                    'Required',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.requiredStatus,
+                    style: const TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
                       color: AppColors.error,
@@ -762,7 +758,7 @@ class _UploadStep extends StatelessWidget {
                     isLoading
                         ? context.l10n.uploadingToVault
                         : (uploaded
-                            ? 'Photo attached · tap to replace'
+                            ? context.l10n.photoAttachedTapReplace
                             : uploadLabel),
                     style: TextStyle(
                       fontWeight: FontWeight.w700,

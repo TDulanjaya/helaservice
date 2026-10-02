@@ -3,6 +3,8 @@ import 'package:provider/provider.dart' as pv;
 import '../../state/locale_provider.dart';
 import '../../state/role_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
+
 
 class LanguageSelectSheet extends StatelessWidget {
   const LanguageSelectSheet({super.key});
@@ -71,7 +73,7 @@ class LanguageSelectSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Choose your primary display language',
+                        context.l10n.chooseDisplayLanguage,
                         style: TextStyle(
                           fontSize: 12.5,
                           color: context.themeTextSecondary,
@@ -174,7 +176,7 @@ class LanguageSelectSheet extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Language switched to ${lang['native']} (${lang['name']})',
+                            '${context.l10n.languageSwitchedTo} ${lang['native']} (${lang['name']})',
                           ),
                           backgroundColor: AppColors.primary,
                           duration: const Duration(seconds: 2),

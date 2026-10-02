@@ -112,7 +112,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Filter Artisans',
+                        context.l10n.filterArtisans,
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -133,9 +133,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                 _minRating = 0.0;
                               });
                             },
-                            child: const Text(
-                              'Reset All',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.resetAllFilters,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
@@ -158,13 +158,13 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                         children: [
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              'Online & Ready to Bid',
-                              style: TextStyle(
+                            title: Text(
+                              context.l10n.onlineReadyToBid,
+                              style: const TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              'Show active artisans ready for instant booking',
+                              context.l10n.onlineReadyToBidSub,
                               style: TextStyle(
                                   fontSize: 12,
                                   color: context.themeTextSecondary),
@@ -178,13 +178,13 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                           ),
                           SwitchListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              'Emergency Dispatch',
-                              style: TextStyle(
+                            title: Text(
+                              context.l10n.emergencyDispatch,
+                              style: const TextStyle(
                                   fontSize: 14, fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              'Available for urgent 24/7 or emergency callouts',
+                              context.l10n.emergencyHelpSubtitle,
                               style: TextStyle(
                                   fontSize: 12,
                                   color: context.themeTextSecondary),
@@ -197,9 +197,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                             },
                           ),
                           const Divider(height: 24),
-                          const Text(
-                            'Customer Rating',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.customerRating,
+                            style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 8),
@@ -208,7 +208,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                             runSpacing: 8,
                             children: [
                               ChoiceChip(
-                                label: const Text('All Ratings'),
+                                label: Text(context.l10n.allRatings),
                                 selected: _minRating == 0.0,
                                 selectedColor: AppColors.primary,
                                 labelStyle: TextStyle(
@@ -259,7 +259,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                 },
                               ),
                               ChoiceChip(
-                                label: const Text('Top Rated (4.8+)'),
+                                label: const Text('4.8+'),
                                 selected: _minRating == 4.8,
                                 selectedColor: AppColors.primary,
                                 labelStyle: TextStyle(
@@ -295,9 +295,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text(
-                        'Apply Filters',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.applyFilters,
+                        style: const TextStyle(
                             fontWeight: FontWeight.w800, fontSize: 15),
                       ),
                     ),
@@ -402,7 +402,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             size: 40,
             iconSize: 20,
             radius: 12,
-            tooltip: 'Messages',
+            tooltip: context.l10n.messages,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -428,7 +428,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, AppBottomNav.contentBottomPadding),
           children: [
             Text(
-              '${context.l10n.greetingAyubowan}, ${pv.Provider.of<RoleProvider>(context).currentUser?.displayName.split(' ').first ?? 'Friend'}!',
+              '${context.l10n.greetingAyubowan}, ${pv.Provider.of<RoleProvider>(context).currentUser?.displayName.split(' ').first ?? context.l10n.friend}!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
@@ -538,9 +538,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Need Quick Service?',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.needQuickService,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
@@ -548,7 +548,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Post your job in 60s & receive instant competitive bids from verified nearby artisans.',
+                    context.l10n.postJobBannerDesc,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12.5,
@@ -573,18 +573,18 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Post Job & Get Quotes',
-                          style: TextStyle(
+                          context.l10n.postJobAndGetQuotes,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 12.5,
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(Icons.chevron_right_rounded, size: 16),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right_rounded, size: 16),
                       ],
                     ),
                   ),
@@ -611,8 +611,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                               _selectedCategoryIndex = -1;
                               _selectedCategoryName = '';
                             }),
-                            child: const Text('Show All',
-                                style: TextStyle(fontSize: 12)),
+                            child: Text(context.l10n.filterAll,
+                                style: const TextStyle(fontSize: 12)),
                           )
                         else
                           Text('${context.l10n.viewAll} (${categories.length})',
@@ -707,8 +707,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               children: [
                 Text(
                   _selectedCategoryName.isNotEmpty
-                      ? 'Top Artisans — $_selectedCategoryName'
-                      : 'Verified Nearby Artisans',
+                      ? '${context.l10n.topArtisans} — $_selectedCategoryName'
+                      : context.l10n.nearbyArtisans,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
@@ -780,14 +780,14 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                         const Icon(Icons.person_search,
                             size: 42, color: AppColors.outline),
                         const SizedBox(height: 10),
-                        const Text(
-                          'No artisans match your filters',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.noArtisansMatchFilters,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Try clearing your search query or adjusting your filters',
+                          context.l10n.tryClearingSearchOrFilters,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 12, color: context.themeTextSecondary),
@@ -806,7 +806,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                               _minRating = 0.0;
                             });
                           },
-                          child: const Text('Reset All Filters'),
+                          child: Text(context.l10n.resetAllFilters),
                         ),
                       ],
                     ),

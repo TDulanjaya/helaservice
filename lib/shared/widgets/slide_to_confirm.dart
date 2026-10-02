@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
 
 class SlideToConfirm extends StatefulWidget {
   final String label;
+  final String? confirmedLabel;
   final VoidCallback onConfirmed;
 
   const SlideToConfirm({
     super.key,
     required this.label,
+    this.confirmedLabel,
     required this.onConfirmed,
   });
 
@@ -48,7 +51,10 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                   duration: const Duration(milliseconds: 150),
                   opacity: _confirmed ? 1.0 : (1.0 - (_dragX / maxDrag)).clamp(0.0, 1.0),
                   child: Text(
-                    _confirmed ? 'Arrival Confirmed' : widget.label,
+                    _confirmed
+                        ? (widget.confirmedLabel ??
+                            context.l10n.arrivalConfirmed)
+                        : widget.label,
                     style: TextStyle(
                       color: _confirmed
                           ? context.themeSuccess

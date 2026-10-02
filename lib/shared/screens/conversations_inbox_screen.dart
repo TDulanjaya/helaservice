@@ -10,6 +10,8 @@ import '../../utils/map_launcher.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/icon_square_button.dart';
 import '../widgets/app_card.dart';
+import '../../utils/l10n_extension.dart';
+
 
 class ConversationsInboxScreen extends StatefulWidget {
   const ConversationsInboxScreen({super.key});
@@ -29,13 +31,13 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
     super.dispose();
   }
 
-  String _formatTimeAgo(DateTime? dt) {
+  String _formatTimeAgo(BuildContext context, DateTime? dt) {
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return context.l10n.timeJustNow;
+    if (diff.inMinutes < 60) return context.l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return context.l10n.timeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return context.l10n.timeDaysAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -70,7 +72,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                   ),
                   const SizedBox(width: 14),
                   Text(
-                    'Messages',
+                    context.l10n.messages,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -91,7 +93,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                     setState(() => _searchQuery = val.trim().toLowerCase()),
                 style: TextStyle(color: context.themeInk, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Search chats by name or message...',
+                  hintText: context.l10n.searchChatsPlaceholder,
                   hintStyle: TextStyle(
                     color: context.themeMuted,
                     fontSize: 14,
@@ -146,7 +148,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                             Icon(Icons.lock_outline, size: 48, color: onSurfaceVar),
                             const SizedBox(height: 16),
                             Text(
-                              'Please sign in to view your messages',
+                              context.l10n.signInToViewMessages,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -173,7 +175,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                             child: Padding(
                               padding: const EdgeInsets.all(24.0),
                               child: Text(
-                                'Failed to load conversations: ${snapshot.error}',
+                                '${context.l10n.failedToLoadConversations}: ${snapshot.error}',
                                 style: const TextStyle(color: AppColors.danger),
                                 textAlign: TextAlign.center,
                               ),
@@ -217,8 +219,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                   const SizedBox(height: 20),
                                   Text(
                                     _searchQuery.isNotEmpty
-                                        ? 'No matching conversations'
-                                        : 'No conversations yet',
+                                        ? context.l10n.noMatchingConversations
+                                        : context.l10n.noConversationsYet,
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -228,8 +230,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                   const SizedBox(height: 8),
                                   Text(
                                     _searchQuery.isEmpty
-                                        ? 'Direct messages with service providers or customers will appear here.'
-                                        : 'Try searching with another name or keyword.',
+                                        ? context.l10n.conversationsEmptyDesc
+                                        : context.l10n.trySearchingAnotherKeyword,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 13.5,
@@ -268,8 +270,9 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                 final otherPartyPhone =
                                     room.getOtherPartyPhone(effectiveUid);
                                 final lastMessage = room.lastMessage.trim();
-                                final timeAgo = _formatTimeAgo(room.lastMessageAt);
-                                final isJustNow = timeAgo == 'Just now';
+                                final isJustNow = room.lastMessageAt != null &&
+                                    DateTime.now().difference(room.lastMessageAt!).inMinutes < 1;
+                                final timeAgo = _formatTimeAgo(context, room.lastMessageAt);
 
                                 return InkWell(
                                   onTap: () {
@@ -340,7 +343,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                               Text(
                                                 lastMessage.isNotEmpty
                                                     ? lastMessage
-                                                    : 'Tap to start conversation',
+                                                    : context.l10n.tapToStartConversation,
                                                 style: TextStyle(
                                                   fontSize: 13,
                                                   color: lastMessage.isNotEmpty
@@ -361,7 +364,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                           const SizedBox(width: 10),
                                           IconSquareButton.small(
                                             icon: Icons.phone_outlined,
-                                            tooltip: 'Call $otherPartyName',
+                                            tooltip: '${context.l10n.call} $otherPartyName',
                                             onTap: () {
                                               MapLauncher.openPhoneCall(
                                                   otherPartyPhone);

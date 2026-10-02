@@ -187,7 +187,9 @@ class JobQuotesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              context.l10n.providerHired,
+              acceptedQuote.isNotEmpty
+                  ? context.l10n.providerHired(acceptedQuote.first.providerName)
+                  : context.l10n.providerHired(context.l10n.roleProvider),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
@@ -326,20 +328,20 @@ class JobQuotesScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${quote.providerName} Hired!',
+                  context.l10n.providerHired(quote.providerName),
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                 ),
               ),
             ],
           ),
           content: Text(
-            'Your service booking is confirmed. A direct conversation has been started with ${quote.providerName} to coordinate timing and location.',
+            context.l10n.bookingConfirmedChatStarted(quote.providerName),
             style: TextStyle(fontSize: 13.5, color: context.themeTextSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Later'),
+              child: Text(context.l10n.later),
             ),
             ElevatedButton.icon(
               onPressed: () {
@@ -357,7 +359,7 @@ class JobQuotesScreen extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.chat_bubble_outline, size: 16),
-              label: const Text('Open Chat'),
+              label: Text(context.l10n.openChat),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.onPrimary,
@@ -372,7 +374,7 @@ class JobQuotesScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to accept quote: $e'),
+            content: Text('${context.l10n.failedToAcceptQuote}: $e'),
             backgroundColor: AppColors.error,
           ),
         );

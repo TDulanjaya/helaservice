@@ -153,7 +153,7 @@ class CustomerBookingsView extends StatelessWidget {
                                 Text(
                                   b.relativeTime.isNotEmpty
                                       ? b.relativeTime
-                                      : 'Today',
+                                      : context.l10n.today,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
@@ -166,7 +166,7 @@ class CustomerBookingsView extends StatelessWidget {
                             Text(
                               b.title.isNotEmpty
                                   ? b.title
-                                  : 'Service Diagnostic',
+                                  : context.l10n.serviceDiagnostic,
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w800),
                             ),
@@ -186,7 +186,7 @@ class CustomerBookingsView extends StatelessWidget {
                                       Text(
                                         b.providerName.isNotEmpty
                                             ? b.providerName
-                                            : (b.providerId.isNotEmpty ? b.providerId : "Technician"),
+                                            : (b.providerId.isNotEmpty ? b.providerId : context.l10n.technician),
                                         style: const TextStyle(
                                           fontSize: 13.5,
                                           fontWeight: FontWeight.w700,
@@ -270,11 +270,11 @@ class CustomerBookingsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ...pastBookings.map((b) => _PastBookingCard(
-                        title: b.title.isNotEmpty ? b.title : 'Service',
+                        title: b.title.isNotEmpty ? b.title : context.l10n.serviceDiagnostic,
                         technician: b.providerName.isNotEmpty
                             ? b.providerName
-                            : 'Technician',
-                        date: b.time.isNotEmpty ? b.time : 'Completed',
+                            : context.l10n.technician,
+                        date: b.time.isNotEmpty ? b.time : LocalizedData.getStatus(context, 'completed'),
                         amount:
                             b.estRate.isNotEmpty ? b.estRate : 'LKR 2,500',
                         status: LocalizedData.getStatus(context, b.status),
@@ -358,7 +358,7 @@ class _PastBookingCard extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        'By $technician',
+                        context.l10n.byTechnician(technician),
                         style: TextStyle(
                           fontSize: 12,
                           color: context.themeTextSecondary,

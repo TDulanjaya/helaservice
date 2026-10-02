@@ -6,6 +6,7 @@ import 'en_route_navigation_screen.dart';
 
 import '../../../models/booking.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../utils/l10n_extension.dart';
 
 class JobAlertScreen extends StatefulWidget {
   final Booking? booking;
@@ -41,11 +42,11 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    final title = booking?.title.isNotEmpty == true ? booking!.title : 'Service Request';
-    final customerName = booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer';
+    final title = booking?.title.isNotEmpty == true ? booking!.title : context.l10n.serviceRequest;
+    final customerName = booking?.customerName.isNotEmpty == true ? booking!.customerName : context.l10n.roleCustomer;
     final initials = booking?.customerInitials.isNotEmpty == true ? booking!.customerInitials : 'CU';
-    final distance = booking?.distance.isNotEmpty == true ? booking!.distance : 'Nearby';
-    final location = booking?.location.isNotEmpty == true ? booking!.location : 'Client Address';
+    final distance = booking?.distance.isNotEmpty == true ? booking!.distance : context.l10n.nearby;
+    final location = booking?.location.isNotEmpty == true ? booking!.location : context.l10n.clientAddress;
     final estRate = booking?.estRate.isNotEmpty == true ? booking!.estRate : 'LKR 2,500';
 
     return Scaffold(
@@ -60,9 +61,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'EXPRESS DISPATCH',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.expressDispatchCaps,
+                    style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -70,7 +71,7 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                     ),
                   ),
                   Text(
-                    'Auto-passes in $_secondsLeft s',
+                    context.l10n.autoPassesInSeconds(_secondsLeft),
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 11,
@@ -99,9 +100,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                                   color: AppColors.error.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
-                                  'URGENT',
-                                  style: TextStyle(
+                                child: Text(
+                                  context.l10n.urgentCaps,
+                                  style: const TextStyle(
                                     color: AppColors.error,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
@@ -109,9 +110,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text(
-                                'New job\nrequest',
-                                style: TextStyle(
+                              Text(
+                                context.l10n.newJobRequest,
+                                style: const TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
@@ -153,9 +154,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                                 ),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
-                                'seconds',
-                                style: TextStyle(
+                              Text(
+                                context.l10n.secondsUnit,
+                                style: const TextStyle(
                                   fontSize: 9.5,
                                   color: Colors.white60,
                                   fontWeight: FontWeight.w600,
@@ -178,9 +179,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'GUARANTEED BASE PAYOUT',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.guaranteedBasePayoutCaps,
+                            style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w800,
                               color: Colors.white60,
@@ -197,9 +198,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Cash at service site',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.cashAtServiceSite,
+                            style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white60,
                             ),
@@ -246,14 +247,14 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    const Row(
+                                    Row(
                                       children: [
-                                        Icon(Icons.verified_user_rounded,
+                                        const Icon(Icons.verified_user_rounded,
                                             size: 11, color: AppColors.primary),
-                                        SizedBox(width: 4),
+                                        const SizedBox(width: 4),
                                         Text(
-                                          'Verified customer',
-                                          style: TextStyle(
+                                          context.l10n.verifiedCustomer,
+                                          style: const TextStyle(
                                             fontSize: 10.5,
                                             color: AppColors.primary,
                                             fontWeight: FontWeight.w600,
@@ -278,7 +279,7 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                                   Text(
                                     booking?.relativeTime.isNotEmpty == true
                                         ? booking!.relativeTime
-                                        : 'Nearby',
+                                        : context.l10n.nearby,
                                     style: const TextStyle(
                                       fontSize: 10.5,
                                       color: Colors.white60,
@@ -320,14 +321,14 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.notes_rounded,
+                              const Icon(Icons.notes_rounded,
                                   size: 14, color: AppColors.primary),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'Service note',
-                                style: TextStyle(
+                                context.l10n.serviceNote,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 12,
                                   color: Colors.white,
@@ -351,7 +352,7 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                     ),
                     const SizedBox(height: 24),
                     PrimaryButton(
-                      label: 'Accept Job',
+                      label: context.l10n.acceptJob,
                       trailingIcon: Icons.arrow_forward_rounded,
                       onPressed: () async {
                         _timer?.cancel();
@@ -382,9 +383,9 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          'Pass to next artisan',
-                          style: TextStyle(
+                        child: Text(
+                          context.l10n.passToNextArtisan,
+                          style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -392,10 +393,10 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Center(
+                    Center(
                       child: Text(
-                        'Pull over safely before accepting.',
-                        style: TextStyle(color: Colors.white38, fontSize: 11),
+                        context.l10n.pullOverSafelyWarning,
+                        style: const TextStyle(color: Colors.white38, fontSize: 11),
                       ),
                     ),
                   ],

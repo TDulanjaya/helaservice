@@ -152,28 +152,28 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       Icons.traffic_rounded,
                       context.l10n.heavyTraffic,
                       onSelected: () =>
-                          _handleDelaySelected(context.l10n.heavyTraffic),
+                          _handleDelaySelected('Heavy Traffic'),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.water_drop_outlined,
                       context.l10n.monsoonRain,
                       onSelected: () =>
-                          _handleDelaySelected(context.l10n.monsoonRain),
+                          _handleDelaySelected('Monsoon Rain'),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.alt_route_rounded,
                       context.l10n.roadDetour,
                       onSelected: () =>
-                          _handleDelaySelected(context.l10n.roadDetour),
+                          _handleDelaySelected('Road Detour / Blocked'),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.local_gas_station_rounded,
                       context.l10n.refuelingStop,
                       onSelected: () =>
-                          _handleDelaySelected(context.l10n.refuelingStop),
+                          _handleDelaySelected('Refueling Stop'),
                     ),
                   ],
                 ),
@@ -197,8 +197,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Reported delay: $reason (+10 min ETA adjustment broadcasted)'),
+          content: Text(context.l10n.delayReportedNotice(reason)),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -264,8 +263,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     const SizedBox(width: 4),
                     Text(
                       booking != null && booking.customerName.isNotEmpty
-                          ? "${booking.customerName}'s Location"
-                          : "Customer Location",
+                          ? context.l10n.customerLocationNamed(booking.customerName)
+                          : context.l10n.customerLocation,
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -298,7 +297,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   customerLabel:
                       booking != null && booking.customerName.isNotEmpty
                           ? booking.customerName
-                          : 'Customer',
+                          : context.l10n.roleCustomer,
                   route: route,
                   booking: booking,
                 );
@@ -729,7 +728,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
     return [
       AppMapMarker.provider(
         point: widget.techPoint,
-        label: 'You (En Route)',
+        label: mounted ? context.l10n.youEnRoute : 'You (En Route)',
         enRoute: true,
       ),
       AppMapMarker.customer(
@@ -826,7 +825,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'In ${route.formattedDistance}',
+                          context.l10n.inDistance(route.formattedDistance),
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -834,7 +833,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                           ),
                         ),
                         Text(
-                          'Navigating to ${booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer'}',
+                          context.l10n.navigatingTo(booking?.customerName.isNotEmpty == true ? booking!.customerName : context.l10n.roleCustomer),
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 13,
@@ -878,8 +877,8 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                   longitude: customerPoint.longitude,
                   destinationTitle:
                       booking != null && booking.customerName.isNotEmpty
-                          ? "${booking.customerName}'s Location"
-                          : 'Customer Location',
+                          ? context.l10n.customerLocationNamed(booking.customerName)
+                          : context.l10n.customerLocation,
                 );
               },
               icon: const Icon(

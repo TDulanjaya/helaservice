@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
 
 enum StatusPillType {
   online,
@@ -28,43 +29,43 @@ class StatusPill extends StatelessWidget {
     this.customForeground,
   });
 
-  const StatusPill.online({super.key, this.label = 'Online'})
+  const StatusPill.online({super.key, this.label})
       : type = StatusPillType.online,
         showDot = true,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.pending({super.key, this.label = 'Pending'})
+  const StatusPill.pending({super.key, this.label})
       : type = StatusPillType.pending,
         showDot = false,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.inProgress({super.key, this.label = 'In Progress'})
+  const StatusPill.inProgress({super.key, this.label})
       : type = StatusPillType.inProgress,
         showDot = false,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.completed({super.key, this.label = 'Completed'})
+  const StatusPill.completed({super.key, this.label})
       : type = StatusPillType.completed,
         showDot = false,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.cancelled({super.key, this.label = 'Cancelled'})
+  const StatusPill.cancelled({super.key, this.label})
       : type = StatusPillType.cancelled,
         showDot = false,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.offline({super.key, this.label = 'Offline'})
+  const StatusPill.offline({super.key, this.label})
       : type = StatusPillType.offline,
         showDot = true,
         customBackground = null,
         customForeground = null;
 
-  const StatusPill.you({super.key, this.label = 'You'})
+  const StatusPill.you({super.key, this.label})
       : type = StatusPillType.you,
         showDot = false,
         customBackground = null,
@@ -80,37 +81,37 @@ class StatusPill extends StatelessWidget {
       case StatusPillType.online:
         bg = context.themeSuccessTint;
         fg = context.themeSuccess;
-        text = label ?? 'Online';
+        text = label ?? context.l10n.online;
         break;
       case StatusPillType.pending:
         bg = context.themeAmberTint;
         fg = context.themeAmberText;
-        text = label ?? 'Pending';
+        text = label ?? context.l10n.statusPending;
         break;
       case StatusPillType.inProgress:
         bg = context.themeInfoTint;
         fg = context.themeInfo;
-        text = label ?? 'In Progress';
+        text = label ?? context.l10n.statusInProgress;
         break;
       case StatusPillType.completed:
         bg = context.themeSuccessTint;
         fg = context.themeSuccess;
-        text = label ?? 'Completed';
+        text = label ?? context.l10n.statusCompleted;
         break;
       case StatusPillType.cancelled:
         bg = context.themeDangerTint;
         fg = context.themeDanger;
-        text = label ?? 'Cancelled';
+        text = label ?? context.l10n.statusCancelled;
         break;
       case StatusPillType.offline:
         bg = context.themeSoft;
         fg = context.themeMuted;
-        text = label ?? 'Offline';
+        text = label ?? context.l10n.offline;
         break;
       case StatusPillType.you:
         bg = context.isDark ? Colors.white : AppColors.ink;
         fg = context.isDark ? AppColors.ink : Colors.white;
-        text = label ?? 'You';
+        text = label ?? context.l10n.you;
         break;
       case StatusPillType.custom:
         bg = customBackground ?? context.themeSoft;

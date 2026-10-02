@@ -40,11 +40,11 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
     super.dispose();
   }
 
-  String _etaLabel(int mins) {
-    if (mins < 60) return '$mins min';
-    if (mins == 60) return '1 hr';
-    if (mins == 90) return '1.5 hr';
-    if (mins == 120) return '2 hr';
+  String _etaLabel(BuildContext context, int mins) {
+    if (mins < 60) return context.l10n.durationMins(mins);
+    if (mins == 60) return context.l10n.durationHours(1);
+    if (mins == 90) return context.l10n.durationOneAndHalfHours;
+    if (mins == 120) return context.l10n.durationHours(2);
     return '${mins ~/ 60}h ${mins % 60}m';
   }
 
@@ -122,7 +122,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit quote: $e'),
+            content: Text(context.l10n.failedToSubmitQuote(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -418,7 +418,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                         ),
                       ),
                       child: Text(
-                        _etaLabel(mins),
+                        _etaLabel(context, mins),
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -447,8 +447,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                 maxLines: 3,
                 style: const TextStyle(fontSize: 13.5),
                 decoration: InputDecoration(
-                  hintText:
-                      'e.g. Price includes inspection and basic parts...',
+                  hintText: context.l10n.quoteNotesHint,
                   hintStyle: TextStyle(
                     fontSize: 12.5,
                     color: context.themeTextSecondary.withValues(alpha: 0.6),

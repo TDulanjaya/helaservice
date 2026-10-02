@@ -6,6 +6,8 @@ import '../../../theme/app_theme.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/icon_square_button.dart';
+import '../../../utils/l10n_extension.dart';
+
 
 // Chat screen between customers and providers
 class DirectChatScreen extends StatefulWidget {
@@ -87,7 +89,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
       if (mounted) {
         setState(() => _isInitializing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not connect to chat')),
+          SnackBar(content: Text(context.l10n.couldNotConnectChat)),
         );
       }
     }
@@ -174,7 +176,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
               child: Center(
                 child: IconSquareButton.small(
                   icon: Icons.call,
-                  tooltip: 'Call',
+                  tooltip: context.l10n.call,
                   onTap: () =>
                       MapLauncher.openPhoneCall(widget.otherPartyPhone!),
                 ),
@@ -192,21 +194,24 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _quickReplies.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) => ActionChip(
-                label: Text(
-                  _quickReplies[i],
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: context.themeTextPrimary,
+              itemBuilder: (_, i) {
+                final text = _getLocalizedQuickReply(context, _quickReplies[i]);
+                return ActionChip(
+                  label: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.themeTextPrimary,
+                    ),
                   ),
-                ),
-                onPressed: () => _sendMessage(_quickReplies[i]),
-                backgroundColor: context.themeSurface,
-                side: BorderSide(color: context.themeBorder),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999)),
-              ),
+                  onPressed: () => _sendMessage(text),
+                  backgroundColor: context.themeSurface,
+                  side: BorderSide(color: context.themeBorder),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999)),
+                );
+              },
             ),
           ),
           const SizedBox(height: 6),
@@ -239,7 +244,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                   size: 38, color: AppColors.primary),
             ),
             const SizedBox(height: 12),
-            Text('Could not load chat',
+            Text(context.l10n.couldNotLoadChat,
                 style: TextStyle(color: context.themeTextSecondary)),
           ],
         ),
@@ -266,7 +271,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                       size: 40, color: AppColors.primary),
                 ),
                 const SizedBox(height: 14),
-                Text('Send a message to start chatting',
+                Text(context.l10n.sendMsgToStartChat,
                     style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -321,7 +326,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
               onSubmitted: _sendMessage,
               style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Type a message…',
+                hintText: context.l10n.typeMessage,
                 hintStyle: TextStyle(color: context.themeTextSecondary),
                 filled: true,
                 fillColor: context.themeSurfaceLow,
@@ -358,6 +363,23 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedQuickReply(BuildContext context, String reply) {
+    switch (reply) {
+      case 'Where are you now?':
+        return context.l10n.quickReplyWhereAreYou;
+      case 'I am waiting at the main gate.':
+        return context.l10n.quickReplyWaitingMainGate;
+      case 'Please call me when you arrive.':
+        return context.l10n.quickReplyCallWhenArrive;
+      case 'Parking is available on premise.':
+        return context.l10n.quickReplyParkingAvailable;
+      case 'On my way, will be there soon.':
+        return context.l10n.quickReplyOnMyWay;
+      default:
+        return reply;
+    }
   }
 }
 

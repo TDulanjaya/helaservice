@@ -250,7 +250,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
               _Field(
                 label: context.l10n.homeAddressLabel,
                 controller: _addressController,
-                hint: 'No. 12, Lake Road',
+                hint: context.l10n.addressHint,
                 prefixIcon: Icons.location_on_outlined,
                 isDarkField: context.isDark,
               ),

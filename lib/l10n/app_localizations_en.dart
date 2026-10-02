@@ -404,7 +404,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your job has been posted. Nearby service providers will send you their price quotes shortly.';
 
   @override
-  String get providerHired => 'Provider Hired!';
+  String providerHired(String providerName) {
+    return '$providerName Hired!';
+  }
 
   @override
   String get backToHome => 'Back to Home';
@@ -1931,4 +1933,606 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get closeMap => 'Close map';
+
+  @override
+  String get adminAccessSuspended => 'Your admin access is suspended.';
+
+  @override
+  String passwordResetSent(String email) {
+    return 'Password reset link sent to $email. Please check your inbox.';
+  }
+
+  @override
+  String get atLeast6Characters => 'At least 6 characters';
+
+  @override
+  String get reEnterPassword => 'Re-enter your password';
+
+  @override
+  String get gpsLocationError =>
+      'Could not obtain GPS location. Please ensure location is enabled.';
+
+  @override
+  String get searchChatsPlaceholder => 'Search chats by name or message...';
+
+  @override
+  String get signInToViewMessages => 'Please sign in to view your messages';
+
+  @override
+  String get failedToLoadConversations => 'Failed to load conversations';
+
+  @override
+  String get noMatchingConversations => 'No matching conversations';
+
+  @override
+  String get noConversationsYet => 'No conversations yet';
+
+  @override
+  String get conversationsEmptyDesc =>
+      'Direct messages with service providers or customers will appear here.';
+
+  @override
+  String get trySearchingAnotherKeyword =>
+      'Try searching with another name or keyword.';
+
+  @override
+  String get tapToStartConversation => 'Tap to start conversation';
+
+  @override
+  String get unauthorizedAdminAccess => 'Unauthorized: Admin access required.';
+
+  @override
+  String get profilePictureUpdated => 'Profile picture updated successfully!';
+
+  @override
+  String get profilePictureRemoved => 'Profile picture removed.';
+
+  @override
+  String get failedToRemovePhoto => 'Failed to remove photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String timeDaysAgo(int count) {
+    return '${count}d ago';
+  }
+
+  @override
+  String get chooseDisplayLanguage => 'Choose your primary display language';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get offline => 'Offline';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get messages => 'Messages';
+
+  @override
+  String get arrivalConfirmed => 'Arrival Confirmed';
+
+  @override
+  String get languageSwitchedTo => 'Language switched to';
+
+  @override
+  String get call => 'Call';
+
+  @override
+  String get addressHint => 'e.g. No. 12, Lake Road';
+
+  @override
+  String get needQuickService => 'Need Quick Service?';
+
+  @override
+  String get postJobBannerDesc =>
+      'Post your job in 60s & receive instant competitive bids from verified nearby artisans.';
+
+  @override
+  String get postJobAndGetQuotes => 'Post Job & Get Quotes';
+
+  @override
+  String get noArtisansMatchFilters => 'No artisans match your filters';
+
+  @override
+  String get tryClearingSearchOrFilters =>
+      'Try clearing your search query or adjusting your filters';
+
+  @override
+  String get resetAllFilters => 'Reset All Filters';
+
+  @override
+  String get filterArtisans => 'Filter Artisans';
+
+  @override
+  String get onlineReadyToBid => 'Online & Ready to Bid';
+
+  @override
+  String get onlineReadyToBidSub =>
+      'Show active artisans ready for instant booking';
+
+  @override
+  String get emergencyDispatch => 'Emergency Dispatch';
+
+  @override
+  String get customerRating => 'Customer Rating';
+
+  @override
+  String get allRatings => 'All Ratings';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get topArtisans => 'Top Artisans';
+
+  @override
+  String get friend => 'Friend';
+
+  @override
+  String get quickReplyWhereAreYou => 'Where are you now?';
+
+  @override
+  String get quickReplyWaitingMainGate => 'I am waiting at the main gate.';
+
+  @override
+  String get quickReplyCallWhenArrive => 'Please call me when you arrive.';
+
+  @override
+  String get quickReplyParkingAvailable => 'Parking is available on premise.';
+
+  @override
+  String get quickReplyOnMyWay => 'On my way, will be there soon.';
+
+  @override
+  String get couldNotConnectChat => 'Could not connect to chat';
+
+  @override
+  String get couldNotLoadChat => 'Could not load chat';
+
+  @override
+  String get sendMsgToStartChat => 'Send a message to start chatting';
+
+  @override
+  String get typeMessage => 'Type a message…';
+
+  @override
+  String bookingConfirmedChatStarted(String providerName) {
+    return 'Your service booking is confirmed. A direct conversation has been started with $providerName to coordinate timing and location.';
+  }
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get openChat => 'Open Chat';
+
+  @override
+  String get failedToAcceptQuote => 'Failed to accept quote';
+
+  @override
+  String etaDelayNotice(int minutes) {
+    return 'ETA Adjusted: +$minutes Mins Delay';
+  }
+
+  @override
+  String artisanReportedDelay(String reason) {
+    return 'Artisan reported: $reason';
+  }
+
+  @override
+  String get providerPhoneNotAvailable => 'Provider phone not available';
+
+  @override
+  String get cancelBookingConfirm =>
+      'Are you sure you want to cancel this booking request?';
+
+  @override
+  String get yesCancel => 'Yes, Cancel';
+
+  @override
+  String get serviceRequestCancelled => 'Service request cancelled.';
+
+  @override
+  String get liveTrackingCopied => 'Live tracking link copied to clipboard!';
+
+  @override
+  String get destination => 'Destination';
+
+  @override
+  String get liveGpsOnTheWay => 'Live GPS • On the way';
+
+  @override
+  String get enableLocationServices =>
+      'Please enable location services on your device';
+
+  @override
+  String get locationPermissionDenied => 'Location permission denied';
+
+  @override
+  String get locationPermissionPermanentlyDenied =>
+      'Location permission permanently denied. Enable in settings.';
+
+  @override
+  String get failedToDetectLocation => 'Failed to detect location';
+
+  @override
+  String get failedToSubmitRequest => 'Failed to submit request';
+
+  @override
+  String get reportProvider => 'Report Provider';
+
+  @override
+  String get experience => 'Experience';
+
+  @override
+  String get noCustomerReviews => 'No customer reviews recorded yet';
+
+  @override
+  String get complaintUnprofessionalConduct => 'Unprofessional Conduct';
+
+  @override
+  String get complaintLateNoShow => 'Late or No-Show';
+
+  @override
+  String get complaintPoorQuality => 'Poor Quality of Work';
+
+  @override
+  String get complaintSafetyConcern => 'Safety or Harassment Concern';
+
+  @override
+  String get complaintFraudIssue => 'Fraud or Identity Issue';
+
+  @override
+  String get complaintOtherIssue => 'Other Issue';
+
+  @override
+  String get reportServiceProvider => 'Report Service Provider';
+
+  @override
+  String reportingTechnician(String name, String title) {
+    return 'Reporting $name ($title)';
+  }
+
+  @override
+  String get selectComplaintReason => 'Select Complaint Reason';
+
+  @override
+  String get explainIncidentDetails => 'Explain Incident Details';
+
+  @override
+  String get explainIncidentHint =>
+      'Please detail what happened, including any agreed fees or work that was not completed...';
+
+  @override
+  String get describeIssueBeforeSubmitting =>
+      'Please describe the issue before submitting.';
+
+  @override
+  String get signInToSubmitComplaint => 'Please sign in to submit a complaint.';
+
+  @override
+  String get complaintSubmittedSuccess =>
+      'Complaint submitted to Admin Support for review.';
+
+  @override
+  String get submitOfficialReport => 'Submit Official Report';
+
+  @override
+  String jobIdNumber(String id) {
+    return 'Job #$id';
+  }
+
+  @override
+  String get settledDirectly => 'Settled directly';
+
+  @override
+  String get tip200 => '+LKR 200';
+
+  @override
+  String get tip500 => '+LKR 500';
+
+  @override
+  String get serviceDiagnostic => 'Service Diagnostic';
+
+  @override
+  String get technician => 'Technician';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String byTechnician(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get accountAndServices => 'ACCOUNT & SERVICES';
+
+  @override
+  String get homeServiceGpsLocation => 'Home / Service GPS Location';
+
+  @override
+  String get tapToAutoDetectGps => 'Tap to auto-detect current GPS coordinates';
+
+  @override
+  String gpsLocationUpdated(String lat, String lng) {
+    return 'GPS Location updated: $lat, $lng';
+  }
+
+  @override
+  String get couldNotObtainGps =>
+      'Could not obtain GPS location. Please check location permissions.';
+
+  @override
+  String currentMode(String mode) {
+    return 'Current: $mode (Tap to change)';
+  }
+
+  @override
+  String get failedToPickImage => 'Failed to pick image';
+
+  @override
+  String get complaintPriceDispute => 'Overcharging / Price Dispute';
+
+  @override
+  String get failedToSubmitReport => 'Failed to submit report';
+
+  @override
+  String get expressDispatchCaps => 'EXPRESS DISPATCH';
+
+  @override
+  String autoPassesInSeconds(int seconds) {
+    return 'Auto-passes in $seconds s';
+  }
+
+  @override
+  String get urgentCaps => 'URGENT';
+
+  @override
+  String get secondsUnit => 'seconds';
+
+  @override
+  String get guaranteedBasePayoutCaps => 'GUARANTEED BASE PAYOUT';
+
+  @override
+  String get cashAtServiceSite => 'Cash at service site';
+
+  @override
+  String get nearby => 'Nearby';
+
+  @override
+  String get acceptJob => 'Accept Job';
+
+  @override
+  String get passToNextArtisan => 'Pass to next artisan';
+
+  @override
+  String get pullOverSafelyWarning => 'Pull over safely before accepting.';
+
+  @override
+  String get serviceRequest => 'Service Request';
+
+  @override
+  String get clientAddress => 'Client Address';
+
+  @override
+  String durationMins(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String durationHours(int hours) {
+    return '$hours hr';
+  }
+
+  @override
+  String get durationOneAndHalfHours => '1.5 hr';
+
+  @override
+  String failedToSubmitQuote(String error) {
+    return 'Failed to submit quote: $error';
+  }
+
+  @override
+  String delayReportedNotice(String reason) {
+    return 'Reported delay: $reason (+10 min ETA adjustment broadcasted)';
+  }
+
+  @override
+  String get customerLocation => 'Customer Location';
+
+  @override
+  String customerLocationNamed(String name) {
+    return '$name\'s Location';
+  }
+
+  @override
+  String get youEnRoute => 'You (En Route)';
+
+  @override
+  String inDistance(String distance) {
+    return 'In $distance';
+  }
+
+  @override
+  String navigatingTo(String target) {
+    return 'Navigating to $target';
+  }
+
+  @override
+  String failedToUploadPhoto(String error) {
+    return 'Failed to upload photo: $error';
+  }
+
+  @override
+  String failedToSubmitVerification(String error) {
+    return 'Failed to submit verification: $error';
+  }
+
+  @override
+  String get step2Of3 => 'Step 2 of 3';
+
+  @override
+  String get navJobs => 'Jobs';
+
+  @override
+  String get verificationUnderReview => 'Verification Under Review';
+
+  @override
+  String get statusPendingReviewCaps => 'STATUS: PENDING REVIEW';
+
+  @override
+  String get nicUnderReviewDesc =>
+      'Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.';
+
+  @override
+  String get returnToDashboard => 'Return to Dashboard';
+
+  @override
+  String get verifyIdentitySubtitle =>
+      'Verify your identity to start receiving jobs island-wide across Sri Lanka.';
+
+  @override
+  String get nicFrontSide => 'NIC Front Side';
+
+  @override
+  String get nicFrontSideDesc =>
+      'Clear photo of the front side showing your portrait and NIC number.';
+
+  @override
+  String get captureOrUploadFront => 'Capture or Upload Front';
+
+  @override
+  String get nicFrontTip =>
+      'Tip: Lay flat on a contrasting surface, avoid phone shadow.';
+
+  @override
+  String get nicBackSide => 'NIC Back Side';
+
+  @override
+  String get nicBackSideDesc =>
+      'Back side showing your registered residential address and clear barcode.';
+
+  @override
+  String get captureOrUploadBack => 'Capture or Upload Back';
+
+  @override
+  String get nicBackTip => 'Ensure all 4 card corners are in frame';
+
+  @override
+  String get selfieHoldingNic => 'Selfie Holding Your NIC';
+
+  @override
+  String get selfieHoldingNicDesc =>
+      'Hold your National ID card next to your face, both equally in focus.';
+
+  @override
+  String get openCamera => 'Open Camera';
+
+  @override
+  String get livePortraitTest => 'Live portrait test';
+
+  @override
+  String get selfieTip =>
+      'Do not wear sunglasses, caps, or masks. Do not cover your name or photo.';
+
+  @override
+  String get fastTurnaroundTitle => 'Fast turnaround:';
+
+  @override
+  String get fastTurnaroundBody =>
+      'Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).';
+
+  @override
+  String get smsAlertTitle => 'SMS alert:';
+
+  @override
+  String get smsAlertBody =>
+      'Instant approval message to your registered mobile number.';
+
+  @override
+  String get qualityStandardTitle => 'Quality standard:';
+
+  @override
+  String get qualityStandardBody =>
+      'Natural daylight photos get accepted first try.';
+
+  @override
+  String get submitForVerification => 'Submit for Verification';
+
+  @override
+  String get attachedStatus => 'Attached';
+
+  @override
+  String get requiredStatus => 'Required';
+
+  @override
+  String get photoAttachedTapReplace => 'Photo attached · tap to replace';
+
+  @override
+  String get newLabel => 'New';
+
+  @override
+  String nReviews(int count) {
+    return '$count reviews';
+  }
+
+  @override
+  String nJobsCompleted(int count) {
+    return '$count jobs';
+  }
+
+  @override
+  String get fleetActive => 'Fleet Active';
+
+  @override
+  String categorySpecialist(String category) {
+    return '$category Specialist';
+  }
+
+  @override
+  String get instantMatchActive => 'Instant Match active';
+
+  @override
+  String get offlineSwitchOnDesc => 'Offline · Switch on to receive jobs';
+
+  @override
+  String nNew(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get acceptDirectBooking => 'Accept Direct Booking';
+
+  @override
+  String distanceAway(String distance) {
+    return '$distance away';
+  }
+
+  @override
+  String get etaLabel => 'ETA';
+
+  @override
+  String get minsUnit => 'min';
+
+  @override
+  String get certifiedArtisan => 'Certified Artisan';
 }

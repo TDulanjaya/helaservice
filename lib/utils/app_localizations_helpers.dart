@@ -119,14 +119,14 @@ class LocalizedData {
     'Kegalle': {'en': 'Kegalle', 'si': 'කෑගල්ල', 'ta': 'கேகாலை'},
   };
 
+  /// Category names come from Firestore and are shown exactly as stored.
   static String getCategory(BuildContext context, String key) {
-    final lang = Localizations.localeOf(context).languageCode;
-    return categories[key]?[lang] ?? categories[key]?['en'] ?? key;
+    return key;
   }
 
+  /// District names come from Firestore and are shown exactly as stored.
   static String getDistrict(BuildContext context, String key) {
-    final lang = Localizations.localeOf(context).languageCode;
-    return districts[key]?[lang] ?? districts[key]?['en'] ?? key;
+    return key;
   }
 
   static String getStatus(BuildContext context, String status) {

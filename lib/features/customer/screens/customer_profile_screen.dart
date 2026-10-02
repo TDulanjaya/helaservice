@@ -334,11 +334,11 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-            const Padding(
-              padding: EdgeInsets.only(left: 4, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
-                'ACCOUNT & SERVICES',
-                style: TextStyle(
+                context.l10n.accountAndServices,
+                style: const TextStyle(
                   fontSize: 11,
                   letterSpacing: 0.8,
                   fontWeight: FontWeight.w800,
@@ -348,10 +348,10 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
             _SettingsTile(
               icon: Icons.my_location,
-              title: 'Home / Service GPS Location',
+              title: context.l10n.homeServiceGpsLocation,
               subtitle: user?.latitude != null
                   ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)} (Tap to update)'
-                  : 'Tap to auto-detect current GPS coordinates',
+                  : context.l10n.tapToAutoDetectGps,
               onTap: () async {
                 final pos = await LocationUtils.getCurrentPosition();
                 if (pos != null && context.mounted) {
@@ -369,7 +369,7 @@ class CustomerProfileScreen extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'GPS Location updated: ${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}',
+                          context.l10n.gpsLocationUpdated(pos.latitude.toStringAsFixed(4), pos.longitude.toStringAsFixed(4)),
                         ),
                         backgroundColor: AppColors.primary,
                       ),
@@ -377,8 +377,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   }
                 } else if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Could not obtain GPS location. Please check location permissions.'),
+                    SnackBar(
+                      content: Text(context.l10n.couldNotObtainGps),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -393,7 +393,7 @@ class CustomerProfileScreen extends StatelessWidget {
                       ? Icons.dark_mode_outlined
                       : Icons.light_mode_outlined,
                   title: context.l10n.appearanceAndTheme,
-                  subtitle: 'Current: ${themeProvider.modeName} (Tap to change)',
+                  subtitle: context.l10n.currentMode(themeProvider.modeName),
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
@@ -478,7 +478,7 @@ class CustomerProfileScreen extends StatelessWidget {
                   icon: Icons.language,
                   title: 'App Language / භාෂාව / மொழி',
                   subtitle:
-                      'Current: ${localeProvider.languageDisplayName} (Tap to change)',
+                      context.l10n.currentMode(localeProvider.languageDisplayName),
                   onTap: () => LanguageSelectSheet.show(context),
                 );
               },

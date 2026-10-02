@@ -107,7 +107,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick image: $e'),
+            content: Text('${context.l10n.failedToPickImage}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -162,8 +162,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Please enable location services on your device')),
+            SnackBar(
+                content: Text(context.l10n.enableLocationServices)),
           );
         }
         setState(() => _detectingLocation = false);
@@ -176,7 +176,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         if (permission == LocationPermission.denied) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Location permission denied')),
+              SnackBar(content: Text(context.l10n.locationPermissionDenied)),
             );
           }
           setState(() => _detectingLocation = false);
@@ -186,9 +186,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content: Text(
-                    'Location permission permanently denied. Enable in settings.')),
+                    context.l10n.locationPermissionPermanentlyDenied)),
           );
         }
         setState(() => _detectingLocation = false);
@@ -209,7 +209,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to detect location: $e'),
+            content: Text('${context.l10n.failedToDetectLocation}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -281,7 +281,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit request: $e'),
+            content: Text('${context.l10n.failedToSubmitRequest}: $e'),
             backgroundColor: AppColors.error,
           ),
         );

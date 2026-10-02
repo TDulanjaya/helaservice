@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
           await minDelay;
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Your admin access is suspended.')),
+            SnackBar(content: Text(context.l10n.adminAccessSuspended)),
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const LoginScreen()),

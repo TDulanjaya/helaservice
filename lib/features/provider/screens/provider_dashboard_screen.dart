@@ -80,10 +80,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final user = roleProvider.currentUser;
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
-        : 'Service Provider';
+        : context.l10n.roleProvider;
     final tradeLabel = user?.serviceCategory?.isNotEmpty == true
-        ? '${LocalizedData.getCategory(context, user!.serviceCategory!)} Specialist'
-        : 'Certified Artisan';
+        ? context.l10n.categorySpecialist(user!.serviceCategory!)
+        : context.l10n.certifiedArtisan;
     final providerCategory = user?.serviceCategory ?? '';
 
     return Scaffold(
@@ -288,7 +288,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Instant Match active',
+                            context.l10n.instantMatchActive,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -387,7 +387,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Offline · Switch on to receive jobs',
+                            context.l10n.offlineSwitchOnDesc,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -431,7 +431,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     }
                     final ratingStr = reviews.isNotEmpty
                         ? avgRating.toStringAsFixed(1)
-                        : (completed > 0 ? '5.0' : 'New');
+                        : (completed > 0 ? '5.0' : context.l10n.newLabel);
 
                     return Row(
                       children: [
@@ -443,7 +443,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         const SizedBox(width: 8),
                         _StatCard(
                           icon: Icons.star_rounded,
-                          value: '$ratingStr ★',
+                          value: (reviews.isNotEmpty || completed > 0)
+                              ? '$ratingStr ★'
+                              : context.l10n.newLabel,
                           sub: context.l10n.rating,
                         ),
                         const SizedBox(width: 8),
@@ -508,7 +510,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                '${requests.length} new',
+                                context.l10n.nNew(requests.length),
                                 style: const TextStyle(
                                   color: AppColors.primary,
                                   fontSize: 11,
@@ -685,9 +687,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                             } else {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
-                                                const SnackBar(
+                                                SnackBar(
                                                   content: Text(
-                                                      'Customer phone not available'),
+                                                      context.l10n.customerPhoneNotAvailable),
                                                 ),
                                               );
                                             }
@@ -718,7 +720,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 destinationTitle:
                                                     b.customerName.isNotEmpty
                                                         ? b.customerName
-                                                        : 'Customer Location',
+                                                        : context.l10n.customerLocation,
                                               );
                                             } else {
                                               final coords = LocationUtils
@@ -732,7 +734,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 destinationTitle:
                                                     b.location.isNotEmpty
                                                         ? b.location
-                                                        : 'Customer Location',
+                                                        : context.l10n.customerLocation,
                                               );
                                             }
                                           },
@@ -758,7 +760,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                         b.status == 'pending') ...[
                                       const SizedBox(height: 12),
                                       PrimaryButton(
-                                        label: 'Accept Direct Booking',
+                                        label: context.l10n.acceptDirectBooking,
                                         leadingIcon:
                                             Icons.check_circle_outline_rounded,
                                         onPressed: () async {
@@ -1057,7 +1059,7 @@ class _JobRequestCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '$distanceText away',
+                        context.l10n.distanceAway(distanceText),
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -1307,7 +1309,7 @@ class _QuoteHistoryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'ETA: ${quote.etaMinutes} min${quote.notes.isNotEmpty ? " · ${quote.notes}" : ""}',
+                      '${context.l10n.etaLabel}: ${quote.etaMinutes} ${context.l10n.minsUnit}${quote.notes.isNotEmpty ? " · ${quote.notes}" : ""}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1339,7 +1341,7 @@ class _QuoteHistoryTile extends StatelessWidget {
           if (isAccepted) ...[
             const SizedBox(height: 12),
             PrimaryButton(
-              label: 'Chat with Customer',
+              label: context.l10n.chatWithCustomer,
               leadingIcon: Icons.chat_bubble_outline_rounded,
               onPressed: () => _openCustomerChat(context),
             ),

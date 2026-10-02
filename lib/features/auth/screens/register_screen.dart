@@ -231,7 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: _obscurePassword,
                 style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                 decoration: InputDecoration(
-                  hintText: 'At least 6 characters',
+                  hintText: context.l10n.atLeast6Characters,
                   hintStyle: TextStyle(
                     color: context.themeTextSecondary.withValues(alpha: 0.6),
                   ),
@@ -284,7 +284,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: _obscureConfirmPassword,
                 style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                 decoration: InputDecoration(
-                  hintText: 'Re-enter your password',
+                  hintText: context.l10n.reEnterPassword,
                   hintStyle: TextStyle(
                     color: context.themeTextSecondary.withValues(alpha: 0.6),
                   ),

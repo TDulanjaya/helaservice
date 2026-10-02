@@ -115,7 +115,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
-        : 'Service Provider';
+        : context.l10n.roleProvider;
     final email = user?.email.isNotEmpty == true
         ? user!.email
         : '';
@@ -278,12 +278,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
                           final ratingValue = avgRating != null
                               ? avgRating.toStringAsFixed(1)
-                              : (completed > 0 ? '5.0' : 'New');
+                              : (completed > 0 ? '5.0' : context.l10n.newLabel);
                           final ratingSub = reviews.isNotEmpty
-                              ? '${reviews.length} reviews'
+                              ? context.l10n.nReviews(reviews.length)
                               : (completed > 0
-                                  ? '$completed jobs'
-                                  : 'Fleet Active');
+                                  ? context.l10n.nJobsCompleted(completed)
+                                  : context.l10n.fleetActive);
 
                           return Row(
                             children: [
@@ -361,14 +361,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'NIC Number',
+                        context.l10n.nicNumberLabel,
                         style: TextStyle(
                           fontSize: 12,
                           color: context.themeTextSecondary,
                         ),
                       ),
                       Text(
-                        nic.isNotEmpty ? _maskNic(nic) : 'Not provided',
+                        nic.isNotEmpty ? _maskNic(nic) : context.l10n.notProvided,
                         style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,

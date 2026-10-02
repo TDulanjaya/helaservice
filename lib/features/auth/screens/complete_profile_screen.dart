@@ -113,8 +113,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not obtain GPS location. Please ensure location is enabled.'),
+            SnackBar(
+              content: Text(context.l10n.gpsLocationError),
               backgroundColor: AppColors.error,
             ),
           );
@@ -807,7 +807,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                         decoration: _inputDecoration(
                           context,
-                          hint: 'No. 12, Lake Road',
+                          hint: context.l10n.addressHint,
                           icon: Icons.home_outlined,
                           isDark: context.isDark,
                         ),
@@ -974,7 +974,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         items: allCats.map((c) {
                           return DropdownMenuItem(
                             value: c,
-                            child: Text(LocalizedData.getCategory(context, c)),
+                            child: Text(c),
                           );
                         }).toList(),
                         onChanged: (val) {

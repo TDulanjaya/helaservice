@@ -2,7 +2,6 @@
   "@@locale": "en",
   "appTitle": "HelaService",
   "tagline": "On-Demand Home & Emergency Services in Sri Lanka",
-
   "language": "Language",
   "selectLanguage": "Select Language",
   "preferredLanguage": "Preferred Language",
@@ -10,18 +9,15 @@
   "english": "English",
   "sinhala": "සිංහල",
   "tamil": "தமிழ்",
-
   "theme": "Theme Mode",
   "themeLight": "Light",
   "themeDark": "Dark",
   "themeSystem": "System Default",
   "changeTheme": "Change Theme",
-
   "roleCustomer": "Customer",
   "roleProvider": "Technician / Artisan",
   "roleAdmin": "Operations Admin",
   "switchRole": "Switch Role",
-
   "navHome": "Home",
   "navExplore": "Explore",
   "navBookings": "Bookings",
@@ -42,7 +38,6 @@
   "navCoverage": "Coverage",
   "navTeam": "Team",
   "navSettings": "Settings",
-
   "loginTitle": "Welcome to HelaService",
   "loginSubtitle": "Find verified home service professionals or manage your service jobs across Sri Lanka.",
   "emailAddress": "Email Address",
@@ -73,7 +68,6 @@
   "orContinueWith": "or continue with",
   "orSignUpWithEmail": "or sign up with email",
   "smsNotice": "We'll send a 6-digit OTP code to verify your phone number.",
-
   "completeProfileTitle": "Choose Role & Profile",
   "completeProfileSubtitle": "Tell us a bit about yourself to get started",
   "selectAccountType": "Select Account Type",
@@ -97,7 +91,6 @@
   "agreeTerms": "I agree to the HelaService Terms & Privacy Policy",
   "completeRegistration": "Complete Registration & Continue",
   "accountVerified": "Account verified",
-
   "postJobTitle": "Post a Job Request",
   "postJobSubtitle": "Connect with verified artisans near your home across Sri Lanka",
   "postJobGetQuotes": "Post Job & Get Quotes",
@@ -129,13 +122,12 @@
   "enterJobTitleError": "Please enter a job title",
   "addDescriptionError": "Please add a description",
   "selectCategoryError": "Please select a service category",
-
   "quotesTitle": "Artisan Quotes & Bids",
   "quotesReceived": "QUOTES RECEIVED",
   "noQuotes": "No quotes received yet. Artisans in your area are reviewing your request.",
   "waitingForQuotes": "Waiting for Quotes",
   "waitingForQuotesDesc": "Your job has been posted. Nearby service providers will send you their price quotes shortly.",
-  "providerHired": "Provider Hired!",
+  "providerHired": "{providerName} Hired!",
   "backToHome": "Back to Home",
   "acceptQuoteHire": "Accept Quote & Hire?",
   "acceptHire": "Accept & Hire",
@@ -159,7 +151,6 @@
   "declineQuote": "Decline",
   "enterQuotedPriceError": "Please enter your quoted price",
   "enterValidPriceError": "Please enter a valid price",
-
   "greetingAyubowan": "Ayubowan",
   "findCertifiedArtisans": "Find certified local artisans ready to help today.",
   "searchHint": "Search plumbers, electricians, carpenters...",
@@ -188,7 +179,6 @@
   "viewDetails": "View Profile & Hire",
   "helaCareGuarantee": "HelaCare Guarantee",
   "helaCareDesc": "All booked visits include complimentary property damage coverage up to LKR 100,000.",
-
   "initialInspectionRate": "Initial Inspection Rate",
   "quickBook": "Quick Book",
   "serviceDetail": "Service Detail",
@@ -204,7 +194,6 @@
   "requestService": "Request Service",
   "message": "Message",
   "chat": "Chat",
-
   "liveTracking": "Live Tracking",
   "noActiveDispatch": "No Active Dispatch",
   "noActiveDispatchSub": "When you request a service, live GPS tracking appears here.",
@@ -217,7 +206,6 @@
   "shareTrip": "Share Trip",
   "jobFinishedRatePay": "Job Finished · Rate & Pay",
   "callTech": "Call Tech",
-
   "checkoutBooking": "Checkout Booking",
   "serviceCompleted": "Service Completed!",
   "costBreakdown": "Cost Breakdown",
@@ -232,39 +220,34 @@
   "tipProvider": "Tip Provider — 100% goes to provider",
   "done": "Done",
   "needHelpOrder": "Need help with this order?",
-
   "statusPending": "Pending",
   "statusAccepted": "Accepted",
   "statusInProgress": "In Progress",
   "statusCompleted": "Completed",
   "statusCancelled": "Cancelled",
-
   "verifiedArtisan": "NIC Verified",
   "activeFleet": "Active Fleet",
   "availableNow": "Available Now",
   "kmAway": "km away",
   "rating": "Rating",
   "reviews": "Reviews",
-
   "myBookings": "My Bookings",
   "activeBookings": "Active",
   "pastBookings": "Past History",
   "activeServiceVisit": "ACTIVE SERVICE VISIT",
   "pastCompletedServices": "Past Completed Services",
   "openLiveGpsTracking": "Open Live GPS Tracking",
-  "noBookingsFound": "No bookings found in this section.",
+  "noBookingsFound": "No job ledger records found",
   "noBookingsRecorded": "No bookings recorded yet",
   "browseArtisansExplore": "Browse certified artisans on the Explore tab.",
   "bookTechnician": "Book an Artisan",
   "callArtisan": "Call Artisan",
   "trackLocation": "Track Location",
   "leaveReview": "Rate & Review",
-
   "rateJobTitle": "Job Completion & Rating",
   "rateJobSubtitle": "How was your service experience with",
   "ratingFeedbackHint": "Share feedback on quality, punctuality, and craftsmanship...",
   "submitRating": "Submit Review & Finish",
-
   "providerDashboardTitle": "Artisan Operations Hub",
   "statusOnline": "Online & Accepting Leads",
   "statusOffline": "Offline / Paused",
@@ -286,7 +269,6 @@
   "acceptedCaps": "ACCEPTED",
   "pendingResponseCaps": "PENDING RESPONSE",
   "declinedCaps": "DECLINED",
-
   "save": "Save Changes",
   "cancel": "Cancel",
   "confirm": "Confirm",
@@ -295,7 +277,6 @@
   "editProfile": "Edit Profile",
   "contactSupport": "Help & Support Hotline",
   "appSettings": "Preferences & Settings",
-
   "editProfileAndPhoto": "Edit Profile & Photo",
   "editContactInfo": "Edit Contact Info",
   "profilePhoto": "Profile Photo",
@@ -321,7 +302,6 @@
   "logoutModalTitle": "Log Out",
   "logoutModalConfirm": "Are you sure you want to log out of HelaService?",
   "profileDetails": "Profile Details",
-
   "serviceLocation": "Service Location",
   "selectDistrict": "Select District",
   "districtLabel": "District",
@@ -330,7 +310,6 @@
   "useExactLiveGps": "Optional: Use exact live GPS",
   "gpsLocationSet": "GPS Location set (Tap to refresh)",
   "detectingGps": "Detecting GPS...",
-
   "expressDispatchRoute": "EXPRESS DISPATCH ROUTE",
   "autoPassesIn": "Auto-passes in",
   "newJobRequest": "New Job Request",
@@ -358,7 +337,6 @@
   "operationalDistrict": "Operational District",
   "primaryTradeCategory": "Primary Trade Category",
   "quotesCount": "Quotes",
-
   "adminDashboardTitle": "HelaService Operations Admin",
   "platformOverview": "Platform Overview",
   "activeTechnicians": "Active Technicians",
@@ -373,7 +351,6 @@
   "auditLogs": "System Audit Logs",
   "approve": "Approve",
   "reject": "Reject",
-
   "failedToPickPhoto": "Failed to pick photo",
   "pleaseAcceptTerms": "Please accept the Terms of Service to continue.",
   "pleaseUploadNicFront": "Please upload a photo of the front of your NIC",
@@ -381,7 +358,6 @@
   "failedToSubmit": "Failed to submit",
   "close": "Close",
   "sec": "sec",
-
   "uploadProfilePhoto": "Upload Profile Photo",
   "uploadNicFront": "Upload NIC Front",
   "uploadNicBack": "Upload NIC Back",
@@ -430,7 +406,6 @@
   "totalCompletedJobs": "Total Completed Jobs",
   "totalInProgressJobs": "Total In-Progress Jobs",
   "averageRating": "Average Rating",
-  "filterAll": "All",
   "filterCompleted": "Completed",
   "filterInProgress": "In Progress",
   "filterCancelled": "Cancelled",
@@ -438,7 +413,6 @@
   "customerLabel": "Customer",
   "bidAmount": "Bid Amount",
   "notRecorded": "Not recorded",
-  "noBookingsFound": "No job ledger records found",
   "noBookingsMatchingFilter": "No bookings match the selected status filter.",
   "delayReported": "Delay Reported",
   "trackingOutcome": "Tracking Outcome",
@@ -462,19 +436,15 @@
   "customerPhoneLabel": "Contact phone number (for artisan dispatch)",
   "providerPhoneLabel": "Contact mobile number (for customer dispatch)",
   "homeAddressLabel": "Home address",
-  "districtLabel": "District",
   "becomeProvider": "Become a Service Provider",
   "providerRegisterSubtitle": "Earn island-wide by taking verified jobs near you across Sri Lanka",
   "agreeProviderTerms": "I agree to the Provider Terms, platform commission rates, and NIC verification process",
   "createAccountVerifyNic": "Create Account & Verify NIC",
-  "reportEnRouteDelay": "Report En-Route Delay",
   "selectDelayReason": "Select a reason to adjust the customer ETA by +10 mins:",
   "heavyTraffic": "Heavy Traffic",
   "monsoonRain": "Monsoon Rain",
   "roadDetour": "Road Detour",
   "refuelingStop": "Refueling Stop",
-  "enRouteNavigation": "En Route Navigation",
-  "googleMapsOrWaze": "Google Maps / Waze",
   "chatWithCustomer": "Chat with Customer",
   "callCustomerPhone": "Call Customer Phone",
   "customerPhoneNotAvailable": "Customer phone number not available",
@@ -549,7 +519,6 @@
   "passwordLabel": "Password",
   "fullNameNicLabel": "Full name (as in NIC)",
   "nicNumberLabel": "National Identity Card (NIC) number",
-
   "opsCoreSubtitle": "Island Operations Core",
   "islandOperationsTitle": "Island Operations",
   "activeProvidersTitle": "Active Providers",
@@ -557,16 +526,24 @@
   "onlineFleetSummary": "{online} Online • {verified} Verified Fleet",
   "@onlineFleetSummary": {
     "placeholders": {
-      "online": {"type": "String"},
-      "verified": {"type": "String"}
+      "online": {
+        "type": "String"
+      },
+      "verified": {
+        "type": "String"
+      }
     }
   },
   "totalBookingsTitle": "Total Bookings",
   "completedInProgressSummary": "{completed} Completed • {inProgress} In Progress",
   "@completedInProgressSummary": {
     "placeholders": {
-      "completed": {"type": "String"},
-      "inProgress": {"type": "String"}
+      "completed": {
+        "type": "String"
+      },
+      "inProgress": {
+        "type": "String"
+      }
     }
   },
   "nicScreeningTitle": "NIC Screening",
@@ -574,7 +551,9 @@
   "verificationDossiersLogged": "{count} Verification Dossiers Logged",
   "@verificationDossiersLogged": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "allSriLankaLiveTraffic": "Live Traffic",
@@ -585,8 +564,12 @@
   "tradeAndZone": "Trade: {trade} • Zone: {zone}",
   "@tradeAndZone": {
     "placeholders": {
-      "trade": {"type": "String"},
-      "zone": {"type": "String"}
+      "trade": {
+        "type": "String"
+      },
+      "zone": {
+        "type": "String"
+      }
     }
   },
   "selectOpenJobRequest": "Select Open Job Request to Dispatch:",
@@ -595,11 +578,14 @@
   "dispatchedArtisanToJob": "Dispatched {artisan} to {job}",
   "@dispatchedArtisanToJob": {
     "placeholders": {
-      "artisan": {"type": "String"},
-      "job": {"type": "String"}
+      "artisan": {
+        "type": "String"
+      },
+      "job": {
+        "type": "String"
+      }
     }
   },
-
   "navDisputes": "Disputes",
   "tradeCategoriesTitle": "Trade Service Categories",
   "addNewCategoryAction": "Add New Category",
@@ -608,34 +594,46 @@
   "categoriesCount": "{count} Categories",
   "@categoriesCount": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "activeTradeServicesPublished": "{count} active trade services published",
   "@activeTradeServicesPublished": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "activeArtisanFleetTitle": "Active Artisan Fleet",
   "artisansCount": "{count} Artisans",
   "@artisansCount": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "vettedTechniciansAvailable": "{count} vetted technicians available",
   "@vettedTechniciansAvailable": {
     "placeholders": {
-      "count": {"type": "String"}
+      "count": {
+        "type": "String"
+      }
     }
   },
   "publishedTradeCategories": "Published Trade Categories",
   "registeredOnlineCount": "{registered} Registered • {online} Online Now",
   "@registeredOnlineCount": {
     "placeholders": {
-      "registered": {"type": "String"},
-      "online": {"type": "String"}
+      "registered": {
+        "type": "String"
+      },
+      "online": {
+        "type": "String"
+      }
     }
   },
   "statusActive": "Active",
@@ -655,7 +653,6 @@
   "readOnlyOpsGovernance": "Read-Only Mode: Ops Governance permission required to manage categories or fleet.",
   "noCategoriesInDb": "No Categories in Database",
   "addFirstCategory": "Add First Category",
-
   "adminTeamGovernanceTitle": "Admin Team & Access Governance",
   "addNewAdminAction": "Add New Admin",
   "totalAdminsCount": "Total Admins",
@@ -678,23 +675,27 @@
   "revokeAccessConfirm": "Are you sure you want to revoke back-office administrative access for {name} ({email})? This action cannot be undone.",
   "@revokeAccessConfirm": {
     "placeholders": {
-      "name": {"type": "String"},
-      "email": {"type": "String"}
+      "name": {
+        "type": "String"
+      },
+      "email": {
+        "type": "String"
+      }
     }
   },
   "revokeAccess": "Revoke Access",
   "adminAccessRevoked": "Administrative access revoked for {name}.",
   "@adminAccessRevoked": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
-
   "searchTechniciansNicJobs": "Search technicians, NIC, jobs...",
   "islandNetworkStatus": "Island Network: 99.8% Online • Colombo / Kandy / Galle active",
   "operationsAlertsBroadcasts": "Operations Alerts & Broadcasts",
   "noActiveSystemAlerts": "No active system alerts or broadcasts logged.",
-
   "disputeComplaintCenter": "Dispute & Complaint Center",
   "reviewUserReports": "Review user reports, audit quality disputes, and enforce moderation",
   "totalReports": "Total Reports",
@@ -707,5 +708,382 @@
   "reasonForBan": "Reason for Ban (Visible to Provider):",
   "filterAllFilter": "All",
   "expandMap": "Expand map",
-  "closeMap": "Close map"
+  "closeMap": "Close map",
+  "adminAccessSuspended": "Your admin access is suspended.",
+  "passwordResetSent": "Password reset link sent to {email}. Please check your inbox.",
+  "@passwordResetSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "atLeast6Characters": "At least 6 characters",
+  "reEnterPassword": "Re-enter your password",
+  "gpsLocationError": "Could not obtain GPS location. Please ensure location is enabled.",
+  "searchChatsPlaceholder": "Search chats by name or message...",
+  "signInToViewMessages": "Please sign in to view your messages",
+  "failedToLoadConversations": "Failed to load conversations",
+  "noMatchingConversations": "No matching conversations",
+  "noConversationsYet": "No conversations yet",
+  "conversationsEmptyDesc": "Direct messages with service providers or customers will appear here.",
+  "trySearchingAnotherKeyword": "Try searching with another name or keyword.",
+  "tapToStartConversation": "Tap to start conversation",
+  "unauthorizedAdminAccess": "Unauthorized: Admin access required.",
+  "profilePictureUpdated": "Profile picture updated successfully!",
+  "profilePictureRemoved": "Profile picture removed.",
+  "failedToRemovePhoto": "Failed to remove photo",
+  "removePhoto": "Remove photo",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count}m ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count}d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseDisplayLanguage": "Choose your primary display language",
+  "online": "Online",
+  "offline": "Offline",
+  "you": "You",
+  "messages": "Messages",
+  "arrivalConfirmed": "Arrival Confirmed",
+  "languageSwitchedTo": "Language switched to",
+  "call": "Call",
+  "addressHint": "e.g. No. 12, Lake Road",
+  "needQuickService": "Need Quick Service?",
+  "postJobBannerDesc": "Post your job in 60s & receive instant competitive bids from verified nearby artisans.",
+  "postJobAndGetQuotes": "Post Job & Get Quotes",
+  "noArtisansMatchFilters": "No artisans match your filters",
+  "tryClearingSearchOrFilters": "Try clearing your search query or adjusting your filters",
+  "resetAllFilters": "Reset All Filters",
+  "filterArtisans": "Filter Artisans",
+  "onlineReadyToBid": "Online & Ready to Bid",
+  "onlineReadyToBidSub": "Show active artisans ready for instant booking",
+  "emergencyDispatch": "Emergency Dispatch",
+  "customerRating": "Customer Rating",
+  "allRatings": "All Ratings",
+  "applyFilters": "Apply Filters",
+  "topArtisans": "Top Artisans",
+  "friend": "Friend",
+  "quickReplyWhereAreYou": "Where are you now?",
+  "quickReplyWaitingMainGate": "I am waiting at the main gate.",
+  "quickReplyCallWhenArrive": "Please call me when you arrive.",
+  "quickReplyParkingAvailable": "Parking is available on premise.",
+  "quickReplyOnMyWay": "On my way, will be there soon.",
+  "couldNotConnectChat": "Could not connect to chat",
+  "couldNotLoadChat": "Could not load chat",
+  "sendMsgToStartChat": "Send a message to start chatting",
+  "typeMessage": "Type a message…",
+  "@providerHired": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingConfirmedChatStarted": "Your service booking is confirmed. A direct conversation has been started with {providerName} to coordinate timing and location.",
+  "@bookingConfirmedChatStarted": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      }
+    }
+  },
+  "later": "Later",
+  "openChat": "Open Chat",
+  "failedToAcceptQuote": "Failed to accept quote",
+  "etaDelayNotice": "ETA Adjusted: +{minutes} Mins Delay",
+  "@etaDelayNotice": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "artisanReportedDelay": "Artisan reported: {reason}",
+  "@artisanReportedDelay": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "providerPhoneNotAvailable": "Provider phone not available",
+  "cancelBookingConfirm": "Are you sure you want to cancel this booking request?",
+  "yesCancel": "Yes, Cancel",
+  "serviceRequestCancelled": "Service request cancelled.",
+  "liveTrackingCopied": "Live tracking link copied to clipboard!",
+  "destination": "Destination",
+  "liveGpsOnTheWay": "Live GPS • On the way",
+  "enableLocationServices": "Please enable location services on your device",
+  "locationPermissionDenied": "Location permission denied",
+  "locationPermissionPermanentlyDenied": "Location permission permanently denied. Enable in settings.",
+  "failedToDetectLocation": "Failed to detect location",
+  "failedToSubmitRequest": "Failed to submit request",
+  "reportProvider": "Report Provider",
+  "experience": "Experience",
+  "noCustomerReviews": "No customer reviews recorded yet",
+  "complaintUnprofessionalConduct": "Unprofessional Conduct",
+  "complaintLateNoShow": "Late or No-Show",
+  "complaintPoorQuality": "Poor Quality of Work",
+  "complaintSafetyConcern": "Safety or Harassment Concern",
+  "complaintFraudIssue": "Fraud or Identity Issue",
+  "complaintOtherIssue": "Other Issue",
+  "reportServiceProvider": "Report Service Provider",
+  "reportingTechnician": "Reporting {name} ({title})",
+  "@reportingTechnician": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "selectComplaintReason": "Select Complaint Reason",
+  "explainIncidentDetails": "Explain Incident Details",
+  "explainIncidentHint": "Please detail what happened, including any agreed fees or work that was not completed...",
+  "describeIssueBeforeSubmitting": "Please describe the issue before submitting.",
+  "signInToSubmitComplaint": "Please sign in to submit a complaint.",
+  "complaintSubmittedSuccess": "Complaint submitted to Admin Support for review.",
+  "submitOfficialReport": "Submit Official Report",
+  "jobIdNumber": "Job #{id}",
+  "@jobIdNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "settledDirectly": "Settled directly",
+  "tip200": "+LKR 200",
+  "tip500": "+LKR 500",
+  "serviceDiagnostic": "Service Diagnostic",
+  "technician": "Technician",
+  "today": "Today",
+  "byTechnician": "By {name}",
+  "@byTechnician": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountAndServices": "ACCOUNT & SERVICES",
+  "homeServiceGpsLocation": "Home / Service GPS Location",
+  "tapToAutoDetectGps": "Tap to auto-detect current GPS coordinates",
+  "gpsLocationUpdated": "GPS Location updated: {lat}, {lng}",
+  "@gpsLocationUpdated": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotObtainGps": "Could not obtain GPS location. Please check location permissions.",
+  "currentMode": "Current: {mode} (Tap to change)",
+  "@currentMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToPickImage": "Failed to pick image",
+  "complaintPriceDispute": "Overcharging / Price Dispute",
+  "failedToSubmitReport": "Failed to submit report",
+  "expressDispatchCaps": "EXPRESS DISPATCH",
+  "autoPassesInSeconds": "Auto-passes in {seconds} s",
+  "@autoPassesInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "urgentCaps": "URGENT",
+  "secondsUnit": "seconds",
+  "guaranteedBasePayoutCaps": "GUARANTEED BASE PAYOUT",
+  "cashAtServiceSite": "Cash at service site",
+  "nearby": "Nearby",
+  "acceptJob": "Accept Job",
+  "passToNextArtisan": "Pass to next artisan",
+  "pullOverSafelyWarning": "Pull over safely before accepting.",
+  "serviceRequest": "Service Request",
+  "clientAddress": "Client Address",
+  "durationMins": "{minutes} min",
+  "@durationMins": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{hours} hr",
+  "@durationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "durationOneAndHalfHours": "1.5 hr",
+  "failedToSubmitQuote": "Failed to submit quote: {error}",
+  "@failedToSubmitQuote": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "delayReportedNotice": "Reported delay: {reason} (+10 min ETA adjustment broadcasted)",
+  "@delayReportedNotice": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "customerLocation": "Customer Location",
+  "customerLocationNamed": "{name}'s Location",
+  "@customerLocationNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youEnRoute": "You (En Route)",
+  "inDistance": "In {distance}",
+  "@inDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navigatingTo": "Navigating to {target}",
+  "@navigatingTo": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToUploadPhoto": "Failed to upload photo: {error}",
+  "@failedToUploadPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSubmitVerification": "Failed to submit verification: {error}",
+  "@failedToSubmitVerification": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "step2Of3": "Step 2 of 3",
+  "navJobs": "Jobs",
+  "verificationUnderReview": "Verification Under Review",
+  "statusPendingReviewCaps": "STATUS: PENDING REVIEW",
+  "nicUnderReviewDesc": "Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.",
+  "returnToDashboard": "Return to Dashboard",
+  "verifyIdentitySubtitle": "Verify your identity to start receiving jobs island-wide across Sri Lanka.",
+  "nicFrontSide": "NIC Front Side",
+  "nicFrontSideDesc": "Clear photo of the front side showing your portrait and NIC number.",
+  "captureOrUploadFront": "Capture or Upload Front",
+  "nicFrontTip": "Tip: Lay flat on a contrasting surface, avoid phone shadow.",
+  "nicBackSide": "NIC Back Side",
+  "nicBackSideDesc": "Back side showing your registered residential address and clear barcode.",
+  "captureOrUploadBack": "Capture or Upload Back",
+  "nicBackTip": "Ensure all 4 card corners are in frame",
+  "selfieHoldingNic": "Selfie Holding Your NIC",
+  "selfieHoldingNicDesc": "Hold your National ID card next to your face, both equally in focus.",
+  "openCamera": "Open Camera",
+  "livePortraitTest": "Live portrait test",
+  "selfieTip": "Do not wear sunglasses, caps, or masks. Do not cover your name or photo.",
+  "fastTurnaroundTitle": "Fast turnaround:",
+  "fastTurnaroundBody": "Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).",
+  "smsAlertTitle": "SMS alert:",
+  "smsAlertBody": "Instant approval message to your registered mobile number.",
+  "qualityStandardTitle": "Quality standard:",
+  "qualityStandardBody": "Natural daylight photos get accepted first try.",
+  "submitForVerification": "Submit for Verification",
+  "attachedStatus": "Attached",
+  "requiredStatus": "Required",
+  "photoAttachedTapReplace": "Photo attached · tap to replace",
+  "newLabel": "New",
+  "nReviews": "{count} reviews",
+  "@nReviews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nJobsCompleted": "{count} jobs",
+  "@nJobsCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetActive": "Fleet Active",
+  "categorySpecialist": "{category} Specialist",
+  "@categorySpecialist": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "instantMatchActive": "Instant Match active",
+  "offlineSwitchOnDesc": "Offline · Switch on to receive jobs",
+  "nNew": "{count} new",
+  "@nNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acceptDirectBooking": "Accept Direct Booking",
+  "distanceAway": "{distance} away",
+  "@distanceAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "etaLabel": "ETA",
+  "minsUnit": "min",
+  "certifiedArtisan": "Certified Artisan"
 }

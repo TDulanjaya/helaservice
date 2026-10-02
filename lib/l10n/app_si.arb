@@ -639,5 +639,7 @@
   "dismissComplaint": "පැමිණිල්ල නිෂ්ප්‍රභ කරන්න",
   "suspendServiceProvider": "සේවා සපයන්නාගේ ගිණුම අත්හිටුවන්න",
   "reasonForBan": "තහනම් කිරීමට හේතුව (සපයන්නාට පෙනේ):",
-  "filterAllFilter": "සියල්ල"
+  "filterAllFilter": "සියල්ල",
+  "expandMap": "සිතියම විශාල කරන්න",
+  "closeMap": "සිතියම වසන්න"
 }

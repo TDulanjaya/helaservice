@@ -1929,4 +1929,10 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get filterAllFilter => 'සියල්ල';
+
+  @override
+  String get expandMap => 'සිතියම විශාල කරන්න';
+
+  @override
+  String get closeMap => 'සිතියම වසන්න';
 }

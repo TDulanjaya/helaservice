@@ -1968,4 +1968,10 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get filterAllFilter => 'அனைத்தும்';
+
+  @override
+  String get expandMap => 'வரைபடத்தை பெரிதாக்கு';
+
+  @override
+  String get closeMap => 'வரைபடத்தை மூடு';
 }

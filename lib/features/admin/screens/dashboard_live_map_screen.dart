@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/firestore_paths.dart';
@@ -10,6 +11,7 @@ import '../../../theme/app_theme.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/widgets/app_map_view.dart';
+import '../../../shared/widgets/full_screen_map_page.dart';
 import '../widgets/admin_stat_card.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/hero_card.dart';
@@ -799,167 +801,284 @@ class _LiveTrafficHeatmapCard extends StatefulWidget {
 }
 
 class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
-  bool _showAllDistricts = false;
+  late final ValueNotifier<bool> _showAllDistrictsNotifier;
+  late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _techniciansSub;
+  QuerySnapshot<Map<String, dynamic>>? _latestSnapshot;
+  int _unknownCount = 0;
+  ModalRoute? _fullScreenRoute;
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection(FirestorePaths.technicians)
-          .snapshots(),
-      builder: (context, snapshot) {
-        final docs = snapshot.data?.docs ?? [];
-        final Map<String, int> counts = {
-          for (final d in LocationUtils.districtCoordinates.keys) d: 0,
-        };
-        int unknownCount = 0;
+  void initState() {
+    super.initState();
+    _showAllDistrictsNotifier = ValueNotifier<bool>(false);
+    _markersNotifier = ValueNotifier<List<AppMapMarker>>([]);
 
-        for (final d in docs) {
-          final data = d.data();
-          final lat = (data['latitude'] ?? data['lat']) as num?;
-          final lng = (data['longitude'] ?? data['lng']) as num?;
-          final districtStr = data['district'] as String?;
-          final serviceAreaStr = data['serviceArea'] as String?;
+    _showAllDistrictsNotifier.addListener(_onFilterChanged);
 
-          final matched = LocationUtils.resolveDistrict(
-            latitude: lat?.toDouble(),
-            longitude: lng?.toDouble(),
-            district: districtStr,
-            serviceArea: serviceAreaStr,
-          );
+    _techniciansSub = FirebaseFirestore.instance
+        .collection(FirestorePaths.technicians)
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted) return;
+      _latestSnapshot = snapshot;
+      _updateMarkers();
+    });
+  }
 
-          if (matched != null && counts.containsKey(matched)) {
-            counts[matched] = counts[matched]! + 1;
-          } else {
-            unknownCount++;
-          }
-        }
+  void _onFilterChanged() {
+    if (!mounted) return;
+    _updateMarkers();
+  }
 
-        final markers = <AppMapMarker>[];
-        for (final entry in LocationUtils.districtCoordinates.entries) {
-          final districtName = entry.key;
-          final coords = entry.value;
-          final count = counts[districtName] ?? 0;
-          final localizedName = LocalizedData.getDistrict(context, districtName);
+  void _updateMarkers() {
+    if (!mounted) return;
+    final docs = _latestSnapshot?.docs ?? [];
+    final Map<String, int> counts = {
+      for (final d in LocationUtils.districtCoordinates.keys) d: 0,
+    };
+    int unknown = 0;
 
-          if (count > 0) {
-            markers.add(
-              AppMapMarker.hub(
-                point: LatLng(coords.lat, coords.lng),
-                label: localizedName,
-                count: count,
-                isLarge: count >= 5,
-              ),
-            );
-          } else if (_showAllDistricts) {
-            markers.add(
-              AppMapMarker.hub(
-                point: LatLng(coords.lat, coords.lng),
-                label: localizedName,
-                count: 0,
-              ),
-            );
-          }
-        }
+    for (final d in docs) {
+      final data = d.data();
+      final lat = (data['latitude'] ?? data['lat']) as num?;
+      final lng = (data['longitude'] ?? data['lng']) as num?;
+      final districtStr = data['district'] as String?;
+      final serviceAreaStr = data['serviceArea'] as String?;
 
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: context.themeSurface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: context.themeBorder),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black
-                    .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                blurRadius: 12,
-              ),
-            ],
+      final matched = LocationUtils.resolveDistrict(
+        latitude: lat?.toDouble(),
+        longitude: lng?.toDouble(),
+        district: districtStr,
+        serviceArea: serviceAreaStr,
+      );
+
+      if (matched != null && counts.containsKey(matched)) {
+        counts[matched] = counts[matched]! + 1;
+      } else {
+        unknown++;
+      }
+    }
+
+    final showAll = _showAllDistrictsNotifier.value;
+    final markers = <AppMapMarker>[];
+    for (final entry in LocationUtils.districtCoordinates.entries) {
+      final districtName = entry.key;
+      final coords = entry.value;
+      final count = counts[districtName] ?? 0;
+      final localizedName = LocalizedData.getDistrict(context, districtName);
+
+      if (count > 0) {
+        markers.add(
+          AppMapMarker.hub(
+            point: LatLng(coords.lat, coords.lng),
+            label: localizedName,
+            count: count,
+            isLarge: count >= 5,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      context.l10n.allSriLankaLiveTraffic,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Show all districts',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w500,
-                          color: context.themeTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Transform.scale(
-                        scale: 0.8,
-                        child: Switch.adaptive(
-                          value: _showAllDistricts,
-                          activeThumbColor: AppColors.primary,
-                          onChanged: (val) =>
-                              setState(() => _showAllDistricts = val),
-                        ),
-                      ),
-                    ],
+        );
+      } else if (showAll) {
+        markers.add(
+          AppMapMarker.hub(
+            point: LatLng(coords.lat, coords.lng),
+            label: localizedName,
+            count: 0,
+          ),
+        );
+      }
+    }
+
+    _unknownCount = unknown;
+    _markersNotifier.value = markers;
+    setState(() {});
+  }
+
+  void _openFullScreen() {
+    final route = MaterialPageRoute<void>(
+      builder: (ctx) => FullScreenMapPage(
+        initialCenter: const LatLng(7.85, 80.725),
+        initialZoom: widget.isMobile ? 6.5 : 7.2,
+        initialCameraFit: CameraFit.bounds(
+          bounds: LatLngBounds(
+            const LatLng(5.85, 79.5),
+            const LatLng(9.85, 81.95),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 20,
+          ),
+        ),
+        markersNotifier: _markersNotifier,
+        headerAction: ValueListenableBuilder<bool>(
+          valueListenable: _showAllDistrictsNotifier,
+          builder: (context, showAll, _) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.themeSurface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: context.themeBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.35 : 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: widget.isMobile ? 360 : 440,
-                child: AppMapView(
-                  initialCenter: const LatLng(7.85, 80.725),
-                  initialZoom: widget.isMobile ? 6.5 : 7.2,
-                  initialCameraFit: CameraFit.bounds(
-                    bounds: LatLngBounds(
-                      const LatLng(5.85, 79.5),
-                      const LatLng(9.85, 81.95),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Show all districts',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.themeTextPrimary,
                     ),
                   ),
-                  interactive: true,
-                  markers: markers,
+                  const SizedBox(width: 6),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch.adaptive(
+                      value: showAll,
+                      activeThumbColor: AppColors.primary,
+                      onChanged: (val) {
+                        _showAllDistrictsNotifier.value = val;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    _fullScreenRoute = route;
+    Navigator.of(context).push(route).then((_) {
+      _fullScreenRoute = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_fullScreenRoute != null && _fullScreenRoute!.isActive) {
+      _fullScreenRoute!.navigator?.removeRoute(_fullScreenRoute!);
+      _fullScreenRoute = null;
+    }
+    _techniciansSub?.cancel();
+    _showAllDistrictsNotifier.removeListener(_onFilterChanged);
+    _showAllDistrictsNotifier.dispose();
+    _markersNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.themeBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black
+                .withValues(alpha: context.isDark ? 0.2 : 0.04),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.allSriLankaLiveTraffic,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: context.themeTextPrimary,
+                  ),
                 ),
               ),
-              if (unknownCount > 0) ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 14,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Show all districts',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
                       color: context.themeTextSecondary,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$unknownCount active provider${unknownCount > 1 ? 's' : ''} in unmapped/unknown zones',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: context.themeTextSecondary,
-                      ),
+                  ),
+                  const SizedBox(width: 6),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _showAllDistrictsNotifier,
+                      builder: (context, showAll, _) {
+                        return Switch.adaptive(
+                          value: showAll,
+                          activeThumbColor: AppColors.primary,
+                          onChanged: (val) =>
+                              _showAllDistrictsNotifier.value = val,
+                        );
+                      },
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 10),
+          SizedBox(
+            height: widget.isMobile ? 360 : 440,
+            child: AppMapView(
+              initialCenter: const LatLng(7.85, 80.725),
+              initialZoom: widget.isMobile ? 6.5 : 7.2,
+              initialCameraFit: CameraFit.bounds(
+                bounds: LatLngBounds(
+                  const LatLng(5.85, 79.5),
+                  const LatLng(9.85, 81.95),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+              ),
+              interactive: true,
+              markers: _markersNotifier.value,
+              onExpand: _openFullScreen,
+            ),
+          ),
+          if (_unknownCount > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: context.themeTextSecondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '$_unknownCount active provider${_unknownCount > 1 ? 's' : ''} in unmapped/unknown zones',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

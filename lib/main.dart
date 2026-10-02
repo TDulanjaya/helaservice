@@ -16,6 +16,25 @@ import 'constants/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Ignore cancelled map tile requests when panning or zooming fast.
+  final originalFlutterOnError = FlutterError.onError;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (details.silent &&
+        details.exception.runtimeType.toString() == 'CancellationException') {
+      return;
+    }
+    originalFlutterOnError?.call(details);
+  };
+
+  final originalPlatformOnError = PlatformDispatcher.instance.onError;
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    if (error.runtimeType.toString() == 'CancellationException') {
+      return true;
+    }
+    return originalPlatformOnError?.call(error, stack) ?? false;
+  };
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

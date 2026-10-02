@@ -1925,4 +1925,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterAllFilter => 'All';
+
+  @override
+  String get expandMap => 'Expand map';
+
+  @override
+  String get closeMap => 'Close map';
 }

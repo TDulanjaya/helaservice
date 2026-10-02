@@ -14,6 +14,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/location_utils.dart';
 import '../../../shared/widgets/app_map_view.dart';
+import '../../../shared/widgets/full_screen_map_page.dart';
 import '../../../services/routing_service.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../models/booking.dart';
@@ -100,7 +101,8 @@ class LiveTrackingScreen extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.liveTracking)),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(
+              24, 24, 24, AppBottomNav.contentBottomPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -206,7 +208,8 @@ class LiveTrackingScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, AppBottomNav.contentBottomPadding),
+              padding: const EdgeInsets.fromLTRB(
+                  16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
                 StreamBuilder<LatLng?>(
                     stream: LiveLocationService.instance
@@ -248,50 +251,13 @@ class LiveTrackingScreen extends StatelessWidget {
 
                           return Column(
                             children: [
-                              Container(
-                                height: 220,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: context.themeBorder),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: Stack(
-                                    children: [
-                                      AppMapView(
-                                        initialCenter: midPoint,
-                                        initialZoom: 14.2,
-                                        interactive: true,
-                                        routePoints: route.points,
-                                        markers: [
-                                          AppMapMarker.provider(
-                                            point: techPoint,
-                                            label: tech.name.isNotEmpty
-                                                ? tech.name
-                                                : 'Artisan',
-                                            enRoute: true,
-                                          ),
-                                          AppMapMarker.customer(
-                                            point: customerPoint,
-                                            label: 'Destination',
-                                          ),
-                                        ],
-                                      ),
-                                      Positioned(
-                                        top: 12,
-                                        left: 12,
-                                        child: PillBadge(
-                                          label: isLive
-                                              ? 'Live GPS • On the way'
-                                              : context.l10n.techOnTheWay,
-                                          icon: isLive ? Icons.sensors : null,
-                                          background: context.themeSurface,
-                                          foreground: AppColors.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _CustomerLiveTrackingMapCard(
+                                techPoint: techPoint,
+                                customerPoint: customerPoint,
+                                midPoint: midPoint,
+                                techName: tech.name,
+                                routePoints: route.points,
+                                isLive: isLive,
                               ),
                               const SizedBox(height: 16),
                               AppCard(
@@ -525,7 +491,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
                                 title: const Text('Cancel Request',
-                                    style: TextStyle(fontWeight: FontWeight.w800)),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w800)),
                                 content: Text(
                                     'Are you sure you want to cancel this booking request?',
                                     style: TextStyle(
@@ -626,6 +593,133 @@ class LiveTrackingScreen extends StatelessWidget {
               : null,
         );
       },
+    );
+  }
+}
+
+class _CustomerLiveTrackingMapCard extends StatefulWidget {
+  final LatLng techPoint;
+  final LatLng customerPoint;
+  final LatLng midPoint;
+  final String techName;
+  final List<LatLng>? routePoints;
+  final bool isLive;
+
+  const _CustomerLiveTrackingMapCard({
+    required this.techPoint,
+    required this.customerPoint,
+    required this.midPoint,
+    required this.techName,
+    required this.routePoints,
+    required this.isLive,
+  });
+
+  @override
+  State<_CustomerLiveTrackingMapCard> createState() =>
+      _CustomerLiveTrackingMapCardState();
+}
+
+class _CustomerLiveTrackingMapCardState
+    extends State<_CustomerLiveTrackingMapCard> {
+  late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
+  late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
+  ModalRoute? _fullScreenRoute;
+
+  @override
+  void initState() {
+    super.initState();
+    _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
+    _routePointsNotifier = ValueNotifier<List<LatLng>?>(widget.routePoints);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CustomerLiveTrackingMapCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.techPoint != widget.techPoint ||
+        oldWidget.customerPoint != widget.customerPoint ||
+        oldWidget.techName != widget.techName) {
+      _markersNotifier.value = _buildMarkers();
+    }
+    if (oldWidget.routePoints != widget.routePoints) {
+      _routePointsNotifier.value = widget.routePoints;
+    }
+  }
+
+  List<AppMapMarker> _buildMarkers() {
+    return [
+      AppMapMarker.provider(
+        point: widget.techPoint,
+        label: widget.techName.isNotEmpty ? widget.techName : 'Artisan',
+        enRoute: true,
+      ),
+      AppMapMarker.customer(
+        point: widget.customerPoint,
+        label: 'Destination',
+      ),
+    ];
+  }
+
+  void _openFullScreen() {
+    final route = MaterialPageRoute<void>(
+      builder: (ctx) => FullScreenMapPage(
+        initialCenter: widget.midPoint,
+        initialZoom: 14.2,
+        markersNotifier: _markersNotifier,
+        routePointsNotifier: _routePointsNotifier,
+      ),
+    );
+    _fullScreenRoute = route;
+    Navigator.of(context).push(route).then((_) {
+      _fullScreenRoute = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_fullScreenRoute != null && _fullScreenRoute!.isActive) {
+      _fullScreenRoute!.navigator?.removeRoute(_fullScreenRoute!);
+      _fullScreenRoute = null;
+    }
+    _markersNotifier.dispose();
+    _routePointsNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 220,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            AppMapView(
+              initialCenter: widget.midPoint,
+              initialZoom: 14.2,
+              interactive: true,
+              routePoints: widget.routePoints,
+              markers: _markersNotifier.value,
+              onExpand: _openFullScreen,
+            ),
+            Positioned(
+              top: 12,
+              left: 12,
+              child: PillBadge(
+                label: widget.isLive
+                    ? 'Live GPS • On the way'
+                    : context.l10n.techOnTheWay,
+                icon: widget.isLive ? Icons.sensors : null,
+                background: context.themeSurface,
+                foreground: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

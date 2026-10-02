@@ -705,5 +705,7 @@
   "dismissComplaint": "Dismiss Complaint",
   "suspendServiceProvider": "Suspend Service Provider",
   "reasonForBan": "Reason for Ban (Visible to Provider):",
-  "filterAllFilter": "All"
+  "filterAllFilter": "All",
+  "expandMap": "Expand map",
+  "closeMap": "Close map"
 }

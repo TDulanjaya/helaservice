@@ -7,6 +7,7 @@ import '../../../models/booking.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../shared/widgets/app_map_view.dart';
+import '../../../shared/widgets/full_screen_map_page.dart';
 import '../../../services/routing_service.dart';
 import '../../../services/live_location_service.dart';
 import '../../../state/role_provider.dart';
@@ -21,7 +22,8 @@ class EnRouteNavigationScreen extends StatefulWidget {
   const EnRouteNavigationScreen({super.key, this.booking});
 
   @override
-  State<EnRouteNavigationScreen> createState() => _EnRouteNavigationScreenState();
+  State<EnRouteNavigationScreen> createState() =>
+      _EnRouteNavigationScreenState();
 }
 
 class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
@@ -39,21 +41,25 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
   Future<void> _initLiveTracking() async {
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    _providerId = roleProvider.currentUser?.id ?? widget.booking?.providerId ?? '';
+    _providerId =
+        roleProvider.currentUser?.id ?? widget.booking?.providerId ?? '';
 
     if (_providerId.isNotEmpty) {
       final customerId = widget.booking?.customerId;
       await LiveLocationService.instance.startTracking(
         _providerId,
-        allowedViewers: customerId != null && customerId.isNotEmpty ? [customerId] : null,
+        allowedViewers:
+            customerId != null && customerId.isNotEmpty ? [customerId] : null,
       );
     }
 
     try {
       final perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.whileInUse || perm == LocationPermission.always) {
+      if (perm == LocationPermission.whileInUse ||
+          perm == LocationPermission.always) {
         final pos = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high),
         );
         if (mounted) {
           setState(() {
@@ -215,8 +221,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
 
     final techPoint = _currentGpsPosition ??
-        LatLng(
-            customerPoint.latitude - 0.009, customerPoint.longitude - 0.013);
+        LatLng(customerPoint.latitude - 0.009, customerPoint.longitude - 0.013);
     final midPoint = LatLng(
       (customerPoint.latitude + techPoint.latitude) / 2,
       (customerPoint.longitude + techPoint.longitude) / 2,
@@ -286,158 +291,16 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 final route = snapshot.data ??
                     RouteInfo.fallback(techPoint, customerPoint);
 
-                return SizedBox(
-                  height: 280,
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: AppMapView(
-                          initialCenter: midPoint,
-                          initialZoom: 14.0,
-                          interactive: true,
-                          routePoints: route.points,
-                          markers: [
-                            AppMapMarker.provider(
-                              point: techPoint,
-                              label: 'You (En Route)',
-                              enRoute: true,
-                            ),
-                            AppMapMarker.customer(
-                              point: customerPoint,
-                              label: booking != null &&
-                                      booking.customerName.isNotEmpty
-                                  ? booking.customerName
-                                  : 'Customer',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color:
-                                context.themeSurface.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: context.themeBorder),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                    alpha: context.isDark ? 0.35 : 0.08),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.turn_left_rounded,
-                                  color: AppColors.primary,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'In ${route.formattedDistance}',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: context.themeTextSecondary,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Navigating to ${booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer'}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 13,
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    route.formattedDuration,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  Text(
-                                    route.formattedDistance,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      color: context.themeTextSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 12,
-                        left: 12,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            MapLauncher.openDirections(
-                              latitude: customerPoint.latitude,
-                              longitude: customerPoint.longitude,
-                              destinationTitle: booking != null &&
-                                      booking.customerName.isNotEmpty
-                                  ? "${booking.customerName}'s Location"
-                                  : 'Customer Location',
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.navigation_rounded,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                          label: Text(
-                            context.l10n.googleMapsOrWaze,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: context.themeTextPrimary,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor:
-                                context.themeSurface.withValues(alpha: 0.94),
-                            side: BorderSide(color: context.themeBorder),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                return _ProviderEnRouteMapCard(
+                  techPoint: techPoint,
+                  customerPoint: customerPoint,
+                  midPoint: midPoint,
+                  customerLabel:
+                      booking != null && booking.customerName.isNotEmpty
+                          ? booking.customerName
+                          : 'Customer',
+                  route: route,
+                  booking: booking,
                 );
               },
             ),
@@ -810,6 +673,240 @@ class _DelayChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ProviderEnRouteMapCard extends StatefulWidget {
+  final LatLng techPoint;
+  final LatLng customerPoint;
+  final LatLng midPoint;
+  final String customerLabel;
+  final RouteInfo route;
+  final Booking? booking;
+
+  const _ProviderEnRouteMapCard({
+    required this.techPoint,
+    required this.customerPoint,
+    required this.midPoint,
+    required this.customerLabel,
+    required this.route,
+    required this.booking,
+  });
+
+  @override
+  State<_ProviderEnRouteMapCard> createState() =>
+      _ProviderEnRouteMapCardState();
+}
+
+class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
+  late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
+  late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
+  ModalRoute? _fullScreenRoute;
+
+  @override
+  void initState() {
+    super.initState();
+    _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
+    _routePointsNotifier = ValueNotifier<List<LatLng>?>(widget.route.points);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProviderEnRouteMapCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.techPoint != widget.techPoint ||
+        oldWidget.customerPoint != widget.customerPoint ||
+        oldWidget.customerLabel != widget.customerLabel) {
+      _markersNotifier.value = _buildMarkers();
+    }
+    if (oldWidget.route.points != widget.route.points) {
+      _routePointsNotifier.value = widget.route.points;
+    }
+  }
+
+  List<AppMapMarker> _buildMarkers() {
+    return [
+      AppMapMarker.provider(
+        point: widget.techPoint,
+        label: 'You (En Route)',
+        enRoute: true,
+      ),
+      AppMapMarker.customer(
+        point: widget.customerPoint,
+        label: widget.customerLabel,
+      ),
+    ];
+  }
+
+  void _openFullScreen() {
+    final route = MaterialPageRoute<void>(
+      builder: (ctx) => FullScreenMapPage(
+        initialCenter: widget.midPoint,
+        initialZoom: 14.0,
+        markersNotifier: _markersNotifier,
+        routePointsNotifier: _routePointsNotifier,
+      ),
+    );
+    _fullScreenRoute = route;
+    Navigator.of(context).push(route).then((_) {
+      _fullScreenRoute = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_fullScreenRoute != null && _fullScreenRoute!.isActive) {
+      _fullScreenRoute!.navigator?.removeRoute(_fullScreenRoute!);
+      _fullScreenRoute = null;
+    }
+    _markersNotifier.dispose();
+    _routePointsNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final booking = widget.booking;
+    final customerPoint = widget.customerPoint;
+    final route = widget.route;
+
+    return SizedBox(
+      height: 280,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: AppMapView(
+              initialCenter: widget.midPoint,
+              initialZoom: 14.0,
+              interactive: true,
+              routePoints: route.points,
+              markers: _markersNotifier.value,
+              onExpand: _openFullScreen,
+            ),
+          ),
+          Positioned(
+            top: 12,
+            left: 12,
+            right: 54,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.themeSurface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.themeBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.35 : 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.turn_left_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'In ${route.formattedDistance}',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        Text(
+                          'Navigating to ${booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer'}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        route.formattedDuration,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Text(
+                        route.formattedDistance,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 12,
+            left: 12,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                MapLauncher.openDirections(
+                  latitude: customerPoint.latitude,
+                  longitude: customerPoint.longitude,
+                  destinationTitle:
+                      booking != null && booking.customerName.isNotEmpty
+                          ? "${booking.customerName}'s Location"
+                          : 'Customer Location',
+                );
+              },
+              icon: const Icon(
+                Icons.navigation_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
+              label: Text(
+                context.l10n.googleMapsOrWaze,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: context.themeSurface.withValues(alpha: 0.94),
+                side: BorderSide(color: context.themeBorder),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

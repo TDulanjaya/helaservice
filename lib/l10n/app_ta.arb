@@ -639,5 +639,7 @@
   "dismissComplaint": "புகாரை நிராகரிக்கவும்",
   "suspendServiceProvider": "சேவை வழங்குநரை இடைநிறுத்துக",
   "reasonForBan": "தடைக்கான காரணம் (வழங்குநருக்குத் தெரியும்):",
-  "filterAllFilter": "அனைத்தும்"
+  "filterAllFilter": "அனைத்தும்",
+  "expandMap": "வரைபடத்தை பெரிதாக்கு",
+  "closeMap": "வரைபடத்தை மூடு"
 }

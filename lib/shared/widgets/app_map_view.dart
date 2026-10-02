@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../constants/app_config.dart';
+import 'package:vector_map_tiles/vector_map_tiles.dart' as vmt;
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
 
 /// Center point of Sri Lanka.
 const LatLng kSriLankaCenter = LatLng(7.8731, 80.7718);
@@ -236,6 +237,7 @@ class AppMapView extends StatefulWidget {
   final MapController? controller;
   final VoidCallback? onMapReady;
   final EdgeInsets? padding;
+  final VoidCallback? onExpand;
 
   const AppMapView({
     super.key,
@@ -248,6 +250,7 @@ class AppMapView extends StatefulWidget {
     this.controller,
     this.onMapReady,
     this.padding,
+    this.onExpand,
   });
 
   @override
@@ -256,51 +259,105 @@ class AppMapView extends StatefulWidget {
 
 class _AppMapViewState extends State<AppMapView> {
   late final MapController _mapController;
-  bool _useStadia = true;
-  int _consecutiveStadiaErrors = 0;
+
+  static final Map<Brightness, vmt.Style> _styleCache = {};
+  static final Map<Brightness, Future<vmt.Style>> _pendingStyleLoads = {};
+
+  vmt.Style? _vectorStyle;
+  bool _hasStyleError = false;
+  Brightness? _activeBrightness;
 
   @override
   void initState() {
     super.initState();
     _mapController = widget.controller ?? MapController();
-    AppConfig.stadiaMapsKeyNotifier.addListener(_onRemoteConfigUpdated);
   }
 
   @override
-  void dispose() {
-    AppConfig.stadiaMapsKeyNotifier.removeListener(_onRemoteConfigUpdated);
-    super.dispose();
-  }
-
-  void _onRemoteConfigUpdated() {
-    if (mounted) {
-      setState(() {
-        _useStadia = true;
-        _consecutiveStadiaErrors = 0;
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final brightness = Theme.of(context).brightness;
+    if (_activeBrightness != brightness) {
+      _loadStyleForBrightness(brightness);
     }
   }
 
-  String _getPrimaryTileUrl(bool isDark) {
-    if (_useStadia && AppConfig.hasStadiaMapsKey) {
-      final style = isDark ? 'alidade_smooth_dark' : 'alidade_smooth';
-      return 'https://tiles.stadiamaps.com/tiles/$style/{z}/{x}/{y}{r}.png?api_key=${AppConfig.stadiaMapsKey}';
+  void _loadStyleForBrightness(Brightness brightness) {
+    _activeBrightness = brightness;
+    final cached = _styleCache[brightness];
+    if (cached != null) {
+      _vectorStyle = cached;
+      _hasStyleError = false;
+      return;
     }
-    // Map tile provider.
-    if (isDark) {
-      return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
-    }
-    return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+
+    _vectorStyle = null;
+    _hasStyleError = false;
+
+    _getOrFetchStyle(brightness).then((style) {
+      if (mounted && _activeBrightness == brightness) {
+        setState(() {
+          _vectorStyle = style;
+          _hasStyleError = false;
+        });
+      }
+    }).catchError((error) {
+      debugPrint(
+          '[AppMapView] OpenFreeMap style loading error: $error. Falling back to OpenStreetMap raster tiles.');
+      if (mounted && _activeBrightness == brightness) {
+        setState(() {
+          _vectorStyle = null;
+          _hasStyleError = true;
+        });
+      }
+    });
   }
 
-  String _getFallbackTileUrl(bool isDark) {
-    if (_useStadia && AppConfig.hasStadiaMapsKey) {
-      return isDark
-          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-          : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+  static Future<vmt.Style> _getOrFetchStyle(Brightness brightness) {
+    final cached = _styleCache[brightness];
+    if (cached != null) return Future.value(cached);
+
+    final pending = _pendingStyleLoads[brightness];
+    if (pending != null) return pending;
+
+    final future = _fetchStyle(brightness).then((style) {
+      _styleCache[brightness] = style;
+      _pendingStyleLoads.remove(brightness);
+      return style;
+    }).catchError((error) {
+      _pendingStyleLoads.remove(brightness);
+      throw error;
+    });
+
+    _pendingStyleLoads[brightness] = future;
+    return future;
+  }
+
+  static Future<vmt.Style> _fetchStyle(Brightness brightness) async {
+    final isDark = brightness == Brightness.dark;
+    final primaryUri = isDark
+        ? 'https://tiles.openfreemap.org/styles/dark'
+        : 'https://tiles.openfreemap.org/styles/liberty';
+
+    try {
+      return await vmt.StyleReader(uri: primaryUri)
+          .read()
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      if (isDark) {
+        debugPrint(
+            '[AppMapView] Dark style failed ($e), falling back to positron style.');
+        try {
+          return await vmt.StyleReader(
+            uri: 'https://tiles.openfreemap.org/styles/positron',
+          ).read().timeout(const Duration(seconds: 10));
+        } catch (err) {
+          debugPrint('[AppMapView] Positron style also failed: $err');
+          rethrow;
+        }
+      }
+      rethrow;
     }
-    // Fallback map tile server.
-    return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   }
 
   @override
@@ -313,113 +370,150 @@ class _AppMapViewState extends State<AppMapView> {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      child: Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: widget.initialCameraFit != null
-                  ? (widget.initialCenter ?? const LatLng(7.85, 80.725))
-                  : center,
-              initialZoom: widget.initialZoom,
-              initialCameraFit: widget.initialCameraFit,
-              minZoom: 5.0,
-              maxZoom: 18.0,
-              interactionOptions: InteractionOptions(
-                flags: widget.interactive
-                    ? InteractiveFlag.all
-                    : InteractiveFlag.none,
+      child: Container(
+        color: context.themeSurface,
+        child: Stack(
+          children: [
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: widget.initialCameraFit != null
+                    ? (widget.initialCenter ?? const LatLng(7.85, 80.725))
+                    : center,
+                initialZoom: widget.initialZoom,
+                initialCameraFit: widget.initialCameraFit,
+                minZoom: 5.0,
+                maxZoom: 18.0,
+                interactionOptions: InteractionOptions(
+                  flags: widget.interactive
+                      ? InteractiveFlag.all
+                      : InteractiveFlag.none,
+                ),
+                onMapReady: widget.onMapReady,
               ),
-              onMapReady: widget.onMapReady,
+              children: [
+                if (_vectorStyle != null)
+                  vmt.VectorTileLayer(
+                    key: ValueKey('vmt_${isDark ? "dark" : "light"}'),
+                    theme: _vectorStyle!.theme,
+                    sprites: _vectorStyle!.sprites,
+                    tileProviders: _vectorStyle!.providers,
+                  )
+                else if (_hasStyleError)
+                  TileLayer(
+                    key: const ValueKey('osm_raster_fallback'),
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.helaservice.helaservice',
+                    maxZoom: 19,
+                  ),
+                if (widget.routePoints != null && widget.routePoints!.length > 1)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: widget.routePoints!,
+                        strokeWidth: 4.0,
+                        color: AppColors.primary,
+                        borderStrokeWidth: 2.0,
+                        borderColor: isDark ? Colors.black : Colors.white,
+                      ),
+                    ],
+                  ),
+                if (widget.markers.isNotEmpty)
+                  MarkerLayer(
+                    markers: widget.markers.map((m) {
+                      return Marker(
+                        point: m.point,
+                        width: m.width,
+                        height: m.height,
+                        child: GestureDetector(
+                          onTap: m.onTap,
+                          child: m.child,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                RichAttributionWidget(
+                  alignment: AttributionAlignment.bottomLeft,
+                  popupInitialDisplayDuration: const Duration(seconds: 4),
+                  showFlutterMapAttribution: false,
+                  popupBackgroundColor: context.themeSurface,
+                  animationConfig: const FadeRAWA(),
+                  attributions: const [
+                    TextSourceAttribution('OpenFreeMap'),
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
+                ),
+              ],
             ),
-            children: [
-              TileLayer(
-                urlTemplate: _getPrimaryTileUrl(isDark),
-                fallbackUrl: _getFallbackTileUrl(isDark),
-                subdomains: const ['a', 'b', 'c', 'd'],
-                userAgentPackageName: 'com.helaservice.app',
-                retinaMode: RetinaMode.isHighDensity(context),
-                maxZoom: 19,
-                errorTileCallback: (tile, error, stackTrace) {
-                  if (_useStadia && AppConfig.hasStadiaMapsKey) {
-                    _consecutiveStadiaErrors++;
-                    if (_consecutiveStadiaErrors >= 3) {
-                      debugPrint(
-                          '[AppMapView] Primary map provider error: $error. Failing over to CartoDB.');
-                      if (mounted) {
-                        setState(() {
-                          _useStadia = false;
-                        });
-                      }
-                    }
-                  }
-                },
+            // expand button in top right corner
+            if (widget.onExpand != null)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Material(
+                  color: context.themeSurface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: context.themeBorder),
+                  ),
+                  elevation: 2,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: widget.onExpand,
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Tooltip(
+                        message: context.l10n.expandMap,
+                        child: Icon(
+                          Icons.open_in_full,
+                          size: 18,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              if (widget.routePoints != null && widget.routePoints!.length > 1)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: widget.routePoints!,
-                      strokeWidth: 4.0,
-                      color: AppColors.primary,
-                      borderStrokeWidth: 2.0,
-                      borderColor: isDark ? Colors.black : Colors.white,
+            // zoom buttons when map is interactive
+            if (widget.interactive)
+              Positioned(
+                right: 10,
+                bottom: 10,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _MapCtrlBtn(
+                      icon: Icons.add,
+                      onPressed: () {
+                        final currentZoom = _mapController.camera.zoom;
+                        _mapController.move(
+                          _mapController.camera.center,
+                          (currentZoom + 1).clamp(5.0, 18.0),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    _MapCtrlBtn(
+                      icon: Icons.remove,
+                      onPressed: () {
+                        final currentZoom = _mapController.camera.zoom;
+                        _mapController.move(
+                          _mapController.camera.center,
+                          (currentZoom - 1).clamp(5.0, 18.0),
+                        );
+                      },
                     ),
                   ],
                 ),
-              if (widget.markers.isNotEmpty)
-                MarkerLayer(
-                  markers: widget.markers.map((m) {
-                    return Marker(
-                      point: m.point,
-                      width: m.width,
-                      height: m.height,
-                      child: GestureDetector(
-                        onTap: m.onTap,
-                        child: m.child,
-                      ),
-                    );
-                  }).toList(),
-                ),
-            ],
-          ),
-          // Zoom buttons when map interaction is enabled.
-          if (widget.interactive)
-            Positioned(
-              right: 10,
-              bottom: 10,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _MapCtrlBtn(
-                    icon: Icons.add,
-                    onPressed: () {
-                      final currentZoom = _mapController.camera.zoom;
-                      _mapController.move(
-                        _mapController.camera.center,
-                        (currentZoom + 1).clamp(5.0, 18.0),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 4),
-                  _MapCtrlBtn(
-                    icon: Icons.remove,
-                    onPressed: () {
-                      final currentZoom = _mapController.camera.zoom;
-                      _mapController.move(
-                        _mapController.camera.center,
-                        (currentZoom - 1).clamp(5.0, 18.0),
-                      );
-                    },
-                  ),
-                ],
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
 
 class _MapCtrlBtn extends StatelessWidget {
   final IconData icon;

@@ -3729,6 +3729,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All'**
   String get filterAllFilter;
+
+  /// No description provided for @expandMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand map'**
+  String get expandMap;
+
+  /// No description provided for @closeMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Close map'**
+  String get closeMap;
 }
 
 class _AppLocalizationsDelegate

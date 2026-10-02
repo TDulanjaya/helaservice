@@ -22,13 +22,13 @@ class AdminSidebar extends StatelessWidget {
       {super.key, required this.selectedIndex, required this.onSelect});
 
   static const entries = [
-    AdminNavEntry(Icons.speed, 'Dashboard'),
-    AdminNavEntry(Icons.badge, 'Verifications'),
-    AdminNavEntry(Icons.map, 'Coverage & Categories'),
-    AdminNavEntry(Icons.shield_outlined, 'Admins & Team'),
-    AdminNavEntry(Icons.receipt_long, 'Job Ledger'),
-    AdminNavEntry(Icons.report_problem_outlined, 'Disputes & Reports'),
-    AdminNavEntry(Icons.settings, 'Platform Settings'),
+    AdminNavEntry(Icons.grid_view_rounded, 'Dashboard'),
+    AdminNavEntry(Icons.badge_outlined, 'Verifications'),
+    AdminNavEntry(Icons.layers_outlined, 'Coverage & Categories'),
+    AdminNavEntry(Icons.people_outline, 'Admins & Team'),
+    AdminNavEntry(Icons.format_list_bulleted, 'Job Ledger'),
+    AdminNavEntry(Icons.warning_amber_rounded, 'Disputes & Reports'),
+    AdminNavEntry(Icons.tune, 'Platform Settings'),
   ];
 
   @override
@@ -141,31 +141,34 @@ class AdminSidebar extends StatelessWidget {
                 onSelect(i);
               },
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                 decoration: BoxDecoration(
-                  color:
-                      active ? context.themeSurfaceContainer : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  color: active
+                      ? (context.isDark
+                          ? AppColors.primary.withValues(alpha: 0.16)
+                          : AppColors.amberTint)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(children: [
                   Icon(e.icon,
-                      size: 18,
+                      size: 19,
                       color: active
-                          ? AppColors.primary
+                          ? (context.isDark ? const Color(0xFFF0B44A) : AppColors.amberDark)
                           : (restricted
                               ? context.themeTextSecondary.withValues(alpha: 0.5)
                               : context.themeTextSecondary)),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(getLocalizedLabel(i),
                         style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 13,
                             fontWeight:
-                                active ? FontWeight.w700 : FontWeight.w500,
+                                active ? FontWeight.w800 : FontWeight.w600,
                             color: active
-                                ? AppColors.primary
+                                ? (context.isDark ? const Color(0xFFF0B44A) : AppColors.amberDark)
                                 : (restricted
                                     ? context.themeTextSecondary
                                     : context.themeTextPrimary))),
@@ -189,9 +192,9 @@ class AdminSidebar extends StatelessWidget {
                         if (count <= 0) return const SizedBox.shrink();
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                              horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
-                              color: AppColors.secondaryContainer,
+                              color: AppColors.danger,
                               borderRadius: BorderRadius.circular(999)),
                           child: Text('$count',
                               style: const TextStyle(

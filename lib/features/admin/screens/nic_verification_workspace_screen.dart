@@ -509,7 +509,7 @@ class _NicVerificationWorkspaceScreenState
                                             Expanded(
                                               child: Text(
                                                 item.fileKey.isNotEmpty
-                                                    ? 'B2 Uploaded'
+                                                    ? 'Docs Uploaded'
                                                     : 'Standard Doc',
                                                 style: TextStyle(
                                                     fontSize: 10,
@@ -546,45 +546,72 @@ class _NicVerificationWorkspaceScreenState
   Widget _buildStatusBadge(VerificationQueueItem item) {
     if (item.status == 'approved') {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(4),
+          color: context.themeSuccessTint,
+          borderRadius: BorderRadius.circular(999),
         ),
-        child: const Text('Approved',
-            style: TextStyle(
-                fontSize: 10,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700)),
+        child: Text(
+          'Approved',
+          style: TextStyle(
+            fontSize: 10.5,
+            color: context.themeSuccess,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       );
     }
     if (item.status == 'rejected') {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(4),
+          color: context.themeDangerTint,
+          borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(context.l10n.rejectedStatus,
-            style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.error,
-                fontWeight: FontWeight.w700)),
+        child: Text(
+          context.l10n.rejectedStatus,
+          style: TextStyle(
+            fontSize: 10.5,
+            color: context.themeDanger,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       );
     }
     if (item.flagged || item.status == 'resubmit') {
-      return Text(context.l10n.reviewRequired,
-          style: const TextStyle(
-              fontSize: 10.5,
-              color: AppColors.error,
-              fontWeight: FontWeight.w700));
-    }
-    return Text(
-        item.hasComputedMatch ? '${item.matchPercent}% Match' : context.l10n.manualReview,
-        style: const TextStyle(
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: context.themeDangerTint,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          context.l10n.reviewRequired,
+          style: TextStyle(
             fontSize: 10.5,
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700));
+            color: context.themeDanger,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: context.themeAmberTint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        item.hasComputedMatch
+            ? '${item.matchPercent}% Match'
+            : context.l10n.manualReview,
+        style: TextStyle(
+          fontSize: 10.5,
+          color: context.themeAmberText,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 
   Widget _buildDetailCard(VerificationQueueItem selectedItem, bool isMobile) {
@@ -594,15 +621,11 @@ class _NicVerificationWorkspaceScreenState
     final isRejected = selectedItem.status == 'rejected';
 
     return Container(
-      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.themeBorder),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 10)
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,35 +635,44 @@ class _NicVerificationWorkspaceScreenState
               child: Text(
                 selectedItem.name,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isMobile ? 14 : 15,
-                    color: context.themeTextPrimary),
+                  fontWeight: FontWeight.w800,
+                  fontSize: isMobile ? 16 : 18,
+                  color: context.themeTextPrimary,
+                  letterSpacing: -0.3,
+                ),
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: isApproved
-                    ? AppColors.primary.withValues(alpha: 0.15)
+                    ? context.themeSuccessTint
                     : (isRejected
-                        ? AppColors.error.withValues(alpha: 0.15)
-                        : AppColors.primary.withValues(alpha: 0.1)),
+                        ? context.themeDangerTint
+                        : context.themeAmberTint),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 isApproved
                     ? context.l10n.activeAndVerified
-                    : (isRejected ? context.l10n.rejectedStatus : context.l10n.pendingVerificationStatus),
+                    : (isRejected
+                        ? context.l10n.rejectedStatus
+                        : context.l10n.pendingVerificationStatus),
                 style: TextStyle(
-                    fontSize: 10.5,
-                    color: isRejected ? AppColors.error : AppColors.primary,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 11,
+                  color: isApproved
+                      ? context.themeSuccess
+                      : (isRejected
+                          ? context.themeDanger
+                          : context.themeAmberText),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ]),
-          const SizedBox(height: 8),
-          Wrap(spacing: 12, runSpacing: 6, children: [
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 6, children: [
             _InfoRow(
                 icon: Icons.call,
                 text: selectedItem.phone.isNotEmpty
@@ -657,20 +689,25 @@ class _NicVerificationWorkspaceScreenState
                     ? selectedItem.preferredLanguage
                     : context.l10n.notSpecified),
           ]),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
-                borderRadius: BorderRadius.circular(10)),
+              color: context.themeSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(children: [
-              const Icon(Icons.verified_user,
-                  size: 14, color: AppColors.primary),
-              const SizedBox(width: 6),
+              const Icon(Icons.verified_user_rounded,
+                  size: 16, color: AppColors.primary),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '${context.l10n.manualNicReview} • NIC: ${selectedItem.nicNumber}',
-                  style: const TextStyle(fontSize: 11),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextPrimary,
+                  ),
                 ),
               ),
             ]),
@@ -678,22 +715,24 @@ class _NicVerificationWorkspaceScreenState
           if (selectedItem.fileKey.isNotEmpty) ...[
             const SizedBox(height: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
-                borderRadius: BorderRadius.circular(8),
+                color: context.themeSoft,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.cloud_done,
-                      size: 13, color: AppColors.primary),
-                  const SizedBox(width: 6),
+                  const Icon(Icons.cloud_done_rounded,
+                      size: 14, color: AppColors.primary),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '${context.l10n.cloudStoragePath}: ${selectedItem.fileKey}',
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 10.5, color: AppColors.outline),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.themeTextSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -701,24 +740,47 @@ class _NicVerificationWorkspaceScreenState
             ),
           ],
           const SizedBox(height: 16),
-          Row(children: [
-            const Icon(Icons.document_scanner, size: 16, color: AppColors.primary),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                selectedItem.flagged
-                    ? context.l10n.ocrAuditFlagged
-                    : context.l10n.ocrAuditConcordant,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
-          ]),
+          Builder(
+            builder: (context) {
+              final isDiscrepancy = selectedItem.flagged;
+              final bannerBg = isDiscrepancy ? context.themeDangerTint : context.themeSuccessTint;
+              final bannerBorder = (isDiscrepancy ? context.themeDanger : context.themeSuccess).withValues(alpha: 0.3);
+              final bannerFg = isDiscrepancy ? context.themeDanger : context.themeSuccess;
+              final bannerIcon = isDiscrepancy ? Icons.warning_amber_rounded : Icons.check_circle_rounded;
+              final bannerText = isDiscrepancy ? context.l10n.ocrAuditFlagged : context.l10n.ocrAuditConcordant;
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: bannerBg,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: bannerBorder, width: 1.0),
+                ),
+                child: Row(
+                  children: [
+                    Icon(bannerIcon, size: 18, color: bannerFg),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        bannerText,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: bannerFg,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
           Builder(
             builder: (context) {
               final ocrFields = [
                 OcrField(
-                  icon: Icons.badge,
+                  icon: Icons.badge_outlined,
                   field: context.l10n.ocrFullName,
                   extracted: selectedItem.name.toUpperCase(),
                   registry: selectedItem.name,
@@ -727,21 +789,21 @@ class _NicVerificationWorkspaceScreenState
                       : context.l10n.manualReview,
                 ),
                 OcrField(
-                  icon: Icons.credit_card,
+                  icon: Icons.credit_card_outlined,
                   field: context.l10n.ocrNicNumber,
                   extracted: selectedItem.nicNumber,
                   registry: selectedItem.nicNumber,
                   status: selectedItem.flagged ? 'Flagged' : 'Match',
                 ),
                 OcrField(
-                  icon: Icons.home,
+                  icon: Icons.home_outlined,
                   field: context.l10n.ocrLocation,
                   extracted: selectedItem.location,
                   registry: '${selectedItem.location} (Verified GN Division)',
                   status: 'Valid',
                 ),
                 OcrField(
-                  icon: Icons.assignment_turned_in,
+                  icon: Icons.assignment_turned_in_outlined,
                   field: context.l10n.ocrTradeNote,
                   extracted: selectedItem.trade,
                   registry: selectedItem.docNote,
@@ -749,52 +811,106 @@ class _NicVerificationWorkspaceScreenState
                 ),
               ];
 
+              Widget buildBadge(String status) {
+                final isMatch = status.toLowerCase().contains('match') ||
+                    status.toLowerCase().contains('valid') ||
+                    status.contains('%');
+                final isFlag = status.toLowerCase().contains('flag') ||
+                    status.toLowerCase().contains('reject');
+                final bg = isFlag
+                    ? context.themeDangerTint
+                    : (isMatch ? context.themeSuccessTint : context.themeAmberTint);
+                final fg = isFlag
+                    ? context.themeDanger
+                    : (isMatch ? context.themeSuccess : context.themeAmberText);
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isMatch)
+                        Icon(Icons.check_circle_rounded, size: 11, color: fg)
+                      else if (isFlag)
+                        Icon(Icons.warning_amber_rounded, size: 11, color: fg),
+                      if (isMatch || isFlag) const SizedBox(width: 4),
+                      Text(
+                        status,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: fg,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
               if (isMobile) {
                 return Column(
                   children: ocrFields
                       .map((f) => Container(
-                            margin: const EdgeInsets.only(bottom: 6),
-                            padding: const EdgeInsets.all(8),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                                color: AppColors.surfaceLow,
-                                borderRadius: BorderRadius.circular(8)),
+                              color: context.themeSoft,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: context.themeBorder.withValues(alpha: 0.5),
+                                width: 1.0,
+                              ),
+                            ),
                             child: Row(
                               children: [
-                                Icon(f.icon, size: 13, color: AppColors.primary),
-                                const SizedBox(width: 8),
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: context.themeSurface,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(f.icon,
+                                      size: 16, color: context.themeTextPrimary),
+                                ),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(f.field,
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.outline,
-                                              fontWeight: FontWeight.w600)),
-                                      Text(f.extracted,
-                                          style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600)),
-                                      Text('Registry: ${f.registry}',
-                                          style: const TextStyle(
-                                              fontSize: 9.5,
-                                              color: AppColors.onSurfaceVariant)),
+                                      Text(
+                                        f.field.toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: context.themeTextSecondary,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.7,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        f.extracted,
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: context.themeTextPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Registry: ${f.registry}',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: context.themeTextSecondary,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.check_circle,
-                                        size: 12, color: AppColors.primary),
-                                    const SizedBox(width: 3),
-                                    Text(f.status,
-                                        style: const TextStyle(
-                                            fontSize: 10,
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
+                                buildBadge(f.status),
                               ],
                             ),
                           ))
@@ -807,7 +923,7 @@ class _NicVerificationWorkspaceScreenState
                   0: FlexColumnWidth(1.4),
                   1: FlexColumnWidth(2),
                   2: FlexColumnWidth(2),
-                  3: FlexColumnWidth(0.8)
+                  3: FlexColumnWidth(1.0)
                 },
                 children: [
                   TableRow(children: [
@@ -818,26 +934,26 @@ class _NicVerificationWorkspaceScreenState
                   ]),
                   ...ocrFields.map((f) => TableRow(children: [
                         Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Row(children: [
                               Icon(f.icon,
-                                  size: 13, color: AppColors.onSurfaceVariant),
-                              const SizedBox(width: 4),
+                                  size: 14, color: context.themeTextSecondary),
+                              const SizedBox(width: 6),
                               Flexible(
                                   child: Text(f.field,
-                                      style: const TextStyle(fontSize: 11)))
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: context.themeTextPrimary,
+                                          fontWeight: FontWeight.w600)))
                             ])),
                         _TCell(f.extracted),
                         _TCell(f.registry),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(children: [
-                            const Icon(Icons.check,
-                                size: 13, color: AppColors.primary),
-                            Text(f.status,
-                                style: const TextStyle(
-                                    fontSize: 10, color: AppColors.primary)),
-                          ]),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: buildBadge(f.status),
+                          ),
                         ),
                       ])),
                 ],
@@ -871,23 +987,23 @@ class _NicVerificationWorkspaceScreenState
           if (!canVerifyNic)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                color: context.themeAmberTint,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.themeAmberText.withValues(alpha: 0.3)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.lock_outline, size: 16, color: AppColors.primary),
-                  SizedBox(width: 8),
+                  Icon(Icons.lock_outline, size: 16, color: context.themeAmberText),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: context.themeAmberText,
                       ),
                     ),
                   ),
@@ -899,28 +1015,41 @@ class _NicVerificationWorkspaceScreenState
               children: [
                 SizedBox(
                   width: double.infinity,
+                  height: 52,
                   child: ElevatedButton.icon(
                     onPressed: (_isProcessing || isApproved)
                         ? null
                         : () => _handleApprove(selectedItem),
                     icon: _isProcessing
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.check_circle, size: 16),
-                    label: Text(isApproved
-                        ? context.l10n.artisanActivated
-                        : context.l10n.approveAndActivateArtisan),
+                              strokeWidth: 2,
+                              color: context.isDark ? Colors.white : AppColors.ink,
+                            ),
+                          )
+                        : const Icon(Icons.check_circle_rounded, size: 18),
+                    label: Text(
+                      isApproved
+                          ? context.l10n.artisanActivated
+                          : context.l10n.approveAndActivateArtisan,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      foregroundColor: AppColors.ink,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
@@ -928,25 +1057,62 @@ class _NicVerificationWorkspaceScreenState
                         onPressed: (_isProcessing || isRejected)
                             ? null
                             : () => _handleReject(selectedItem),
-                        icon: const Icon(Icons.cancel,
-                            size: 14, color: AppColors.error),
+                        icon: Icon(
+                          Icons.cancel_outlined,
+                          size: 16,
+                          color: context.themeDanger,
+                        ),
                         label: Text(
-                            isRejected ? context.l10n.rejectedStatus : context.l10n.rejectAction,
-                            style: const TextStyle(
-                                color: AppColors.error, fontSize: 11)),
+                          isRejected
+                              ? context.l10n.rejectedStatus
+                              : context.l10n.rejectAction,
+                          style: TextStyle(
+                            color: context.themeDanger,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.error)),
+                          minimumSize: const Size(64, 44),
+                          side: BorderSide(
+                            color: context.themeDanger.withValues(alpha: 0.5),
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _isProcessing
                             ? null
                             : () => _handleRequestResubmission(selectedItem),
-                        icon: const Icon(Icons.replay, size: 14),
-                        label: Text(context.l10n.requestClearerPhoto,
-                            style: const TextStyle(fontSize: 11)),
+                        icon: Icon(
+                          Icons.replay,
+                          size: 16,
+                          color: context.themeTextPrimary,
+                        ),
+                        label: Text(
+                          context.l10n.requestClearerPhoto,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(64, 44),
+                          side: BorderSide(
+                            color: context.themeBorder,
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -960,24 +1126,65 @@ class _NicVerificationWorkspaceScreenState
                   onPressed: (_isProcessing || isRejected)
                       ? null
                       : () => _handleReject(selectedItem),
-                  icon: const Icon(Icons.cancel,
-                      size: 14, color: AppColors.error),
-                  label: Text(isRejected ? context.l10n.rejectedStatus : context.l10n.rejectAction,
-                      style: const TextStyle(color: AppColors.error)),
+                  icon: Icon(
+                    Icons.cancel_outlined,
+                    size: 16,
+                    color: context.themeDanger,
+                  ),
+                  label: Text(
+                    isRejected
+                        ? context.l10n.rejectedStatus
+                        : context.l10n.rejectAction,
+                    style: TextStyle(
+                      color: context.themeDanger,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.error)),
+                    minimumSize: const Size(64, 46),
+                    side: BorderSide(
+                      color: context.themeDanger.withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                    onPressed: _isProcessing
-                        ? null
-                        : () => _handleRequestResubmission(selectedItem),
-                    icon: const Icon(Icons.replay, size: 14),
-                    label: Text(context.l10n.requestClearerPhoto)),
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _handleRequestResubmission(selectedItem),
+                  icon: Icon(
+                    Icons.replay,
+                    size: 16,
+                    color: context.themeTextPrimary,
+                  ),
+                  label: Text(
+                    context.l10n.requestClearerPhoto,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(64, 46),
+                    side: BorderSide(
+                      color: context.themeBorder,
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 flex: 2,
                 child: ElevatedButton.icon(
@@ -985,18 +1192,33 @@ class _NicVerificationWorkspaceScreenState
                       ? null
                       : () => _handleApprove(selectedItem),
                   icon: _isProcessing
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.check_circle, size: 16),
-                  label: Text(isApproved
-                      ? context.l10n.artisanActivated
-                      : context.l10n.approveAndActivateArtisan),
+                            strokeWidth: 2,
+                            color: context.isDark ? Colors.white : AppColors.ink,
+                          ),
+                        )
+                      : const Icon(Icons.check_circle_rounded, size: 18),
+                  label: Text(
+                    isApproved
+                        ? context.l10n.artisanActivated
+                        : context.l10n.approveAndActivateArtisan,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.ink,
+                    elevation: 0,
+                    minimumSize: const Size(64, 46),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
               ),
             ]),
@@ -1016,27 +1238,34 @@ class _QueueStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.themeBorder),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 8)
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.themeBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-          Text(label,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: 10.5, color: context.themeTextSecondary)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: context.themeTextSecondary,
+            ),
+          ),
         ],
       ),
     );

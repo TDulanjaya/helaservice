@@ -53,14 +53,14 @@ class _AdminShellState extends State<AdminShell> {
                 pendingComplaints > 0 ? '$pendingComplaints' : null;
 
             final adminNavItems = [
-              NavItem(Icons.speed, context.l10n.navOverview),
-              NavItem(Icons.badge, context.l10n.navVerify, badge: verifyBadge),
-              NavItem(Icons.map, context.l10n.navCoverage),
-              NavItem(Icons.shield_outlined, context.l10n.navTeam),
-              NavItem(Icons.receipt_long, context.l10n.jobLedgerNav),
-              NavItem(Icons.report_problem_outlined, context.l10n.navDisputes,
+              NavItem(Icons.grid_view_rounded, context.l10n.navOverview),
+              NavItem(Icons.badge_outlined, context.l10n.navVerify, badge: verifyBadge),
+              NavItem(Icons.layers_outlined, context.l10n.navCoverage),
+              NavItem(Icons.people_outline, context.l10n.navTeam),
+              NavItem(Icons.format_list_bulleted, context.l10n.jobLedgerNav),
+              NavItem(Icons.warning_amber_rounded, context.l10n.navDisputes,
                   badge: complaintsBadge),
-              NavItem(Icons.admin_panel_settings, context.l10n.navSettings),
+              NavItem(Icons.tune, context.l10n.navSettings),
             ];
 
             final screens = [
@@ -96,6 +96,7 @@ class _AdminShellState extends State<AdminShell> {
                     bottomNavigationBar: AppBottomNav(
                       items: adminNavItems,
                       currentIndex: _navIndex,
+                      compact: true,
                       onTap: (i) {
                         if (i == 3 && !roleProvider.isSuperAdmin) {
                           ScaffoldMessenger.of(context).showSnackBar(

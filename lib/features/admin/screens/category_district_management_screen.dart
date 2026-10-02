@@ -379,43 +379,52 @@ class _CategoryDistrictManagementScreenState
                   ),
                   const SizedBox(height: 12),
                   if (canManageCategories)
-                    ElevatedButton.icon(
-                      onPressed: () => _openAddCategoryDialog(context),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: Text(context.l10n.addNewCategoryAction,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _openAddCategoryDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(
+                          context.l10n.addNewCategoryAction,
                           style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(44),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.ink,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
                       ),
                     )
                   else
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                          horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
+                        color: context.themeAmberTint,
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.2)),
+                            color: context.themeAmberText.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.lock_outline,
-                              size: 16, color: AppColors.primary),
+                          Icon(Icons.lock_outline,
+                              size: 16, color: context.themeAmberText),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               context.l10n.readOnlyOpsGovernance,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primary),
+                                  color: context.themeAmberText),
                             ),
                           ),
                         ],
@@ -439,13 +448,17 @@ class _CategoryDistrictManagementScreenState
                   if (canManageCategories)
                     ElevatedButton.icon(
                       onPressed: () => _openAddCategoryDialog(context),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: Text(context.l10n.addNewCategoryAction),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: Text(context.l10n.addNewCategoryAction,
+                          style: const TextStyle(fontWeight: FontWeight.w800)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.ink,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                     )
                   else
@@ -1801,11 +1814,11 @@ class _MobileCategoryCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.themeSurfaceLow,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.themeBorder),
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1813,15 +1826,15 @@ class _MobileCategoryCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: context.themeSoft,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(c.icon, color: AppColors.primary, size: 20),
+                child: Icon(c.icon, color: AppColors.primary, size: 22),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1829,19 +1842,20 @@ class _MobileCategoryCard extends StatelessWidget {
                     Text(
                       LocalizedData.getCategory(context, c.name),
                       style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
                         color: context.themeTextPrimary,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       context.l10n.registeredOnlineCount(
                         '$registeredCount',
                         '$onlineCount',
                       ),
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        color: AppColors.primary,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeAmberText,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1853,10 +1867,11 @@ class _MobileCategoryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (isActive ? AppColors.primary : AppColors.error)
-                        .withValues(alpha: 0.12),
+                    color: isActive
+                        ? context.themeSuccessTint
+                        : context.themeDangerTint,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
@@ -1864,27 +1879,32 @@ class _MobileCategoryCard extends StatelessWidget {
                     children: [
                       Icon(
                         isActive
-                            ? Icons.check_circle
+                            ? Icons.check_circle_rounded
                             : Icons.pause_circle_outline,
-                        size: 11,
-                        color: isActive ? AppColors.primary : AppColors.error,
+                        size: 12,
+                        color: isActive
+                            ? context.themeSuccess
+                            : context.themeDanger,
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Text(
                         LocalizedData.getStatus(context, c.status),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: isActive ? AppColors.primary : AppColors.error,
+                          color: isActive
+                              ? context.themeSuccess
+                              : context.themeDanger,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(width: 4),
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert,
-                    size: 18, color: context.themeTextSecondary),
+                    size: 20, color: context.themeTextSecondary),
                 padding: EdgeInsets.zero,
                 onSelected: (val) {
                   if (val == 'toggle') onToggleStatus();
@@ -1921,47 +1941,51 @@ class _MobileCategoryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            c.description,
-            style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
-          ),
-          const SizedBox(height: 8),
+          if (c.description.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              c.description,
+              style: TextStyle(
+                  fontSize: 12, color: context.themeTextSecondary, height: 1.3),
+            ),
+          ],
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: context.themeSurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: context.themeBorder),
+              color: context.themeSoft,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
                 const Icon(Icons.gavel_rounded,
                     size: 14, color: AppColors.primary),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     context.l10n.dynamicBiddingBadge,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11,
+                      fontSize: 11.5,
                       color: context.themeTextPrimary,
                     ),
                   ),
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     context.l10n.islandWideBadge,
-                    style: const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: context.isDark
+                          ? AppColors.primary
+                          : context.themeAmberText,
                     ),
                   ),
                 ),
@@ -1997,29 +2021,19 @@ class _MiniCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary
-                    .withValues(alpha: context.isDark ? 0.12 : 0.06)
+                ? context.themeAmberTint
                 : context.themeSurface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? AppColors.primary : context.themeBorder,
-              width: isSelected ? 1.8 : 1.0,
+              width: isSelected ? 1.5 : 1.0,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.15)
-                    : Colors.black
-                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                blurRadius: isSelected ? 12 : 8,
-              )
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2029,15 +2043,29 @@ class _MiniCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(icon, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 6),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.2)
+                              : context.themeSoft,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon,
+                            size: 16,
+                            color: isSelected
+                                ? context.themeAmberText
+                                : context.themeTextSecondary),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         label,
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           color: isSelected
-                              ? AppColors.primary
+                              ? context.themeAmberText
                               : context.themeTextSecondary,
                         ),
                       ),
@@ -2046,36 +2074,38 @@ class _MiniCard extends StatelessWidget {
                   if (isSelected)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         context.l10n.viewingBadge,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.ink,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: context.themeTextPrimary,
+                  letterSpacing: -0.3,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 sub,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   color: context.themeTextSecondary,
                 ),
               ),

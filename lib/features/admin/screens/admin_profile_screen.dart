@@ -348,436 +348,458 @@ class AdminProfileScreen extends StatelessWidget {
         ? user!.email
         : (adminUser?.email ?? '');
 
-    final roleColor = adminUser?.roleColor ?? AppColors.primary;
     final roleTag = isSuperAdmin
         ? 'Super Admin • Platform Governance'
-        : (adminUser != null ? adminUser.role.label : 'Operations Admin');
+        : (adminUser != null
+            ? '${adminUser.role.label} • Operations'
+            : 'Operations Admin');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.l10n.adminConsole,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz),
-            tooltip: context.l10n.switchRole,
-            onPressed: () => showRoleSwitchSheet(context),
-          ),
-        ],
+    final permissions = isSuperAdmin
+        ? AdminPermission.values
+        : (adminUser?.permissions ?? []);
+
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? AppBottomNav.contentBottomPadding : 24,
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            8,
-            16,
-            MediaQuery.of(context).size.width < 768
-                ? AppBottomNav.contentBottomPadding
-                : 24,
-          ),
-          children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: context.themeBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.adminConsole,
+                  style: TextStyle(
+                    fontSize: isMobile ? 24 : 28,
+                    fontWeight: FontWeight.w800,
+                    color: context.themeTextPrimary,
+                    letterSpacing: -0.5,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      UserAvatar(
-                        uid: user?.id ?? adminUser?.id,
-                        displayName: displayName,
-                        photoUrl: user?.photoUrl,
-                        radius: 32,
-                        backgroundColor: roleColor.withValues(alpha: 0.15),
-                        textColor: roleColor,
-                        editable: true,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              displayName,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              email,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: context.themeTextSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: roleColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                roleTag,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: roleColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (adminUser != null && !isSuperAdmin) ...[
-                    const SizedBox(height: 14),
-                    const Divider(height: 1),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Assigned Permissions:',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: adminUser.permissions.map((p) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLow,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppColors.outline.withValues(alpha: 0.2),
-                            ),
-                          ),
-                          child: Text(
-                            p.label,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.operationsControls,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            _AdminActionTile(
-              icon: Icons.shield_outlined,
-              title: context.l10n.adminTeamGovernance,
-              subtitle: context.l10n.adminTeamGovernanceDesc,
-              onTap: () {
-                if (onNavigateToAdmins != null) {
-                  onNavigateToAdmins!();
-                }
-              },
-            ),
-            if (roleProvider.hasAdminPermission(AdminPermission.broadcastAlerts))
-              _AdminActionTile(
-                icon: Icons.campaign_outlined,
-                title: context.l10n.emergencyBroadcast,
-                subtitle: context.l10n.emergencyBroadcastDesc,
-                onTap: () => _showBroadcastDialog(context),
-              ),
-            _AdminActionTile(
-              icon: Icons.security_outlined,
-              title: context.l10n.auditLogs,
-              subtitle: 'Review administrator actions & access history',
-              onTap: () {
-                if (isSuperAdmin) {
-                  _showAuditLogsSheet(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Access Denied: Platform audit logs are restricted to Super Admins.'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 14),
-            Text(
-              context.l10n.appearance,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-
-            Container(
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: pv.Consumer<ThemeProvider>(
-                builder: (context, themeProvider, _) {
-                  return ListTile(
-                    leading: Icon(
-                      themeProvider.isDark(context)
-                          ? Icons.dark_mode_outlined
-                          : Icons.light_mode_outlined,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    title: Text(context.l10n.themeMode,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w700)),
-                    subtitle: Text(
-                      '${context.l10n.currentTheme}: ${themeProvider.getModeDisplayName(context)} (${context.l10n.tapToChange})',
-                      style: TextStyle(
-                          fontSize: 11.5, color: context.themeTextSecondary),
-                    ),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: context.themeSurface,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        builder: (sheetCtx) => SafeArea(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(context.l10n.themeMode,
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 12),
-                                ListTile(
-                                  leading: const Icon(Icons.brightness_auto),
-                                  title: Text(context.l10n.themeSystem),
-                                  trailing: themeProvider.mode == ThemeMode.system
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
-                                  onTap: () {
-                                    themeProvider.setSystem();
-                                    Navigator.pop(sheetCtx);
-                                  },
-                                ),
-                                ListTile(
-                                  leading: const Icon(Icons.light_mode),
-                                  title: Text(context.l10n.themeLight),
-                                  trailing: themeProvider.mode == ThemeMode.light
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
-                                  onTap: () {
-                                    themeProvider.setLight();
-                                    Navigator.pop(sheetCtx);
-                                  },
-                                ),
-                                ListTile(
-                                  leading: const Icon(Icons.dark_mode),
-                                  title: Text(context.l10n.themeDark),
-                                  trailing: themeProvider.mode == ThemeMode.dark
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
-                                  onTap: () {
-                                    themeProvider.setDark();
-                                    Navigator.pop(sheetCtx);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 14),
-            Container(
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: pv.Consumer<LocaleProvider>(
-                builder: (context, localeProvider, _) {
-                  return ListTile(
-                    leading: const Icon(Icons.language,
-                        color: AppColors.primary),
-                    title: Text(context.l10n.appLanguage,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w700)),
-                    subtitle: Text(
-                      '${context.l10n.currentLanguage}: ${localeProvider.languageDisplayName} (${context.l10n.tapToChange})',
-                      style: TextStyle(
-                          fontSize: 12, color: context.themeTextSecondary),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios,
-                        size: 14, color: AppColors.outline),
-                    onTap: () => LanguageSelectSheet.show(context),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 14),
-            Text(
-              context.l10n.switchRole,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () => showRoleSwitchSheet(context),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: context.themeSurfaceLow,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: context.themeBorder),
                 ),
-                child: Row(
+              ),
+              InkWell(
+                onTap: () => showRoleSwitchSheet(context),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: context.themeSurface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Icon(
+                    Icons.swap_horiz,
+                    color: context.themeTextPrimary,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isMobile ? 18 : 22),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: context.themeHeroSurface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: context.themeHeroBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.swap_horiz,
-                          color: AppColors.primary, size: 20),
+                    UserAvatar(
+                      uid: user?.id ?? adminUser?.id,
+                      displayName: displayName,
+                      photoUrl: user?.photoUrl,
+                      radius: 32,
+                      editable: true,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            context.l10n.switchOperationalView,
+                            displayName,
                             style: const TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            context.l10n.switchOperationalViewDesc,
+                            email,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            roleTag,
                             style: TextStyle(
-                              fontSize: 11.5,
-                              color: context.themeTextSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: context.themeAmberText,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios,
-                        size: 14, color: context.themeTextSecondary),
                   ],
                 ),
-              ),
+                if (permissions.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Assigned Permissions:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: permissions.map((p) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          p.label,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 18),
-            OutlinedButton.icon(
+          ),
+          SizedBox(height: isMobile ? 20 : 26),
+          Text(
+            context.l10n.operationsControls.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.9,
+              color: context.themeTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: context.themeSurface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: context.themeBorder),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.people_outline_rounded,
+                  iconBg: context.themeAmberTint,
+                  iconColor: context.themeAmberText,
+                  title: context.l10n.adminTeamGovernance,
+                  subtitle: context.l10n.adminTeamGovernanceDesc,
+                  onTap: () {
+                    if (onNavigateToAdmins != null) {
+                      onNavigateToAdmins!();
+                    }
+                  },
+                ),
+                if (roleProvider.hasAdminPermission(AdminPermission.broadcastAlerts)) ...[
+                  Divider(height: 1, color: context.themeBorder),
+                  _SettingsTile(
+                    icon: Icons.campaign_outlined,
+                    iconBg: context.themeAmberTint,
+                    iconColor: context.themeAmberText,
+                    title: context.l10n.emergencyBroadcast,
+                    subtitle: context.l10n.emergencyBroadcastDesc,
+                    onTap: () => _showBroadcastDialog(context),
+                  ),
+                ],
+                Divider(height: 1, color: context.themeBorder),
+                _SettingsTile(
+                  icon: Icons.receipt_long_outlined,
+                  iconBg: context.themeSoft,
+                  iconColor: AppColors.primary,
+                  title: context.l10n.auditLogs,
+                  subtitle: 'Review administrator actions & access history',
+                  onTap: () {
+                    if (isSuperAdmin) {
+                      _showAuditLogsSheet(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Access Denied: Platform audit logs are restricted to Super Admins.',
+                          ),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isMobile ? 20 : 26),
+          Text(
+            'PREFERENCES & APPEARANCE',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.9,
+              color: context.themeTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: context.themeSurface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: context.themeBorder),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                pv.Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, _) {
+                    return _SettingsTile(
+                      icon: themeProvider.isDark(context)
+                          ? Icons.dark_mode_outlined
+                          : Icons.light_mode_outlined,
+                      title: context.l10n.themeMode,
+                      subtitle:
+                          'Current: ${themeProvider.getModeDisplayName(context)}',
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: context.themeSurface,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          builder: (sheetCtx) => SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    context.l10n.themeMode,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ListTile(
+                                    leading: const Icon(Icons.brightness_auto),
+                                    title: Text(context.l10n.themeSystem),
+                                    trailing:
+                                        themeProvider.mode == ThemeMode.system
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: AppColors.primary,
+                                              )
+                                            : null,
+                                    onTap: () {
+                                      themeProvider.setSystem();
+                                      Navigator.pop(sheetCtx);
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.light_mode),
+                                    title: Text(context.l10n.themeLight),
+                                    trailing:
+                                        themeProvider.mode == ThemeMode.light
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: AppColors.primary,
+                                              )
+                                            : null,
+                                    onTap: () {
+                                      themeProvider.setLight();
+                                      Navigator.pop(sheetCtx);
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.dark_mode),
+                                    title: Text(context.l10n.themeDark),
+                                    trailing:
+                                        themeProvider.mode == ThemeMode.dark
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: AppColors.primary,
+                                              )
+                                            : null,
+                                    onTap: () {
+                                      themeProvider.setDark();
+                                      Navigator.pop(sheetCtx);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                Divider(height: 1, color: context.themeBorder),
+                pv.Consumer<LocaleProvider>(
+                  builder: (context, localeProvider, _) {
+                    return _SettingsTile(
+                      icon: Icons.language,
+                      title: 'App Language / භාෂාව / மொழி',
+                      subtitle: localeProvider.languageDisplayName,
+                      onTap: () => LanguageSelectSheet.show(context),
+                    );
+                  },
+                ),
+                Divider(height: 1, color: context.themeBorder),
+                _SettingsTile(
+                  icon: Icons.swap_horiz,
+                  title: context.l10n.switchOperationalView,
+                  subtitle: context.l10n.switchOperationalViewDesc,
+                  onTap: () => showRoleSwitchSheet(context),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isMobile ? 24 : 32),
+          SizedBox(
+            height: 54,
+            width: double.infinity,
+            child: OutlinedButton.icon(
               onPressed: () => _logout(context),
-              icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.error,
+                size: 20,
+              ),
               label: Text(
                 context.l10n.logout,
                 style: const TextStyle(
                   color: AppColors.error,
+                  fontSize: 15,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
+                backgroundColor: context.themeDangerTint.withValues(alpha: 0.2),
+                side: BorderSide(
+                  color: AppColors.error.withValues(alpha: 0.35),
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-
-class _AdminActionTile extends StatelessWidget {
+class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Color? iconColor;
+  final Color? iconBg;
 
-  const _AdminActionTile({
+  const _SettingsTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.iconColor,
+    this.iconBg,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: context.themeSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.themeBorder),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        leading: Icon(icon, color: AppColors.primary, size: 22),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconBg ?? context.themeSoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor ?? context.themeTextPrimary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: context.themeTextSecondary,
+            ),
+          ],
         ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-              fontSize: 11.5, color: context.themeTextSecondary),
-        ),
-        trailing:
-            Icon(Icons.chevron_right, size: 18, color: context.themeTextSecondary),
       ),
     );
   }

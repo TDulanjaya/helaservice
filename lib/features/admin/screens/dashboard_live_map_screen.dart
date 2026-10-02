@@ -12,6 +12,8 @@ import 'package:latlong2/latlong.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../widgets/admin_stat_card.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/hero_card.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -36,9 +38,10 @@ class DashboardLiveMapScreen extends StatelessWidget {
           Text(
             context.l10n.islandOperationsTitle,
             style: TextStyle(
-              fontSize: isMobile ? 18 : 22,
-              fontWeight: FontWeight.bold,
+              fontSize: isMobile ? 26 : 28,
+              fontWeight: FontWeight.w800,
               color: context.themeTextPrimary,
+              letterSpacing: -0.5,
             ),
           ),
           SizedBox(height: isMobile ? 16 : 20),
@@ -46,51 +49,79 @@ class DashboardLiveMapScreen extends StatelessWidget {
           SizedBox(height: isMobile ? 16 : 24),
           _LiveTrafficHeatmapCard(isMobile: isMobile),
           SizedBox(height: isMobile ? 16 : 24),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
+          if (isMobile) ...[
+            Text(
+              context.l10n.activeArtisanFleetLive,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: context.themeTextPrimary,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 12),
+            StreamBuilder<List<Technician>>(
+              stream: TechnicianRepository().streamTechnicians(),
+              builder: (context, snapshot) {
+                final technicians = snapshot.data ?? [];
+                final roster = technicians
+                    .map((t) => _technicianToRosterRow(t))
+                    .toList();
+
+                if (roster.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'No active artisans found in fleet',
+                      style: TextStyle(
+                        color: context.themeTextSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children:
+                      roster.map((r) => _MobileRosterCard(r: r)).toList(),
+                );
+              },
+            ),
+          ] else
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: context.themeBorder),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black
-                          .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                      blurRadius: 12)
-                ]),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(context.l10n.activeArtisanFleetLive,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: context.themeTextPrimary)),
-                const SizedBox(height: 12),
-                StreamBuilder<List<Technician>>(
-                  stream: TechnicianRepository().streamTechnicians(),
-                  builder: (context, snapshot) {
-                    final technicians = snapshot.data ?? [];
-                    final roster = technicians
-                        .map((t) => _technicianToRosterRow(t))
-                        .toList();
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.activeArtisanFleetLive,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 14),
+                  StreamBuilder<List<Technician>>(
+                    stream: TechnicianRepository().streamTechnicians(),
+                    builder: (context, snapshot) {
+                      final technicians = snapshot.data ?? [];
+                      final roster = technicians
+                          .map((t) => _technicianToRosterRow(t))
+                          .toList();
 
-                    if (roster.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Center(
-                          child: Text('No active artisans found in fleet',
-                              style: TextStyle(
-                                  color: AppColors.outline, fontSize: 12)),
-                        ),
-                      );
-                    }
-
-                    if (isMobile) {
-                      return Column(
-                        children:
-                            roster.map((r) => _MobileRosterCard(r: r)).toList(),
-                      );
-                    }
+                      if (roster.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: Text('No active artisans found in fleet',
+                                style: TextStyle(
+                                    color: AppColors.outline, fontSize: 12)),
+                          ),
+                        );
+                      }
 
                     return Table(
                       columnWidths: const {
@@ -358,76 +389,182 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
 class _MobileRosterCard extends StatelessWidget {
   final ArtisanRosterRow r;
   const _MobileRosterCard({required this.r});
+
   @override
   Widget build(BuildContext context) {
+    final isDispatch = r.actionLabel.toLowerCase().contains('dispatch');
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: context.themeSurfaceLow,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: context.themeBorder)),
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder, width: 1.0),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Icon(r.tradeIcon, size: 16, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
+          Row(
+            children: [
+              UserAvatar(
+                displayName: r.name,
+                radius: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${r.nic} • ${r.zone}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: r.statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  r.status,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: r.statusColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(r.name,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: context.themeTextPrimary)),
-                  Text(r.nic,
-                      style: TextStyle(
-                          fontSize: 10, color: context.themeTextSecondary)),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Payout ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.themeTextSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        TextSpan(
+                          text: r.payoutToday.replaceAll(' (Today)', ''),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '(Today)',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                  color: r.statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999)),
-              child: Text(r.status,
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: r.statusColor,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ]),
-          const SizedBox(height: 8),
-          Text(r.zone,
-              style:
-                  TextStyle(fontSize: 12, color: context.themeTextSecondary)),
-          const SizedBox(height: 6),
-          Row(children: [
-            Expanded(
-                child: Text(r.payoutToday,
+              const SizedBox(width: 18),
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${r.rating}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        '(${r.reviews})',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              if (isDispatch)
+                ElevatedButton(
+                  onPressed: () => _showDispatchDialog(context, r),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.isDark ? Colors.white : AppColors.ink,
+                    foregroundColor: context.isDark ? AppColors.ink : Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    minimumSize: const Size(80, 38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    r.actionLabel,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+              else
+                OutlinedButton(
+                  onPressed: () => _showDispatchDialog(context, r),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: context.themeBorder, width: 1.2),
+                    foregroundColor: context.themeTextPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    minimumSize: const Size(80, 38),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    r.actionLabel,
                     style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: context.themeTextPrimary))),
-            const Icon(Icons.star,
-                size: 13, color: AppColors.secondaryContainer),
-            const SizedBox(width: 3),
-            Text('${r.rating} (${r.reviews})',
-                style:
-                    TextStyle(fontSize: 11, color: context.themeTextSecondary)),
-            const SizedBox(width: 10),
-            TextButton(
-              onPressed: () => _showDispatchDialog(context, r),
-              style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(0, 0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-              child: Text(r.actionLabel, style: const TextStyle(fontSize: 11)),
-            ),
-          ]),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -496,54 +633,151 @@ class _LiveDashboardStats extends StatelessWidget {
                         (q) => (q.data()['status'] ?? 'pending') == 'pending')
                     .length;
 
-                final cards = [
-                  AdminStatCard(
-                    icon: Icons.engineering,
-                    label: context.l10n.activeProvidersTitle,
-                    value: '$totalTechs',
-                    trailingBadge:
-                        onlineCount > 0 ? '+$onlineCount Live' : null,
-                    subtitle: context.l10n
-                        .onlineFleetSummary('$onlineCount', '$verifiedCount'),
+                final heroCard = HeroCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.engineering,
+                              size: 20,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              context.l10n.activeProvidersTitle.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                color: context.isDark
+                                    ? context.themeAmberText
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '+$onlineCount Live',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        '$totalTechs',
+                        style: const TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.8,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        context.l10n.onlineFleetSummary(
+                          '$onlineCount',
+                          '$verifiedCount',
+                        ),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.75),
+                        ),
+                      ),
+                    ],
                   ),
-                  AdminStatCard(
-                    icon: Icons.receipt_long,
-                    label: context.l10n.totalBookingsTitle,
-                    value: '$totalBookings',
-                    trailingBadge:
-                        activeBookings > 0 ? '$activeBookings Active' : null,
-                    subtitle: context.l10n.completedInProgressSummary(
-                        '$completedBookings', '$activeBookings'),
+                );
+
+                final bookingsCard = AdminStatCard(
+                  icon: Icons.receipt_long,
+                  label: context.l10n.totalBookingsTitle,
+                  value: '$totalBookings',
+                  trailingBadge:
+                      activeBookings > 0 ? '$activeBookings Active' : null,
+                  subtitle: context.l10n.completedInProgressSummary(
+                    '$completedBookings',
+                    '$activeBookings',
                   ),
-                  AdminStatCard(
-                    icon: Icons.assignment_late,
-                    label: context.l10n.nicScreeningTitle,
-                    value: '$pendingQueue',
-                    trailingBadge: pendingQueue > 0
-                        ? 'Action Req'
-                        : context.l10n.clearStatusBadge,
-                    subtitle: context.l10n
-                        .verificationDossiersLogged('${queue.length}'),
+                );
+
+                final nicCard = AdminStatCard(
+                  icon: Icons.badge_outlined,
+                  label: context.l10n.nicScreeningTitle,
+                  value: '$pendingQueue',
+                  trailingBadge: pendingQueue > 0
+                      ? 'Action Req'
+                      : context.l10n.clearStatusBadge,
+                  subtitle: context.l10n.verificationDossiersLogged(
+                    '${queue.length}',
                   ),
-                ];
+                );
 
                 if (isMobile) {
                   return Column(
                     children: [
-                      for (int i = 0; i < cards.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 10),
-                        cards[i],
-                      ],
+                      heroCard,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: bookingsCard),
+                          const SizedBox(width: 12),
+                          Expanded(child: nicCard),
+                        ],
+                      ),
                     ],
                   );
                 }
 
                 return Row(
                   children: [
-                    for (int i = 0; i < cards.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      Expanded(child: cards[i]),
-                    ],
+                    Expanded(flex: 3, child: heroCard),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 2, child: bookingsCard),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 2, child: nicCard),
                   ],
                 );
               },
@@ -554,6 +788,7 @@ class _LiveDashboardStats extends StatelessWidget {
     );
   }
 }
+
 
 class _LiveTrafficHeatmapCard extends StatefulWidget {
   final bool isMobile;

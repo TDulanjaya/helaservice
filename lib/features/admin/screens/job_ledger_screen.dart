@@ -5,7 +5,6 @@ import '../../../repositories/booking_repository.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
-import '../widgets/admin_stat_card.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 
 enum LedgerStatusFilter { all, completed, inProgress, cancelled }
@@ -64,23 +63,6 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
       return booking.estRate.trim();
     }
     return context.l10n.notRecorded;
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return AppColors.primary;
-      case 'in_progress':
-      case 'en_route':
-      case 'accepted':
-        return AppColors.secondaryContainer;
-      case 'cancelled':
-      case 'rejected':
-        return AppColors.error;
-      case 'pending':
-      default:
-        return AppColors.secondary;
-    }
   }
 
   String _getStatusLabel(BuildContext context, String status) {
@@ -153,102 +135,76 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                   Text(
                     context.l10n.jobLedger,
                     style: TextStyle(
-                      fontSize: isMobile ? 18 : 22,
-                      fontWeight: FontWeight.bold,
+                      fontSize: isMobile ? 24 : 28,
+                      fontWeight: FontWeight.w800,
                       color: context.themeTextPrimary,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     context.l10n.jobLedgerSubtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: context.themeTextSecondary,
                     ),
                   ),
-                  SizedBox(height: isMobile ? 16 : 20),
+                  SizedBox(height: isMobile ? 18 : 22),
                   _buildSummaryCards(
+                    context: context,
                     isMobile: isMobile,
                     completedCount: completedCount,
                     inProgressCount: inProgressCount,
                     avgRating: avgRating,
                     ratedCount: ratedBookings.length,
                   ),
-                  SizedBox(height: isMobile ? 16 : 24),
+                  SizedBox(height: isMobile ? 18 : 22),
                   _buildFilterChips(context, isMobile),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: EdgeInsets.all(isMobile ? 14 : 18),
-                    decoration: BoxDecoration(
-                      color: context.themeSurface,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: context.themeBorder),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                          blurRadius: 12,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${context.l10n.jobLedger} (${filteredBookings.length})',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: context.themeTextPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        if (bookingSnap.connectionState ==
-                                ConnectionState.waiting &&
-                            allBookings.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 32),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                  color: AppColors.primary),
-                            ),
-                          )
-                        else if (allBookings.isEmpty)
-                          _buildEmptyState(
-                            context,
-                            context.l10n.noBookingsFound,
-                          )
-                        else if (filteredBookings.isEmpty)
-                          _buildEmptyState(
-                            context,
-                            context.l10n.noBookingsMatchingFilter,
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredBookings.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final booking = filteredBookings[index];
-                              return _buildBookingCard(
-                                context,
-                                booking,
-                                techMap,
-                                isMobile,
-                              );
-                            },
-                          ),
-                      ],
+                  const SizedBox(height: 18),
+                  Text(
+                    '${context.l10n.jobLedger.toUpperCase()} (${filteredBookings.length})',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.9,
+                      color: context.themeTextSecondary,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  if (bookingSnap.connectionState == ConnectionState.waiting &&
+                      allBookings.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: CircularProgressIndicator(color: AppColors.primary),
+                      ),
+                    )
+                  else if (allBookings.isEmpty)
+                    _buildEmptyState(
+                      context,
+                      context.l10n.noBookingsFound,
+                    )
+                  else if (filteredBookings.isEmpty)
+                    _buildEmptyState(
+                      context,
+                      context.l10n.noBookingsMatchingFilter,
+                    )
+                  else
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredBookings.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final booking = filteredBookings[index];
+                        return _buildBookingCard(
+                          context,
+                          booking,
+                          techMap,
+                          isMobile,
+                        );
+                      },
+                    ),
                 ],
               ),
             );
@@ -259,53 +215,188 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
   }
 
   Widget _buildSummaryCards({
+    required BuildContext context,
     required bool isMobile,
     required int completedCount,
     required int inProgressCount,
     required String avgRating,
     required int ratedCount,
   }) {
-    final cards = [
-      AdminStatCard(
-        icon: Icons.check_circle_outline,
-        label: context.l10n.totalCompletedJobs,
-        value: '$completedCount',
-        subtitle: '$completedCount jobs resolved across island',
-      ),
-      AdminStatCard(
-        icon: Icons.pending_actions,
-        label: context.l10n.totalInProgressJobs,
-        value: '$inProgressCount',
-        trailingBadge: inProgressCount > 0 ? 'Active' : null,
-        subtitle: '$inProgressCount dispatches active in field',
-      ),
-      AdminStatCard(
-        icon: Icons.star_rate_rounded,
-        label: context.l10n.averageRating,
-        value: avgRating == '—' ? avgRating : avgRating,
-        subtitle: ratedCount > 0
-            ? 'Based on $ratedCount verified reviews'
-            : 'Awaiting customer feedback',
-      ),
-    ];
-
-    if (isMobile) {
-      return Column(
-        children: [
-          for (int i = 0; i < cards.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
-            cards[i],
-          ],
-        ],
-      );
-    }
-
-    return Row(
+    return Column(
       children: [
-        for (int i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(width: 12),
-          Expanded(child: cards[i]),
-        ],
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.themeHeroSurface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: context.themeHeroBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.totalCompletedJobs.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.9,
+                  color: context.themeAmberText,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$completedCount',
+                style: const TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '$completedCount jobs resolved across island',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            context.l10n.totalInProgressJobs,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: context.themeTextPrimary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (inProgressCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.themeInfoTint,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Text(
+                              'Active',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.info,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$inProgressCount',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$inProgressCount dispatches active in field',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.themeTextSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.averageRating,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          avgRating,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        if (avgRating != '—') ...[
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 24,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      ratedCount > 0
+                          ? 'Based on $ratedCount verified reviews'
+                          : 'Awaiting customer feedback',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.themeTextSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -318,35 +409,45 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
       (LedgerStatusFilter.cancelled, context.l10n.filterCancelled),
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: filters.map((f) {
-        final active = _selectedFilter == f.$1;
-        return InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: () => setState(() => _selectedFilter = f.$1),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: active ? AppColors.primary : context.themeSurfaceContainer,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: active ? AppColors.primary : context.themeBorder,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: filters.map((f) {
+          final active = _selectedFilter == f.$1;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () => setState(() => _selectedFilter = f.$1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: active
+                      ? (context.isDark ? Colors.white : AppColors.ink)
+                      : context.themeSurface,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: active ? Colors.transparent : context.themeBorder,
+                  ),
+                ),
+                child: Text(
+                  f.$2,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: active ? FontWeight.bold : FontWeight.w600,
+                    color: active
+                        ? (context.isDark ? AppColors.ink : Colors.white)
+                        : context.themeTextPrimary,
+                  ),
+                ),
               ),
             ),
-            child: Text(
-              f.$2,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: active ? FontWeight.bold : FontWeight.w600,
-                color: active ? Colors.white : context.themeTextPrimary,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -392,7 +493,29 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
     Map<String, String> techMap,
     bool isMobile,
   ) {
-    final statusColor = _getStatusColor(booking.status);
+    final status = booking.status.toLowerCase();
+    Color statusColor;
+    Color statusBg;
+    switch (status) {
+      case 'completed':
+        statusColor = AppColors.success;
+        statusBg = context.themeSuccessTint;
+        break;
+      case 'in_progress':
+      case 'en_route':
+      case 'accepted':
+        statusColor = context.themeAmberText;
+        statusBg = context.themeAmberTint;
+        break;
+      case 'cancelled':
+      case 'rejected':
+        statusColor = AppColors.error;
+        statusBg = context.themeDangerTint;
+        break;
+      default:
+        statusColor = context.themeTextSecondary;
+        statusBg = context.themeSoft;
+    }
     final statusLabel = _getStatusLabel(context, booking.status);
     final dateTimeStr = _formatDateTime(booking);
     final bidStr = _formatBidAmount(context, booking);
@@ -412,12 +535,23 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
         ? booking.customerName
         : context.l10n.notRecorded;
 
+    final hasDelay = (booking.delayReason != null &&
+            booking.delayReason!.isNotEmpty) ||
+        (booking.delayMinutes != null && booking.delayMinutes! > 0);
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: context.themeSurfaceLow,
-        borderRadius: BorderRadius.circular(14),
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: context.themeBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,26 +568,19 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                           ? booking.title
                           : 'Service Booking',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
                         color: context.themeTextPrimary,
                       ),
                     ),
                     if (dateTimeStr.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.schedule,
-                              size: 12, color: context.themeTextSecondary),
-                          const SizedBox(width: 4),
-                          Text(
-                            dateTimeStr,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: context.themeTextSecondary,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 3),
+                      Text(
+                        dateTimeStr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
                       ),
                     ],
                   ],
@@ -464,16 +591,13 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: statusColor.withValues(alpha: 0.3),
-                  ),
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   statusLabel,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.bold,
                     color: statusColor,
                   ),
@@ -481,180 +605,148 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Divider(height: 1, color: context.themeBorder),
-          const SizedBox(height: 12),
-          if (isMobile) ...[
-            _buildDetailRow(
-              context: context,
-              icon: Icons.handyman_outlined,
-              label: context.l10n.wonBy,
-              value: providerDisplayName,
-              extra: booking.providerPhone.isNotEmpty
-                  ? booking.providerPhone
-                  : null,
-            ),
-            const SizedBox(height: 8),
-            _buildDetailRow(
-              context: context,
-              icon: Icons.person_outline,
-              label: context.l10n.customerLabel,
-              value: customerDisplayName,
-              extra: booking.customerPhone.isNotEmpty
-                  ? booking.customerPhone
-                  : null,
-            ),
-            const SizedBox(height: 8),
-            _buildDetailRow(
-              context: context,
-              icon: Icons.payments_outlined,
-              label: context.l10n.bidAmount,
-              value: bidStr,
-            ),
-          ] else ...[
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.wonBy,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      providerDisplayName,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.customerLabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      customerDisplayName,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.bidAmount,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      bidStr,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: context.themeTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (booking.rating != null && booking.rating! > 0) ...[
+            const SizedBox(height: 12),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildDetailRow(
-                    context: context,
-                    icon: Icons.handyman_outlined,
-                    label: context.l10n.wonBy,
-                    value: providerDisplayName,
-                    extra: booking.providerPhone.isNotEmpty
-                        ? booking.providerPhone
-                        : null,
+                for (int s = 1; s <= 5; s++)
+                  Icon(
+                    s <= (booking.rating ?? 0).round()
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    size: 16,
+                    color: AppColors.primary,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDetailRow(
-                    context: context,
-                    icon: Icons.person_outline,
-                    label: context.l10n.customerLabel,
-                    value: customerDisplayName,
-                    extra: booking.customerPhone.isNotEmpty
-                        ? booking.customerPhone
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDetailRow(
-                    context: context,
-                    icon: Icons.payments_outlined,
-                    label: context.l10n.bidAmount,
-                    value: bidStr,
+                const SizedBox(width: 6),
+                Text(
+                  '${booking.rating}/5',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: context.themeTextPrimary,
                   ),
                 ),
               ],
             ),
           ],
-          if ((booking.delayReason != null &&
-                  booking.delayReason!.isNotEmpty) ||
-              (booking.delayMinutes != null && booking.delayMinutes! > 0) ||
-              (booking.rating != null && booking.rating! > 0)) ...[
-            const SizedBox(height: 10),
+          if (hasDelay) ...[
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: context.themeSurfaceContainer,
-                borderRadius: BorderRadius.circular(8),
+                color: context.themeAmberTint,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
               ),
               child: Row(
                 children: [
-                  if ((booking.delayReason != null &&
-                          booking.delayReason!.isNotEmpty) ||
-                      (booking.delayMinutes != null &&
-                          booking.delayMinutes! > 0)) ...[
-                    const Icon(Icons.info_outline,
-                        size: 14, color: AppColors.error),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '${context.l10n.delayReported}: ${booking.delayMinutes != null ? "${booking.delayMinutes}m delay • " : ""}${booking.delayReason ?? ""}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.error,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: context.themeAmberText,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${context.l10n.delayReported}: ${booking.delayMinutes != null && booking.delayMinutes! > 0 ? "${booking.delayMinutes}m delay • " : ""}${booking.delayReason ?? ""}',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeAmberText,
                       ),
                     ),
-                  ],
-                  if (booking.rating != null && booking.rating! > 0) ...[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star,
-                            size: 14, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${booking.rating}/5',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildDetailRow({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required String value,
-    String? extra,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: context.themeTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.bold,
-                  color: context.themeTextPrimary,
-                ),
-              ),
-              if (extra != null && extra.isNotEmpty) ...[
-                const SizedBox(height: 1),
-                Text(
-                  extra,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: context.themeTextSecondary,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

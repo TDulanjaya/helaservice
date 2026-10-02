@@ -192,6 +192,27 @@ class AppBottomNav extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (item.badge != null && item.badge!.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8A1E18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      item.badge!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

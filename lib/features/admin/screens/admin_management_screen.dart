@@ -204,19 +204,25 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                 const SizedBox(height: 12),
                                   SizedBox(
                                     width: double.infinity,
+                                    height: 52,
                                     child: ElevatedButton.icon(
                                       onPressed: () =>
                                           _openAddAdminDialog(context),
-                                      icon: const Icon(Icons.add, size: 18),
-                                      label: Text(context.l10n.addNewAdminAction),
+                                      icon: const Icon(Icons.add_rounded, size: 18),
+                                      label: Text(
+                                        context.l10n.addNewAdminAction,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.primary,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 14, vertical: 12),
+                                        foregroundColor: AppColors.ink,
+                                        elevation: 0,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(12),
+                                              BorderRadius.circular(16),
                                         ),
                                       ),
                                     ),
@@ -262,15 +268,17 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                 ElevatedButton.icon(
                                   onPressed: () =>
                                       _openAddAdminDialog(context),
-                                  icon: const Icon(Icons.add, size: 18),
-                                  label: Text(context.l10n.addNewAdminAction),
+                                  icon: const Icon(Icons.add_rounded, size: 18),
+                                  label: Text(context.l10n.addNewAdminAction,
+                                      style: const TextStyle(fontWeight: FontWeight.w800)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: AppColors.ink,
+                                    elevation: 0,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 12),
+                                        horizontal: 20, vertical: 14),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
                                 ),
@@ -626,15 +634,8 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.themeBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,7 +646,7 @@ class _MetricCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: context.themeTextSecondary,
                   ),
@@ -655,10 +656,11 @@ class _MetricCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.all(6),
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 16, color: color),
               ),
@@ -668,16 +670,17 @@ class _MetricCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: color,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: context.themeTextPrimary,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtitle,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11,
               color: context.themeTextSecondary,
             ),
             maxLines: 1,
@@ -704,31 +707,30 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? AppColors.primary;
+    final selBg = context.isDark ? Colors.white : AppColors.ink;
+    final selFg = context.isDark ? AppColors.ink : Colors.white;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.only(right: 8),
       child: InkWell(
         onTap: onSelected,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected
-                ? effectiveColor.withValues(alpha: 0.15)
-                : context.themeSurfaceLow,
-            borderRadius: BorderRadius.circular(20),
+            color: isSelected ? selBg : context.themeSurface,
+            borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: isSelected ? effectiveColor : context.themeBorder,
-              width: isSelected ? 1.5 : 1,
+              color: isSelected ? selBg : context.themeBorder,
+              width: 1.0,
             ),
           ),
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-              color: isSelected ? effectiveColor : context.themeTextPrimary,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? selFg : context.themeTextPrimary,
             ),
           ),
         ),
@@ -1103,20 +1105,189 @@ class _AdminMobileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (admin.isSuperAdmin) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: context.themeHeroSurface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: context.themeHeroBorder, width: 1.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                UserAvatar(
+                  uid: admin.id,
+                  displayName: admin.displayName,
+                  radius: 22,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                  textColor: AppColors.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              admin.displayName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.3,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isSelf) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                context.l10n.youBadge,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        admin.email,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Text(
+                    context.l10n.roleSuperAdminBadge.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.shield_rounded,
+                      size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.fullRootGovernanceBadge,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock_outline,
+                            size: 11, color: AppColors.primary),
+                        SizedBox(width: 4),
+                        Text(
+                          'Protected',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.verified_outlined,
+                    size: 13, color: Colors.white.withValues(alpha: 0.5)),
+                const SizedBox(width: 6),
+                Text(
+                  'Managed in Firebase Console',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final statusBg = admin.status == AdminStatus.active
+        ? context.themeSuccessTint
+        : (admin.status == AdminStatus.suspended
+            ? context.themeDangerTint
+            : context.themeAmberTint);
+    final statusFg = admin.status == AdminStatus.active
+        ? context.themeSuccess
+        : (admin.status == AdminStatus.suspended
+            ? context.themeDanger
+            : context.themeAmberText);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.themeBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.themeBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1141,7 +1312,7 @@ class _AdminMobileCard extends StatelessWidget {
                           child: Text(
                             admin.displayName,
                             style: TextStyle(
-                              fontSize: 14.5,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: context.themeTextPrimary,
                             ),
@@ -1152,17 +1323,17 @@ class _AdminMobileCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                                horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(4),
+                              color: context.themeAmberTint,
+                              borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               context.l10n.youBadge,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
+                                color: context.themeAmberText,
                               ),
                             ),
                           ),
@@ -1180,10 +1351,11 @@ class _AdminMobileCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: admin.statusBgColor,
-                  borderRadius: BorderRadius.circular(6),
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   admin.status == AdminStatus.active
@@ -1193,8 +1365,8 @@ class _AdminMobileCard extends StatelessWidget {
                           : context.l10n.pendingInvitesCount),
                   style: TextStyle(
                     fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: admin.statusColor,
+                    fontWeight: FontWeight.w700,
+                    color: statusFg,
                   ),
                 ),
               ),
@@ -1204,10 +1376,11 @@ class _AdminMobileCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: admin.roleBgColor,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   admin.role == AdminRole.superAdmin
@@ -1234,19 +1407,8 @@ class _AdminMobileCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 10),
-          Divider(height: 1, color: context.themeBorder),
-          const SizedBox(height: 10),
-          if (admin.isSuperAdmin)
-            Text(
-              context.l10n.fullRootGovernanceBadge,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            )
-          else
+          if (admin.permissions.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -1255,11 +1417,8 @@ class _AdminMobileCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: context.themeSurfaceLow,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: context.themeBorder,
-                    ),
+                    color: context.themeSoft,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     p.label,
@@ -1272,49 +1431,32 @@ class _AdminMobileCard extends StatelessWidget {
                 );
               }).toList(),
             ),
-          if (admin.isSuperAdmin) ...[
+          ],
+          if (isSuperAdmin && !isSelf) ...[
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.lock_outline, size: 14, color: AppColors.primary),
-                  SizedBox(width: 6),
-                  Text(
-                    'Managed in Firebase Console',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else if (isSuperAdmin && !isSelf) ...[
-            const SizedBox(height: 12),
+            Divider(height: 1, color: context.themeBorder),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    Text('Active:',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary)),
+                    Text(
+                      'Active:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    Switch(
-                      value: admin.isActive,
-                      activeThumbColor: AppColors.primary,
-                      onChanged: onToggleStatus,
+                    Transform.scale(
+                      scale: 0.85,
+                      child: Switch.adaptive(
+                        value: admin.isActive,
+                        activeThumbColor: AppColors.primary,
+                        onChanged: onToggleStatus,
+                      ),
                     ),
                   ],
                 ),
@@ -1322,13 +1464,13 @@ class _AdminMobileCard extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: Icon(Icons.edit_outlined,
-                          size: 20, color: context.themeTextSecondary),
+                          size: 19, color: context.themeTextSecondary),
                       tooltip: 'Edit Permissions',
                       onPressed: onEditPermissions,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline,
-                          size: 20, color: AppColors.error),
+                          size: 19, color: AppColors.error),
                       tooltip: 'Revoke Access',
                       onPressed: onRevoke,
                     ),

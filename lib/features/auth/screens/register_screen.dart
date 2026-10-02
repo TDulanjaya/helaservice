@@ -350,6 +350,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 20),
               SizedBox(
+                width: double.infinity,
                 height: 52,
                 child: OutlinedButton(
                   onPressed: (_isGoogleLoading || _isLoading) ? null : () => _handleGoogleSignIn(),

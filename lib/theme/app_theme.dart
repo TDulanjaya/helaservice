@@ -272,6 +272,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.amberDark,
+          minimumSize: const Size(64, 40),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
         ),
       ),
@@ -279,7 +280,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink,
           side: const BorderSide(color: AppColors.border, width: 1.5),
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size(64, 54),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
@@ -290,11 +291,20 @@ class AppTheme {
         elevation: 3,
         shape: CircleBorder(),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
+          minimumSize: const Size(64, 54),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size(64, 54),
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
@@ -492,6 +502,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFFF0B44A),
+          minimumSize: const Size(64, 40),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
         ),
       ),
@@ -499,7 +510,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: darkText,
           side: const BorderSide(color: darkBorder, width: 1.5),
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size(64, 54),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
@@ -510,11 +521,20 @@ class AppTheme {
         elevation: 3,
         shape: CircleBorder(),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
+          minimumSize: const Size(64, 54),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size(64, 54),
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),

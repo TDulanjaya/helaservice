@@ -37,23 +37,24 @@ class AdminTopBar extends StatelessWidget {
 
     if (isMobile) {
       return Container(
-        height: 56,
+        height: 60,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: context.themeSurface,
-          border: Border(
-            bottom: BorderSide(color: context.themeBorder),
-          ),
+          color: context.themeBg,
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.all(5),
               child: Image.asset(
                 'assets/images/app_logo.png',
-                width: 32,
-                height: 32,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(width: 10),
@@ -61,41 +62,72 @@ class AdminTopBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'HelaService Ops',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: context.themeTextPrimary,
+                    letterSpacing: -0.2,
+                  ),
                 ),
                 Text(
                   context.l10n.opsCoreSubtitle,
-                  style: TextStyle(fontSize: 10, color: context.themeTextSecondary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.themeTextSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
             const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.search, size: 20),
-              onPressed: onSearchTap ?? () {},
-              tooltip: 'Search',
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                shape: BoxShape.circle,
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.search, size: 18, color: context.themeTextPrimary),
+                onPressed: onSearchTap ?? () {},
+                tooltip: 'Search',
+                padding: EdgeInsets.zero,
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.chat_bubble_outline, size: 20),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ConversationsInboxScreen(),
-                  ),
-                );
-              },
-              tooltip: 'Messages',
+            const SizedBox(width: 8),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                shape: BoxShape.circle,
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.chat_bubble_outline,
+                    size: 18, color: context.themeTextPrimary),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ConversationsInboxScreen(),
+                    ),
+                  );
+                },
+                tooltip: 'Messages',
+                padding: EdgeInsets.zero,
+              ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: onProfileTap ?? () => showRoleSwitchSheet(context),
               child: UserAvatar(
                 uid: roleProvider.currentUser?.id ?? adminUser?.id,
                 displayName: adminName,
                 photoUrl: roleProvider.currentUser?.photoUrl,
-                radius: 15,
+                radius: 17,
               ),
             ),
           ],

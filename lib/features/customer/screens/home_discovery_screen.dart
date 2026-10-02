@@ -17,6 +17,10 @@ import 'live_tracking_screen.dart';
 import 'post_job_request_screen.dart';
 import 'provider_detail_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/hero_card.dart';
+import '../../../shared/widgets/status_pill.dart';
 
 class HomeDiscoveryScreen extends StatefulWidget {
   final int initialIndex;
@@ -79,7 +83,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       isScrollControlled: true,
       backgroundColor: context.themeSurface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => SafeArea(
@@ -93,13 +97,26 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: context.themeBorder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Filter Artisans',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: context.themeInk),
                       ),
                       Row(
                         children: [
@@ -125,9 +142,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 20),
-                            onPressed: () => Navigator.pop(ctx),
+                          IconSquareButton.small(
+                            icon: Icons.close_rounded,
+                            onTap: () => Navigator.pop(ctx),
                           ),
                         ],
                       ),
@@ -268,14 +285,15 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
+                    height: 54,
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(ctx),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       child: const Text(
                         'Apply Filters',
@@ -335,36 +353,57 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   Widget _buildExploreView(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: context.themeBg,
         title: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                'assets/images/app_logo.png',
-                width: 32,
-                height: 32,
-                fit: BoxFit.cover,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  'assets/images/app_logo.png',
+                  width: 34,
+                  height: 34,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.appTitle,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w700)),
-                Text(context.l10n.navExplore,
-                    style: TextStyle(
-                        fontSize: 11, color: context.themeTextSecondary)),
+                Text(
+                  context.l10n.appTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: context.themeInk,
+                  ),
+                ),
+                Text(
+                  context.l10n.navExplore,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: context.themeMuted,
+                  ),
+                ),
               ],
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
+          IconSquareButton(
+            icon: Icons.chat_bubble_outline_rounded,
+            size: 40,
+            iconSize: 20,
+            radius: 12,
             tooltip: 'Messages',
-            onPressed: () {
+            onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const ConversationsInboxScreen(),
@@ -372,183 +411,185 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               );
             },
           ),
-          GestureDetector(
-            onTap: () => setState(() => _navIndex = 3),
-            child: UserAvatar(
-              uid: pv.Provider.of<RoleProvider>(context).currentUser?.id,
-              displayName: pv.Provider.of<RoleProvider>(context).currentUser?.displayName ?? '',
-              photoUrl: pv.Provider.of<RoleProvider>(context).currentUser?.photoUrl,
-              radius: 16,
-            ),
+          const SizedBox(width: 8),
+          IconSquareButton(
+            icon: Icons.swap_vert_rounded,
+            size: 40,
+            iconSize: 22,
+            radius: 12,
+            tooltip: context.l10n.switchRole,
+            onTap: () => showRoleSwitchSheet(context),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
         ],
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, AppBottomNav.contentBottomPadding),
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${context.l10n.greetingAyubowan}, ${pv.Provider.of<RoleProvider>(context).currentUser?.displayName.split(' ').first ?? 'Friend'}!',
-                        style: const TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        context.l10n.findCertifiedArtisans,
-                        style: TextStyle(color: context.themeTextSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => showRoleSwitchSheet(context),
-                  icon:
-                      Icon(Icons.swap_horiz, color: context.themeTextSecondary),
-                  tooltip: context.l10n.switchRole,
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, Colors.black],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+            Text(
+              '${context.l10n.greetingAyubowan}, ${pv.Provider.of<RoleProvider>(context).currentUser?.displayName.split(' ').first ?? 'Friend'}!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: context.themeInk,
+                letterSpacing: -0.3,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Need Quick Service?',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Post your job in 60s & receive instant competitive bids from verified nearby artisans.',
-                          style:
-                              TextStyle(color: Colors.white70, fontSize: 11.5),
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const PostJobRequestScreen(),
-                            ),
-                          ),
-                          icon: const Icon(Icons.add_task, size: 16),
-                          label: const Text('Post Job & Get Quotes'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
-                            textStyle: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.electric_bolt,
-                        size: 36, color: AppColors.primary),
-                  ),
-                ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.findCertifiedArtisans,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.themeTextSecondary,
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: context.themeBorder),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black
-                          .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                      blurRadius: 16)
-                ],
-              ),
-              child: Row(children: [
-                Icon(Icons.search, color: context.themeTextSecondary),
-                const SizedBox(width: 8),
+            Row(
+              children: [
                 Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) =>
-                        setState(() => _searchQuery = val.trim().toLowerCase()),
-                    style: TextStyle(color: context.themeTextPrimary),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: context.l10n.searchServiceHint,
-                      hintStyle: TextStyle(color: context.themeTextSecondary),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
+                  child: Container(
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.themeBorder, width: 1.5),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) =>
+                          setState(() => _searchQuery = val.trim().toLowerCase()),
+                      style: TextStyle(color: context.themeInk, fontSize: 14),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: context.themeMuted,
+                          size: 20,
+                        ),
+                        hintText: context.l10n.searchServiceHint,
+                        hintStyle: TextStyle(
+                          color: context.themeMuted,
+                          fontSize: 14,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 16),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                color: context.themeMuted,
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                      ),
                     ),
                   ),
                 ),
-                InkWell(
+                const SizedBox(width: 10),
+                GestureDetector(
                   onTap: _showFilterSheet,
-                  borderRadius: BorderRadius.circular(999),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                        color: _hasActiveFilters
-                            ? AppColors.primary
-                            : context.themeSurfaceContainer,
-                        shape: BoxShape.circle),
-                    child: Icon(Icons.tune,
-                        size: 18,
-                        color: _hasActiveFilters
-                            ? AppColors.onPrimary
-                            : AppColors.primary),
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(
+                          Icons.tune_rounded,
+                          size: 22,
+                          color: AppColors.onPrimary,
+                        ),
+                        if (_hasActiveFilters)
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ]),
+              ],
+            ),
+            const SizedBox(height: 18),
+            HeroCard(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Need Quick Service?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Post your job in 60s & receive instant competitive bids from verified nearby artisans.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12.5,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PostJobRequestScreen(),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Post Job & Get Quotes',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(Icons.chevron_right_rounded, size: 16),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 22),
             StreamBuilder<List<CategoryRow>>(
@@ -789,155 +830,140 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       ),
     );
   }
-}
-
-class _ArtisanCard extends StatelessWidget {
+}class _ArtisanCard extends StatelessWidget {
   final Technician tech;
   const _ArtisanCard({required this.tech});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return AppCard(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ProviderDetailScreen(technician: tech),
         ),
       ),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: context.themeSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.themeBorder),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UserAvatar(
-              uid: tech.id,
-              displayName: tech.name,
-              radius: 26,
-              backgroundColor: tech.avatarColor,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          tech.name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (tech.nicVerified) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.verified,
-                            size: 14, color: AppColors.primary),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tech.title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.themeTextSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.star,
-                          size: 14, color: AppColors.secondaryContainer),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${tech.rating.toStringAsFixed(1)} (${tech.reviewCount})',
-                        style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 10),
-                      Icon(Icons.location_on,
-                          size: 13, color: context.themeTextSecondary),
-                      const SizedBox(width: 2),
-                      Flexible(
-                        child: Text(
-                          tech.serviceArea.isNotEmpty
-                              ? tech.serviceArea
-                              : 'Colombo',
-                          style: TextStyle(
-                              fontSize: 11, color: context.themeTextSecondary),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UserAvatar(
+            uid: tech.id,
+            displayName: tech.name,
+            radius: 24,
+            backgroundColor: tech.avatarColor,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'LKR ${tech.baseRateLkr}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Text(
-                  'Inspection',
-                  style: TextStyle(
-                      fontSize: 10, color: context.themeTextSecondary),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: tech.online
-                        ? AppColors.primary.withValues(alpha: 0.12)
-                        : context.themeSurfaceContainer,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    tech.online
-                        ? context.l10n.statusOnline
-                        : context.l10n.statusOffline,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: tech.online
-                          ? AppColors.primary
-                          : context.themeTextSecondary,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        tech.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: context.themeInk,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    if (tech.nicVerified) ...[
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 16,
+                        color: AppColors.success,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  tech.title,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: context.themeTextSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 15,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${tech.rating.toStringAsFixed(1)} (${tech.reviewCount})',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeInk,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 13,
+                      color: context.themeMuted,
+                    ),
+                    const SizedBox(width: 2),
+                    Flexible(
+                      child: Text(
+                        tech.serviceArea.isNotEmpty
+                            ? tech.serviceArea
+                            : 'Colombo',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeTextSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                StatusPill(
+                  type: tech.online ? StatusPillType.online : StatusPillType.offline,
+                  label: tech.online ? 'Online & accepting leads' : context.l10n.statusOffline,
+                  showDot: true,
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'LKR ${tech.baseRateLkr}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  color: context.themeInk,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'inspection',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.themeMuted,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

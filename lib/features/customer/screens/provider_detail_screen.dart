@@ -8,14 +8,15 @@ import '../../../models/complaint.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../repositories/complaint_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
-import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../utils/l10n_extension.dart';
-import '../../../utils/map_launcher.dart';
 import '../../../services/review_service.dart';
 import 'live_tracking_screen.dart';
 import 'direct_chat_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/status_pill.dart';
 
 class ProviderDetailScreen extends StatelessWidget {
   final Technician technician;
@@ -25,117 +26,118 @@ class ProviderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.serviceDetail),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.flag_outlined, color: AppColors.error),
-            tooltip: 'Report Provider',
-            onPressed: () => _showReportProviderSheet(context, technician),
+        elevation: 0,
+        backgroundColor: context.themeBg,
+        leading: Center(
+          child: IconSquareButton.small(
+            icon: Icons.chevron_left_rounded,
+            onTap: () => Navigator.maybePop(context),
           ),
-          const SizedBox(width: 8),
+        ),
+        title: Text(
+          context.l10n.serviceDetail,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: context.themeInk,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Center(
+            child: IconSquareButton.small(
+              icon: Icons.flag_outlined,
+              iconColor: AppColors.error,
+              tooltip: 'Report Provider',
+              onTap: () => _showReportProviderSheet(context, technician),
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          Row(
-            children: [
-              UserAvatar(
-                uid: technician.id,
-                displayName: technician.name,
-                radius: 34,
-                backgroundColor: technician.avatarColor,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Center(
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Text(technician.name,
-                        style: const TextStyle(
-                            fontSize: 19, fontWeight: FontWeight.bold)),
-                    if (technician.nicVerified)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: PillBadge(
-                            label: context.l10n.verifiedArtisan,
-                            icon: Icons.verified,
-                            background: context.themeSurfaceContainer,
-                            foreground: AppColors.primary),
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 2),
                       ),
-                    const SizedBox(height: 4),
-                    Text(technician.title,
-                        style: TextStyle(color: context.themeTextSecondary)),
-                    const SizedBox(height: 4),
-                    Row(children: [
-                      const Icon(Icons.bolt,
-                          size: 14, color: AppColors.secondaryContainer),
-                      const SizedBox(width: 3),
-                      Text(technician.responseTimeLabel,
-                          style: TextStyle(
-                              fontSize: 12, color: context.themeTextSecondary)),
-                    ]),
-                    if (technician.phone.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () =>
-                            MapLauncher.openPhoneCall(technician.phone),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.25)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.phone_in_talk,
-                                  size: 13, color: AppColors.primary),
-                              const SizedBox(width: 5),
-                              Text(
-                                technician.phone,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
+                    UserAvatar(
+                      uid: technician.id,
+                      displayName: technician.name,
+                      radius: 40,
+                      backgroundColor: technician.avatarColor,
+                    ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  technician.name,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: context.themeInk,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${technician.title} · ${technician.serviceArea.isNotEmpty ? technician.serviceArea : 'Colombo'}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                if (technician.nicVerified) ...[
+                  const SizedBox(height: 8),
+                  StatusPill(
+                    type: StatusPillType.online,
+                    label: context.l10n.verifiedArtisan,
+                    showDot: true,
+                  ),
+                ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _StatTile(
-                  icon: Icons.star,
-                  value: '${technician.rating}',
-                  label: context.l10n.rating),
-              _StatTile(
-                  icon: Icons.task_alt,
+          const SizedBox(height: 18),
+          AppCard(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _StatTile(
+                  icon: Icons.star_rounded,
+                  value: technician.rating.toStringAsFixed(1),
+                  label: context.l10n.rating,
+                ),
+                _StatTile(
+                  icon: Icons.task_alt_rounded,
                   value: '${technician.jobsCount}',
-                  label: context.l10n.completedJobs),
-              _StatTile(
-                  icon: Icons.timer,
+                  label: context.l10n.completedJobs,
+                ),
+                _StatTile(
+                  icon: Icons.work_history_rounded,
                   value: technician.yearsExperience,
-                  label: 'Experience'),
-              _StatTile(
-                  icon: Icons.verified,
+                  label: 'Experience',
+                ),
+                _StatTile(
+                  icon: Icons.timer_outlined,
                   value: technician.onTimePercent,
-                  label: context.l10n.onTimeArrival),
-            ],
+                  label: context.l10n.onTimeArrival,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           _SectionCard(
@@ -406,64 +408,47 @@ class ProviderDetailScreen extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: context.themeSurface,
             border: Border(top: BorderSide(color: context.themeBorder)),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black
-                      .withValues(alpha: context.isDark ? 0.2 : 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2))
+                color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
             ],
           ),
-          child: Row(children: [
-            if (technician.phone.isNotEmpty) ...[
-              InkWell(
-                onTap: () => MapLauncher.openPhoneCall(technician.phone),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.3)),
-                  ),
-                  child: const Icon(Icons.phone,
-                      color: AppColors.primary, size: 22),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(
-                child: AppOutlineButton(
-              label: context.l10n.message,
-              icon: Icons.chat,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => DirectChatScreen(
-                      otherPartyId: technician.id,
-                      otherPartyName: technician.name,
-                      otherPartyRole: technician.title,
-                      otherPartyPhone: technician.phone,
+          child: Row(
+            children: [
+              IconSquareButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                size: 54,
+                radius: 16,
+                tooltip: context.l10n.message,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DirectChatScreen(
+                        otherPartyId: technician.id,
+                        otherPartyName: technician.name,
+                        otherPartyRole: technician.title,
+                        otherPartyPhone: technician.phone,
+                      ),
                     ),
-                  ),
-                );
-              },
-            )),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: PrimaryButton(
-                label:
-                    '${context.l10n.requestService} · LKR ${technician.baseRateLkr}',
-                trailingIcon: Icons.event_available,
-                onPressed: () async {
-                  final user = FirebaseAuth.instance.currentUser;
+                  );
+                },
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 54,
+                  child: PrimaryButton(
+                    label: '${context.l10n.requestService} · LKR ${technician.baseRateLkr}',
+                    trailingIcon: Icons.arrow_forward_rounded,
+                    onPressed: () async {
+                      final user = FirebaseAuth.instance.currentUser;
                   final custName = user?.displayName?.isNotEmpty == true
                       ? user!.displayName!
                       : 'Customer';
@@ -520,10 +505,12 @@ class ProviderDetailScreen extends StatelessWidget {
                 },
               ),
             ),
-          ]),
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 }
 
@@ -564,25 +551,23 @@ class _SectionCard extends StatelessWidget {
   const _SectionCard({required this.title, required this.child});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: context.themeSurface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: context.themeBorder),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black
-                    .withValues(alpha: context.isDark ? 0.15 : 0.04),
-                blurRadius: 12)
-          ]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        const SizedBox(height: 10),
-        child,
-      ]),
+    return AppCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: context.themeInk,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
     );
   }
 }
@@ -604,17 +589,37 @@ class _PriceRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeInk,
+                  ),
+                ),
                 if (sub != null)
-                  Text(sub!,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      sub!,
                       style: TextStyle(
-                          fontSize: 11, color: context.themeTextSecondary)),
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          Text(price, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
+          Text(
+            price,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              color: context.themeInk,
+            ),
+          ),
         ],
       ),
     );

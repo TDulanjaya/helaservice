@@ -6,6 +6,10 @@ import '../../../state/theme_provider.dart';
 import '../../../state/locale_provider.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../shared/widgets/language_select_sheet.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/outline_button.dart';
+import '../../../shared/widgets/icon_square_button.dart';
 import '../../../app_router.dart';
 import '../../../models/user_profile.dart';
 import '../../../utils/location_utils.dart';
@@ -37,13 +41,24 @@ class CustomerProfileScreen extends StatelessWidget {
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            top: 14,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -51,23 +66,23 @@ class CustomerProfileScreen extends StatelessWidget {
                     context.l10n.editProfileAndPhoto,
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.pop(ctx),
+                  IconSquareButton.small(
+                    icon: Icons.close,
+                    onTap: () => Navigator.pop(ctx),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Center(
                 child: UserAvatar(
                   uid: user?.id,
                   displayName: user?.displayName ?? 'Customer',
                   photoUrl: user?.photoUrl,
-                  radius: 38,
+                  radius: 40,
                   editable: true,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -94,7 +109,8 @@ class CustomerProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
+              PrimaryButton(
+                label: context.l10n.save,
                 onPressed: () {
                   if (user != null) {
                     final updated = user.copyWith(
@@ -112,18 +128,6 @@ class CustomerProfileScreen extends StatelessWidget {
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  context.l10n.save,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
               ),
             ],
           ),
@@ -136,8 +140,12 @@ class CustomerProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.logoutModalTitle),
-        content: Text(context.l10n.logoutModalConfirm),
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.logoutModalTitle,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(context.l10n.logoutModalConfirm,
+            style: TextStyle(color: context.themeTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -155,6 +163,7 @@ class CustomerProfileScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(context.l10n.logout),
           ),
@@ -187,10 +196,15 @@ class CustomerProfileScreen extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => _showEditProfileSheet(context),
-            tooltip: context.l10n.editProfile,
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: IconSquareButton(
+                icon: Icons.edit_outlined,
+                onTap: () => _showEditProfileSheet(context),
+                tooltip: context.l10n.editProfile,
+              ),
+            ),
           ),
         ],
       ),
@@ -198,72 +212,53 @@ class CustomerProfileScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: context.themeBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
+            AppCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
                 children: [
                   UserAvatar(
                     uid: user?.id,
                     displayName: displayName,
                     photoUrl: user?.photoUrl,
-                    radius: 32,
+                    radius: 38,
                     editable: true,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 12),
+                  Text(
+                    displayName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (email.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      email,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Icon(Icons.verified, color: AppColors.primary, size: 14),
+                        const SizedBox(width: 4),
                         Text(
-                          displayName,
+                          context.l10n.verifiedCustomer,
                           style: const TextStyle(
-                            fontSize: 17,
+                            color: AppColors.primary,
+                            fontSize: 11,
                             fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          email,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: context.themeTextSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.verified,
-                                  color: AppColors.primary, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                context.l10n.verifiedCustomer,
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ],
@@ -273,14 +268,9 @@ class CustomerProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
-            Container(
+            const SizedBox(height: 14),
+            AppCard(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: context.themeBorder),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -310,8 +300,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.phone_iphone,
-                          size: 18, color: AppColors.outline),
+                      Icon(Icons.phone_iphone,
+                          size: 18, color: context.themeTextSecondary),
                       const SizedBox(width: 10),
                       Text(
                         '+94 $phone',
@@ -325,8 +315,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined,
-                          size: 18, color: AppColors.outline),
+                      Icon(Icons.location_on_outlined,
+                          size: 18, color: context.themeTextSecondary),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -343,10 +333,18 @@ class CustomerProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 14),
-            const Text(
-              'Account & Services',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            const SizedBox(height: 16),
+            const Padding(
+              padding: EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                'ACCOUNT & SERVICES',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
             _SettingsTile(
               icon: Icons.my_location,
@@ -402,20 +400,31 @@ class CustomerProfileScreen extends StatelessWidget {
                       backgroundColor: context.themeSurface,
                       shape: const RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(20)),
+                            BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       builder: (sheetCtx) => SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Center(
+                                child: Container(
+                                  width: 36,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: context.themeBorder,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               Text(context.l10n.chooseAppearance,
                                   style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 12),
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 14),
                               ListTile(
                                 leading: const Icon(Icons.brightness_auto),
                                 title: Text(context.l10n.systemDefault),
@@ -475,81 +484,60 @@ class CustomerProfileScreen extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 14),
-            InkWell(
+            const SizedBox(height: 12),
+            AppCard(
               onTap: () => showRoleSwitchSheet(context),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: context.themeSurfaceLow,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: context.themeBorder),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.handyman,
-                          color: AppColors.primary, size: 20),
+              color: context.themeSurfaceLow,
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            roleProvider.isAuthorizedAdmin
-                                ? context.l10n.switchOperationalView
-                                : context.l10n.roleProvider,
-                            style: const TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                            ),
+                    child: const Icon(Icons.handyman,
+                        color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          roleProvider.isAuthorizedAdmin
+                              ? context.l10n.switchOperationalView
+                              : context.l10n.roleProvider,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
                           ),
-                          Text(
-                            roleProvider.isAuthorizedAdmin
-                                ? context.l10n.switchOperationalViewDesc
-                                : context.l10n.providerRoleDesc,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: context.themeTextSecondary,
-                            ),
+                        ),
+                        Text(
+                          roleProvider.isAuthorizedAdmin
+                              ? context.l10n.switchOperationalViewDesc
+                              : context.l10n.providerRoleDesc,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.themeTextSecondary,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const Icon(Icons.arrow_forward_ios,
-                        size: 14, color: AppColors.outline),
-                  ],
-                ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 14, color: AppColors.outline),
+                ],
               ),
             ),
 
             const SizedBox(height: 18),
-            OutlinedButton.icon(
+            AppOutlineButton(
+              label: context.l10n.logout,
+              icon: Icons.logout,
+              color: AppColors.error,
               onPressed: () => _logout(context),
-              icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
-              label: Text(
-                context.l10n.logout,
-                style: const TextStyle(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: BorderSide(
-                    color: AppColors.error.withValues(alpha: 0.4)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
             ),
           ],
         ),
@@ -573,28 +561,40 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
+      onTap: onTap,
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: context.themeSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.themeBorder),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        leading: Icon(icon, color: AppColors.primary, size: 22),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
-        ),
-        trailing: const Icon(Icons.chevron_right,
-            size: 18, color: AppColors.outline),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: 16,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 18, color: AppColors.outline),
+        ],
       ),
     );
   }

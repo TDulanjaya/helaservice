@@ -7,6 +7,9 @@ import '../../../repositories/booking_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/icon_square_button.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/location_utils.dart';
@@ -104,11 +107,11 @@ class LiveTrackingScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.near_me_outlined,
-                    size: 54, color: AppColors.primary),
+                    size: 50, color: AppColors.primary),
               ),
               const SizedBox(height: 16),
               Text(
@@ -127,17 +130,10 @@ class LiveTrackingScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: const Icon(Icons.explore, size: 18),
-                label: Text(context.l10n.navExplore),
+              PrimaryButton(
+                label: context.l10n.navExplore,
+                leadingIcon: Icons.explore,
+                expand: false,
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
@@ -187,6 +183,14 @@ class LiveTrackingScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            leading: !showBottomNav
+                ? Center(
+                    child: IconSquareButton(
+                      icon: Icons.arrow_back,
+                      onTap: () => Navigator.maybePop(context),
+                    ),
+                  )
+                : null,
             title: Text(context.l10n.liveTracking),
             actions: [
               Padding(
@@ -244,80 +248,76 @@ class LiveTrackingScreen extends StatelessWidget {
 
                           return Column(
                             children: [
-                              SizedBox(
+                              Container(
                                 height: 220,
-                                child: Stack(
-                                  children: [
-                                    AppMapView(
-                                      initialCenter: midPoint,
-                                      initialZoom: 14.2,
-                                      interactive: true,
-                                      routePoints: route.points,
-                                      markers: [
-                                        AppMapMarker.provider(
-                                          point: techPoint,
-                                          label: tech.name.isNotEmpty
-                                              ? tech.name
-                                              : 'Artisan',
-                                          enRoute: true,
-                                        ),
-                                        AppMapMarker.customer(
-                                          point: customerPoint,
-                                          label: 'Destination',
-                                        ),
-                                      ],
-                                    ),
-                                    Positioned(
-                                      top: 10,
-                                      left: 10,
-                                      child: PillBadge(
-                                        label: isLive
-                                            ? 'Live GPS • On the way'
-                                            : context.l10n.techOnTheWay,
-                                        icon: isLive ? Icons.sensors : null,
-                                        background: context.themeSurface,
-                                        foreground: AppColors.primary,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: context.themeBorder),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Stack(
+                                    children: [
+                                      AppMapView(
+                                        initialCenter: midPoint,
+                                        initialZoom: 14.2,
+                                        interactive: true,
+                                        routePoints: route.points,
+                                        markers: [
+                                          AppMapMarker.provider(
+                                            point: techPoint,
+                                            label: tech.name.isNotEmpty
+                                                ? tech.name
+                                                : 'Artisan',
+                                            enRoute: true,
+                                          ),
+                                          AppMapMarker.customer(
+                                            point: customerPoint,
+                                            label: 'Destination',
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                      Positioned(
+                                        top: 12,
+                                        left: 12,
+                                        child: PillBadge(
+                                          label: isLive
+                                              ? 'Live GPS • On the way'
+                                              : context.l10n.techOnTheWay,
+                                          icon: isLive ? Icons.sensors : null,
+                                          background: context.themeSurface,
+                                          foreground: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                    color: context.themeSurface,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border:
-                                        Border.all(color: context.themeBorder),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.black.withValues(
-                                              alpha:
-                                                  context.isDark ? 0.2 : 0.04),
-                                          blurRadius: 10)
-                                    ]),
+                              AppCard(
+                                padding: const EdgeInsets.all(16),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(children: [
                                       const Icon(Icons.timer,
-                                          color: AppColors.primary, size: 20),
-                                      const SizedBox(width: 8),
+                                          color: AppColors.primary, size: 22),
+                                      const SizedBox(width: 10),
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(context.l10n.estimatedArrival,
                                               style: TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 11.5,
                                                   color: context
                                                       .themeTextSecondary)),
                                           Text(
                                               '${context.l10n.arrivingIn} ${route.formattedDuration}',
                                               style: const TextStyle(
-                                                  fontWeight: FontWeight.bold)),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w800)),
                                         ],
                                       ),
                                     ]),
@@ -328,7 +328,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                       const SizedBox(width: 4),
                                       Text(route.formattedDistance,
                                           style: const TextStyle(
-                                              fontWeight: FontWeight.w600)),
+                                              fontWeight: FontWeight.w700)),
                                     ]),
                                   ],
                                 ),
@@ -343,10 +343,10 @@ class LiveTrackingScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                           color: AppColors.error.withValues(alpha: 0.3)),
                     ),
@@ -381,18 +381,8 @@ class LiveTrackingScreen extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                      color: context.themeSurface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: context.themeBorder),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black
-                                .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                            blurRadius: 10)
-                      ]),
+                AppCard(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Row(children: [
@@ -456,7 +446,7 @@ class LiveTrackingScreen extends StatelessWidget {
                           ),
                         ),
                       ]),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Row(children: [
                         Expanded(
                             child: AppOutlineButton(
@@ -497,12 +487,9 @@ class LiveTrackingScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Container(
+                AppCard(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                      color: context.themeSurfaceLow,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: context.themeBorder)),
+                  color: context.themeSurfaceLow,
                   child: Row(children: [
                     const Icon(Icons.payments, color: AppColors.primary),
                     const SizedBox(width: 10),
@@ -534,9 +521,15 @@ class LiveTrackingScreen extends StatelessWidget {
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: const Text('Cancel Request'),
-                                content: const Text(
-                                    'Are you sure you want to cancel this booking request?'),
+                                backgroundColor: context.themeSurface,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
+                                title: const Text('Cancel Request',
+                                    style: TextStyle(fontWeight: FontWeight.w800)),
+                                content: Text(
+                                    'Are you sure you want to cancel this booking request?',
+                                    style: TextStyle(
+                                        color: context.themeTextSecondary)),
                                 actions: [
                                   TextButton(
                                       onPressed: () =>
@@ -545,7 +538,10 @@ class LiveTrackingScreen extends StatelessWidget {
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.error,
-                                        foregroundColor: Colors.white),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12))),
                                     onPressed: () => Navigator.pop(ctx, true),
                                     child: const Text('Yes, Cancel'),
                                   ),
@@ -588,10 +584,9 @@ class LiveTrackingScreen extends StatelessWidget {
                           })),
                 ]),
                 const SizedBox(height: 14),
-                AppOutlineButton(
+                PrimaryButton(
                   label: context.l10n.jobFinishedRatePay,
-                  icon: Icons.check_circle,
-                  color: AppColors.primary,
+                  leadingIcon: Icons.check_circle,
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => RatingCompletionScreen(

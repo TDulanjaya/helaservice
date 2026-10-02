@@ -4,6 +4,9 @@ import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
 import '../../../shared/widgets/rating_stars.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/user_avatar.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../services/review_service.dart';
@@ -114,100 +117,153 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.checkoutBooking)),
+      appBar: AppBar(
+        leading: Center(
+          child: IconSquareButton(
+            icon: Icons.arrow_back,
+            onTap: () => Navigator.maybePop(context),
+          ),
+        ),
+        title: Text(context.l10n.checkoutBooking),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Column(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
-                    color: context.themeSurfaceContainer, shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle,
-                    color: AppColors.primary, size: 34),
+                  color: context.isDark
+                      ? const Color(0xFF1B382B)
+                      : const Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  color: context.isDark
+                      ? const Color(0xFF81C784)
+                      : const Color(0xFF2E7D32),
+                  size: 38,
+                ),
               ),
-              const SizedBox(height: 10),
-              Text(context.l10n.serviceCompleted,
-                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
               Text(
-                  widget.jobTitle.isNotEmpty
-                      ? '${widget.jobTitle} • ${widget.technician.name.split(' ').first}'
-                      : widget.technician.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: context.themeTextSecondary)),
+                context.l10n.serviceCompleted,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.jobTitle.isNotEmpty
+                    ? '${widget.jobTitle} • ${widget.technician.name.split(' ').first}'
+                    : widget.technician.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.themeTextSecondary, fontSize: 13),
+              ),
               if (widget.jobRequestId.isNotEmpty)
-                Text('Job #${widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()}',
-                    style: TextStyle(color: context.themeTextSecondary, fontSize: 11)),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Job #${widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()}',
+                    style: TextStyle(color: context.themeTextSecondary, fontSize: 11),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 20),
-          Container(
+          AppCard(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: context.themeBorder),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 12)
-                ]),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(children: [
-                        const Icon(Icons.receipt_long,
-                            size: 18, color: AppColors.primary),
-                        const SizedBox(width: 6),
-                        Text(context.l10n.costBreakdown,
-                            style: const TextStyle(fontWeight: FontWeight.bold))
-                      ]),
-                      Text(context.l10n.paid,
-                          style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold)),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(children: [
+                      const Icon(Icons.receipt_long,
+                          size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.costBreakdown,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
                     ]),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: context.isDark
+                            ? const Color(0xFF1B382B)
+                            : const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        context.l10n.paid,
+                        style: TextStyle(
+                          color: context.isDark
+                              ? const Color(0xFF81C784)
+                              : const Color(0xFF2E7D32),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const Divider(height: 20),
-                if (widget.totalPrice != null) ...[              
-                  _CostRow(context.l10n.totalPaid, 'LKR ${widget.totalPrice!.toStringAsFixed(0)}', bold: true),
-                ] else ...[                  
+                if (widget.totalPrice != null) ...[
+                  _CostRow(context.l10n.totalPaid,
+                      'LKR ${widget.totalPrice!.toStringAsFixed(0)}',
+                      bold: true),
+                ] else ...[
                   _CostRow(context.l10n.totalPaid, 'Settled directly', bold: true),
                 ],
                 const SizedBox(height: 6),
-                Text(context.l10n.settledDirectlyCash,
-                    style: TextStyle(
-                        fontSize: 11, color: context.themeTextSecondary)),
+                Text(
+                  context.l10n.settledDirectlyCash,
+                  style: TextStyle(
+                      fontSize: 11, color: context.themeTextSecondary),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 22),
-          Column(
-            children: [
-              const Icon(Icons.handyman, color: AppColors.primary, size: 28),
-              const SizedBox(height: 6),
-              Text('${context.l10n.rateExperience} (${widget.technician.name.split(' ').first})',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 15)),
-              const SizedBox(height: 10),
-              RatingStars(
-                  rating: _rating.toDouble(),
-                  size: 34,
-                  onChanged: (v) => setState(() => _rating = v)),
-              const SizedBox(height: 6),
-              Text(_getRatingLabel(context),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, color: AppColors.primary)),
-            ],
-          ),
           const SizedBox(height: 18),
+          AppCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                UserAvatar(
+                  uid: widget.technician.id,
+                  displayName: widget.technician.name,
+                  radius: 28,
+                  backgroundColor: widget.technician.avatarColor,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${context.l10n.rateExperience} (${widget.technician.name.split(' ').first})',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 15),
+                ),
+                const SizedBox(height: 12),
+                RatingStars(
+                    rating: _rating.toDouble(),
+                    size: 36,
+                    onChanged: (v) => setState(() => _rating = v)),
+                const SizedBox(height: 8),
+                Text(
+                  _getRatingLabel(context),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           Text(context.l10n.whatWentWell,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 8),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -225,10 +281,13 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
                     color: selected ? AppColors.onPrimary : context.themeTextPrimary,
-                    fontSize: 12),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600),
                 backgroundColor: context.themeSurfaceContainer,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999)),
+                    borderRadius: BorderRadius.circular(999),
+                    side: BorderSide(
+                        color: selected ? AppColors.primary : context.themeBorder)),
               );
             }).toList(),
           ),
@@ -243,8 +302,16 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
               filled: true,
               fillColor: context.themeSurface,
               border: OutlineInputBorder(
-                borderRadius: const BorderRadius.all(Radius.circular(14)),
-                borderSide: BorderSide(color: context.themeBorder),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
@@ -291,32 +358,47 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                   context: context,
                   backgroundColor: context.themeSurface,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   ),
                   builder: (ctx) => SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: context.themeBorder,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           Text(
                             context.l10n.orderPaymentSupport,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             context.l10n.orderSupportDesc,
                             style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
                           ),
                           const SizedBox(height: 16),
                           ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: context.themeBorder),
+                            ),
                             leading: const CircleAvatar(
                               backgroundColor: AppColors.primary,
                               child: Icon(Icons.call, color: AppColors.onPrimary, size: 18),
                             ),
                             title: Text(context.l10n.callSupportHotline,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
                             subtitle: Text(context.l10n.tollFreeCare, style: const TextStyle(fontSize: 11)),
                             onTap: () {
                               Navigator.pop(ctx);
@@ -387,8 +469,9 @@ class _TipChip extends StatelessWidget {
                 ? AppColors.primary.withValues(alpha: 0.15)
                 : context.themeSurface,
             border: Border.all(
-                color: selected ? AppColors.primary : context.themeBorder),
-            borderRadius: BorderRadius.circular(14),
+                color: selected ? AppColors.primary : context.themeBorder,
+                width: selected ? 1.5 : 1.0),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(children: [
             Text(label,

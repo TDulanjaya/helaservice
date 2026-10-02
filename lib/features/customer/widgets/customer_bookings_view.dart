@@ -8,6 +8,11 @@ import '../../../repositories/booking_repository.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../screens/live_tracking_screen.dart';
 
 class CustomerBookingsView extends StatelessWidget {
@@ -26,6 +31,23 @@ class CustomerBookingsView extends StatelessWidget {
           context.l10n.myBookings,
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: IconSquareButton(
+                icon: Icons.chat_bubble_outline,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ConversationsInboxScreen()),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: StreamBuilder<List<Booking>>(
@@ -46,16 +68,24 @@ class CustomerBookingsView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.calendar_month_outlined,
-                          size: 54, color: context.themeTextSecondary),
-                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.calendar_month_outlined,
+                            size: 44, color: AppColors.primary),
+                      ),
+                      const SizedBox(height: 16),
                       Text(context.l10n.noBookingsRecorded,
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
+                              fontSize: 17, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
                       Text(context.l10n.browseArtisansExplore,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontSize: 12, color: context.themeTextSecondary)),
+                              fontSize: 13, color: context.themeTextSecondary)),
                     ],
                   ),
                 ),
@@ -89,24 +119,11 @@ class CustomerBookingsView extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ...activeBookings.map((b) => Container(
+                  ...activeBookings.map((b) => AppCard(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: context.themeSurface,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: context.isDark ? 0.2 : 0.08),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
+                        borderColor: AppColors.primary,
+                        borderWidth: 1.5,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -115,21 +132,21 @@ class CustomerBookingsView extends StatelessWidget {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                      horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: context.isDark
-                                        ? const Color(0xFF1B382B)
-                                        : const Color(0xFFE8F5E9),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: b.status == 'in_progress' || b.status == 'dispatched'
+                                        ? AppColors.primary.withValues(alpha: 0.15)
+                                        : (context.isDark ? const Color(0xFF1B382B) : const Color(0xFFE8F5E9)),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     LocalizedData.getStatus(context, b.status),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: context.isDark
-                                          ? const Color(0xFF81C784)
-                                          : const Color(0xFF2E7D32),
+                                      color: b.status == 'in_progress' || b.status == 'dispatched'
+                                          ? AppColors.primary
+                                          : (context.isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32)),
                                     ),
                                   ),
                                 ),
@@ -148,50 +165,81 @@ class CustomerBookingsView extends StatelessWidget {
                             const SizedBox(height: 12),
                             Text(
                               b.title.isNotEmpty
-                                   ? b.title
+                                  ? b.title
                                   : 'Service Diagnostic',
                               style: const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.w800),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${context.l10n.roleProvider}: ${b.providerName.isNotEmpty ? b.providerName : (b.providerId.isNotEmpty ? b.providerId : "Technician")}',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                color: context.themeTextSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 10),
                             Row(
                               children: [
-                                Icon(Icons.location_on_outlined,
-                                    size: 16, color: context.themeTextSecondary),
-                                const SizedBox(width: 6),
+                                UserAvatar(
+                                  uid: b.providerId,
+                                  displayName: b.providerName,
+                                  radius: 18,
+                                ),
+                                const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(
-                                    b.location.isNotEmpty
-                                        ? b.location
-                                        : 'Colombo, Sri Lanka',
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        b.providerName.isNotEmpty
+                                            ? b.providerName
+                                            : (b.providerId.isNotEmpty ? b.providerId : "Technician"),
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        context.l10n.roleProvider,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: context.themeTextSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (b.estRate.isNotEmpty)
+                                  Text(
+                                    b.estRate,
                                     style: const TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primary,
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  b.estRate.isNotEmpty
-                                      ? b.estRate
-                                      : 'LKR 2,500',
-                                  style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
                               ],
                             ),
+                            if (b.location.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on_outlined,
+                                      size: 16, color: context.themeTextSecondary),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      b.location,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: context.themeTextSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 16),
-                            ElevatedButton.icon(
+                            PrimaryButton(
+                              label: context.l10n.openLiveGpsTracking,
+                              leadingIcon: Icons.navigation_outlined,
                               onPressed: onTrackPressed ??
                                   () async {
                                     final Technician? tech =
@@ -209,45 +257,30 @@ class CustomerBookingsView extends StatelessWidget {
                                       ),
                                     );
                                   },
-                              icon: const Icon(Icons.navigation_outlined,
-                                  size: 18),
-                              label: Text(context.l10n.openLiveGpsTracking),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                minimumSize: const Size(double.infinity, 44),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
                             ),
                           ],
                         ),
                       )),
                 ],
                 if (pastBookings.isNotEmpty) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   Text(
                     context.l10n.pastCompletedServices,
                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
-                  ...pastBookings.map((b) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _PastBookingCard(
-                          title: b.title.isNotEmpty ? b.title : 'Service',
-                          technician: b.providerName.isNotEmpty
-                              ? b.providerName
-                              : 'Technician',
-                          date: b.time.isNotEmpty ? b.time : 'Completed',
-                          amount:
-                              b.estRate.isNotEmpty ? b.estRate : 'LKR 2,500',
-                          status: LocalizedData.getStatus(context, b.status),
-                          rating: b.status.toLowerCase() == 'completed'
-                              ? (b.rating ?? 5)
-                              : 0,
-                        ),
+                  ...pastBookings.map((b) => _PastBookingCard(
+                        title: b.title.isNotEmpty ? b.title : 'Service',
+                        technician: b.providerName.isNotEmpty
+                            ? b.providerName
+                            : 'Technician',
+                        date: b.time.isNotEmpty ? b.time : 'Completed',
+                        amount:
+                            b.estRate.isNotEmpty ? b.estRate : 'LKR 2,500',
+                        status: LocalizedData.getStatus(context, b.status),
+                        rating: b.status.toLowerCase() == 'completed'
+                            ? (b.rating ?? 5)
+                            : 0,
                       )),
                 ],
               ],
@@ -278,13 +311,9 @@ class _PastBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.themeSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.themeBorder),
-      ),
+      margin: const EdgeInsets.only(bottom: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -299,10 +328,10 @@ class _PastBookingCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: context.themeSurfaceContainer,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   status,
@@ -315,12 +344,12 @@ class _PastBookingCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
@@ -339,13 +368,13 @@ class _PastBookingCard extends StatelessWidget {
                       ),
                     ),
                     if (rating > 0) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(
                           rating,
                           (index) => const Icon(Icons.star,
-                              size: 13, color: AppColors.primary),
+                              size: 13, color: AppColors.secondaryContainer),
                         ),
                       ),
                     ],
@@ -356,7 +385,7 @@ class _PastBookingCard extends StatelessWidget {
               Text(
                 amount,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w800,
                 ),
               ),

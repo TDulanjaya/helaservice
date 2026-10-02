@@ -5,8 +5,9 @@ import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/icon_square_button.dart';
 
-// Chat screen between customers and providers.
+// Chat screen between customers and providers
 class DirectChatScreen extends StatefulWidget {
   final String otherPartyId;
   final String otherPartyName;
@@ -130,24 +131,36 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Center(
+          child: IconSquareButton(
+            icon: Icons.arrow_back,
+            onTap: () => Navigator.maybePop(context),
+          ),
+        ),
         title: Row(
           children: [
             UserAvatar(
               uid: widget.otherPartyId,
               displayName: widget.otherPartyName,
-              radius: 16,
+              radius: 18,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.otherPartyName,
-                      style: const TextStyle(fontSize: 14),
-                      overflow: TextOverflow.ellipsis),
-                  Text(widget.otherPartyRole ?? 'Service Provider',
-                      style: TextStyle(
-                          fontSize: 11, color: context.themeTextSecondary)),
+                  Text(
+                    widget.otherPartyName,
+                    style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    widget.otherPartyRole ?? 'Service Provider',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -156,34 +169,47 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         actions: [
           if (widget.otherPartyPhone != null &&
               widget.otherPartyPhone!.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.call, size: 20),
-              tooltip: 'Call',
-              onPressed: () =>
-                  MapLauncher.openPhoneCall(widget.otherPartyPhone!),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(
+                child: IconSquareButton.small(
+                  icon: Icons.call,
+                  tooltip: 'Call',
+                  onTap: () =>
+                      MapLauncher.openPhoneCall(widget.otherPartyPhone!),
+                ),
+              ),
             ),
         ],
       ),
       body: Column(
         children: [
+          const SizedBox(height: 6),
           SizedBox(
-            height: 40,
+            height: 38,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _quickReplies.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) => ActionChip(
-                label: Text(_quickReplies[i],
-                    style: const TextStyle(fontSize: 11)),
+                label: Text(
+                  _quickReplies[i],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextPrimary,
+                  ),
+                ),
                 onPressed: () => _sendMessage(_quickReplies[i]),
-                backgroundColor: context.themeSurfaceContainer,
+                backgroundColor: context.themeSurface,
+                side: BorderSide(color: context.themeBorder),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999)),
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
 
           Expanded(child: _buildMessagesList()),
 
@@ -203,9 +229,16 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline,
-                size: 48, color: context.themeTextSecondary),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.chat_bubble_outline,
+                  size: 38, color: AppColors.primary),
+            ),
+            const SizedBox(height: 12),
             Text('Could not load chat',
                 style: TextStyle(color: context.themeTextSecondary)),
           ],
@@ -223,11 +256,21 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.chat_bubble_outline,
-                    size: 48, color: context.themeTextSecondary),
-                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.chat_bubble_outline,
+                      size: 40, color: AppColors.primary),
+                ),
+                const SizedBox(height: 14),
                 Text('Send a message to start chatting',
-                    style: TextStyle(color: context.themeTextSecondary)),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary)),
               ],
             ),
           );
@@ -237,7 +280,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
         return ListView.builder(
           controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           itemCount: messages.length,
           itemBuilder: (_, index) {
             final msg = messages[index];
@@ -258,10 +301,10 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   Widget _buildInputBar(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-        left: 12,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 8,
+        left: 16,
+        right: 12,
+        top: 10,
+        bottom: MediaQuery.of(context).padding.bottom + 10,
       ),
       decoration: BoxDecoration(
         color: context.themeSurface,
@@ -276,28 +319,39 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
               maxLines: 3,
               textInputAction: TextInputAction.send,
               onSubmitted: _sendMessage,
+              style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Type a message…',
                 hintStyle: TextStyle(color: context.themeTextSecondary),
                 filled: true,
-                fillColor: context.themeSurfaceContainer,
+                fillColor: context.themeSurfaceLow,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: context.themeBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: context.themeBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Container(
+            width: 46,
+            height: 46,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.primary,
             ),
             child: IconButton(
-              icon: const Icon(Icons.send, color: AppColors.onPrimary, size: 18),
+              icon: const Icon(Icons.send, color: AppColors.onPrimary, size: 19),
               onPressed: () => _sendMessage(_textController.text),
             ),
           ),
@@ -325,7 +379,7 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment:
             isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -335,22 +389,27 @@ class _ChatBubble extends StatelessWidget {
             UserAvatar(
               uid: senderId,
               displayName: senderName,
-              radius: 12,
+              radius: 14,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isMe
                     ? AppColors.primary
-                    : context.themeSurfaceContainer,
+                    : context.themeSurfaceLow,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
                   bottomLeft: Radius.circular(isMe ? 16 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 16),
+                ),
+                border: Border.all(
+                  color: isMe
+                      ? AppColors.primary
+                      : context.themeBorder.withValues(alpha: 0.6),
                 ),
               ),
               child: Column(
@@ -360,15 +419,16 @@ class _ChatBubble extends StatelessWidget {
                     text,
                     style: TextStyle(
                       color: isMe ? AppColors.onPrimary : context.themeTextPrimary,
-                      fontSize: 13,
+                      fontSize: 13.5,
+                      fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                   if (time != null) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: 9.5,
                         color: isMe
                             ? AppColors.onPrimary.withValues(alpha: 0.7)
                             : context.themeTextSecondary,

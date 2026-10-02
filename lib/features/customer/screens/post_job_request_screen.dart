@@ -15,6 +15,9 @@ import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'job_quotes_screen.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/primary_button.dart';
 
 class PostJobRequestScreen extends StatefulWidget {
   const PostJobRequestScreen({super.key});
@@ -292,49 +295,70 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.postJobGetQuotes,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+        elevation: 0,
+        backgroundColor: context.themeBg,
+        leading: Center(
+          child: IconSquareButton.small(
+            icon: Icons.chevron_left_rounded,
+            onTap: () => Navigator.maybePop(context),
+          ),
+        ),
+        title: Text(
+          context.l10n.postJobGetQuotes,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: context.themeInk,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
-              Container(
+              AppCard(
+                color: context.themeAmberTint,
+                borderColor: AppColors.primary.withValues(alpha: 0.3),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2)),
-                ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.description_outlined,
-                          color: AppColors.primary, size: 22),
+                      child: const Icon(
+                        Icons.campaign_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             context.l10n.describeJobOrRepair,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 13.5),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: context.themeInk,
+                            ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             context.l10n.describeJobSubtitle,
                             style: TextStyle(
-                                fontSize: 11.5,
-                                color: context.themeTextSecondary),
+                              fontSize: 12,
+                              color: context.themeTextSecondary,
+                              height: 1.3,
+                            ),
                           ),
                         ],
                       ),
@@ -344,8 +368,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
 
               const SizedBox(height: 18),
-              Text(context.l10n.category,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              Text(
+                context.l10n.category,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeInk,
+                ),
+              ),
               const SizedBox(height: 8),
               StreamBuilder<List<CategoryRow>>(
                 stream: CategoryRepository().streamCategoryRows(),
@@ -518,29 +548,33 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              Text(context.l10n.serviceLocation,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: context.themeSurface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.themeBorder),
+              Text(
+                context.l10n.serviceLocation,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeInk,
                 ),
+              ),
+              const SizedBox(height: 8),
+              AppCard(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.l10n.districtLabel,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: context.themeTextSecondary)),
+                    Text(
+                      context.l10n.districtLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedDistrict,
                       dropdownColor: context.themeSurface,
-                      style: TextStyle(color: context.themeTextPrimary, fontSize: 13),
+                      style: TextStyle(color: context.themeInk, fontSize: 13.5),
                       decoration: _inputDecoration(
                         context,
                         hint: context.l10n.selectDistrict,
@@ -564,38 +598,58 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         }
                       },
                     ),
-                    const SizedBox(height: 12),
-                    Text(context.l10n.addressOrAreaOptional,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: context.themeTextSecondary)),
+                    const SizedBox(height: 14),
+                    Text(
+                      context.l10n.addressOrAreaOptional,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _addressController,
-                      style: const TextStyle(fontSize: 13),
+                      style: TextStyle(fontSize: 13.5, color: context.themeInk),
                       decoration: _inputDecoration(
                         context,
                         hint: context.l10n.addressOrAreaHint,
                         icon: Icons.home_outlined,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
                     InkWell(
                       onTap: _detectingLocation ? null : _detectLocation,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: context.themeSoft,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: context.themeBorder),
+                        ),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              _latitude != null && _detectingLocation == false
-                                  ? Icons.my_location
-                                  : Icons.location_searching,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 6),
+                            if (_detectingLocation)
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            else
+                              Icon(
+                                _latitude != null && _detectingLocation == false
+                                    ? Icons.my_location_rounded
+                                    : Icons.location_searching_rounded,
+                                size: 18,
+                                color: AppColors.primary,
+                              ),
+                            const SizedBox(width: 8),
                             Text(
                               _detectingLocation
                                   ? context.l10n.detectingGps
@@ -603,8 +657,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                                       ? context.l10n.gpsLocationSet
                                       : context.l10n.useExactLiveGps),
                               style: const TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
                               ),
                             ),
@@ -617,33 +671,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
 
               const SizedBox(height: 28),
-              ElevatedButton(
-                onPressed: _submitting ? null : _submitRequest,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
+              SizedBox(
+                height: 54,
+                child: PrimaryButton(
+                  label: context.l10n.postJobGetQuotes,
+                  loading: _submitting,
+                  onPressed: _submitRequest,
                 ),
-                child: _submitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.onPrimary),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.send, size: 18),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.postJobGetQuotes,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 14)),
-                        ],
-                      ),
               ),
             ],
           ),
@@ -656,23 +690,23 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       {required String hint, required IconData icon}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
-      prefixIcon: Icon(icon, size: 18, color: context.themeTextSecondary),
+      hintStyle: TextStyle(fontSize: 13, color: context.themeMuted),
+      prefixIcon: Icon(icon, size: 20, color: context.themeMuted),
       filled: true,
-      fillColor: context.themeSurfaceLow,
+      fillColor: context.themeSurface,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: context.themeBorder),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: context.themeBorder),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     );
   }
 }

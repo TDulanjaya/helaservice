@@ -97,6 +97,17 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     );
   }
 
+  String _maskNic(String nic) {
+    if (nic.isEmpty) return '';
+    final trimmed = nic.trim();
+    if (trimmed.length >= 8) {
+      final start = trimmed.substring(0, 4);
+      final end = trimmed.substring(trimmed.length - 3);
+      return '$start•••••$end';
+    }
+    return trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
@@ -117,11 +128,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       appBar: AppBar(
         title: Text(
           context.l10n.artisanProfile,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.swap_horiz),
+            icon: const Icon(Icons.swap_horiz_rounded),
             tooltip: context.l10n.switchRole,
             onPressed: () => showRoleSwitchSheet(context),
           ),
@@ -129,19 +140,21 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(
+              16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: context.themeBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.25 : 0.04),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -153,7 +166,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         uid: user?.id,
                         displayName: displayName,
                         photoUrl: user?.photoUrl,
-                        radius: 34,
+                        radius: 36,
                         editable: true,
                       ),
                       const SizedBox(width: 14),
@@ -164,25 +177,63 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                             Text(
                               displayName,
                               style: const TextStyle(
-                                fontSize: 17,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
-                              LocalizedData.getCategory(context, category),
+                              '${LocalizedData.getCategory(context, category)} · ${LocalizedData.getDistrict(context, district)}',
                               style: const TextStyle(
                                 fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              email,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.themeTextSecondary,
+                            if (email.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: context.themeTextSecondary,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF22C55E)
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFF22C55E)
+                                      .withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 12,
+                                    color: Color(0xFF22C55E),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.l10n.verifiedArtisan,
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF22C55E),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -192,17 +243,28 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   StreamBuilder<List<Booking>>(
-                    stream: BookingRepository().streamProviderBookings(user?.id ?? ''),
+                    stream: BookingRepository()
+                        .streamProviderBookings(user?.id ?? ''),
                     builder: (context, snapshot) {
                       final bookings = snapshot.data ?? [];
-                      final completed = bookings.where((b) => b.status == 'completed').length;
-                      final delayed = bookings.where((b) => b.delayReason != null && b.delayReason!.isNotEmpty).length;
+                      final completed = bookings
+                          .where((b) => b.status == 'completed')
+                          .length;
+                      final delayed = bookings
+                          .where((b) =>
+                              b.delayReason != null &&
+                              b.delayReason!.isNotEmpty)
+                          .length;
                       final onTimePercent = completed > 0
-                          ? (((completed - delayed).clamp(0, completed) / completed) * 100).round()
+                          ? (((completed - delayed).clamp(0, completed) /
+                                      completed) *
+                                  100)
+                              .round()
                           : 100;
 
                       return StreamBuilder<List<Map<String, dynamic>>>(
-                        stream: ReviewService.instance.streamProviderReviews(user?.id ?? ''),
+                        stream: ReviewService.instance
+                            .streamProviderReviews(user?.id ?? ''),
                         builder: (context, revSnap) {
                           final reviews = revSnap.data ?? [];
                           final double? avgRating = reviews.isNotEmpty
@@ -214,52 +276,41 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                   reviews.length)
                               : null;
 
-                          return Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: context.themeSurfaceLow,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: context.themeBorder),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _StatColumn(
-                                    label: context.l10n.rating,
-                                    value: avgRating != null
-                                        ? avgRating.toStringAsFixed(1)
-                                        : (completed > 0 ? '5.0' : 'New'),
-                                    sub: reviews.isNotEmpty
-                                        ? '${reviews.length} reviews'
-                                        : (completed > 0
-                                            ? '$completed jobs'
-                                            : 'Fleet Active'),
-                                  ),
-                                ),
-                                Container(
-                                    width: 1,
-                                    height: 28,
-                                    color: context.themeBorder),
-                                Expanded(
-                                  child: _StatColumn(
-                                    label: context.l10n.jobsDone,
-                                    value: '$completed',
-                                    sub: context.l10n.completed,
-                                  ),
-                                ),
-                                Container(
-                                    width: 1,
-                                    height: 28,
-                                    color: context.themeBorder),
-                                Expanded(
-                                  child: _StatColumn(
-                                    label: context.l10n.onTimeArrival,
-                                    value: '$onTimePercent%',
-                                    sub: context.l10n.promptArrival,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          final ratingValue = avgRating != null
+                              ? avgRating.toStringAsFixed(1)
+                              : (completed > 0 ? '5.0' : 'New');
+                          final ratingSub = reviews.isNotEmpty
+                              ? '${reviews.length} reviews'
+                              : (completed > 0
+                                  ? '$completed jobs'
+                                  : 'Fleet Active');
+
+                          return Row(
+                            children: [
+                              _StatCard(
+                                icon: Icons.star_rounded,
+                                iconColor: Colors.amber,
+                                value: ratingValue,
+                                label: context.l10n.rating,
+                                sub: ratingSub,
+                              ),
+                              const SizedBox(width: 8),
+                              _StatCard(
+                                icon: Icons.check_circle_rounded,
+                                iconColor: const Color(0xFF22C55E),
+                                value: '$completed',
+                                label: context.l10n.jobsDone,
+                                sub: context.l10n.completed,
+                              ),
+                              const SizedBox(width: 8),
+                              _StatCard(
+                                icon: Icons.timer_outlined,
+                                iconColor: AppColors.primary,
+                                value: '$onTimePercent%',
+                                label: context.l10n.onTimeArrival,
+                                sub: context.l10n.promptArrival,
+                              ),
+                            ],
                           );
                         },
                       );
@@ -268,76 +319,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.verified_user,
-                          size: 18, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.l10n.verifiedArtisan,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text('NIC: $nic',
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${context.l10n.operatingDistrict}: ${LocalizedData.getDistrict(context, district)}${phone.isNotEmpty ? ' · ${context.l10n.phone}: +94 $phone' : ''}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.themeTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      context.l10n.nicUploaded,
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 18),
-            Text(
-              context.l10n.baseLocation,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: context.themeBorder),
               ),
               child: Column(
@@ -346,12 +333,161 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.badge_outlined,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        context.l10n.verifiedArtisan.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'NIC Number',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      Text(
+                        nic.isNotEmpty ? _maskNic(nic) : 'Not provided',
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 13,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            context.l10n.nicUploaded,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: context.themeBorder),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.operatingDistrict,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      Text(
+                        LocalizedData.getDistrict(context, district),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (phone.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.l10n.phone,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        Text(
+                          '+94 $phone',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              context.l10n.baseLocation,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(9),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
+                        child: const Icon(
+                          Icons.my_location_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -362,112 +498,160 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                               user?.latitude != null
                                   ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)}'
                                   : context.l10n.noGpsSet,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               context.l10n.distanceCalcHint,
-                              style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: context.themeTextSecondary,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
-                    height: 38,
+                    height: 42,
                     child: OutlinedButton.icon(
-                      onPressed: _updatingLocation ? null : () => _refreshGpsLocation(context),
+                      onPressed: _updatingLocation
+                          ? null
+                          : () => _refreshGpsLocation(context),
                       icon: _updatingLocation
                           ? const SizedBox(
-                              width: 14,
-                              height: 14,
+                              width: 15,
+                              height: 15,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.gps_fixed, size: 15),
+                          : const Icon(Icons.gps_fixed_rounded, size: 16),
                       label: Text(
-                        _updatingLocation ? context.l10n.statusPending : context.l10n.autoDetectGps,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        _updatingLocation
+                            ? context.l10n.statusPending
+                            : context.l10n.autoDetectGps,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.primary),
                         foregroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 18),
             Text(
               context.l10n.jobDispatchSettings,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
             ),
             const SizedBox(height: 8),
-
             Container(
               decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: context.themeBorder),
               ),
               child: SwitchListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 value: _emergencyAvailable,
-                activeThumbColor: AppColors.primary,
+                activeThumbColor: Colors.white,
+                activeTrackColor: const Color(0xFF22C55E),
                 title: Text(
                   context.l10n.emergencyCallout,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 subtitle: Text(
                   context.l10n.emergencyCalloutDesc,
                   style: TextStyle(
-                      fontSize: 11.5, color: context.themeTextSecondary),
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
                 ),
                 onChanged: (val) async {
                   setState(() => _emergencyAvailable = val);
                   final uid = FirebaseAuth.instance.currentUser?.uid;
                   if (uid != null && uid.isNotEmpty) {
-                    await TechnicianRepository().updateEmergencyStatus(uid, val);
+                    await TechnicianRepository()
+                        .updateEmergencyStatus(uid, val);
                   }
                 },
               ),
             ),
-
             const SizedBox(height: 18),
             Text(
               context.l10n.appearance,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
             ),
             const SizedBox(height: 8),
-
             Container(
               decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: context.themeBorder),
               ),
               child: pv.Consumer<ThemeProvider>(
                 builder: (context, themeProvider, _) {
                   return ListTile(
-                    leading: Icon(
-                      themeProvider.isDark(context)
-                          ? Icons.dark_mode_outlined
-                          : Icons.light_mode_outlined,
-                      color: AppColors.primary,
-                      size: 20,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        themeProvider.isDark(context)
+                            ? Icons.dark_mode_outlined
+                            : Icons.light_mode_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
-                    title: Text(context.l10n.themeMode,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w700)),
+                    title: Text(
+                      context.l10n.themeMode,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     subtitle: Text(
-                      '${context.l10n.currentTheme}: ${themeProvider.getModeDisplayName(context)} (${context.l10n.tapToChange})',
+                      '${context.l10n.currentTheme}: ${themeProvider.getModeDisplayName(context)}',
                       style: TextStyle(
-                          fontSize: 11.5, color: context.themeTextSecondary),
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
                     ),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: context.themeTextSecondary,
+                    ),
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
@@ -491,7 +675,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.brightness_auto),
                                   title: Text(context.l10n.themeSystem),
-                                  trailing: themeProvider.mode == ThemeMode.system
+                                  trailing: themeProvider.mode ==
+                                          ThemeMode.system
                                       ? const Icon(Icons.check,
                                           color: AppColors.primary)
                                       : null,
@@ -503,7 +688,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.light_mode),
                                   title: Text(context.l10n.themeLight),
-                                  trailing: themeProvider.mode == ThemeMode.light
+                                  trailing: themeProvider.mode ==
+                                          ThemeMode.light
                                       ? const Icon(Icons.check,
                                           color: AppColors.primary)
                                       : null,
@@ -515,10 +701,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.dark_mode),
                                   title: Text(context.l10n.themeDark),
-                                  trailing: themeProvider.mode == ThemeMode.dark
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
+                                  trailing:
+                                      themeProvider.mode == ThemeMode.dark
+                                          ? const Icon(Icons.check,
+                                              color: AppColors.primary)
+                                          : null,
                                   onTap: () {
                                     themeProvider.setDark();
                                     Navigator.pop(sheetCtx);
@@ -534,59 +721,80 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 },
               ),
             ),
-
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
                 color: context.themeSurface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: context.themeBorder),
               ),
               child: pv.Consumer<LocaleProvider>(
                 builder: (context, localeProvider, _) {
                   return ListTile(
-                    leading: const Icon(Icons.language,
-                        color: AppColors.primary),
-                    title: Text(context.l10n.appLanguage,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w700)),
-                    subtitle: Text(
-                      '${context.l10n.currentLanguage}: ${localeProvider.languageDisplayName} (${context.l10n.tapToChange})',
-                      style: TextStyle(
-                          fontSize: 12, color: context.themeTextSecondary),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.language_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios,
-                        size: 14, color: AppColors.outline),
+                    title: Text(
+                      context.l10n.appLanguage,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${context.l10n.currentLanguage}: ${localeProvider.languageDisplayName}',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: context.themeTextSecondary,
+                    ),
                     onTap: () => LanguageSelectSheet.show(context),
                   );
                 },
               ),
             ),
-
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             InkWell(
               onTap: () => showRoleSwitchSheet(context),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               child: Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: context.themeSurfaceLow,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: context.themeBorder),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: context.themeBorder),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: AppColors.primary.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.home_repair_service_outlined,
-                          color: AppColors.primary, size: 20),
+                      child: const Icon(
+                        Icons.home_repair_service_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,6 +806,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             context.l10n.switchToCustomerDesc,
                             style: TextStyle(
@@ -608,30 +817,36 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios,
-                        size: 14, color: context.themeTextSecondary),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: context.themeTextSecondary,
+                    ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () => _logout(context),
-              icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
+              icon: const Icon(Icons.logout_rounded,
+                  color: AppColors.error, size: 18),
               label: Text(
                 context.l10n.logout,
                 style: const TextStyle(
                   color: AppColors.error,
                   fontWeight: FontWeight.w800,
+                  fontSize: 14,
                 ),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: BorderSide(
-                    color: AppColors.error.withValues(alpha: 0.4)),
+                  color: AppColors.error.withValues(alpha: 0.4),
+                  width: 1.2,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
@@ -642,44 +857,71 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   }
 }
 
-class _StatColumn extends StatelessWidget {
-  final String label;
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
   final String value;
+  final String label;
   final String sub;
 
-  const _StatColumn({
-    required this.label,
+  const _StatCard({
+    required this.icon,
+    required this.iconColor,
     required this.value,
+    required this.label,
     required this.sub,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: context.themeSurfaceLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.themeBorder),
         ),
-        const SizedBox(height: 1),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: iconColor),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                color: context.themeTextSecondary,
+              ),
+            ),
+            Text(
+              sub,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 9.5,
+                color: context.themeTextSecondary,
+              ),
+            ),
+          ],
         ),
-        Text(
-          sub,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: context.themeTextSecondary),
-        ),
-      ],
+      ),
     );
   }
 }
+

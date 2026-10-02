@@ -1038,7 +1038,17 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get endToEndEncryptedVault =>
-      'සම්පූර්ණ සුරක්ෂිත දත්ත ගබඩාව • හෙළසර්විස්';
+      'ඡායාරූප ආරක්ෂිතව ගබඩා කර ඇත • HelaService පරිපාලකයින්ට පමණි';
+
+  @override
+  String get nicUploadFileLimitHint => 'JPEG, PNG හෝ HEIC (උපරිම 600 KB)';
+
+  @override
+  String get nicSecureStorageDesc =>
+      'ඡායාරූප ආරක්ෂිතව ගබඩා කර ඇති අතර HelaService පරිපාලකයින්ට පමණක් දැකගත හැක.';
+
+  @override
+  String get uploadingToVault => 'ආරක්ෂිතව උඩුගත කෙරේ...';
 
   @override
   String get emergencyAvailable247 => '24/7 හදිසි සේවා සූදානම';

@@ -10,6 +10,8 @@ import '../../../models/job_request.dart';
 import '../../../models/quote.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../shared/widgets/photo_placeholder.dart';
+import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/app_card.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -41,6 +43,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   String _etaLabel(int mins) {
     if (mins < 60) return '$mins min';
     if (mins == 60) return '1 hr';
+    if (mins == 90) return '1.5 hr';
+    if (mins == 120) return '2 hr';
     return '${mins ~/ 60}h ${mins % 60}m';
   }
 
@@ -159,84 +163,155 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
               ),
               const SizedBox(height: 16),
 
-              Text(context.l10n.submitPriceQuote,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 6),
-              Text(context.l10n.submitPriceQuoteSub,
-                  style: TextStyle(
-                      fontSize: 12.5, color: context.themeTextSecondary)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.submitPriceQuote,
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.submitPriceQuoteSub,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: context.themeSurfaceLow,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.themeBorder),
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 18),
 
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: context.themeSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.themeBorder),
-                ),
+              AppCard(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              LocalizedData.getCategory(context, req.category),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 10.5,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.bolt_rounded,
+                                  size: 13, color: AppColors.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                LocalizedData.getCategory(context, req.category),
+                                style: const TextStyle(
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.primary),
-                            ),
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(Icons.person_outline,
-                            size: 14, color: context.themeTextSecondary),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            req.customerName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: context.themeTextSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(req.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 15)),
-                    const SizedBox(height: 6),
-                    Text(req.description,
-                        style: TextStyle(
-                            fontSize: 12.5,
-                            color: context.themeTextSecondary)),
-                    if (req.address.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on,
+                        const Spacer(),
+                        if (req.customerName.isNotEmpty) ...[
+                          Icon(Icons.person_outline_rounded,
                               size: 13, color: context.themeTextSecondary),
                           const SizedBox(width: 4),
+                          Text(
+                            req.customerName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      req.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (req.description.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        req.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.35,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                    if (req.photoUrls.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 72,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: req.photoUrls.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (context, i) {
+                            final url = req.photoUrls[i];
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: _buildPhoto(url, 72, 72),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    if (req.address.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.location_on_outlined,
+                              size: 14, color: AppColors.primary),
+                          const SizedBox(width: 5),
                           Expanded(
-                            child: Text(req.address,
-                                style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: context.themeTextSecondary)),
+                            child: Text(
+                              req.address,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -245,186 +320,156 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                 ),
               ),
 
-              if (req.photoUrls.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                Text(context.l10n.customerPhotos,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 120,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: req.photoUrls.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
-                    itemBuilder: (context, i) {
-                      final url = req.photoUrls[i];
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _buildPhoto(url, 120, 120),
-                      );
-                    },
-                  ),
-                ),
-              ],
-
-              if (req.latitude != null && req.longitude != null) ...[
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: context.themeSurfaceLow,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.near_me,
-                          size: 16, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'GPS: ${req.latitude!.toStringAsFixed(4)}, ${req.longitude!.toStringAsFixed(4)}',
-                        style: TextStyle(
-                            fontSize: 11.5,
-                            color: context.themeTextSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
               const SizedBox(height: 20),
-              const Divider(),
-              const SizedBox(height: 16),
 
-              Text(context.l10n.yourQuotedPrice,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              Text(
+                context.l10n.yourQuotedPrice,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w800),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
                 decoration: InputDecoration(
-                  hintText: 'e.g. 2500',
+                  hintText: '3,500',
                   hintStyle: TextStyle(
-                      fontSize: 18,
-                      color: context.themeTextSecondary.withValues(alpha: 0.5)),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: context.themeTextSecondary.withValues(alpha: 0.4),
+                  ),
                   prefixText: 'LKR ',
                   prefixStyle: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.themeTextSecondary),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: context.themeTextSecondary,
+                  ),
                   filled: true,
                   fillColor: context.themeSurfaceLow,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: context.themeBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: context.themeBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide:
                         const BorderSide(color: AppColors.primary, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 18,
+                    vertical: 16,
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 16),
-              Text(context.l10n.estimatedArrivalTime,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+
+              Text(
+                context.l10n.estimatedArrivalTime,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: _etaOptions.map((mins) {
                   final selected = _selectedEta == mins;
-                  return ChoiceChip(
-                    label: Text(_etaLabel(mins)),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _selectedEta = mins),
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                    backgroundColor: context.themeSurfaceLow,
-                    side: BorderSide(
-                      color: selected
-                          ? AppColors.primary
-                          : context.themeBorder,
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: selected
-                          ? AppColors.primary
-                          : context.themeTextSecondary,
+                  return InkWell(
+                    onTap: () => setState(() => _selectedEta = mins),
+                    borderRadius: BorderRadius.circular(24),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? (context.isDark ? Colors.white : Colors.black)
+                            : context.themeSurfaceLow,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: selected
+                              ? Colors.transparent
+                              : context.themeBorder,
+                        ),
+                      ),
+                      child: Text(
+                        _etaLabel(mins),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: selected
+                              ? (context.isDark ? Colors.black : Colors.white)
+                              : context.themeTextPrimary,
+                        ),
+                      ),
                     ),
                   );
                 }).toList(),
               ),
 
-              const SizedBox(height: 16),
-              Text(context.l10n.messageToCustomerOptional,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 20),
+
+              Text(
+                context.l10n.messageToCustomerOptional,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 maxLines: 3,
-                style: const TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13.5),
                 decoration: InputDecoration(
                   hintText:
-                      'e.g. Price includes full inspection and basic parts...',
+                      'e.g. Price includes inspection and basic parts...',
                   hintStyle: TextStyle(
-                      fontSize: 12, color: context.themeTextSecondary),
+                    fontSize: 12.5,
+                    color: context.themeTextSecondary.withValues(alpha: 0.6),
+                  ),
                   filled: true,
                   fillColor: context.themeSurfaceLow,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: context.themeBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: context.themeBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide:
                         const BorderSide(color: AppColors.primary, width: 2),
                   ),
-                  contentPadding: const EdgeInsets.all(14),
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
 
               const SizedBox(height: 24),
-              ElevatedButton(
+
+              PrimaryButton(
+                label: context.l10n.sendPriceQuote,
+                leadingIcon: Icons.send_rounded,
+                loading: _submitting,
                 onPressed: _submitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                child: _submitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.onPrimary),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.send, size: 18),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.sendPriceQuote,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 14)),
-                        ],
-                      ),
               ),
             ],
           ),

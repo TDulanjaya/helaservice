@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
-import '../../../shared/widgets/outline_button.dart';
 import 'en_route_navigation_screen.dart';
 
 import '../../../models/booking.dart';
@@ -41,230 +40,369 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
+    final title = booking?.title.isNotEmpty == true ? booking!.title : 'Service Request';
+    final customerName = booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer';
+    final initials = booking?.customerInitials.isNotEmpty == true ? booking!.customerInitials : 'CU';
+    final distance = booking?.distance.isNotEmpty == true ? booking!.distance : 'Nearby';
+    final location = booking?.location.isNotEmpty == true ? booking!.location : 'Client Address';
+    final estRate = booking?.estRate.isNotEmpty == true ? booking!.estRate : 'LKR 2,500';
+
     return Scaffold(
-      backgroundColor: AppColors.onSurface,
+      backgroundColor: const Color(0xFF121212),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(children: [
-                const Icon(Icons.handyman, color: Colors.white70, size: 16),
-                const SizedBox(width: 6),
-                const Text('EXPRESS DISPATCH ROUTE',
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.primary,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'EXPRESS DISPATCH',
                     style: TextStyle(
-                        color: Colors.white70, fontSize: 11, letterSpacing: 1)),
-                const Spacer(),
-                const Icon(Icons.volume_up, color: Colors.white70, size: 14),
-                Text(' Auto-passes in $_secondsLeft s',
-                    style:
-                        const TextStyle(color: Colors.white70, fontSize: 11)),
-              ]),
-              const SizedBox(height: 20),
-              Container(
+                      color: Colors.black87,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  Text(
+                    'Auto-passes in $_secondsLeft s',
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                    color: context.themeSurface,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: context.themeBorder)),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(children: [
-                          Icon(Icons.bolt, color: AppColors.secondaryContainer),
-                          SizedBox(width: 6),
-                          Text('New Job Request',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
-                        ]),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'URGENT',
+                                  style: TextStyle(
+                                    color: AppColors.error,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'New job\nrequest',
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  height: 1.15,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                          width: 72,
+                          height: 72,
+                          alignment: Alignment.center,
                           decoration: BoxDecoration(
-                              color: AppColors.errorContainer,
-                              borderRadius: BorderRadius.circular(999)),
-                          child: const Text('URGENT',
-                              style: TextStyle(
-                                  color: AppColors.error,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold)),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 3.5,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$_secondsLeft',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'seconds',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  color: Colors.white60,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      width: 72,
-                      height: 72,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: AppColors.primary, width: 3)),
-                      child: Text('$_secondsLeft\nsec',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(children: [
-                      const Icon(Icons.handyman, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                      Expanded(
-                          child: Text(widget.booking?.title ?? 'Service Request',
-                              style: const TextStyle(fontWeight: FontWeight.w600))),
-                    ]),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          color: context.themeSurfaceLow,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: context.themeBorder)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Guaranteed Base Payout',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: context.themeTextSecondary)),
-                              Text(widget.booking?.estRate.isNotEmpty == true ? widget.booking!.estRate : 'LKR 2,500',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17)),
-                            ],
-                          ),
-                          Text('Direct Settlement\nCash at Service Site',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  color: context.themeTextSecondary)),
-                        ],
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white12),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      CircleAvatar(
-                          radius: 16,
-                          backgroundColor: context.themeSurfaceContainer,
-                          child: Text(widget.booking?.customerInitials.isNotEmpty == true ? widget.booking!.customerInitials : 'CU',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: Text(widget.booking?.customerName.isNotEmpty == true ? widget.booking!.customerName : 'Direct Customer',
-                              style: const TextStyle(fontWeight: FontWeight.w600))),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.verified_user, size: 12, color: AppColors.primary),
-                            SizedBox(width: 3),
-                            Text('Verified', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                          ],
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: 6),
-                    Row(children: [
-                      Icon(Icons.navigation,
-                          size: 14, color: context.themeTextSecondary),
-                      const SizedBox(width: 4),
-                      Text(widget.booking?.distance.isNotEmpty == true ? widget.booking!.distance : 'Nearby',
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600)),
-                    ]),
-                    Row(children: [
-                      Icon(Icons.location_on,
-                          size: 14, color: context.themeTextSecondary),
-                      const SizedBox(width: 4),
-                      Expanded(
-                          child: Text(widget.booking?.location.isNotEmpty == true ? widget.booking!.location : 'Client Address',
-                              style: const TextStyle(fontSize: 12))),
-                    ]),
-                    Row(children: [
-                      Icon(Icons.two_wheeler,
-                          size: 14, color: context.themeTextSecondary),
-                      const SizedBox(width: 4),
-                      Expanded(
-                          child: Text(
-                              'Fastest direct route available',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: context.themeTextSecondary))),
-                    ]),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                          color: AppColors.errorContainer.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(14)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(children: [
-                            Icon(Icons.warning,
-                                size: 14, color: AppColors.error),
-                            SizedBox(width: 4),
-                            Text('Service Note',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 12))
-                          ]),
+                          const Text(
+                            'GUARANTEED BASE PAYOUT',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white60,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
-                              widget.booking?.title ?? 'Service Request',
-                              style: const TextStyle(
-                                  fontSize: 12, fontStyle: FontStyle.italic)),
+                            estRate,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Cash at service site',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white60,
+                            ),
+                          ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1A),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: const Color(0xFF8A3B2C),
+                                child: Text(
+                                  initials,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      customerName,
+                                      style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    const Row(
+                                      children: [
+                                        Icon(Icons.verified_user_rounded,
+                                            size: 11, color: AppColors.primary),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Verified customer',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    distance,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    booking?.relativeTime.isNotEmpty == true
+                                        ? booking!.relativeTime
+                                        : 'Nearby',
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      color: Colors.white60,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_outlined,
+                                  size: 14, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  location,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.notes_rounded,
+                                  size: 14, color: AppColors.primary),
+                              SizedBox(width: 6),
+                              Text(
+                                'Service note',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            booking?.entryInstructions?.isNotEmpty == true
+                                ? booking!.entryInstructions!
+                                : title,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    PrimaryButton(
+                      label: 'Accept Job',
+                      trailingIcon: Icons.arrow_forward_rounded,
+                      onPressed: () async {
+                        _timer?.cancel();
+                        if (booking != null && booking.id.isNotEmpty) {
+                          await BookingRepository().acceptBookingByProvider(
+                            bookingId: booking.id,
+                            jobRequestId: booking.jobRequestId,
+                          );
+                        }
+                        if (!context.mounted) return;
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => EnRouteNavigationScreen(booking: booking),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'Pass to next artisan',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Center(
+                      child: Text(
+                        'Pull over safely before accepting.',
+                        style: TextStyle(color: Colors.white38, fontSize: 11),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              PrimaryButton(
-                label: 'Accept Job ($_secondsLeft s)',
-                trailingIcon: Icons.check_circle,
-                onPressed: () async {
-                  _timer?.cancel();
-                  if (widget.booking != null && widget.booking!.id.isNotEmpty) {
-                    await BookingRepository().acceptBookingByProvider(
-                      bookingId: widget.booking!.id,
-                      jobRequestId: widget.booking!.jobRequestId,
-                    );
-                  }
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                        builder: (_) => EnRouteNavigationScreen(booking: widget.booking)),
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
-              AppOutlineButton(
-                label: 'Pass to Next Available Artisan',
-                icon: Icons.cancel,
-                color: Colors.white,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(height: 10),
-              const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.security, size: 12, color: Colors.white54),
-                SizedBox(width: 4),
-                Text('Pull over safely before confirming arrival navigation',
-                    style: TextStyle(color: Colors.white54, fontSize: 10)),
-              ]),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

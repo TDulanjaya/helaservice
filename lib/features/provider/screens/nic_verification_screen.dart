@@ -10,6 +10,8 @@ import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import 'provider_dashboard_screen.dart';
@@ -249,7 +251,46 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('National ID (NIC) Verification')),
+      appBar: AppBar(
+        title: Text(
+          context.l10n.nationalIdVerification,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: context.themeInk,
+          ),
+        ),
+        leading: Navigator.canPop(context)
+            ? Center(
+                child: IconSquareButton.small(
+                  icon: Icons.chevron_left_rounded,
+                  onTap: () => Navigator.maybePop(context),
+                ),
+              )
+            : null,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.themeAmberTint,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'Step 2 of 3',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: _isSubmitted ? _buildSubmittedView() : _buildFormView(),
       bottomNavigationBar: widget.showBottomNav
           ? const AppBottomNav(
@@ -348,39 +389,71 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
 
   Widget _buildFormView() {
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
       children: [
-        const PillBadgeChip(label: 'Step 2 of 3'),
-        const SizedBox(height: 10),
         Text(
-            'Verify your identity to start receiving jobs island-wide across Sri Lanka.',
-            style: TextStyle(color: context.themeTextSecondary)),
+          context.l10n.nationalIdVerification,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: context.themeInk,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Verify your identity to start receiving jobs island-wide across Sri Lanka.',
+          style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+        ),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-              color: context.themeSurfaceLow,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.themeBorder)),
-          child: Row(children: [
-            const Icon(Icons.shield, color: AppColors.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Verified Artisan Network — Sri Lanka',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text(
-                      'Government & Police vetted channel. Uploaded documents are encrypted with '
-                      '256-bit bank-grade security and stored in an isolated Backblaze B2 credential vault.',
-                      style: TextStyle(
-                          fontSize: 11, color: context.themeTextSecondary)),
-                ],
-              ),
+            color: context.isDark ? const Color(0xFF1E1A14) : const Color(0xFFFFF9E6),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: context.isDark ? 0.4 : 0.3),
             ),
-          ]),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.verifiedArtisanNetworkSriLanka,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        color: context.themeInk,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.nicSecureStorageDesc,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
         _UploadStep(
@@ -390,9 +463,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               'Clear photo of the front side showing your portrait and NIC number.',
           uploaded: _front,
           isLoading: _isUploadingFront,
-          uploadIcon: Icons.add_a_photo,
+          uploadIcon: Icons.add_a_photo_outlined,
           uploadLabel: 'Capture or Upload Front',
-          hint: 'JPEG, PNG or HEIC (Up to 10MB)',
+          hint: context.l10n.nicUploadFileLimitHint,
           tip: 'Tip: Lay flat on a contrasting surface, avoid phone shadow.',
           onTap: () => _handleUpload('front'),
         ),
@@ -404,9 +477,10 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               'Back side showing your registered residential address and clear barcode.',
           uploaded: _back,
           isLoading: _isUploadingBack,
-          uploadIcon: Icons.document_scanner,
+          uploadIcon: Icons.document_scanner_outlined,
           uploadLabel: 'Capture or Upload Back',
-          hint: 'Ensure all 4 card corners are in frame',
+          hint: context.l10n.nicUploadFileLimitHint,
+          tip: 'Ensure all 4 card corners are in frame',
           onTap: () => _handleUpload('back'),
         ),
         const SizedBox(height: 14),
@@ -417,7 +491,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               'Hold your National ID card next to your face, both equally in focus.',
           uploaded: _selfie,
           isLoading: _isUploadingSelfie,
-          uploadIcon: Icons.photo_camera_front,
+          uploadIcon: Icons.photo_camera_front_outlined,
           uploadLabel: 'Open Camera',
           hint: 'Live portrait test',
           tip:
@@ -425,74 +499,80 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           onTap: () => _handleUpload('selfie'),
         ),
         const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-              color: context.themeSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.themeBorder),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black
-                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
-                    blurRadius: 10)
-              ]),
+        AppCard(
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                const Icon(Icons.verified, color: AppColors.primary, size: 18),
-                const SizedBox(width: 6),
-                Text(context.l10n.fastTrackVerificationChecklist,
-                    style: const TextStyle(fontWeight: FontWeight.bold))
-              ]),
+              Row(
+                children: [
+                  const Icon(Icons.verified_rounded, color: AppColors.primary, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.fastTrackVerificationChecklist,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                      color: context.themeInk,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const _ChecklistRow(
+                icon: Icons.timer_outlined,
+                title: 'Fast turnaround:',
+                body: 'Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).',
+              ),
               const SizedBox(height: 10),
               const _ChecklistRow(
-                  icon: Icons.timer,
-                  title: 'Fast turnaround:',
-                  body:
-                      'Approvals take less than 2 hours (Mon-Sat, 8 AM - 6 PM).'),
-              const SizedBox(height: 8),
+                icon: Icons.chat_bubble_outline_rounded,
+                title: 'SMS alert:',
+                body: 'Instant approval message to your registered mobile number.',
+              ),
+              const SizedBox(height: 10),
               const _ChecklistRow(
-                  icon: Icons.sms,
-                  title: 'SMS alert:',
-                  body:
-                      'Instant approval message to your registered mobile number.'),
-              const SizedBox(height: 8),
-              const _ChecklistRow(
-                  icon: Icons.wb_sunny,
-                  title: 'Quality standard:',
-                  body: 'Natural daylight photos get accepted first try.'),
+                icon: Icons.wb_sunny_outlined,
+                title: 'Quality standard:',
+                body: 'Natural daylight photos get accepted first try.',
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        Center(
-          child: TextButton.icon(
-            onPressed: () => MapLauncher.openPhoneCall('1340'),
-            icon: const Icon(Icons.headset_mic, size: 16),
-            label: Text(context.l10n.callPartnerSupport),
-          ),
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
         PrimaryButton(
           label: _isSubmitting
-              ? 'Uploading to Vault...'
+              ? context.l10n.uploadingToVault
               : 'Submit for Verification',
-          trailingIcon: Icons.arrow_forward,
+          trailingIcon: Icons.arrow_forward_rounded,
           onPressed: (_front && _back && _selfie && !_isSubmitting)
               ? _handleSubmit
               : null,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Center(
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.lock, size: 13, color: AppColors.primary),
-            const SizedBox(width: 4),
-            Text(context.l10n.endToEndEncryptedVault,
-                style:
-                    TextStyle(fontSize: 11, color: context.themeTextSecondary)),
-          ]),
+          child: TextButton.icon(
+            onPressed: () => MapLauncher.openPhoneCall('1340'),
+            icon: const Icon(Icons.headset_mic_rounded, size: 16),
+            label: Text(
+              context.l10n.callPartnerSupport,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_rounded, size: 13, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                context.l10n.endToEndEncryptedVault,
+                style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -507,17 +587,24 @@ class PillBadgeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-          color: context.themeSurfaceContainer,
-          borderRadius: BorderRadius.circular(999)),
-      child: const Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.verified_user, size: 13, color: AppColors.primary),
-        SizedBox(width: 4),
-        Text('Step 2 of 3',
-            style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary)),
-      ]),
+        color: context.themeSurfaceContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.verified_user_rounded, size: 13, color: AppColors.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -549,107 +636,170 @@ class _UploadStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-          color: context.themeSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.themeBorder),
-          boxShadow: [
-            BoxShadow(
-                color:
-                    Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
-                blurRadius: 10)
-          ]),
+    return AppCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            CircleAvatar(
-                radius: 12,
-                backgroundColor: AppColors.primary,
-                child: Text('$index',
-                    style: const TextStyle(fontSize: 11, color: Colors.white))),
-            const SizedBox(width: 8),
-            Expanded(
-                child: Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.bold))),
-            if (isLoading)
-              const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else ...[
-              Icon(uploaded ? Icons.check_circle : Icons.pending,
-                  size: 16,
-                  color: uploaded
-                      ? AppColors.primary
-                      : context.themeTextSecondary),
-              const SizedBox(width: 4),
-              Text(uploaded ? 'Attached' : 'Required',
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Colors.black87,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$index',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
                   style: TextStyle(
-                      fontSize: 11,
-                      color: uploaded
-                          ? AppColors.primary
-                          : context.themeTextSecondary)),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: context.themeInk,
+                  ),
+                ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else if (uploaded)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_rounded, size: 12, color: AppColors.primary),
+                      SizedBox(width: 4),
+                      Text(
+                        'Attached',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Text(
+                    'Required',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
             ],
-          ]),
+          ),
           const SizedBox(height: 6),
-          Text(description,
-              style:
-                  TextStyle(fontSize: 12, color: context.themeTextSecondary)),
-          const SizedBox(height: 10),
+          Text(
+            description,
+            style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+          ),
+          const SizedBox(height: 12),
           GestureDetector(
             onTap: isLoading ? null : onTap,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               decoration: BoxDecoration(
-                border: Border.all(
-                    color: uploaded ? AppColors.primary : context.themeBorder,
-                    style: BorderStyle.solid,
-                    width: uploaded ? 1.5 : 1),
+                color: uploaded
+                    ? (context.isDark ? const Color(0xFF14241B) : const Color(0xFFE8F5E9))
+                    : context.themeSurfaceLow,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: uploaded
+                      ? AppColors.primary.withValues(alpha: 0.5)
+                      : context.themeBorder,
+                  width: uploaded ? 1.5 : 1,
+                ),
               ),
-              child: Column(children: [
-                if (isLoading)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  Icon(uploaded ? Icons.check_circle : uploadIcon,
+              child: Column(
+                children: [
+                  if (isLoading)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    Icon(
+                      uploaded ? Icons.check_circle_rounded : uploadIcon,
+                      size: 28,
                       color: uploaded
                           ? AppColors.primary
-                          : context.themeTextSecondary),
-                const SizedBox(height: 6),
-                Text(
+                          : context.themeTextSecondary,
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
                     isLoading
-                        ? 'Uploading to B2 Vault...'
+                        ? context.l10n.uploadingToVault
                         : (uploaded
-                            ? 'Photo attached • Tap to replace'
+                            ? 'Photo attached · tap to replace'
                             : uploadLabel),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 12)),
-                Text(hint,
                     style: TextStyle(
-                        fontSize: 10, color: context.themeTextSecondary)),
-              ]),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
+                      color: uploaded ? AppColors.primary : context.themeInk,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hint,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           if (tip != null) ...[
-            const SizedBox(height: 6),
-            Row(children: [
-              const Icon(Icons.lightbulb,
-                  size: 13, color: AppColors.secondaryContainer),
-              const SizedBox(width: 4),
-              Expanded(
-                  child: Text(tip!,
-                      style: TextStyle(
-                          fontSize: 10.5, color: context.themeTextSecondary))),
-            ]),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.info_outline_rounded,
+                    size: 13, color: AppColors.secondaryContainer),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    tip!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),
@@ -661,28 +811,34 @@ class _ChecklistRow extends StatelessWidget {
   final IconData icon;
   final String title;
   final String body;
-  const _ChecklistRow(
-      {required this.icon, required this.title, required this.body});
+  const _ChecklistRow({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Expanded(
           child: RichText(
             text: TextSpan(
-                style:
-                    TextStyle(fontSize: 12, color: context.themeTextSecondary),
-                children: [
-                  TextSpan(
-                      text: '$title ',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: context.themeTextPrimary)),
-                  TextSpan(text: body),
-                ]),
+              style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+              children: [
+                TextSpan(
+                  text: '$title ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: context.themeTextPrimary,
+                  ),
+                ),
+                TextSpan(text: body),
+              ],
+            ),
           ),
         ),
       ],

@@ -1033,7 +1033,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get endToEndEncryptedVault =>
-      'End-to-end encrypted • HelaService Vault';
+      'Photos stored securely • Only seen by HelaService admins';
+
+  @override
+  String get nicUploadFileLimitHint => 'JPEG, PNG or HEIC (Max 600 KB)';
+
+  @override
+  String get nicSecureStorageDesc =>
+      'Photos are stored securely and only seen by HelaService admins.';
+
+  @override
+  String get uploadingToVault => 'Uploading securely...';
 
   @override
   String get emergencyAvailable247 => '24/7 Emergency Dispatch Available';

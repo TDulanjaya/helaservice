@@ -23,6 +23,7 @@ import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../../customer/screens/direct_chat_screen.dart';
 import '../../../services/chat_service.dart';
 import '../../../constants/firestore_paths.dart';
+import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'en_route_navigation_screen.dart';
@@ -86,145 +87,341 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final providerCategory = user?.serviceCategory ?? '';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.navJobsRadar),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            tooltip: 'Messages',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ConversationsInboxScreen(),
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999)),
-                child: Text(
-                    _online
-                        ? context.l10n.statusOnline
-                        : context.l10n.statusOffline,
-                    style: TextStyle(
-                        color: _online ? AppColors.primary : AppColors.error,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(
+              16, 16, 16, AppBottomNav.contentBottomPadding),
           children: [
-            Row(children: [
-              GestureDetector(
-                onTap: () => setState(() => _navIndex = 2),
-                child: UserAvatar(
-                  uid: user?.id,
-                  displayName: displayName,
-                  photoUrl: user?.photoUrl,
-                  radius: 24,
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => _navIndex = 2),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                    ),
+                    child: UserAvatar(
+                      uid: user?.id,
+                      displayName: displayName,
+                      photoUrl: user?.photoUrl,
+                      radius: 20,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Flexible(
-                        child: Text(displayName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.verified,
-                          size: 14, color: AppColors.primary),
-                    ]),
-                    Row(children: [
-                      Icon(Icons.engineering,
-                          size: 13, color: context.themeTextSecondary),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: Text(tradeLabel,
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: context.themeTextSecondary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                    ]),
-                  ],
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => showRoleSwitchSheet(context),
-                icon: const Icon(Icons.sync, size: 14),
-                label: Text(context.l10n.switchRole,
-                    style: const TextStyle(fontSize: 11)),
-              ),
-            ]),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(18)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified_rounded,
+                              size: 15, color: AppColors.primary),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
                       Text(
-                          _online
-                              ? context.l10n.youAreOnline
-                              : context.l10n.youAreOffline,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 17)),
-                      Switch(
-                        value: _online,
-                        onChanged: (v) async {
-                          setState(() => _online = v);
-                          final uid = FirebaseAuth.instance.currentUser?.uid;
-                          if (uid != null && uid.isNotEmpty) {
-                            await TechnicianRepository()
-                                .updateOnlineStatus(uid, v);
-                          }
-                        },
-                        activeThumbColor: Colors.white,
-                        activeTrackColor: Colors.white38,
+                        tradeLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  Text(context.l10n.activeDispatchSub,
-                      style:
-                          const TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    const Icon(Icons.radar, size: 14, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Instant Match active · ${_online ? 'Online & Available' : 'Offline'}',
-                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ConversationsInboxScreen(),
+                      ),
+                    );
+                  },
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.themeSurfaceLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: context.themeBorder),
                     ),
-                  ]),
-                ],
-              ),
+                  ),
+                  icon: Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 18,
+                    color: context.themeTextPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => showRoleSwitchSheet(context),
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.themeSurfaceLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: context.themeBorder),
+                    ),
+                  ),
+                  icon: Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 18,
+                    color: context.themeTextPrimary,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+            if (_online)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: context.isDark
+                        ? [const Color(0xFF0D2818), const Color(0xFF133F26)]
+                        : [const Color(0xFFE8F5E9), const Color(0xFFD4EDDA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: context.isDark
+                        ? const Color(0xFF1E5E3A)
+                        : const Color(0xFFA3D9B5),
+                    width: 1.2,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STATUS',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: context.isDark
+                                    ? const Color(0xFF81C784)
+                                    : const Color(0xFF2E7D32),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            RichText(
+                              text: TextSpan(
+                                text: 'You are ',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: context.isDark
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: 'ONLINE',
+                                    style: TextStyle(
+                                      color: Color(0xFF4ADE80),
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Switch(
+                            value: _online,
+                            activeThumbColor: Colors.white,
+                            activeTrackColor: const Color(0xFF22C55E),
+                            onChanged: (v) async {
+                              setState(() => _online = v);
+                              final uid =
+                                  FirebaseAuth.instance.currentUser?.uid;
+                              if (uid != null && uid.isNotEmpty) {
+                                await TechnicianRepository()
+                                    .updateOnlineStatus(uid, v);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      context.l10n.activeDispatchSub,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.isDark
+                            ? Colors.white70
+                            : const Color(0xFF2D5A3F),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: context.isDark
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : Colors.white.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF4ADE80),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Instant Match active',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: context.isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: context.themeSurfaceLow,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'STATUS',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            RichText(
+                              text: TextSpan(
+                                text: 'You are ',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: context.themeTextPrimary,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'OFFLINE',
+                                    style: TextStyle(
+                                      color: context.themeTextSecondary,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Switch(
+                            value: _online,
+                            onChanged: (v) async {
+                              setState(() => _online = v);
+                              final uid =
+                                  FirebaseAuth.instance.currentUser?.uid;
+                              if (uid != null && uid.isNotEmpty) {
+                                await TechnicianRepository()
+                                    .updateOnlineStatus(uid, v);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      context.l10n.activeDispatchSub,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: context.themeSurface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: context.themeBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: context.themeTextSecondary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Offline · Switch on to receive jobs',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 14),
             StreamBuilder<List<Booking>>(
               stream: BookingRepository().streamBookingsForProvider(
@@ -258,38 +455,32 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         ? avgRating.toStringAsFixed(1)
                         : (completed > 0 ? '5.0' : 'New');
 
-                    return Row(children: [
-                      _StatCard(
-                          icon: Icons.task_alt,
+                    return Row(
+                      children: [
+                        _StatCard(
+                          icon: Icons.check_circle_outline_rounded,
                           value: '$completed',
-                          sub: context.l10n.completedJobs),
-                      const SizedBox(width: 10),
-                      _StatCard(
-                          icon: Icons.star,
-                          value: ratingStr,
-                          sub: context.l10n.rating),
-                      const SizedBox(width: 10),
-                      _StatCard(
-                          icon: Icons.schedule,
+                          sub: context.l10n.completedJobs,
+                        ),
+                        const SizedBox(width: 8),
+                        _StatCard(
+                          icon: Icons.star_rounded,
+                          value: '$ratingStr ★',
+                          sub: context.l10n.rating,
+                        ),
+                        const SizedBox(width: 8),
+                        _StatCard(
+                          icon: Icons.timer_outlined,
                           value: onTimePercent,
-                          sub: context.l10n.onTimeArrival),
-                    ]);
+                          sub: context.l10n.onTimeArrival,
+                        ),
+                      ],
+                    );
                   },
                 );
               },
             ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(context.l10n.openJobRequests,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(context.l10n.fromCustomers,
-                    style: const TextStyle(
-                        color: AppColors.primary, fontSize: 12)),
-              ],
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
             if (providerCategory.isEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -299,10 +490,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   border: Border.all(color: context.themeBorder),
                 ),
                 child: Center(
-                  child: Text(context.l10n.customerRequestsAppearHere,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: context.themeTextSecondary, fontSize: 13)),
+                  child: Text(
+                    context.l10n.customerRequestsAppearHere,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.themeTextSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
               )
             else
@@ -311,54 +506,108 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     .streamOpenRequestsForCategory(providerCategory),
                 builder: (context, snapshot) {
                   final requests = snapshot.data ?? [];
-                  if (requests.isEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: context.themeSurface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: context.themeBorder),
-                      ),
-                      child: Column(
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.inbox_outlined,
-                              size: 36, color: context.themeTextSecondary),
-                          const SizedBox(height: 8),
-                          Text(context.l10n.noOpenRequests,
-                              style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 13)),
-                          const SizedBox(height: 4),
-                          Text(context.l10n.customerRequestsAppearHere,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 11)),
+                          Text(
+                            context.l10n.openJobRequests,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (requests.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${requests.length} new',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-                    );
-                  }
-                  return Column(
-                    children: requests
-                        .map((req) => _JobRequestCard(
-                              request: req,
-                              providerLat: user?.latitude,
-                              providerLng: user?.longitude,
-                              onSendQuote: () => _openSubmitQuoteSheet(req),
-                            ))
-                        .toList(),
+                      const SizedBox(height: 10),
+                      if (requests.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: context.themeSurface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: context.themeBorder),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(Icons.inbox_outlined,
+                                  size: 36, color: context.themeTextSecondary),
+                              const SizedBox(height: 8),
+                              Text(
+                                context.l10n.noOpenRequests,
+                                style: TextStyle(
+                                  color: context.themeTextSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                context.l10n.customerRequestsAppearHere,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.themeTextSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Column(
+                          children: requests
+                              .map((req) => _JobRequestCard(
+                                    request: req,
+                                    providerLat: user?.latitude,
+                                    providerLng: user?.longitude,
+                                    onSendQuote: () =>
+                                        _openSubmitQuoteSheet(req),
+                                  ))
+                              .toList(),
+                        ),
+                    ],
                   );
                 },
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.scheduledBookings,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(context.l10n.viewAll,
-                    style: const TextStyle(
-                        color: AppColors.primary, fontSize: 12)),
+                Text(
+                  context.l10n.scheduledBookings,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  context.l10n.viewAll,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -396,66 +645,61 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                    color: context.themeSurface,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border:
-                                        Border.all(color: context.themeBorder),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.black.withValues(
-                                              alpha:
-                                                  context.isDark ? 0.2 : 0.04),
-                                          blurRadius: 10)
-                                    ]),
+                                  color: context.themeSurface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: context.themeBorder),
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                              '${b.time}${b.relativeTime.isNotEmpty ? " (${b.relativeTime})" : ""}',
-                                              style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: context
-                                                      .themeTextSecondary)),
-                                          Text(b.estRate,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ]),
-                                    Text(b.title,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14)),
-                                    const SizedBox(height: 6),
-                                    Row(children: [
-                                      UserAvatar(
-                                        uid: b.customerId,
-                                        displayName: b.customerName,
-                                        radius: 14,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(b.customerName,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight:
-                                                        FontWeight.w600)),
-                                            Text(
-                                                '${b.location} (${b.distance})',
-                                                style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: context
-                                                        .themeTextSecondary)),
-                                          ],
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.14),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            b.time,
+                                            style: const TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      IconButton(
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                b.location.isNotEmpty
+                                                    ? b.location
+                                                    : b.title,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 14.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '${b.distance}${b.relativeTime.isNotEmpty ? " · ${b.relativeTime}" : ""}',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  color: context
+                                                      .themeTextSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
                                           onPressed: () {
                                             if (b.customerPhone.isNotEmpty) {
                                               MapLauncher.openPhoneCall(
@@ -464,15 +708,29 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
                                                 const SnackBar(
-                                                    content: Text(
-                                                        'Customer phone not available')),
+                                                  content: Text(
+                                                      'Customer phone not available'),
+                                                ),
                                               );
                                             }
                                           },
-                                          icon: const Icon(Icons.call,
-                                              size: 18,
-                                              color: AppColors.primary)),
-                                      IconButton(
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                context.themeSurfaceLow,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              side: BorderSide(
+                                                  color: context.themeBorder),
+                                            ),
+                                            padding: const EdgeInsets.all(8),
+                                          ),
+                                          icon: const Icon(Icons.call_rounded,
+                                              size: 16,
+                                              color: AppColors.primary),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        IconButton(
                                           onPressed: () {
                                             if (b.customerLatitude != null &&
                                                 b.customerLongitude != null) {
@@ -500,33 +758,38 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               );
                                             }
                                           },
-                                          icon: const Icon(Icons.directions,
-                                              size: 18,
-                                              color: AppColors.primary)),
-                                    ]),
-                                    if (b.providerAcceptedAt == null && b.status == 'pending') ...[
-                                      const SizedBox(height: 8),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.primary,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                context.themeSurfaceLow,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10)),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              side: BorderSide(
+                                                  color: context.themeBorder),
+                                            ),
+                                            padding: const EdgeInsets.all(8),
                                           ),
-                                          icon: const Icon(Icons.check_circle_outline, size: 16),
-                                          label: const Text('Accept Direct Booking',
-                                              style: TextStyle(
-                                                  fontSize: 12, fontWeight: FontWeight.bold)),
-                                          onPressed: () async {
-                                            await BookingRepository().acceptBookingByProvider(
-                                              bookingId: b.id,
-                                              jobRequestId: b.jobRequestId,
-                                            );
-                                          },
+                                          icon: const Icon(
+                                              Icons.near_me_rounded,
+                                              size: 16,
+                                              color: AppColors.primary),
                                         ),
+                                      ],
+                                    ),
+                                    if (b.providerAcceptedAt == null &&
+                                        b.status == 'pending') ...[
+                                      const SizedBox(height: 12),
+                                      PrimaryButton(
+                                        label: 'Accept Direct Booking',
+                                        leadingIcon:
+                                            Icons.check_circle_outline_rounded,
+                                        onPressed: () async {
+                                          await BookingRepository()
+                                              .acceptBookingByProvider(
+                                            bookingId: b.id,
+                                            jobRequestId: b.jobRequestId,
+                                          );
+                                        },
                                       ),
                                     ],
                                   ],
@@ -556,48 +819,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Widget _buildMyQuotesView(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.navMyQuotes),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            tooltip: 'Messages',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ConversationsInboxScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: SafeArea(
         child: StreamBuilder<List<Quote>>(
           stream: JobRequestRepository().streamProviderQuotes(uid),
           builder: (context, snapshot) {
             final quotes = snapshot.data ?? [];
-
-            if (quotes.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.assignment_outlined,
-                        size: 48, color: context.themeTextSecondary),
-                    const SizedBox(height: 12),
-                    Text(context.l10n.noQuotesYet,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(context.l10n.browseRadarDesc,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12, color: context.themeTextSecondary)),
-                  ],
-                ),
-              );
-            }
 
             final pendingQuotes =
                 quotes.where((q) => q.status == 'pending').toList();
@@ -607,24 +833,85 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 quotes.where((q) => q.status == 'declined').toList();
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
+              padding: const EdgeInsets.fromLTRB(
+                  16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
-                if (acceptedQuotes.isNotEmpty) ...[
-                  _sectionHeader(context, context.l10n.acceptedCaps,
-                      AppColors.primary, acceptedQuotes.length),
-                  ...acceptedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
-                  const SizedBox(height: 16),
-                ],
-                if (pendingQuotes.isNotEmpty) ...[
-                  _sectionHeader(context, context.l10n.pendingResponseCaps,
-                      AppColors.secondaryContainer, pendingQuotes.length),
-                  ...pendingQuotes.map((q) => _QuoteHistoryTile(quote: q)),
-                  const SizedBox(height: 16),
-                ],
-                if (declinedQuotes.isNotEmpty) ...[
-                  _sectionHeader(context, context.l10n.declinedCaps,
-                      AppColors.error, declinedQuotes.length),
-                  ...declinedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      context.l10n.navMyQuotes,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ConversationsInboxScreen(),
+                          ),
+                        );
+                      },
+                      style: IconButton.styleFrom(
+                        backgroundColor: context.themeSurfaceLow,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: context.themeBorder),
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 18,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (quotes.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.assignment_outlined,
+                              size: 48, color: context.themeTextSecondary),
+                          const SizedBox(height: 12),
+                          Text(context.l10n.noQuotesYet,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text(context.l10n.browseRadarDesc,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.themeTextSecondary)),
+                        ],
+                      ),
+                    ),
+                  )
+                else ...[
+                  if (acceptedQuotes.isNotEmpty) ...[
+                    _sectionHeader(context, context.l10n.acceptedCaps,
+                        const Color(0xFF22C55E), acceptedQuotes.length),
+                    ...acceptedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                    const SizedBox(height: 16),
+                  ],
+                  if (pendingQuotes.isNotEmpty) ...[
+                    _sectionHeader(context, context.l10n.pendingResponseCaps,
+                        AppColors.primary, pendingQuotes.length),
+                    ...pendingQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                    const SizedBox(height: 16),
+                  ],
+                  if (declinedQuotes.isNotEmpty) ...[
+                    _sectionHeader(context, context.l10n.declinedCaps,
+                        context.themeTextSecondary, declinedQuotes.length),
+                    ...declinedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                  ],
                 ],
               ],
             );
@@ -729,15 +1016,16 @@ class _JobRequestCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: context.themeBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: context.isDark ? 0.18 : 0.04),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: context.isDark ? 0.22 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -747,121 +1035,160 @@ class _JobRequestCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                    LocalizedData.getCategory(context, request.category),
-                    style: const TextStyle(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.bolt_rounded,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      LocalizedData.getCategory(context, request.category).toUpperCase(),
+                      style: const TextStyle(
                         fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary)),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
               if (distanceText != null)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.near_me,
-                          size: 11, color: AppColors.primary),
-                      const SizedBox(width: 3),
+                      const Icon(
+                        Icons.near_me_rounded,
+                        size: 11,
+                        color: Color(0xFF22C55E),
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        distanceText,
+                        '$distanceText away',
                         style: const TextStyle(
                           fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF22C55E),
                         ),
                       ),
                     ],
                   ),
                 )
               else if (request.quoteCount > 0)
-                Text('${request.quoteCount} ${context.l10n.quotesTitle}',
-                    style: TextStyle(
-                        fontSize: 10.5, color: context.themeTextSecondary)),
+                Text(
+                  '${request.quoteCount} ${context.l10n.quotesTitle}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(request.title,
-              style:
-                  const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text(request.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style:
-                  TextStyle(fontSize: 12, color: context.themeTextSecondary)),
+          const SizedBox(height: 10),
+          Text(
+            request.title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 15.5,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            request.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.35,
+              color: context.themeTextSecondary,
+            ),
+          ),
           if (request.photoUrls.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             SizedBox(
-              height: 56,
+              height: 60,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: request.photoUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
                   final url = request.photoUrls[i];
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: _buildPhoto(url, 56, 56),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: context.themeBorder),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _buildPhoto(url, 60, 60),
+                    ),
                   );
                 },
               ),
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.person_outline,
-                  size: 13, color: context.themeTextSecondary),
+              Icon(
+                Icons.person_outline_rounded,
+                size: 14,
+                color: context.themeTextSecondary,
+              ),
               const SizedBox(width: 4),
               Expanded(
-                child: Text(request.customerName,
-                    style: TextStyle(
-                        fontSize: 11.5, color: context.themeTextSecondary)),
+                child: Text(
+                  request.customerName,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
               ),
               if (request.address.isNotEmpty) ...[
-                Icon(Icons.location_on,
-                    size: 13, color: context.themeTextSecondary),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: context.themeTextSecondary,
+                ),
                 const SizedBox(width: 2),
                 Flexible(
-                  child: Text(request.address,
-                      style: TextStyle(
-                          fontSize: 11, color: context.themeTextSecondary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    request.address,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: context.themeTextSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onSendQuote,
-              icon: const Icon(Icons.send, size: 16),
-              label: Text(context.l10n.sendPriceQuote,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800, fontSize: 13)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-            ),
+          const SizedBox(height: 14),
+          PrimaryButton(
+            label: context.l10n.sendPriceQuote,
+            leadingIcon: Icons.send_rounded,
+            onPressed: onSendQuote,
           ),
         ],
       ),
@@ -873,18 +1200,24 @@ class _JobRequestCard extends StatelessWidget {
       try {
         final base64Str = url.split(',').last;
         final bytes = base64Decode(base64Str);
-        return Image.memory(Uint8List.fromList(bytes),
-            width: width, height: height, fit: BoxFit.cover);
+        return Image.memory(
+          Uint8List.fromList(bytes),
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+        );
       } catch (_) {
         return PhotoPlaceholder(width: width, height: height, iconSize: 16);
       }
     }
-    return Image.network(url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            PhotoPlaceholder(width: width, height: height, iconSize: 16));
+    return Image.network(
+      url,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) =>
+          PhotoPlaceholder(width: width, height: height, iconSize: 16),
+    );
   }
 }
 
@@ -937,28 +1270,35 @@ class _QuoteHistoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isAccepted = quote.status == 'accepted';
     final statusColor = switch (quote.status) {
-      'accepted' => AppColors.primary,
+      'accepted' => const Color(0xFF22C55E),
       'declined' => AppColors.error,
-      _ => AppColors.secondaryContainer,
+      _ => AppColors.primary,
     };
     final statusIcon = switch (quote.status) {
-      'accepted' => Icons.check_circle,
-      'declined' => Icons.cancel,
-      _ => Icons.hourglass_top,
+      'accepted' => Icons.check_circle_rounded,
+      'declined' => Icons.cancel_rounded,
+      _ => Icons.hourglass_top_rounded,
     };
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.themeSurface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isAccepted
-              ? AppColors.primary.withValues(alpha: 0.5)
+              ? const Color(0xFF22C55E).withValues(alpha: 0.4)
               : context.themeBorder,
           width: isAccepted ? 1.5 : 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: context.isDark ? 0.18 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -966,65 +1306,64 @@ class _QuoteHistoryTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(statusIcon, color: statusColor, size: 18),
+                child: Icon(statusIcon, color: statusColor, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('LKR ${quote.quotedPrice.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(
+                      'LKR ${quote.quotedPrice.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('ETA: ${quote.etaMinutes} min',
-                        style: TextStyle(
-                            fontSize: 11, color: context.themeTextSecondary)),
+                    Text(
+                      'ETA: ${quote.etaMinutes} min${quote.notes.isNotEmpty ? " · ${quote.notes}" : ""}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  LocalizedData.getStatus(context, quote.status),
+                  LocalizedData.getStatus(context, quote.status).toUpperCase(),
                   style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: statusColor),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: statusColor,
+                  ),
                 ),
               ),
             ],
           ),
           if (isAccepted) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _openCustomerChat(context),
-                icon: const Icon(Icons.chat_bubble_outline, size: 15),
-                label: const Text(
-                  'Chat with Customer',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-              ),
+            PrimaryButton(
+              label: 'Chat with Customer',
+              leadingIcon: Icons.chat_bubble_outline_rounded,
+              onPressed: () => _openCustomerChat(context),
             ),
           ],
         ],
@@ -1032,3 +1371,4 @@ class _QuoteHistoryTile extends StatelessWidget {
     );
   }
 }
+

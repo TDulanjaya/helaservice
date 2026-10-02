@@ -76,38 +76,103 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.themeSurface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Expanded(
-                    child: Text(context.l10n.reportEnRouteDelay,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: context.themeSurface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(
+            top: BorderSide(color: context.themeBorder),
+            left: BorderSide(color: context.themeBorder),
+            right: BorderSide(color: context.themeBorder),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: context.themeBorder,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.reportEnRouteDelay,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16))),
-                IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close)),
-              ]),
-              Text(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: IconButton.styleFrom(
+                        backgroundColor: context.themeSurfaceLow,
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(6),
+                      ),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
                   context.l10n.selectDelayReason,
-                  style:
-                      TextStyle(color: context.themeTextSecondary, fontSize: 12)),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                _DelayChip(Icons.traffic, context.l10n.heavyTraffic, onSelected: () => _handleDelaySelected(context.l10n.heavyTraffic)),
-                _DelayChip(Icons.water_drop_outlined, context.l10n.monsoonRain, onSelected: () => _handleDelaySelected(context.l10n.monsoonRain)),
-                _DelayChip(Icons.alt_route, context.l10n.roadDetour, onSelected: () => _handleDelaySelected(context.l10n.roadDetour)),
-                _DelayChip(Icons.local_gas_station, context.l10n.refuelingStop, onSelected: () => _handleDelaySelected(context.l10n.refuelingStop)),
-              ]),
-              const SizedBox(height: 12),
-            ],
+                  style: TextStyle(
+                    color: context.themeTextSecondary,
+                    fontSize: 12.5,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  children: [
+                    _DelayChip(
+                      Icons.traffic_rounded,
+                      context.l10n.heavyTraffic,
+                      onSelected: () =>
+                          _handleDelaySelected(context.l10n.heavyTraffic),
+                    ),
+                    const SizedBox(height: 8),
+                    _DelayChip(
+                      Icons.water_drop_outlined,
+                      context.l10n.monsoonRain,
+                      onSelected: () =>
+                          _handleDelaySelected(context.l10n.monsoonRain),
+                    ),
+                    const SizedBox(height: 8),
+                    _DelayChip(
+                      Icons.alt_route_rounded,
+                      context.l10n.roadDetour,
+                      onSelected: () =>
+                          _handleDelaySelected(context.l10n.roadDetour),
+                    ),
+                    const SizedBox(height: 8),
+                    _DelayChip(
+                      Icons.local_gas_station_rounded,
+                      context.l10n.refuelingStop,
+                      onSelected: () =>
+                          _handleDelaySelected(context.l10n.refuelingStop),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -126,7 +191,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Reported delay: $reason (+10 min ETA adjustment broadcasted)'),
+          content: Text(
+              'Reported delay: $reason (+10 min ETA adjustment broadcasted)'),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -138,8 +204,10 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     final booking = widget.booking;
 
     final LatLng customerPoint;
-    if (booking?.customerLatitude != null && booking?.customerLongitude != null) {
-      customerPoint = LatLng(booking!.customerLatitude!, booking.customerLongitude!);
+    if (booking?.customerLatitude != null &&
+        booking?.customerLongitude != null) {
+      customerPoint =
+          LatLng(booking!.customerLatitude!, booking.customerLongitude!);
     } else {
       final destLocation = LocationUtils.getDistrictCoordinates(
           booking?.location.isNotEmpty == true ? booking!.location : 'Colombo');
@@ -147,7 +215,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
 
     final techPoint = _currentGpsPosition ??
-        LatLng(customerPoint.latitude - 0.009, customerPoint.longitude - 0.013);
+        LatLng(
+            customerPoint.latitude - 0.009, customerPoint.longitude - 0.013);
     final midPoint = LatLng(
       (customerPoint.latitude + techPoint.latitude) / 2,
       (customerPoint.longitude + techPoint.longitude) / 2,
@@ -155,26 +224,50 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.enRouteNavigation),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          context.l10n.enRouteNavigation,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            letterSpacing: -0.3,
+          ),
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 14),
             child: Center(
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                    color: AppColors.surfaceContainer,
-                    borderRadius: BorderRadius.circular(999)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.home, size: 13, color: AppColors.primary),
-                  const SizedBox(width: 4),
-                  Text(booking != null && booking.customerName.isNotEmpty
-                      ? "${booking.customerName}'s Location"
-                      : "Customer Location",
-                      style:
-                          const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                ]),
+                  color: context.themeSurfaceLow,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.location_on_rounded,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      booking != null && booking.customerName.isNotEmpty
+                          ? "${booking.customerName}'s Location"
+                          : "Customer Location",
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -194,103 +287,153 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     RouteInfo.fallback(techPoint, customerPoint);
 
                 return SizedBox(
-                  height: 250,
+                  height: 280,
                   child: Stack(
                     children: [
-                      AppMapView(
-                        initialCenter: midPoint,
-                        initialZoom: 14.0,
-                        interactive: true,
-                        routePoints: route.points,
-                        markers: [
-                          AppMapMarker.provider(
-                            point: techPoint,
-                            label: 'You (En Route)',
-                            enRoute: true,
-                          ),
-                          AppMapMarker.customer(
-                            point: customerPoint,
-                            label: booking != null && booking.customerName.isNotEmpty
-                                ? booking.customerName
-                                : 'Customer',
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                              color:
-                                  context.themeSurface.withValues(alpha: 0.95),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: context.themeBorder),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black.withValues(
-                                        alpha: context.isDark ? 0.3 : 0.08),
-                                    blurRadius: 8)
-                              ]),
-                          child: Row(children: [
-                            const Icon(Icons.turn_left,
-                                color: AppColors.primary, size: 24),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('In ${route.formattedDistance}',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          color: context.themeTextSecondary)),
-                                  Text('Navigating to ${booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer'}',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12)),
-                                ],
-                              ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: AppMapView(
+                          initialCenter: midPoint,
+                          initialZoom: 14.0,
+                          interactive: true,
+                          routePoints: route.points,
+                          markers: [
+                            AppMapMarker.provider(
+                              point: techPoint,
+                              label: 'You (En Route)',
+                              enRoute: true,
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(route.formattedDistance,
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700)),
-                                Text(route.formattedDuration,
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        color: context.themeTextSecondary)),
-                              ],
+                            AppMapMarker.customer(
+                              point: customerPoint,
+                              label: booking != null &&
+                                      booking.customerName.isNotEmpty
+                                  ? booking.customerName
+                                  : 'Customer',
                             ),
-                          ]),
+                          ],
                         ),
                       ),
                       Positioned(
-                        bottom: 10,
-                        left: 10,
+                        top: 12,
+                        left: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color:
+                                context.themeSurface.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: context.themeBorder),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                    alpha: context.isDark ? 0.35 : 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.turn_left_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'In ${route.formattedDistance}',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.themeTextSecondary,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Navigating to ${booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer'}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    route.formattedDuration,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    route.formattedDistance,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      color: context.themeTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
                         child: OutlinedButton.icon(
                           onPressed: () {
                             MapLauncher.openDirections(
                               latitude: customerPoint.latitude,
                               longitude: customerPoint.longitude,
-                              destinationTitle: booking != null && booking.customerName.isNotEmpty
+                              destinationTitle: booking != null &&
+                                      booking.customerName.isNotEmpty
                                   ? "${booking.customerName}'s Location"
                                   : 'Customer Location',
                             );
                           },
-                          icon: const Icon(Icons.navigation, size: 14),
-                          label: Text(context.l10n.googleMapsOrWaze,
-                              style: const TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.bold)),
+                          icon: const Icon(
+                            Icons.navigation_rounded,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                          label: Text(
+                            context.l10n.googleMapsOrWaze,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
-                              backgroundColor: context.themeSurface,
-                              side: BorderSide(color: context.themeBorder),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(999))),
+                            backgroundColor:
+                                context.themeSurface.withValues(alpha: 0.94),
+                            side: BorderSide(color: context.themeBorder),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -300,48 +443,87 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             ),
             const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                  color: context.themeSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.themeBorder),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04), blurRadius: 10)
-                  ]),
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black
+                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 children: [
-                  Row(children: [
-                    CircleAvatar(
-                        radius: 20,
-                        backgroundColor: context.themeSurfaceContainer,
-                        child: Icon(Icons.person,
-                            color: context.themeTextSecondary)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Text(booking?.customerName.isNotEmpty == true ? booking!.customerName : 'Customer',
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.verified,
-                                size: 13, color: AppColors.primary)
-                          ]),
-                          Row(children: [
-                            Icon(Icons.location_on,
-                                size: 12, color: context.themeTextSecondary),
-                            const SizedBox(width: 3),
-                            Text(booking?.location.isNotEmpty == true ? booking!.location : 'Western Province',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: context.themeTextSecondary))
-                          ]),
-                        ],
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.12),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
                       ),
-                    ),
-                    IconButton(
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  booking?.customerName.isNotEmpty == true
+                                      ? booking!.customerName
+                                      : 'Customer',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 13,
+                                  color: context.themeTextSecondary,
+                                ),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    booking?.location.isNotEmpty == true
+                                        ? booking!.location
+                                        : 'Western Province',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: context.themeTextSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
                         tooltip: context.l10n.chatWithCustomer,
                         onPressed: () {
                           Navigator.push(
@@ -349,9 +531,10 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                             MaterialPageRoute(
                               builder: (_) => DirectChatScreen(
                                 otherPartyId: booking?.customerId ?? '',
-                                otherPartyName: booking?.customerName.isNotEmpty == true
-                                    ? booking!.customerName
-                                    : 'Customer',
+                                otherPartyName:
+                                    booking?.customerName.isNotEmpty == true
+                                        ? booking!.customerName
+                                        : 'Customer',
                                 otherPartyRole: 'Customer',
                                 otherPartyPhone: booking?.customerPhone ?? '',
                                 jobRequestId: booking?.jobRequestId,
@@ -359,8 +542,22 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.chat, color: AppColors.primary)),
-                    IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: context.themeSurfaceLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: context.themeBorder),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        icon: const Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
                         tooltip: context.l10n.callCustomerPhone,
                         onPressed: () {
                           final phone = booking?.customerPhone ?? '';
@@ -368,72 +565,141 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                             MapLauncher.openPhoneCall(phone);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(context.l10n.customerPhoneNotAvailable)),
+                              SnackBar(
+                                content: Text(
+                                    context.l10n.customerPhoneNotAvailable),
+                              ),
                             );
                           }
                         },
-                        icon:
-                            const Icon(Icons.phone, color: AppColors.primary)),
-                  ]),
-                  const Divider(height: 20),
-                  Row(children: [
-                    const Icon(Icons.vpn_key,
-                        size: 16, color: AppColors.secondaryContainer),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text.rich(TextSpan(children: [
-                        TextSpan(
-                            text: context.l10n.entryInstructionsLabel,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 12)),
-                        TextSpan(
-                            text:
-                                booking?.entryInstructions?.isNotEmpty == true
-                                    ? booking!.entryInstructions!
-                                    : context.l10n.noSpecialEntryInstructions,
-                            style: const TextStyle(fontSize: 12)),
-                      ])),
+                        style: IconButton.styleFrom(
+                          backgroundColor: context.themeSurfaceLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: context.themeBorder),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        icon: const Icon(
+                          Icons.phone_rounded,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(
+                      height: 1,
+                      color: context.themeBorder,
                     ),
-                  ]),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.key_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.entryInstructionsLabel.toUpperCase(),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 9.5,
+                                letterSpacing: 0.6,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              booking?.entryInstructions?.isNotEmpty == true
+                                  ? booking!.entryInstructions!
+                                  : context.l10n.noSpecialEntryInstructions,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                  color: context.themeSurfaceLow,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.themeBorder)),
-              child: Row(children: [
-                const Icon(Icons.payments, color: AppColors.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(context.l10n.directPayCash,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12)),
-                    ],
+                color: context.themeSurfaceLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.payments_rounded,
+                      color: Color(0xFF22C55E),
+                      size: 20,
+                    ),
                   ),
-                ),
-                Text(
-                  booking?.agreedPrice != null
-                      ? 'LKR ${booking!.agreedPrice!.toStringAsFixed(0)}'
-                      : (booking?.estRate.isNotEmpty == true ? booking!.estRate : 'Direct Pay'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      context.l10n.directPayCash,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    booking?.agreedPrice != null
+                        ? 'LKR ${booking!.agreedPrice!.toStringAsFixed(0)}'
+                        : (booking?.estRate.isNotEmpty == true
+                            ? booking!.estRate
+                            : 'Direct Pay'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 18),
             SlideToConfirm(
-              label: _isArrived ? context.l10n.arrivedAtLocation : context.l10n.slideToConfirmArrival,
+              label: _isArrived
+                  ? context.l10n.arrivedAtLocation
+                  : context.l10n.slideToConfirmArrival,
               onConfirmed: () async {
                 setState(() => _isArrived = true);
                 LiveLocationService.instance.stopTracking();
                 if (booking != null && booking.id.isNotEmpty) {
-                  await BookingRepository().updateStatus(booking.id, 'in_progress');
+                  await BookingRepository()
+                      .updateStatus(booking.id, 'in_progress');
                 }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -445,30 +711,51 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 }
               },
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Center(
               child: Text(
                 _isArrived
                     ? context.l10n.arrivalRecordedReady
                     : context.l10n.customerWillBeNotified,
                 style: TextStyle(
-                    fontSize: 11, color: context.themeTextSecondary),
+                  fontSize: 11.5,
+                  color: context.themeTextSecondary,
+                ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             AppOutlineButton(
               label: context.l10n.reportTrafficDelay,
-              icon: Icons.warning,
+              icon: Icons.warning_amber_rounded,
               color: AppColors.error,
               onPressed: () => _showDelayReasons(context),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Center(
-              child: Text(
-                _currentGpsPosition != null
-                    ? context.l10n.gpsActiveDevice
-                    : context.l10n.gpsActivePrecision,
-                style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: _currentGpsPosition != null
+                          ? const Color(0xFF22C55E)
+                          : context.themeTextSecondary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _currentGpsPosition != null
+                        ? context.l10n.gpsActiveDevice
+                        : context.l10n.gpsActivePrecision,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -483,14 +770,47 @@ class _DelayChip extends StatelessWidget {
   final String label;
   final VoidCallback onSelected;
   const _DelayChip(this.icon, this.label, {required this.onSelected});
+
   @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      avatar: Icon(icon, size: 16, color: AppColors.primary),
-      label: Text(label, style: TextStyle(color: context.themeTextPrimary)),
-      onPressed: onSelected,
-      backgroundColor: context.themeSurfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    return InkWell(
+      onTap: onSelected,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.themeSurfaceLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: context.themeBorder),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: context.themeTextSecondary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

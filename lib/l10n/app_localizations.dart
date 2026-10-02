@@ -2071,8 +2071,26 @@ abstract class AppLocalizations {
   /// No description provided for @endToEndEncryptedVault.
   ///
   /// In en, this message translates to:
-  /// **'End-to-end encrypted • HelaService Vault'**
+  /// **'Photos stored securely • Only seen by HelaService admins'**
   String get endToEndEncryptedVault;
+
+  /// No description provided for @nicUploadFileLimitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'JPEG, PNG or HEIC (Max 600 KB)'**
+  String get nicUploadFileLimitHint;
+
+  /// No description provided for @nicSecureStorageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos are stored securely and only seen by HelaService admins.'**
+  String get nicSecureStorageDesc;
+
+  /// No description provided for @uploadingToVault.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading securely...'**
+  String get uploadingToVault;
 
   /// No description provided for @emergencyAvailable247.
   ///

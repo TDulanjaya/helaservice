@@ -1063,7 +1063,18 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get endToEndEncryptedVault =>
-      'முழுமையாகப் பாதுகாக்கப்பட்ட தரவுக் பெட்டகம் • ஹெலாசர்வீஸ்';
+      'புகைப்படங்கள் பாதுகாப்பாக சேமிக்கப்பட்டுள்ளன • HelaService நிர்வாகிகளுக்கு மட்டுமே';
+
+  @override
+  String get nicUploadFileLimitHint =>
+      'JPEG, PNG அல்லது HEIC (அதிகபட்சம் 600 KB)';
+
+  @override
+  String get nicSecureStorageDesc =>
+      'புகைப்படங்கள் பாதுகாப்பாக சேமிக்கப்பட்டு HelaService நிர்வாகிகளால் மட்டுமே பார்க்கப்படும்.';
+
+  @override
+  String get uploadingToVault => 'பாதுகாப்பாக பதிவேற்றப்படுகிறது...';
 
   @override
   String get emergencyAvailable247 => '24/7 அவசர சேவை தயார்நிலை';

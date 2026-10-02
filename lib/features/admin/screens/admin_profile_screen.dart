@@ -77,7 +77,7 @@ class AdminProfileScreen extends StatelessWidget {
               Text(
                 context.l10n.broadcastAlertDesc,
                 style:
-                    const TextStyle(fontSize: 12.5, color: AppColors.onSurfaceVariant),
+                    TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 12),
               TextField(

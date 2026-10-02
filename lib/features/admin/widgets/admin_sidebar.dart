@@ -46,7 +46,7 @@ class AdminSidebar extends StatelessWidget {
         case 4:
           return context.l10n.jobLedgerNav;
         case 5:
-          return 'Disputes & Reports';
+          return context.l10n.navDisputes;
         case 6:
           return context.l10n.navPlatformSettings;
         default:

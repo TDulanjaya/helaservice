@@ -200,7 +200,7 @@ class JobQuotesScreen extends StatelessWidget {
               ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Open Live Tracking',
+              label: context.l10n.openLiveGpsTracking,
               leadingIcon: Icons.navigation,
               expand: false,
               onPressed: () async {

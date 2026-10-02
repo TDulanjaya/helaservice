@@ -490,9 +490,9 @@ class LiveTrackingScreen extends StatelessWidget {
                                 backgroundColor: context.themeSurface,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
-                                title: const Text('Cancel Request',
+                                title: Text(context.l10n.cancelRequest,
                                     style:
-                                        TextStyle(fontWeight: FontWeight.w800)),
+                                        const TextStyle(fontWeight: FontWeight.w800)),
                                 content: Text(
                                     'Are you sure you want to cancel this booking request?',
                                     style: TextStyle(
@@ -501,7 +501,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                   TextButton(
                                       onPressed: () =>
                                           Navigator.pop(ctx, false),
-                                      child: const Text('No')),
+                                      child: Text(context.l10n.cancel)),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.error,

@@ -169,14 +169,11 @@ class _NicVerificationWorkspaceScreenState
           return b.submittedAt!.compareTo(a.submittedAt!);
         });
 
-        final pendingCount =
-            items.where((i) => i.status == 'pending').length;
-        final approvedCount =
-            items.where((i) => i.status == 'approved').length;
+        final pendingCount = items.where((i) => i.status == 'pending').length;
+        final approvedCount = items.where((i) => i.status == 'approved').length;
         final resubmitCount =
             items.where((i) => i.flagged || i.status == 'resubmit').length;
-        final rejectedCount =
-            items.where((i) => i.status == 'rejected').length;
+        final rejectedCount = items.where((i) => i.status == 'rejected').length;
 
         if (_selected >= items.length && items.isNotEmpty) {
           _selected = items.length - 1;
@@ -200,7 +197,6 @@ class _NicVerificationWorkspaceScreenState
                     fontSize: isMobile ? 18 : 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: isMobile ? 14 : 18),
-
               if (isMobile)
                 GridView.count(
                   shrinkWrap: true,
@@ -257,19 +253,19 @@ class _NicVerificationWorkspaceScreenState
                   ],
                 ),
               SizedBox(height: isMobile ? 16 : 20),
-
               if (items.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 48, horizontal: 24),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                   decoration: BoxDecoration(
                     color: context.themeSurface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: context.themeBorder),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                          color: Colors.black
+                              .withValues(alpha: context.isDark ? 0.2 : 0.04),
                           blurRadius: 10)
                     ],
                   ),
@@ -281,7 +277,9 @@ class _NicVerificationWorkspaceScreenState
                       Text(
                         context.l10n.verificationQueueClear,
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold, color: context.themeTextPrimary),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: context.themeTextPrimary),
                       ),
                     ],
                   ),
@@ -295,7 +293,8 @@ class _NicVerificationWorkspaceScreenState
                     border: Border.all(color: context.themeBorder),
                     boxShadow: [
                       BoxShadow(
-                          color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                          color: Colors.black
+                              .withValues(alpha: context.isDark ? 0.2 : 0.04),
                           blurRadius: 10)
                     ],
                   ),
@@ -309,7 +308,9 @@ class _NicVerificationWorkspaceScreenState
                               context.l10n.incomingVerificationStream,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 13, color: context.themeTextPrimary),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: context.themeTextPrimary),
                             ),
                           ),
                           Text('$pendingCount Pending',
@@ -321,7 +322,8 @@ class _NicVerificationWorkspaceScreenState
                       ),
                       Text(context.l10n.selectArtisanAudit,
                           style: TextStyle(
-                              fontSize: 10.5, color: context.themeTextSecondary)),
+                              fontSize: 10.5,
+                              color: context.themeTextSecondary)),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 110,
@@ -341,7 +343,8 @@ class _NicVerificationWorkspaceScreenState
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
                                   color: selected
-                                      ? AppColors.primary.withValues(alpha: 0.12)
+                                      ? AppColors.primary
+                                          .withValues(alpha: 0.12)
                                       : context.themeSurfaceLow,
                                   border: Border.all(
                                     color: selected
@@ -352,8 +355,7 @@ class _NicVerificationWorkspaceScreenState
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Row(children: [
@@ -373,7 +375,8 @@ class _NicVerificationWorkspaceScreenState
                                       Text(item.timeAgo,
                                           style: TextStyle(
                                               fontSize: 10,
-                                              color: context.themeTextSecondary)),
+                                              color:
+                                                  context.themeTextSecondary)),
                                     ]),
                                     const SizedBox(height: 4),
                                     Text(
@@ -392,7 +395,8 @@ class _NicVerificationWorkspaceScreenState
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                                 fontSize: 10,
-                                                color: context.themeTextSecondary),
+                                                color:
+                                                    context.themeTextSecondary),
                                           ),
                                         ),
                                         _buildStatusBadge(item),
@@ -426,7 +430,8 @@ class _NicVerificationWorkspaceScreenState
                             border: Border.all(color: context.themeBorder),
                             boxShadow: [
                               BoxShadow(
-                                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                                  color: Colors.black.withValues(
+                                      alpha: context.isDark ? 0.2 : 0.04),
                                   blurRadius: 10)
                             ],
                           ),
@@ -451,7 +456,8 @@ class _NicVerificationWorkspaceScreenState
                               ),
                               Text('Sorted by Most Recent',
                                   style: TextStyle(
-                                      fontSize: 10, color: context.themeTextSecondary)),
+                                      fontSize: 10,
+                                      color: context.themeTextSecondary)),
                               const SizedBox(height: 10),
                               ...List.generate(items.length, (i) {
                                 final item = items[i];
@@ -487,22 +493,25 @@ class _NicVerificationWorkspaceScreenState
                                                       fontWeight:
                                                           FontWeight.w700,
                                                       fontSize: 12.5,
-                                                      color: context.themeTextPrimary))),
+                                                      color: context
+                                                          .themeTextPrimary))),
                                           Text(item.timeAgo,
                                               style: TextStyle(
                                                   fontSize: 10,
-                                                  color: context.themeTextSecondary)),
+                                                  color: context
+                                                      .themeTextSecondary)),
                                         ]),
-                                        Text(
-                                            '${item.trade} • ${item.location}',
+                                        Text('${item.trade} • ${item.location}',
                                             style: TextStyle(
                                                 fontSize: 11,
-                                                color: context.themeTextSecondary)),
+                                                color: context
+                                                    .themeTextSecondary)),
                                         Text(
                                             '${item.nicNumber} — ${item.docNote}',
                                             style: TextStyle(
                                                 fontSize: 10.5,
-                                                color: context.themeTextSecondary)),
+                                                color: context
+                                                    .themeTextSecondary)),
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [
@@ -513,7 +522,8 @@ class _NicVerificationWorkspaceScreenState
                                                     : 'Standard Doc',
                                                 style: TextStyle(
                                                     fontSize: 10,
-                                                    color: context.themeTextSecondary),
+                                                    color: context
+                                                        .themeTextSecondary),
                                               ),
                                             ),
                                             _buildStatusBadge(item),
@@ -616,7 +626,8 @@ class _NicVerificationWorkspaceScreenState
 
   Widget _buildDetailCard(VerificationQueueItem selectedItem, bool isMobile) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
-    final canVerifyNic = roleProvider.hasAdminPermission(AdminPermission.verifyNic);
+    final canVerifyNic =
+        roleProvider.hasAdminPermission(AdminPermission.verifyNic);
     final isApproved = selectedItem.status == 'approved';
     final isRejected = selectedItem.status == 'rejected';
 
@@ -743,14 +754,24 @@ class _NicVerificationWorkspaceScreenState
           Builder(
             builder: (context) {
               final isDiscrepancy = selectedItem.flagged;
-              final bannerBg = isDiscrepancy ? context.themeDangerTint : context.themeSuccessTint;
-              final bannerBorder = (isDiscrepancy ? context.themeDanger : context.themeSuccess).withValues(alpha: 0.3);
-              final bannerFg = isDiscrepancy ? context.themeDanger : context.themeSuccess;
-              final bannerIcon = isDiscrepancy ? Icons.warning_amber_rounded : Icons.check_circle_rounded;
-              final bannerText = isDiscrepancy ? context.l10n.ocrAuditFlagged : context.l10n.ocrAuditConcordant;
+              final bannerBg = isDiscrepancy
+                  ? context.themeDangerTint
+                  : context.themeSuccessTint;
+              final bannerBorder =
+                  (isDiscrepancy ? context.themeDanger : context.themeSuccess)
+                      .withValues(alpha: 0.3);
+              final bannerFg =
+                  isDiscrepancy ? context.themeDanger : context.themeSuccess;
+              final bannerIcon = isDiscrepancy
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_rounded;
+              final bannerText = isDiscrepancy
+                  ? context.l10n.ocrAuditFlagged
+                  : context.l10n.ocrAuditConcordant;
 
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: bannerBg,
                   borderRadius: BorderRadius.circular(14),
@@ -819,13 +840,16 @@ class _NicVerificationWorkspaceScreenState
                     status.toLowerCase().contains('reject');
                 final bg = isFlag
                     ? context.themeDangerTint
-                    : (isMatch ? context.themeSuccessTint : context.themeAmberTint);
+                    : (isMatch
+                        ? context.themeSuccessTint
+                        : context.themeAmberTint);
                 final fg = isFlag
                     ? context.themeDanger
                     : (isMatch ? context.themeSuccess : context.themeAmberText);
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: bg,
                     borderRadius: BorderRadius.circular(999),
@@ -861,7 +885,8 @@ class _NicVerificationWorkspaceScreenState
                               color: context.themeSoft,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: context.themeBorder.withValues(alpha: 0.5),
+                                color:
+                                    context.themeBorder.withValues(alpha: 0.5),
                                 width: 1.0,
                               ),
                             ),
@@ -875,12 +900,14 @@ class _NicVerificationWorkspaceScreenState
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(f.icon,
-                                      size: 16, color: context.themeTextPrimary),
+                                      size: 16,
+                                      color: context.themeTextPrimary),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         f.field.toUpperCase(),
@@ -991,11 +1018,13 @@ class _NicVerificationWorkspaceScreenState
               decoration: BoxDecoration(
                 color: context.themeAmberTint,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: context.themeAmberText.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: context.themeAmberText.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.lock_outline, size: 16, color: context.themeAmberText),
+                  Icon(Icons.lock_outline,
+                      size: 16, color: context.themeAmberText),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1026,7 +1055,8 @@ class _NicVerificationWorkspaceScreenState
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: context.isDark ? Colors.white : AppColors.ink,
+                              color:
+                                  context.isDark ? Colors.white : AppColors.ink,
                             ),
                           )
                         : const Icon(Icons.check_circle_rounded, size: 18),
@@ -1197,7 +1227,8 @@ class _NicVerificationWorkspaceScreenState
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: context.isDark ? Colors.white : AppColors.ink,
+                            color:
+                                context.isDark ? Colors.white : AppColors.ink,
                           ),
                         )
                       : const Icon(Icons.check_circle_rounded, size: 18),
@@ -1403,10 +1434,10 @@ class _NicDocImagePreview extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
+                color: context.themeSurfaceLow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
@@ -1419,7 +1450,7 @@ class _NicDocImagePreview extends StatelessWidget {
                         bytes,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Icon(fallbackIcon,
-                            color: AppColors.onSurfaceVariant),
+                            color: context.themeTextSecondary),
                       ),
                     ),
                   ),
@@ -1454,7 +1485,7 @@ class _NicDocImagePreview extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.surfaceLow,
+          color: context.themeSurfaceLow,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -1463,10 +1494,10 @@ class _NicDocImagePreview extends StatelessWidget {
               height: 68,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
+                color: context.themeSoft,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(fallbackIcon, color: AppColors.onSurfaceVariant),
+              child: Icon(fallbackIcon, color: context.themeTextSecondary),
             ),
             const SizedBox(height: 6),
             Text(
@@ -1478,9 +1509,9 @@ class _NicDocImagePreview extends StatelessWidget {
             Text(
               tag,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 9.5,
-                color: AppColors.outline,
+                color: context.themeTextSecondary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1490,4 +1521,3 @@ class _NicDocImagePreview extends StatelessWidget {
     );
   }
 }
-

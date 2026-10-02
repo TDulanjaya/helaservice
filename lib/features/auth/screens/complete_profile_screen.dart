@@ -742,18 +742,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E8E3E).withValues(alpha: 0.12),
+                            color: context.themeSuccessTint,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFF1E8E3E)),
+                              Icon(Icons.check_circle_outline_rounded, size: 16, color: context.themeSuccess),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '${context.l10n.gpsDetected} · ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF1E8E3E),
+                                  style: TextStyle(
+                                    color: context.themeSuccess,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
                                   ),

@@ -362,7 +362,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                 value: '$activeOpsCount',
                                 subtitle: context.l10n.dispatchKycDuty,
                                 icon: Icons.verified_user_outlined,
-                                color: const Color(0xFF2E7D32),
+                                color: context.themeSuccess,
                               ),
                             ),
                             SizedBox(
@@ -442,10 +442,10 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                             children: [
                               Text(
                                 context.l10n.roleFilterLabel,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.onSurfaceVariant,
+                                  color: context.themeTextSecondary,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -481,15 +481,15 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               Container(
                                 width: 1,
                                 height: 20,
-                                color: AppColors.outline.withValues(alpha: 0.2),
+                                color: context.themeBorder,
                               ),
                               const SizedBox(width: 14),
-                              const Text(
+                              Text(
                                 'Status:',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.onSurfaceVariant,
+                                  color: context.themeTextSecondary,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -558,9 +558,9 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                             _searchQuery.isNotEmpty
                                 ? 'No admin matching "$_searchQuery" was found.'
                                 : 'Try changing your role or status filter.',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
-                              color: AppColors.onSurfaceVariant,
+                              color: context.themeTextSecondary,
                             ),
                           ),
                         ],
@@ -870,17 +870,17 @@ class _AdminDesktopTable extends StatelessWidget {
                           ),
                           Text(
                             admin.email,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
-                              color: AppColors.onSurfaceVariant,
+                              color: context.themeTextSecondary,
                             ),
                           ),
                           if (admin.phone != null && admin.phone!.isNotEmpty)
                             Text(
                               admin.phone!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10.5,
-                                color: AppColors.outline,
+                                color: context.themeMuted,
                               ),
                             ),
                         ],

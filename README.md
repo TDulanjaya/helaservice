@@ -22,7 +22,7 @@ HelaService is an on-demand home and local services mobile application built wit
 - **Framework**: [Flutter](https://flutter.dev/) (Dart)
 - **Backend & Database**: [Google Firebase](https://firebase.google.com/) (Cloud Firestore, Firebase Authentication, Firebase Remote Config)
 - **State Management**: [Provider](https://pub.dev/packages/provider)
-- **Maps & Geospatial**: `flutter_map`, `latlong2`, Stadia Maps / OpenStreetMap
+- **Maps & Geospatial**: `flutter_map`, `latlong2`, `vector_map_tiles`, OpenFreeMap / OpenStreetMap
 - **Security Rules**: Granular Firestore Security Rules with unit test coverage
 
 ---
@@ -69,26 +69,18 @@ flutter pub get
    firebase deploy --only firestore:rules
    ```
 
-### 4. Environment Variables
+### 4. Running the Application
 
-An example configuration file is provided at `secrets.env.example`.
-
-To supply local keys during development:
-
-```bash
-cp secrets.env.example secrets.env
-```
-
-Configure any necessary keys (such as `STADIA_MAPS_KEY` or object storage credentials for document uploads). Run Flutter with the environment file if defined:
-
-```bash
-flutter run --dart-define-from-file=secrets.env
-```
-
-Or run normally with fallback base map providers:
+Run the app (OpenFreeMap vector tiles require no API keys):
 
 ```bash
 flutter run
+```
+
+Optional: If supplying custom environment definitions during development:
+
+```bash
+flutter run --dart-define-from-file=secrets.env
 ```
 
 ---

@@ -935,7 +935,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 const SizedBox(height: 8),
                 StatusPill(
                   type: tech.online ? StatusPillType.online : StatusPillType.offline,
-                  label: tech.online ? 'Online & accepting leads' : context.l10n.statusOffline,
+                  label: tech.online ? context.l10n.statusOnline : context.l10n.statusOffline,
                   showDot: true,
                 ),
               ],

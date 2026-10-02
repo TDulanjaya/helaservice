@@ -460,7 +460,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
                 style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                 decoration: InputDecoration(
-                  hintText: 'Enter your password',
+                  hintText: '••••••••',
                   hintStyle: TextStyle(
                     color: context.themeTextSecondary.withValues(alpha: 0.6),
                   ),

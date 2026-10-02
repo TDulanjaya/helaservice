@@ -363,20 +363,20 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       children: [
                         _buildMetricCard(
                           context,
-                          title: 'Total',
+                          title: context.l10n.totalReports,
                           count: '$totalCount',
                         ),
                         const SizedBox(width: 10),
                         _buildMetricCard(
                           context,
-                          title: 'Pending',
+                          title: context.l10n.pendingAction,
                           count: '$pendingCount',
                           countColor: AppColors.error,
                         ),
                         const SizedBox(width: 10),
                         _buildMetricCard(
                           context,
-                          title: 'Resolved',
+                          title: context.l10n.resolvedCases,
                           count: '$resolvedCount',
                           countColor: AppColors.success,
                         ),
@@ -895,9 +895,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       ),
                       onPressed: () =>
                           _showResolveDialog(complaint, 'resolved'),
-                      child: const Text(
-                        'Resolve',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.resolveComplaint,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                         ),
@@ -924,9 +924,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       ),
                       onPressed: () =>
                           _showResolveDialog(complaint, 'dismissed'),
-                      child: const Text(
-                        'Dismiss',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.dismissComplaint,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -949,9 +949,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         ),
                       ),
                       icon: const Icon(Icons.block_flipped, size: 16),
-                      label: const Text(
-                        'Suspend',
-                        style: TextStyle(
+                      label: Text(
+                        context.l10n.suspendServiceProvider,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),

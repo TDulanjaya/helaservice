@@ -213,7 +213,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'STATUS',
+                              context.l10n.statusOnline.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -224,25 +224,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            RichText(
-                              text: TextSpan(
-                                text: 'You are ',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: context.isDark
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                                children: const [
-                                  TextSpan(
-                                    text: 'ONLINE',
-                                    style: TextStyle(
-                                      color: Color(0xFF4ADE80),
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              context.l10n.youAreOnline,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: context.isDark
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
                             ),
                           ],
@@ -332,7 +321,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'STATUS',
+                              context.l10n.statusOffline.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -341,23 +330,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            RichText(
-                              text: TextSpan(
-                                text: 'You are ',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: context.themeTextPrimary,
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: 'OFFLINE',
-                                    style: TextStyle(
-                                      color: context.themeTextSecondary,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              context.l10n.youAreOffline,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: context.themeTextPrimary,
                               ),
                             ),
                           ],

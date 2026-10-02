@@ -280,6 +280,15 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                     ],
                     if (req.photoUrls.isNotEmpty) ...[
                       const SizedBox(height: 12),
+                      Text(
+                        context.l10n.customerPhotos,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       SizedBox(
                         height: 72,
                         child: ListView.separated(

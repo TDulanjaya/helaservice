@@ -267,7 +267,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
 
   Widget _buildSubmittedView() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -348,7 +348,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
 
   Widget _buildFormView() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 16),
       children: [
         const PillBadgeChip(label: 'Step 2 of 3'),
         const SizedBox(height: 10),

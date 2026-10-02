@@ -386,7 +386,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
             Row(
               children: [

@@ -15,6 +15,7 @@ import '../../../shared/widgets/language_select_sheet.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
@@ -128,7 +129,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
             Container(
               padding: const EdgeInsets.all(18),

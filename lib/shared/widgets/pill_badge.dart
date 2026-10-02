@@ -7,6 +7,8 @@ class PillBadge extends StatelessWidget {
   final Color? background;
   final Color? foreground;
   final double fontSize;
+  final FontWeight fontWeight;
+  final EdgeInsetsGeometry? padding;
 
   const PillBadge({
     super.key,
@@ -15,33 +17,42 @@ class PillBadge extends StatelessWidget {
     this.background,
     this.foreground,
     this.fontSize = 12,
+    this.fontWeight = FontWeight.w700,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg = background ?? context.themeSurfaceContainer;
-    final fg = foreground ?? context.themeTextSecondary;
+    final bg = background ?? context.themeSoft;
+    final fg = foreground ?? context.themeInk;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      constraints: const BoxConstraints(minHeight: 24),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
-          color: bg, borderRadius: BorderRadius.circular(999)),
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: fontSize + 3, color: fg),
+            Icon(icon, size: fontSize + 2, color: fg),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: TextStyle(
-                color: fg,
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600),
+              color: fg,
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+              letterSpacing: 0.1,
+            ),
           ),
         ],
       ),
     );
   }
 }
+

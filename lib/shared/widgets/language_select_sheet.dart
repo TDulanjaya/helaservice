@@ -11,8 +11,9 @@ class LanguageSelectSheet extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.themeSurface,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => const LanguageSelectSheet(),
     );
@@ -48,7 +49,7 @@ class LanguageSelectSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,16 +64,16 @@ class LanguageSelectSheet extends StatelessWidget {
                       Text(
                         'Select Language / භාෂාව / மொழி',
                         style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: context.themeTextPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: context.themeInk,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Choose your primary display language',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.5,
                           color: context.themeTextSecondary,
                         ),
                       ),
@@ -80,37 +81,38 @@ class LanguageSelectSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close_rounded, size: 22),
+                  color: context.themeTextSecondary,
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             ...languages.map((lang) {
               final isSelected = currentCode == lang['code'];
               return Container(
-                margin: const EdgeInsets.only(bottom: 8),
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.08)
-                      : context.themeSurfaceLow,
-                  borderRadius: BorderRadius.circular(14),
+                      ? context.themeAmberTint
+                      : context.themeSoft,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected ? AppColors.primary : context.themeBorder,
-                    width: isSelected ? 1.5 : 1,
+                    width: isSelected ? 1.6 : 1,
                   ),
                 ),
                 child: ListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   leading: Container(
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.15)
-                          : context.themeBorder.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(10),
+                          ? AppColors.primary.withValues(alpha: 0.18)
+                          : context.themeSurface,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -120,7 +122,7 @@ class LanguageSelectSheet extends StatelessWidget {
                         fontSize: 13,
                         color: isSelected
                             ? AppColors.primary
-                            : context.themeTextPrimary,
+                            : context.themeInk,
                       ),
                     ),
                   ),
@@ -131,14 +133,14 @@ class LanguageSelectSheet extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
-                          color: context.themeTextPrimary,
+                          color: context.themeInk,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '(${lang['name']})',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.5,
                           color: context.themeTextSecondary,
                         ),
                       ),
@@ -147,15 +149,21 @@ class LanguageSelectSheet extends StatelessWidget {
                   subtitle: Text(
                     lang['subtitle']!,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       color: context.themeTextSecondary,
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(Icons.check_circle,
-                          color: AppColors.primary, size: 22)
-                      : const Icon(Icons.circle_outlined,
-                          color: AppColors.outline, size: 20),
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.primary,
+                          size: 22,
+                        )
+                      : Icon(
+                          Icons.circle_outlined,
+                          color: context.themeMuted.withValues(alpha: 0.5),
+                          size: 20,
+                        ),
                   onTap: () async {
                     await localeProvider.setLocale(
                       Locale(lang['code']!),
@@ -183,3 +191,4 @@ class LanguageSelectSheet extends StatelessWidget {
     );
   }
 }
+

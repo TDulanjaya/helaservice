@@ -7,6 +7,7 @@ import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../widgets/add_admin_dialog.dart';
 import '../widgets/edit_admin_permissions_dialog.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class AdminManagementScreen extends StatefulWidget {
@@ -560,7 +561,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                    padding: EdgeInsets.fromLTRB(20, 4, 20, isMobile ? AppBottomNav.contentBottomPadding : 24),
                     sliver: isDesktop
                         ? SliverToBoxAdapter(
                             child: _AdminDesktopTable(

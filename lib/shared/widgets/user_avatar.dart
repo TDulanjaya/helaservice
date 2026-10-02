@@ -17,19 +17,19 @@ class UserAvatar extends StatefulWidget {
   final ValueChanged<Uint8List?>? onImageChanged;
 
   static const List<Color> avatarPalette = [
-    Color(0xFFD97706),
-    Color(0xFF2563EB),
-    Color(0xFF059669),
-    Color(0xFF7C3AED),
-    Color(0xFFDC2626),
-    Color(0xFF0891B2),
-    Color(0xFFD946EF),
-    Color(0xFF4B5563),
-    Color(0xFF4F46E5),
-    Color(0xFF0D9488),
+    Color(0xFF245851), // Teal green
+    Color(0xFF6E3F27), // Warm brown
+    Color(0xFF395CA6), // Slate blue
+    Color(0xFF6A346C), // Plum purple
+    Color(0xFF8B590E), // Amber brown
+    Color(0xFF2B5B75), // Ocean blue
+    Color(0xFF8A3B2C), // Crimson brick
+    Color(0xFF3F613B), // Forest olive
+    Color(0xFF4B4668), // Deep indigo
+    Color(0xFF7A4A28), // Bronze
   ];
 
-  // pick color by user uid
+  // Pick color by user id
   static Color computeBackgroundColor(String? uid) {
     if (uid == null || uid.isEmpty) {
       return avatarPalette[0];
@@ -41,7 +41,7 @@ class UserAvatar extends StatefulWidget {
     return avatarPalette[hash % avatarPalette.length];
   }
 
-  // get 1 or 2 letter initials from name or email
+  // Initials from name or email
   static String computeInitials({String? displayName, String? email}) {
     final name = (displayName ?? '').trim();
     if (name.isNotEmpty) {
@@ -236,7 +236,7 @@ class _UserAvatarState extends State<UserAvatar> {
   Widget _buildAvatarContent(Uint8List? dpBytes) {
     final double diameter = widget.radius * 2;
 
-    // show uploaded photo if available
+    // Show photo if available
     if (dpBytes != null && dpBytes.isNotEmpty) {
       return Image.memory(
         dpBytes,
@@ -247,7 +247,7 @@ class _UserAvatarState extends State<UserAvatar> {
       );
     }
 
-    // fallback to initials
+    // Fallback to initials
     return _buildFallback(diameter);
   }
 
@@ -277,7 +277,7 @@ class _UserAvatarState extends State<UserAvatar> {
 
     Widget avatarCore;
 
-    // live update if current user photo
+    // Watch photo for current user
     if (widget.editable && isCurrentUser) {
       avatarCore = StreamBuilder<Uint8List?>(
         stream: _imageService.watchImage(widget.uid!),
@@ -331,19 +331,28 @@ class _UserAvatarState extends State<UserAvatar> {
         Positioned(
           bottom: 0,
           right: 0,
-          child: Material(
-            color: AppColors.primary,
-            shape: const CircleBorder(),
-            elevation: 3,
-            child: InkWell(
-              onTap: _isUploading ? null : _showEditSheet,
-              customBorder: const CircleBorder(),
-              child: Padding(
-                padding: EdgeInsets.all(widget.radius * 0.18),
-                child: Icon(
-                  Icons.camera_alt,
-                  size: widget.radius * 0.46,
-                  color: Colors.white,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: context.themeSurface,
+                width: 2,
+              ),
+            ),
+            child: Material(
+              color: AppColors.primary,
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: InkWell(
+                onTap: _isUploading ? null : _showEditSheet,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: EdgeInsets.all(widget.radius * 0.18),
+                  child: Icon(
+                    Icons.camera_alt_rounded,
+                    size: widget.radius * 0.46,
+                    color: AppColors.onPrimary,
+                  ),
                 ),
               ),
             ),
@@ -351,5 +360,6 @@ class _UserAvatarState extends State<UserAvatar> {
         ),
       ],
     );
+
   }
 }

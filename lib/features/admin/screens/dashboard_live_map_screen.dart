@@ -11,6 +11,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../widgets/admin_stat_card.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -23,7 +24,12 @@ class DashboardLiveMapScreen extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? AppBottomNav.contentBottomPadding : 24,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

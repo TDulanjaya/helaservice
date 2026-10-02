@@ -13,6 +13,7 @@ import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 
 List<String> get kAllSriLankanDistricts =>
     LocationUtils.districtCoordinates.keys.toList();
@@ -354,7 +355,12 @@ class _CategoryDistrictManagementScreenState
         roleProvider.hasAdminPermission(AdminPermission.manageCategories);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? AppBottomNav.contentBottomPadding : 24,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -8,6 +8,7 @@ import '../../../theme/app_theme.dart';
 import '../../../utils/map_launcher.dart';
 import '../../customer/screens/direct_chat_screen.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 
 /// Screen for admins to review and resolve customer complaints.
 class AdminComplaintsScreen extends StatefulWidget {
@@ -352,6 +353,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
             return true;
           }).toList();
 
+          final isMobile = MediaQuery.of(context).size.width < 768;
+
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -491,8 +494,12 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 )
               else
                 SliverPadding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    isMobile ? AppBottomNav.contentBottomPadding : 8,
+                  ),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {

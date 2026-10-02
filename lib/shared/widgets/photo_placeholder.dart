@@ -5,12 +5,14 @@ class PhotoPlaceholder extends StatelessWidget {
   final double width;
   final double height;
   final double iconSize;
+  final BorderRadiusGeometry? borderRadius;
 
   const PhotoPlaceholder({
     super.key,
     required this.width,
     required this.height,
     this.iconSize = 20,
+    this.borderRadius,
   });
 
   @override
@@ -18,12 +20,17 @@ class PhotoPlaceholder extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      color: AppColors.surfaceLow,
+      decoration: BoxDecoration(
+        color: context.themeSoft,
+        borderRadius: borderRadius ?? BorderRadius.circular(16),
+        border: Border.all(color: context.themeBorder, width: 1),
+      ),
       child: Icon(
-        Icons.broken_image,
+        Icons.image_outlined,
         size: iconSize,
-        color: AppColors.outline,
+        color: context.themeMuted.withValues(alpha: 0.6),
       ),
     );
   }
 }
+

@@ -124,7 +124,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, AppBottomNav.contentBottomPadding),
           children: [
             Row(children: [
               GestureDetector(
@@ -607,7 +607,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 quotes.where((q) => q.status == 'declined').toList();
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
               children: [
                 if (acceptedQuotes.isNotEmpty) ...[
                   _sectionHeader(context, context.l10n.acceptedCaps,

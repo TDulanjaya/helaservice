@@ -135,4 +135,8 @@ secrets.env
 *service-account*.json
 *-adminsdk-*.json
 *credentials*.json
-*.key.json
+*.key.json
+
+# Design references
+design_ref/
+

@@ -13,6 +13,7 @@ import '../../../state/locale_provider.dart';
 import '../../../shared/widgets/language_select_sheet.dart';
 import '../../../app_router.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class AdminProfileScreen extends StatelessWidget {
@@ -368,7 +369,14 @@ class AdminProfileScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            MediaQuery.of(context).size.width < 768
+                ? AppBottomNav.contentBottomPadding
+                : 24,
+          ),
           children: [
             Container(
               padding: const EdgeInsets.all(18),

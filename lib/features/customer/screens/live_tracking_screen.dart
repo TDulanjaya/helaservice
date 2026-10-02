@@ -97,7 +97,7 @@ class LiveTrackingScreen extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.liveTracking)),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, AppBottomNav.contentBottomPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -202,7 +202,7 @@ class LiveTrackingScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
                 StreamBuilder<LatLng?>(
                     stream: LiveLocationService.instance

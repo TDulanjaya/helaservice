@@ -7,6 +7,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 import '../screens/live_tracking_screen.dart';
 
 class CustomerBookingsView extends StatelessWidget {
@@ -62,7 +63,7 @@ class CustomerBookingsView extends StatelessWidget {
             }
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
               children: [
                 if (activeBookings.isNotEmpty) ...[
                   Row(

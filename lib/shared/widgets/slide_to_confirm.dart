@@ -5,8 +5,11 @@ class SlideToConfirm extends StatefulWidget {
   final String label;
   final VoidCallback onConfirmed;
 
-  const SlideToConfirm(
-      {super.key, required this.label, required this.onConfirmed});
+  const SlideToConfirm({
+    super.key,
+    required this.label,
+    required this.onConfirmed,
+  });
 
   @override
   State<SlideToConfirm> createState() => _SlideToConfirmState();
@@ -15,7 +18,8 @@ class SlideToConfirm extends StatefulWidget {
 class _SlideToConfirmState extends State<SlideToConfirm> {
   double _dragX = 0;
   bool _confirmed = false;
-  static const _knobSize = 52.0;
+  static const _knobSize = 50.0;
+  static const _trackHeight = 58.0;
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +27,37 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
       builder: (context, constraints) {
         final maxDrag = constraints.maxWidth - _knobSize - 8;
         return Container(
-          height: _knobSize + 8,
+          height: _trackHeight,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
+            color: _confirmed
+                ? context.themeSuccessTint
+                : context.themeAmberTint,
             borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: _confirmed
+                  ? context.themeSuccess.withValues(alpha: 0.3)
+                  : context.themeBorder,
+              width: 1.5,
+            ),
           ),
           child: Stack(
             alignment: Alignment.centerLeft,
             children: [
               Center(
-                child: Text(
-                  _confirmed ? 'Arrival Confirmed' : widget.label,
-                  style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w700),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: _confirmed ? 1.0 : (1.0 - (_dragX / maxDrag)).clamp(0.0, 1.0),
+                  child: Text(
+                    _confirmed ? 'Arrival Confirmed' : widget.label,
+                    style: TextStyle(
+                      color: _confirmed
+                          ? context.themeSuccess
+                          : context.themeAmberText,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
               ),
               Positioned(
@@ -48,7 +70,8 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                     });
                   },
                   onHorizontalDragEnd: (_) {
-                    if (_dragX >= maxDrag * 0.85) {
+                    if (_confirmed) return;
+                    if (_dragX >= maxDrag * 0.8) {
                       setState(() {
                         _dragX = maxDrag;
                         _confirmed = true;
@@ -61,9 +84,22 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                   child: Container(
                     width: _knobSize,
                     height: _knobSize,
-                    decoration: const BoxDecoration(
-                        color: AppColors.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.double_arrow, color: Colors.white),
+                    decoration: BoxDecoration(
+                      color: _confirmed ? context.themeSuccess : AppColors.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _confirmed ? Icons.check_rounded : Icons.arrow_forward_rounded,
+                      color: _confirmed ? Colors.white : AppColors.onPrimary,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
@@ -74,3 +110,4 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
     );
   }
 }
+

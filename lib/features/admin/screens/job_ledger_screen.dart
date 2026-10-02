@@ -6,6 +6,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../widgets/admin_stat_card.dart';
+import '../../../shared/widgets/app_bottom_nav.dart';
 
 enum LedgerStatusFilter { all, completed, inProgress, cancelled }
 
@@ -140,7 +141,12 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                 : '—';
 
             return SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? 16 : 24),
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                isMobile ? 16 : 24,
+                isMobile ? AppBottomNav.contentBottomPadding : 24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

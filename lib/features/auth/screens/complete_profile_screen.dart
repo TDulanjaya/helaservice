@@ -399,12 +399,32 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
     final localeProvider = pv.Provider.of<LocaleProvider>(context);
     final profile = widget.initialProfile ?? roleProvider.currentUser;
+    final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
 
     return Scaffold(
       backgroundColor: context.themeBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isFieldBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.themeBorder, width: 1.5),
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: context.themeTextPrimary),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ),
         title: Text(
           context.l10n.completeProfileTitle,
           style: TextStyle(
@@ -416,7 +436,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           child: Form(
             key: _formKey,
             child: Column(
@@ -427,9 +447,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     padding: const EdgeInsets.all(14),
                     margin: const EdgeInsets.only(bottom: 22),
                     decoration: BoxDecoration(
-                      color: context.themeSurface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: context.themeBorder),
+                      color: isFieldBg,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: context.themeBorder, width: 1.5),
                     ),
                     child: Row(
                       children: [
@@ -438,8 +458,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           displayName: profile.displayName,
                           email: profile.email,
                           radius: 20,
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                          textColor: AppColors.primary,
+                          backgroundColor: const Color(0xFF1E293B),
+                          textColor: Colors.white,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -450,76 +470,67 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 profile.email.isNotEmpty ? profile.email : profile.displayName,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 13.5,
+                                  fontSize: 14,
                                   color: context.themeTextPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                context.l10n.accountVerified,
-                                style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 11.5,
-                                ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.check, color: AppColors.success, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.l10n.accountVerified,
+                                    style: const TextStyle(
+                                      color: AppColors.success,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.check_circle, color: AppColors.primary, size: 18),
                       ],
                     ),
                   ),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: context.themeSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: context.themeBorder),
+
+                Text(
+                  context.l10n.preferredLanguage,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: context.themeTextPrimary,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 48,
+                  padding: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.only(bottom: 22),
+                  decoration: BoxDecoration(
+                    color: isFieldBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.themeBorder, width: 1.5),
+                  ),
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.language,
-                              size: 18, color: AppColors.primary),
-                          const SizedBox(width: 8),
-                          Text(
-                            context.l10n.preferredLanguage,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: context.themeTextPrimary,
-                            ),
-                          ),
-                        ],
+                      _SegmentedLanguageItem(
+                        label: 'English',
+                        selected: localeProvider.languageCode == 'en',
+                        onTap: () => localeProvider.setLocale(const Locale('en')),
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _LanguageChip(
-                            label: 'English',
-                            selected: localeProvider.languageCode == 'en',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('en')),
-                          ),
-                          const SizedBox(width: 8),
-                          _LanguageChip(
-                            label: 'සිංහල',
-                            selected: localeProvider.languageCode == 'si',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('si')),
-                          ),
-                          const SizedBox(width: 8),
-                          _LanguageChip(
-                            label: 'தமிழ்',
-                            selected: localeProvider.languageCode == 'ta',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('ta')),
-                          ),
-                        ],
+                      _SegmentedLanguageItem(
+                        label: 'සිංහල',
+                        selected: localeProvider.languageCode == 'si',
+                        onTap: () => localeProvider.setLocale(const Locale('si')),
+                      ),
+                      _SegmentedLanguageItem(
+                        label: 'தமிழ்',
+                        selected: localeProvider.languageCode == 'ta',
+                        onTap: () => localeProvider.setLocale(const Locale('ta')),
                       ),
                     ],
                   ),
@@ -528,19 +539,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 Text(
                   context.l10n.selectAccountType,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     color: context.themeTextPrimary,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
                       child: _RoleCard(
                         title: context.l10n.roleCustomer,
                         description: context.l10n.customerRoleDesc,
-                        icon: Icons.person_pin_circle_outlined,
+                        icon: Icons.home_outlined,
                         selected: _selectedRole == AppRole.customer,
                         onTap: () => setState(() => _selectedRole = AppRole.customer),
                       ),
@@ -558,33 +569,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
-                Text(
-                  _selectedRole == AppRole.customer ? context.l10n.roleCustomer : context.l10n.roleProvider,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
+                const SizedBox(height: 22),
                 Text(
                   context.l10n.fullName,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: context.themeTextPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                   decoration: _inputDecoration(
                     context,
                     hint: context.l10n.fullNameAsNic,
                     icon: Icons.person_outline,
+                    isDark: context.isDark,
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
@@ -598,20 +600,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 Text(
                   context.l10n.phoneLabel,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: context.themeTextPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                   decoration: _inputDecoration(
                     context,
                     hint: '07X XXXXXXX',
                     icon: Icons.phone_outlined,
+                    isDark: context.isDark,
+                    prefixText: '+94 ',
                   ),
                   validator: (val) {
                     if (val == null || val.trim().length < 9) {
@@ -625,20 +629,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 Text(
                   context.l10n.district,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: context.themeTextPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _district,
                   dropdownColor: context.themeSurface,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
                   decoration: _inputDecoration(
                     context,
                     hint: context.l10n.district,
                     icon: Icons.map_outlined,
+                    isDark: context.isDark,
                   ),
                   items: _districts.map((d) {
                     return DropdownMenuItem(
@@ -651,32 +657,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
-                Text(
-                  context.l10n.jobLocationGps,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
+                const SizedBox(height: 22),
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: context.themeSurface,
-                    borderRadius: BorderRadius.circular(14),
+                    color: isFieldBg,
+                    borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: _latitude != null ? AppColors.primary : context.themeBorder,
+                      color: context.themeBorder,
+                      width: 1.5,
                     ),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -689,12 +688,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _latitude != null
-                                      ? '${context.l10n.gpsDetected}: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}'
-                                      : context.l10n.detectGps,
+                                  context.l10n.jobLocationGps,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13.5,
                                     color: context.themeTextPrimary,
                                   ),
                                 ),
@@ -710,100 +707,146 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 40,
-                        child: OutlinedButton.icon(
-                          onPressed: _detectingLocation ? null : _detectGpsLocation,
-                          icon: _detectingLocation
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.gps_fixed, size: 16),
-                          label: Text(
-                            _latitude != null ? context.l10n.refreshGps : context.l10n.detectGps,
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                      const SizedBox(height: 14),
+                      if (_latitude == null)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: _detectingLocation ? null : _detectGpsLocation,
+                            icon: _detectingLocation
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : const Icon(Icons.gps_fixed, size: 16),
+                            label: Text(
+                              context.l10n.detectGps,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.primary, width: 1.5),
+                              foregroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.primary),
-                            foregroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        )
+                      else ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E8E3E).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline_rounded, size: 16, color: Color(0xFF1E8E3E)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${context.l10n.gpsDetected} · ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E8E3E),
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 42,
+                          child: OutlinedButton.icon(
+                            onPressed: _detectingLocation ? null : _detectGpsLocation,
+                            icon: _detectingLocation
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : const Icon(Icons.refresh_rounded, size: 16),
+                            label: Text(
+                              context.l10n.refreshGps,
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: context.themeBorder, width: 1.5),
+                              foregroundColor: context.themeTextPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
+                      ],
+                      const SizedBox(height: 16),
+                      Text(
+                        context.l10n.address,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _addressController,
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: 'No. 12, Lake Road',
+                          icon: Icons.home_outlined,
+                          isDark: context.isDark,
+                        ),
                       ),
                     ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _addressController,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                  decoration: _inputDecoration(
-                    context,
-                    hint: context.l10n.address,
-                    icon: Icons.home_outlined,
                   ),
                 ),
 
                 if (_selectedRole == AppRole.provider) ...[
                   const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Text(
-                        context.l10n.profilePhoto,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: context.themeTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          context.l10n.requiredField,
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
                   Text(
-                    context.l10n.uploadClearFacePhoto,
+                    context.l10n.roleProvider,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: context.themeTextSecondary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeTextPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Center(
-                    child: Stack(
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isFieldBg,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: context.themeBorder, width: 1.5),
+                    ),
+                    child: Row(
                       children: [
                         GestureDetector(
                           onTap: _showProfileImageSourceSheet,
                           child: Container(
-                            width: 100,
-                            height: 100,
+                            width: 72,
+                            height: 72,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: context.themeSurfaceLow,
+                              borderRadius: BorderRadius.circular(16),
+                              color: context.isDark ? context.themeBg : const Color(0xFFF6F5F2),
                               border: Border.all(
                                 color: _profileImage != null ? AppColors.primary : context.themeBorder,
-                                width: 2.5,
+                                width: 1.5,
                               ),
                               image: _profileImage != null
                                   ? DecorationImage(
@@ -816,65 +859,94 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(
-                                        Icons.add_a_photo_outlined,
-                                        size: 30,
-                                        color: AppColors.primary,
+                                      Icon(
+                                        Icons.camera_alt_outlined,
+                                        size: 24,
+                                        color: context.themeTextSecondary,
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 3),
                                       Text(
                                         context.l10n.addPhoto,
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
                                           color: context.themeTextSecondary,
                                         ),
                                       ),
                                     ],
                                   )
-                                : null,
+                                : Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                                    ),
+                                  ),
                           ),
                         ),
-                        if (_profileImage != null)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: _showProfileImageSourceSheet,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    context.l10n.profilePhoto,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.themeTextPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.error.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      context.l10n.requiredField,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
+                              const SizedBox(height: 4),
+                              Text(
+                                context.l10n.uploadClearFacePhoto,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: context.themeTextSecondary,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
-                  Text(
-                    context.l10n.category,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: context.themeTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
+                  const SizedBox(height: 16),
                   Text(
                     context.l10n.primaryCategory,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: context.themeTextPrimary,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   StreamBuilder<List<CategoryRow>>(
                     stream: CategoryRepository().streamCategoryRows(),
                     builder: (context, snapshot) {
@@ -891,11 +963,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       return DropdownButtonFormField<String>(
                         initialValue: effectiveVal,
                         dropdownColor: context.themeSurface,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
                         decoration: _inputDecoration(
                           context,
                           hint: context.l10n.category,
-                          icon: Icons.category_outlined,
+                          icon: Icons.bolt_outlined,
+                          isDark: context.isDark,
                         ),
                         items: allCats.map((c) {
                           return DropdownMenuItem(
@@ -914,19 +988,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   Text(
                     context.l10n.nicNumber,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: context.themeTextPrimary,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _nicController,
-                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                     decoration: _inputDecoration(
                       context,
-                      hint: '199012345678 / 901234567V',
+                      hint: '200012345678 or 881234567V',
                       icon: Icons.badge_outlined,
+                      isDark: context.isDark,
                     ),
                     validator: (val) {
                       if (_selectedRole == AppRole.provider && (val == null || val.trim().isEmpty)) {
@@ -940,7 +1015,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   Text(
                     context.l10n.nicFront,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: context.themeTextPrimary,
                     ),
@@ -953,6 +1028,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           label: context.l10n.nicFront,
                           image: _nicFrontImage,
                           onTap: () => _showImageSourceSheet(true),
+                          isDark: context.isDark,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -961,6 +1037,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           label: context.l10n.nicBack,
                           image: _nicBackImage,
                           onTap: () => _showImageSourceSheet(false),
+                          isDark: context.isDark,
                         ),
                       ),
                     ],
@@ -993,10 +1070,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 PrimaryButton(
                   label: _isSubmitting ? context.l10n.statusPending : context.l10n.completeRegistration,
-                  onPressed: _isSubmitting ? () {} : _submit,
+                  onPressed: _isSubmitting ? null : _submit,
                   loading: _isSubmitting,
                 ),
               ],
@@ -1011,25 +1088,36 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     BuildContext context, {
     required String hint,
     required IconData icon,
+    required bool isDark,
+    String? prefixText,
   }) {
+    final isFieldBg = isDark ? context.themeSurfaceLow : Colors.white;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(
+        color: context.themeTextSecondary.withValues(alpha: 0.6),
+      ),
+      prefixText: prefixText,
+      prefixStyle: TextStyle(
+        fontWeight: FontWeight.w700,
+        color: context.themeTextPrimary,
+      ),
       prefixIcon: Icon(icon, size: 20, color: context.themeTextSecondary),
       filled: true,
-      fillColor: context.themeSurface,
+      fillColor: isFieldBg,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: context.themeBorder),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: context.themeBorder),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
 }
@@ -1051,33 +1139,73 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final isFieldBg = isDark ? context.themeSurfaceLow : Colors.white;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withValues(alpha: 0.08) : context.themeSurface,
-          borderRadius: BorderRadius.circular(14),
+          color: selected ? AppColors.primary.withValues(alpha: 0.08) : isFieldBg,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? AppColors.primary : context.themeBorder,
-            width: selected ? 2 : 1,
+            width: selected ? 2 : 1.5,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: selected ? AppColors.primary : context.themeTextSecondary,
-              size: 26,
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E2024) : const Color(0xFFF2EFE9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: selected ? AppColors.primary : context.themeTextSecondary,
+                    size: 20,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected ? AppColors.primary : context.themeBorder,
+                      width: selected ? 2 : 1.5,
+                    ),
+                  ),
+                  child: selected
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               title,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
-                color: selected ? AppColors.primary : context.themeTextPrimary,
+                color: context.themeTextPrimary,
               ),
             ),
             const SizedBox(height: 4),
@@ -1100,25 +1228,29 @@ class _NicUploadBox extends StatelessWidget {
   final String label;
   final XFile? image;
   final VoidCallback onTap;
+  final bool isDark;
 
   const _NicUploadBox({
     required this.label,
     required this.image,
     required this.onTap,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isFieldBg = isDark ? context.themeSurfaceLow : Colors.white;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 110,
+        height: 100,
         decoration: BoxDecoration(
-          color: context.themeSurface,
-          borderRadius: BorderRadius.circular(12),
+          color: isFieldBg,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: image != null ? AppColors.primary : context.themeBorder,
-            style: image != null ? BorderStyle.solid : BorderStyle.solid,
+            width: 1.5,
           ),
         ),
         child: image != null
@@ -1127,13 +1259,13 @@ class _NicUploadBox extends StatelessWidget {
                 builder: (ctx, snap) {
                   if (snap.hasData) {
                     return ClipRRect(
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(15),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
                           Image.memory(snap.data!, fit: BoxFit.cover),
                           Container(
-                            color: Colors.black26,
+                            color: Colors.black38,
                             padding: const EdgeInsets.all(6),
                             alignment: Alignment.bottomCenter,
                             child: Text(
@@ -1155,7 +1287,7 @@ class _NicUploadBox extends StatelessWidget {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_outlined, color: context.themeTextSecondary, size: 26),
+                  Icon(Icons.credit_card_outlined, color: context.themeTextSecondary, size: 24),
                   const SizedBox(height: 6),
                   Text(
                     label,
@@ -1172,12 +1304,12 @@ class _NicUploadBox extends StatelessWidget {
   }
 }
 
-class _LanguageChip extends StatelessWidget {
+class _SegmentedLanguageItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _LanguageChip({
+  const _SegmentedLanguageItem({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -1185,40 +1317,35 @@ class _LanguageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return Expanded(
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Container(
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primary
-                : context.themeSurfaceLow,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? AppColors.primary : context.themeBorder,
-              width: selected ? 1.5 : 1,
-            ),
+                ? (isDark ? context.themeSurfaceHigh : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: selected && !isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
           ),
-          child: Column(
-            children: [
-              Icon(
-                Icons.language,
-                size: 18,
-                color: selected ? Colors.white : AppColors.primary,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                  color: selected ? Colors.white : context.themeTextPrimary,
-                ),
-              ),
-            ],
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? context.themeTextPrimary : context.themeTextSecondary,
+            ),
           ),
         ),
       ),

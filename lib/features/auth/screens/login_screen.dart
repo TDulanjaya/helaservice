@@ -185,16 +185,29 @@ class _LoginScreenState extends State<LoginScreen> {
           return AlertDialog(
             backgroundColor: context.themeSurface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             title: Row(
               children: [
-                const Icon(Icons.lock_reset, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.resetPassword,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w800),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.lock_reset, color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.l10n.resetPassword,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -208,21 +221,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       color: context.themeTextSecondary,
+                      height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 16),
+                  Text(
+                    context.l10n.emailAddress,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: resetController,
                     keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      labelText: context.l10n.emailAddress,
                       hintText: 'name@example.com',
-                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: context.themeTextSecondary),
                       filled: true,
-                      fillColor: context.themeSurfaceLow,
+                      fillColor: context.isDark ? context.themeSurfaceLow : Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
                   ),
                 ],
@@ -231,7 +264,13 @@ class _LoginScreenState extends State<LoginScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(context.l10n.cancel),
+                child: Text(
+                  context.l10n.cancel,
+                  style: TextStyle(
+                    color: context.themeTextSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: isResetting
@@ -268,9 +307,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.onPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: isResetting
@@ -279,10 +320,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.onPrimary,
                         ),
                       )
-                    : Text(context.l10n.sendResetLink),
+                    : Text(
+                        context.l10n.sendResetLink,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
               ),
             ],
           );
@@ -293,137 +337,199 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
+
     return Scaffold(
+      backgroundColor: context.themeBg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/images/app_logo.png',
-                      width: 42,
-                      height: 42,
-                      fit: BoxFit.cover,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     context.l10n.appTitle,
-                    style: const TextStyle(
-                        fontSize: 19, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeTextPrimary,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                  const Spacer(),
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
               Text(
                 context.l10n.loginTitle,
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                  height: 1.25,
+                  letterSpacing: -0.5,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 context.l10n.loginSubtitle,
                 style: TextStyle(
                   fontSize: 13.5,
                   color: context.themeTextSecondary,
-                  height: 1.35,
+                  height: 1.4,
                 ),
               ),
               const SizedBox(height: 28),
+
+              Text(
+                context.l10n.emailAddress,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                 decoration: InputDecoration(
-                  labelText: context.l10n.emailAddress,
                   hintText: 'name@example.com',
-                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                  hintStyle: TextStyle(
+                    color: context.themeTextSecondary.withValues(alpha: 0.6),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.email_outlined,
+                    size: 20,
+                    color: context.themeTextSecondary,
+                  ),
                   filled: true,
-                  fillColor: context.themeSurface,
+                  fillColor: isFieldBg,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.themeBorder),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.themeBorder),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide:
-                        const BorderSide(color: AppColors.primary, width: 1.8),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+
+              const SizedBox(height: 18),
+              Text(
+                context.l10n.password,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                 decoration: InputDecoration(
-                  labelText: context.l10n.password,
-                  hintText: '••••••••',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  hintText: 'Enter your password',
+                  hintStyle: TextStyle(
+                    color: context.themeTextSecondary.withValues(alpha: 0.6),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    size: 20,
+                    color: context.themeTextSecondary,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
                       size: 20,
+                      color: context.themeTextSecondary,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
-                  fillColor: context.themeSurface,
+                  fillColor: isFieldBg,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.themeBorder),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.themeBorder),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide:
-                        const BorderSide(color: AppColors.primary, width: 1.8),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _showForgotPasswordDialog,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                child: GestureDetector(
+                  onTap: _showForgotPasswordDialog,
+                  child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                  ),
-                  child: Text(
-                    context.l10n.forgotPassword,
-                    style: const TextStyle(
-                        fontSize: 12.5, fontWeight: FontWeight.w600),
+                    child: Text(
+                      context.l10n.forgotPassword,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 18),
               PrimaryButton(
                 label: context.l10n.signIn,
                 loading: _isEmailLoading,
-                onPressed: _handleEmailSignIn,
+                onPressed: (_isEmailLoading || _isGoogleLoading) ? null : _handleEmailSignIn,
               ),
+
               const SizedBox(height: 24),
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(color: context.themeBorder),
-                  ),
+                  Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       context.l10n.orContinueWith,
                       style: TextStyle(
@@ -433,100 +539,99 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(color: context.themeBorder),
-                  ),
+                  Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
                 ],
               ),
+
               const SizedBox(height: 20),
-              OutlinedButton(
-                onPressed:
-                    _isGoogleLoading ? null : () => _handleGoogleSignIn(),
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: context.themeSurface,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: BorderSide(
-                    color: context.themeBorder,
-                    width: 1.2,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: context.isDark ? 0 : 1,
-                  shadowColor: Colors.black.withValues(alpha: 0.04),
-                ),
-                child: _isGoogleLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const _GoogleMark(),
-                          const SizedBox(width: 12),
-                          Text(
-                            context.l10n.googleSignIn,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14.5,
-                              color: context.themeTextPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: context.themeBorder)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      context.l10n.newToHelaService,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: context.themeTextSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
+              SizedBox(
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: isFieldBg,
+                    side: BorderSide(color: context.themeBorder, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  Expanded(child: Divider(color: context.themeBorder)),
-                ],
+                  child: _isGoogleLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const _GoogleMark(),
+                            const SizedBox(width: 12),
+                            Text(
+                              context.l10n.googleSignIn,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14.5,
+                                color: context.themeTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 36),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isFieldBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder, width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        context.l10n.newToHelaService,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.isDark ? Colors.white : const Color(0xFF141517),
+                        foregroundColor: context.isDark ? const Color(0xFF141517) : Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        context.l10n.createAccount,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RegisterScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.person_add_outlined,
-                    size: 20, color: AppColors.primary),
-                label: Text(
-                  context.l10n.createAccount,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  side: BorderSide(
-                      color: AppColors.primary.withValues(alpha: 0.5)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

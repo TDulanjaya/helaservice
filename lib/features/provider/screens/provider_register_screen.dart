@@ -143,17 +143,44 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
+
     return Scaffold(
+      backgroundColor: context.themeBg,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isFieldBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.themeBorder, width: 1.5),
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: context.themeTextPrimary),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ),
         title: Text(
           context.l10n.becomeProvider,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: context.themeTextPrimary,
+          ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -162,67 +189,80 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 style: TextStyle(
                   fontSize: 13.5,
                   color: context.themeTextSecondary,
+                  height: 1.4,
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 24),
               _Field(
                 label: context.l10n.fullNameNicLabel,
                 controller: _nameController,
                 hint: 'Kasun Perera',
                 prefixIcon: Icons.person_outline,
+                isDarkField: context.isDark,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _Field(
                 label: context.l10n.accountEmailLabel,
                 controller: _emailController,
                 hint: 'kasun.provider@example.com',
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.email_outlined,
+                isDarkField: context.isDark,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     context.l10n.passwordLabel,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: context.themeTextSecondary,
+                      color: context.themeTextPrimary,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: TextStyle(color: context.themeTextPrimary),
+                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                     decoration: InputDecoration(
                       hintText: context.l10n.atLeast6Chars,
-                      hintStyle: TextStyle(color: context.themeTextSecondary),
-                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      hintStyle: TextStyle(
+                        color: context.themeTextSecondary.withValues(alpha: 0.6),
+                      ),
+                      prefixIcon: Icon(Icons.lock_outline, size: 20, color: context.themeTextSecondary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           size: 20,
+                          color: context.themeTextSecondary,
                         ),
                         onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword),
                       ),
                       filled: true,
-                      fillColor: context.themeSurface,
+                      fillColor: isFieldBg,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(
-                          color: context.themeBorder,
-                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(16)),
+                        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _Field(
                 label: context.l10n.providerPhoneLabel,
                 controller: _phoneController,
@@ -230,15 +270,17 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 keyboardType: TextInputType.phone,
                 prefixText: '+94 ',
                 prefixIcon: Icons.phone_outlined,
+                isDarkField: context.isDark,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _Field(
                 label: context.l10n.nicNumberLabel,
                 controller: _nicController,
                 hint: '200012345678 or 881234567V',
                 prefixIcon: Icons.badge_outlined,
+                isDarkField: context.isDark,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               StreamBuilder<List<CategoryRow>>(
                 stream: CategoryRepository().streamCategoryRows(),
                 builder: (context, snapshot) {
@@ -254,23 +296,29 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                     items: allCats,
                     itemLabel: (c) => LocalizedData.getCategory(context, c),
                     onChanged: (v) => setState(() => _category = v ?? _category),
+                    isDarkField: context.isDark,
+                    prefixIcon: Icons.bolt_outlined,
                   );
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               _Dropdown(
                 label: context.l10n.primaryDistrict,
                 value: _districts.contains(_district) ? _district : _districts.first,
                 items: _districts,
                 itemLabel: (d) => LocalizedData.getDistrict(context, d),
                 onChanged: (v) => setState(() => _district = v ?? _district),
+                isDarkField: context.isDark,
+                prefixIcon: Icons.map_outlined,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               CheckboxListTile(
                 value: _agreed,
                 onChanged: (v) => setState(() => _agreed = v ?? false),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
+                activeColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                 title: Text(
                   context.l10n.agreeProviderTerms,
                   style: TextStyle(
@@ -279,35 +327,39 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               PrimaryButton(
                 label: context.l10n.createAccountVerifyNic,
                 loading: _isLoading,
-                onPressed: _agreed ? _createAccount : null,
+                onPressed: _agreed && !_isLoading ? _createAccount : null,
               ),
-              const SizedBox(height: 14),
-              Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      context.l10n.alreadyHaveAccount,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.themeTextSecondary,
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    context.l10n.alreadyHaveAccount,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: context.themeTextSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Text(
+                      context.l10n.signIn,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        context.l10n.signIn,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -323,6 +375,7 @@ class _Field extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? prefixText;
   final IconData? prefixIcon;
+  final bool isDarkField;
 
   const _Field({
     required this.label,
@@ -331,38 +384,62 @@ class _Field extends StatelessWidget {
     this.keyboardType,
     this.prefixText,
     this.prefixIcon,
+    required this.isDarkField,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bg = isDarkField ? context.themeSurfaceLow : Colors.white;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: context.themeTextSecondary,
+            color: context.themeTextPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: TextStyle(color: context.themeTextPrimary),
+          style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: context.themeTextSecondary),
+            hintStyle: TextStyle(
+              color: context.themeTextSecondary.withValues(alpha: 0.6),
+            ),
             prefixText: prefixText,
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
+            prefixStyle: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: context.themeTextPrimary,
+            ),
+            prefixIcon: prefixIcon != null
+                ? Icon(prefixIcon, size: 20, color: context.themeTextSecondary)
+                : null,
             filled: true,
-            fillColor: context.themeSurface,
+            fillColor: bg,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
                 color: context.themeBorder,
+                width: 1.5,
               ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: context.themeBorder,
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -377,6 +454,8 @@ class _Dropdown extends StatelessWidget {
   final List<String> items;
   final ValueChanged<String?> onChanged;
   final String Function(String)? itemLabel;
+  final bool isDarkField;
+  final IconData? prefixIcon;
 
   const _Dropdown({
     required this.label,
@@ -384,6 +463,8 @@ class _Dropdown extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.itemLabel,
+    required this.isDarkField,
+    this.prefixIcon,
   });
 
   @override
@@ -391,6 +472,7 @@ class _Dropdown extends StatelessWidget {
     final effectiveValue = items.contains(value)
         ? value
         : (items.isNotEmpty ? items.first : null);
+    final bg = isDarkField ? context.themeSurfaceLow : Colors.white;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,36 +480,48 @@ class _Dropdown extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: context.themeTextSecondary,
+            color: context.themeTextPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: context.themeSurface,
-            borderRadius: BorderRadius.circular(14),
+            color: bg,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: context.themeBorder,
+              width: 1.5,
             ),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: effectiveValue,
-              dropdownColor: context.themeSurface,
-              isExpanded: true,
-              items: items
-                  .map((d) => DropdownMenuItem(
-                      value: d,
-                      child: Text(
-                        itemLabel != null ? itemLabel!(d) : d,
-                        style: TextStyle(color: context.themeTextPrimary),
-                      )))
-                  .toList(),
-              onChanged: onChanged,
-            ),
+          child: Row(
+            children: [
+              if (prefixIcon != null) ...[
+                Icon(prefixIcon, size: 20, color: context.themeTextSecondary),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: effectiveValue,
+                    dropdownColor: context.themeSurface,
+                    isExpanded: true,
+                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
+                    items: items
+                        .map((d) => DropdownMenuItem(
+                            value: d,
+                            child: Text(
+                              itemLabel != null ? itemLabel!(d) : d,
+                              style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                            )))
+                        .toList(),
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

@@ -2535,4 +2535,904 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get certifiedArtisan => 'Certified Artisan';
+
+  @override
+  String get addAdminGrantOnePermission =>
+      'Please grant at least one permission flag for this admin.';
+
+  @override
+  String addAdminFailed(String error) {
+    return 'Failed to add admin: $error';
+  }
+
+  @override
+  String get addAdminAccountCreated => 'Admin Account Created';
+
+  @override
+  String addAdminSuccessBody(String role) {
+    return 'The user has been successfully granted $role privileges. The next time they sign in with this email, the administrative console will be accessible.';
+  }
+
+  @override
+  String get addAdminTitle => 'Add Platform Administrator';
+
+  @override
+  String get addAdminSubtitle =>
+      'Assign role and permissions; invite links will be generated';
+
+  @override
+  String get addAdminEnterFullName =>
+      'Please enter the administrator full name';
+
+  @override
+  String get addAdminWorkEmail => 'Official Work Email';
+
+  @override
+  String get addAdminEnterWorkEmail => 'Please enter a valid work email';
+
+  @override
+  String get addAdminMobileOptional => 'Mobile Phone (Optional)';
+
+  @override
+  String get addAdminTier => 'Administrative Tier';
+
+  @override
+  String get addAdminOperationalPermissions => 'Operational Permissions';
+
+  @override
+  String get addAdminAdding => 'Adding...';
+
+  @override
+  String get addAdminGrantRole => 'Grant Admin Role';
+
+  @override
+  String get editPermSelectOne => 'Please select at least one permission flag.';
+
+  @override
+  String editPermUpdatedFor(String name) {
+    return 'Permissions updated for $name.';
+  }
+
+  @override
+  String editPermFailed(String error) {
+    return 'Failed to update permissions: $error';
+  }
+
+  @override
+  String get editPermChangeTier => 'Change Administrative Tier';
+
+  @override
+  String get editPermAssigned => 'Assigned Operational Permissions';
+
+  @override
+  String get editPermUpdating => 'Updating...';
+
+  @override
+  String get editPermSave => 'Save Permissions';
+
+  @override
+  String get sidebarOnlySuperAdmins =>
+      'Only Super Admins can access Administrator Management.';
+
+  @override
+  String get sidebarNoPermission =>
+      'You do not have permission to access this section.';
+
+  @override
+  String get sidebarColomboCentralHub => 'Colombo Central Hub';
+
+  @override
+  String get topBarSearch => 'Search';
+
+  @override
+  String get topBarSupportMessages => 'Support & Mediation Messages';
+
+  @override
+  String get topBarAdministrator => 'Administrator';
+
+  @override
+  String get cdmPublishedCategoriesInfo =>
+      'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.';
+
+  @override
+  String get cdmCategoryTitleHint => 'e.g. Solar PV Maintenance';
+
+  @override
+  String get cdmServiceDescriptionHint =>
+      'Brief summary of the trade services offered...';
+
+  @override
+  String get cdmEnterCategoryTitle => 'Please enter a category title';
+
+  @override
+  String cdmCategorySaved(String title) {
+    return 'Category \"$title\" saved and published successfully';
+  }
+
+  @override
+  String cdmDeleteCategoryConfirm(String name) {
+    return 'Are you sure you want to delete \"$name\"? This will disable dispatch for this category island-wide.';
+  }
+
+  @override
+  String cdmCategoryDeleted(String name) {
+    return 'Category \"$name\" deleted';
+  }
+
+  @override
+  String get cdmDelete => 'Delete';
+
+  @override
+  String get cdmReadOnlyModeOpsGovernance => 'Read-Only Mode (Ops Governance)';
+
+  @override
+  String get cdmFleetSubtitle =>
+      'Audit verified service technicians, moderate access, and enforce suspensions';
+
+  @override
+  String get cdmNoCategoriesDesc =>
+      'Add your service trades to publish them to Firebase so customers can discover and book technicians.';
+
+  @override
+  String get cdmDynamicQuotes => 'Dynamic Quotes';
+
+  @override
+  String get cdmArtisansBidPerJob => 'Artisans Bid Per Job';
+
+  @override
+  String get cdmPauseCategory => 'Pause Category';
+
+  @override
+  String get cdmActivateCategory => 'Activate Category';
+
+  @override
+  String cdmFilterAllCount(String count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String cdmFilterOnlineCount(String count) {
+    return 'Online ($count)';
+  }
+
+  @override
+  String cdmFilterSuspendedCount(String count) {
+    return 'Suspended ($count)';
+  }
+
+  @override
+  String cdmFilterOfflineCount(String count) {
+    return 'Offline ($count)';
+  }
+
+  @override
+  String get cdmNoArtisansMatchSearch =>
+      'No artisans match the search criteria';
+
+  @override
+  String get cdmNoArtisansInFilter =>
+      'No artisans registered in this filter view';
+
+  @override
+  String get cdmBadgeSuspended => 'SUSPENDED';
+
+  @override
+  String get cdmBadgeOnline => 'ONLINE';
+
+  @override
+  String get cdmBadgeOffline => 'OFFLINE';
+
+  @override
+  String get cdmSriLanka => 'Sri Lanka';
+
+  @override
+  String cdmBaseRate(String amount) {
+    return 'Base: LKR $amount';
+  }
+
+  @override
+  String cdmSuspensionReason(String reason) {
+    return 'Suspension Reason: \"$reason\"';
+  }
+
+  @override
+  String get cdmComplaints => 'Complaints';
+
+  @override
+  String get cdmSuspend => 'Suspend';
+
+  @override
+  String get cdmRestoreUnban => 'Restore / Unban';
+
+  @override
+  String get cdmDeleteArtisanPermanently => 'Delete Artisan Permanently';
+
+  @override
+  String cdmSuspendName(String name) {
+    return 'Suspend $name';
+  }
+
+  @override
+  String get cdmSuspendConfirmBody =>
+      'Are you sure you want to suspend this artisan? They will be locked offline, hidden from customer searches, and prevented from submitting quotes.';
+
+  @override
+  String get cdmReasonForSuspension => 'Reason for Suspension:';
+
+  @override
+  String cdmArtisanSuspended(String name) {
+    return '$name has been suspended.';
+  }
+
+  @override
+  String get cdmConfirmSuspension => 'Confirm Suspension';
+
+  @override
+  String cdmRestoreName(String name) {
+    return 'Restore $name';
+  }
+
+  @override
+  String get cdmRestoreConfirmBody =>
+      'Reactivate this artisan\'s profile? They will be allowed to go online and accept customer service requests.';
+
+  @override
+  String cdmArtisanRestored(String name) {
+    return '$name has been restored to active status.';
+  }
+
+  @override
+  String get cdmRestoreAccess => 'Restore Access';
+
+  @override
+  String get cdmDeleteArtisan => 'Delete Artisan';
+
+  @override
+  String cdmDeleteArtisanConfirm(String name) {
+    return 'Are you sure you want to permanently delete \"$name\" from the technician database? This operation cannot be reversed.';
+  }
+
+  @override
+  String cdmArtisanDeleted(String name) {
+    return '$name deleted from database.';
+  }
+
+  @override
+  String get cdmDeletePermanently => 'Delete Permanently';
+
+  @override
+  String cdmComplaintsFor(String name) {
+    return 'Complaints for $name';
+  }
+
+  @override
+  String get cdmNoComplaintsFiled => 'No complaints filed';
+
+  @override
+  String get cdmNoComplaintsDesc =>
+      'This service provider has no recorded customer disputes.';
+
+  @override
+  String cdmByCustomer(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get ledgerStatusEnRoute => 'En Route';
+
+  @override
+  String ledgerJobsResolvedIsland(String count) {
+    return '$count jobs resolved across island';
+  }
+
+  @override
+  String ledgerDispatchesActive(String count) {
+    return '$count dispatches active in field';
+  }
+
+  @override
+  String ledgerBasedOnReviews(String count) {
+    return 'Based on $count verified reviews';
+  }
+
+  @override
+  String get ledgerAwaitingFeedback => 'Awaiting customer feedback';
+
+  @override
+  String get ledgerServiceBooking => 'Service Booking';
+
+  @override
+  String ledgerDelayMinutes(String minutes) {
+    return '${minutes}m delay';
+  }
+
+  @override
+  String get adminRoleDescSuper =>
+      'Root operational lead with team administration & full platform governance.';
+
+  @override
+  String get adminRoleDescOps =>
+      'Operational dispatch, artisan verifications, category & district hub management.';
+
+  @override
+  String get adminRoleDescSupport =>
+      'Support queue handler with KYC review and provider inquiry access.';
+
+  @override
+  String get permManageAdminsLabel => 'Admin Team Governance';
+
+  @override
+  String get permVerifyNicLabel => 'Artisan NIC & KYC Verification';
+
+  @override
+  String get permManageCategoriesLabel => 'Categories & District Hubs';
+
+  @override
+  String get permBroadcastAlertsLabel => 'Island-wide Emergency Alerts';
+
+  @override
+  String get permViewFinancesLabel => 'Service & Financial Logs';
+
+  @override
+  String get permManageAdminsDesc =>
+      'Invite, configure, demote, and deactivate administrators.';
+
+  @override
+  String get permVerifyNicDesc =>
+      'Review smart NICs, police reports, and approve/reject artisan registrations.';
+
+  @override
+  String get permManageCategoriesDesc =>
+      'Configure trade categories, base rates, and provincial hub thresholds.';
+
+  @override
+  String get permBroadcastAlertsDesc =>
+      'Send push alerts and critical warnings to active island artisans.';
+
+  @override
+  String get permViewFinancesDesc =>
+      'Inspect service metrics, provider earnings, and completed job records.';
+
+  @override
+  String get adminStatusInvited => 'Invited';
+
+  @override
+  String get adminStatusSuspended => 'Suspended';
+
+  @override
+  String get custArtisanLabel => 'Artisan';
+
+  @override
+  String get custDefaultSystemLanguage => 'Default system language';
+
+  @override
+  String custMetresAway(int metres) {
+    return '$metres m away';
+  }
+
+  @override
+  String custKmAwayValue(String km) {
+    return '$km km away';
+  }
+
+  @override
+  String get custFallbackAreaColombo03 => 'Colombo 03';
+
+  @override
+  String get custFallbackWesternProvince => 'Western Province';
+
+  @override
+  String get custFallbackColombo => 'Colombo';
+
+  @override
+  String custShareTrackingText(String link) {
+    return 'Track my HelaService artisan live here: $link';
+  }
+
+  @override
+  String custRatePerHour(String amount) {
+    return 'LKR $amount / hr';
+  }
+
+  @override
+  String custGpsTapToUpdate(String lat, String lng) {
+    return 'GPS: $lat, $lng (Tap to update)';
+  }
+
+  @override
+  String get custInspectionSuffix => 'inspection';
+
+  @override
+  String get custServiceProviderLabel => 'Service Provider';
+
+  @override
+  String get liveMapColArtisan => 'Artisan';
+
+  @override
+  String get liveMapColAssignedZone => 'Assigned Zone';
+
+  @override
+  String get liveMapColPayout => 'Payout';
+
+  @override
+  String get liveMapColQuickDispatch => 'Quick Dispatch';
+
+  @override
+  String get liveMapStatusAvailableIdle => 'Available / Idle';
+
+  @override
+  String get liveMapStatusActiveVerified => 'Active Verified';
+
+  @override
+  String get liveMapNicVerified => 'NIC: Verified';
+
+  @override
+  String get liveMapNicPending => 'NIC: Pending';
+
+  @override
+  String get liveMapZoneColomboMetro => 'Colombo Metro';
+
+  @override
+  String liveMapPayoutToday(String amount) {
+    return '$amount (Today)';
+  }
+
+  @override
+  String get liveMapTodayParen => '(Today)';
+
+  @override
+  String get liveMapActionDispatch => 'Dispatch';
+
+  @override
+  String get liveMapActionReassign => 'Re-assign';
+
+  @override
+  String liveMapDispatchDialogTitle(String action, String name) {
+    return '$action: $name';
+  }
+
+  @override
+  String liveMapQuotesReceived(int count) {
+    return '$count quotes received';
+  }
+
+  @override
+  String liveMapLiveCount(int count) {
+    return '+$count Live';
+  }
+
+  @override
+  String liveMapActiveCount(int count) {
+    return '$count Active';
+  }
+
+  @override
+  String get liveMapActionRequired => 'Action Req';
+
+  @override
+  String get liveMapShowAllDistricts => 'Show all districts';
+
+  @override
+  String liveMapUnmappedProviderOne(int count) {
+    return '$count active provider in unmapped/unknown zones';
+  }
+
+  @override
+  String liveMapUnmappedProviderMany(int count) {
+    return '$count active providers in unmapped/unknown zones';
+  }
+
+  @override
+  String get disputesNotAvailable => 'N/A';
+
+  @override
+  String get disputesResolveNotesPrompt =>
+      'Add resolution notes detailing the outcome of the investigation or customer compensation.';
+
+  @override
+  String get disputesDismissNotesPrompt =>
+      'Add notes explaining why this dispute is dismissed.';
+
+  @override
+  String get disputesResolutionSummaryHint =>
+      'Enter internal admin resolution summary...';
+
+  @override
+  String get disputesMarkedResolvedSnack => 'Complaint marked as Resolved.';
+
+  @override
+  String get disputesDismissedSnack => 'Complaint dismissed.';
+
+  @override
+  String get disputesMarkResolved => 'Mark Resolved';
+
+  @override
+  String get disputesConfirmDismiss => 'Confirm Dismiss';
+
+  @override
+  String disputesBanConfirm(String name, String trade) {
+    return 'Are you sure you want to ban $name ($trade)? They will be locked offline and hidden from customer discovery.';
+  }
+
+  @override
+  String get disputesSuspendProvider => 'Suspend Provider';
+
+  @override
+  String disputesProviderSuspendedSnack(String name) {
+    return 'Provider $name has been suspended.';
+  }
+
+  @override
+  String disputesErrorLoading(String error) {
+    return 'Error loading complaints: $error';
+  }
+
+  @override
+  String disputesFilterAllCount(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String disputesFilterPendingCount(int count) {
+    return 'Pending ($count)';
+  }
+
+  @override
+  String disputesFilterResolvedCount(int count) {
+    return 'Resolved ($count)';
+  }
+
+  @override
+  String disputesFilterDismissedCount(int count) {
+    return 'Dismissed ($count)';
+  }
+
+  @override
+  String get disputesNoMatching => 'No matching complaints found';
+
+  @override
+  String get disputesNoneRecorded => 'No complaints recorded';
+
+  @override
+  String get disputesTryAdjustingSearch =>
+      'Try adjusting your search criteria.';
+
+  @override
+  String get disputesAllDisputeFree =>
+      'All service transactions are currently dispute-free.';
+
+  @override
+  String get disputesStatusResolvedCaps => 'RESOLVED';
+
+  @override
+  String get disputesStatusDismissedCaps => 'DISMISSED';
+
+  @override
+  String get disputesStatusPendingCaps => 'PENDING';
+
+  @override
+  String disputesFiledAgo(String time) {
+    return 'Filed $time';
+  }
+
+  @override
+  String get disputesCustomerCaps => 'CUSTOMER';
+
+  @override
+  String get disputesReportedCaps => 'REPORTED';
+
+  @override
+  String disputesAdminNote(String note) {
+    return 'Admin Note: $note';
+  }
+
+  @override
+  String get disputesReopenCase => 'Reopen Case';
+
+  @override
+  String get disputesCaseReopenedSnack => 'Dispute case reopened.';
+
+  @override
+  String get shellSuperAdminOnly =>
+      'Only Super Admins can access Administrator Management.';
+
+  @override
+  String get provLocationNotSet => 'Location not set';
+
+  @override
+  String get provDirectPay => 'Direct Pay';
+
+  @override
+  String get provSpecialist => 'Specialist';
+
+  @override
+  String provNicImageTooLarge(int sizeKb) {
+    return 'Image size is too large ($sizeKb KB). Maximum allowed size is 600 KB. Please choose or capture a compressed photo.';
+  }
+
+  @override
+  String get provNicDecodeFailed => 'Failed to decode the captured document.';
+
+  @override
+  String get provNicTooLargeAfterCompression =>
+      'NIC image is too large even after compression. Please retake the photo.';
+
+  @override
+  String get provUserNotAuthenticated => 'User not authenticated';
+
+  @override
+  String get provNotLoggedIn => 'Not logged in';
+
+  @override
+  String get provNicHintExample => '200012345678 or 881234567V';
+
+  @override
+  String provDurationHoursMins(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String authGpsLocationDetected(String lat, String lng) {
+    return 'GPS Location detected: $lat, $lng';
+  }
+
+  @override
+  String authFailedToPickProfilePhoto(String error) {
+    return 'Failed to pick profile photo: $error';
+  }
+
+  @override
+  String get authErrUserNotFound =>
+      'No account found with this email. Please check your spelling or register.';
+
+  @override
+  String get authErrWrongCredentials =>
+      'Incorrect password or email. Please check your credentials.';
+
+  @override
+  String get authErrEmailInUse =>
+      'An account already exists with this email address.';
+
+  @override
+  String get authErrWeakPassword =>
+      'The password is too weak. Please use at least 6 characters.';
+
+  @override
+  String get authErrInvalidEmail => 'Please enter a valid email address.';
+
+  @override
+  String get authErrUserDisabled =>
+      'This account has been disabled. Please contact support.';
+
+  @override
+  String get authErrTooManyRequests =>
+      'Too many attempts. Please wait a moment before trying again.';
+
+  @override
+  String get authErrNetwork =>
+      'Network connection issue. Please check your internet connection.';
+
+  @override
+  String get authErrSignInCancelled => 'Sign-in cancelled by user.';
+
+  @override
+  String get authErrUserDataUnavailable =>
+      'Firebase user data is not available.';
+
+  @override
+  String get authErrAlreadyAdmin =>
+      'User is already registered as an administrator.';
+
+  @override
+  String authErrAuthenticationFailed(String email) {
+    return 'Authentication failed for $email';
+  }
+
+  @override
+  String authErrRegistrationFailed(String email) {
+    return 'Registration failed for $email';
+  }
+
+  @override
+  String authErrNoRegisteredUser(String email) {
+    return 'No registered user found with email \"$email\". The person must first register an account in the app before they can be promoted to an administrator.';
+  }
+
+  @override
+  String nicDeskApprovedActivated(String name) {
+    return '$name approved & activated on HelaService!';
+  }
+
+  @override
+  String nicDeskErrorApproving(String error) {
+    return 'Error approving verification: $error';
+  }
+
+  @override
+  String nicDeskVerificationRejected(String name) {
+    return 'Verification for $name rejected.';
+  }
+
+  @override
+  String nicDeskErrorRejecting(String error) {
+    return 'Error rejecting verification: $error';
+  }
+
+  @override
+  String nicDeskRequestedClearerPhoto(String name) {
+    return 'Requested clearer photo from $name.';
+  }
+
+  @override
+  String nicDeskErrorResubmission(String error) {
+    return 'Error requesting resubmission: $error';
+  }
+
+  @override
+  String nicDeskPendingCount(int count) {
+    return '$count Pending';
+  }
+
+  @override
+  String get nicDeskSortedMostRecent => 'Sorted by Most Recent';
+
+  @override
+  String get nicDeskDocsUploaded => 'Docs Uploaded';
+
+  @override
+  String get nicDeskStandardDoc => 'Standard Doc';
+
+  @override
+  String nicDeskMatchPercent(int percent) {
+    return '$percent% Match';
+  }
+
+  @override
+  String get nicDeskDefaultLocation => 'Western Province, Sri Lanka';
+
+  @override
+  String nicDeskVerifiedGnDivision(String location) {
+    return '$location (Verified GN Division)';
+  }
+
+  @override
+  String get nicDeskOcrFlagged => 'Flagged';
+
+  @override
+  String get nicDeskOcrMatch => 'Match';
+
+  @override
+  String get nicDeskOcrValid => 'Valid';
+
+  @override
+  String get nicDeskReadOnlyMode =>
+      'Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.';
+
+  @override
+  String get nicDeskNoId => 'No ID';
+
+  @override
+  String get nicDeskNoImage => 'No image';
+
+  @override
+  String get nicDeskTapToZoom => 'Tap to zoom';
+
+  @override
+  String teamAdminNowStatus(String name, String status) {
+    return '$name is now $status.';
+  }
+
+  @override
+  String teamFailedUpdateStatus(String error) {
+    return 'Failed to update status: $error';
+  }
+
+  @override
+  String get teamReadOnlyView =>
+      'Read-Only View: You are currently operating with Operations Admin privileges. Only Super Admins can add, reconfigure, or revoke administrative access.';
+
+  @override
+  String get teamStatusFilterLabel => 'Status:';
+
+  @override
+  String get teamAllStatuses => 'All Statuses';
+
+  @override
+  String get teamNoAdminsFound => 'No administrators found';
+
+  @override
+  String teamNoAdminMatching(String query) {
+    return 'No admin matching \"$query\" was found.';
+  }
+
+  @override
+  String get teamTryChangingFilter =>
+      'Try changing your role or status filter.';
+
+  @override
+  String get teamColAdministrator => 'ADMINISTRATOR';
+
+  @override
+  String get teamColTierRole => 'TIER & ROLE';
+
+  @override
+  String get teamColGrantedPermissions => 'GRANTED PERMISSIONS';
+
+  @override
+  String get teamColStatus => 'STATUS';
+
+  @override
+  String get teamColActions => 'ACTIONS';
+
+  @override
+  String get teamManagedInFirebase => 'Managed in Firebase Console';
+
+  @override
+  String get teamManageAdmin => 'Manage Admin';
+
+  @override
+  String get teamEditPermissions => 'Edit Permissions';
+
+  @override
+  String get teamProtected => 'Protected';
+
+  @override
+  String get teamActiveLabel => 'Active:';
+
+  @override
+  String get adminSetBroadcastHint =>
+      'e.g. Weather warning: Heavy rain alert in Western Province...';
+
+  @override
+  String get adminSetEnterAlertMessage => 'Please enter an alert message.';
+
+  @override
+  String get adminSetBroadcastDispatched =>
+      'Broadcast alert dispatched and recorded in live operations feed.';
+
+  @override
+  String adminSetBroadcastFailed(String error) {
+    return 'Failed to dispatch broadcast: $error';
+  }
+
+  @override
+  String adminSetRecentRecords(int count) {
+    return '$count Recent Governance & Dispatch Records';
+  }
+
+  @override
+  String get adminSetExportAuditLog => 'Export Audit Log (JSON)';
+
+  @override
+  String get adminSetAuditExported =>
+      'Audit log exported to clipboard as JSON.';
+
+  @override
+  String get adminSetNoAuditLogs => 'No platform audit logs recorded yet.';
+
+  @override
+  String get adminSetSystemAction => 'System Action';
+
+  @override
+  String get adminSetAuditTag => 'AUDIT';
+
+  @override
+  String get adminSetRecent => 'Recent';
+
+  @override
+  String get adminSetAdministratorFallback => 'Administrator';
+
+  @override
+  String get adminSetPlatformGovernance => 'Platform Governance';
+
+  @override
+  String get adminSetAssignedPermissions => 'Assigned Permissions:';
+
+  @override
+  String get adminSetAuditLogsDesc =>
+      'Review administrator actions & access history';
+
+  @override
+  String get adminSetAuditAccessDenied =>
+      'Access Denied: Platform audit logs are restricted to Super Admins.';
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/admin_user.dart';
 import '../../../services/auth_service.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
+import '../../../utils/auth_error_l10n.dart';
 
 class AddAdminDialog extends StatefulWidget {
   const AddAdminDialog({super.key});
@@ -66,8 +69,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
 
     if (_selectedPermissions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please grant at least one permission flag for this admin.'),
+        SnackBar(
+          content: Text(context.l10n.addAdminGrantOnePermission),
           backgroundColor: AppColors.error,
         ),
       );
@@ -101,10 +104,10 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
       });
     } catch (e) {
       if (!mounted) return;
-      final errorMsg = AuthService.getReadableAuthError(e);
+      final errorMsg = authErrorMessage(context, e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to add admin: $errorMsg'),
+          content: Text(context.l10n.addAdminFailed(errorMsg)),
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 5),
         ),
@@ -163,7 +166,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Admin Account Created',
+                    context.l10n.addAdminAccountCreated,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -197,8 +200,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'The user has been successfully granted ${_selectedRole.label} privileges. '
-                  'The next time they sign in with this email, the administrative console will be accessible.',
+                  context.l10n.addAdminSuccessBody(
+                      adminRoleLabel(context, _selectedRole)),
                   style: TextStyle(
                     fontSize: 12,
                     color: context.themeTextPrimary,
@@ -222,7 +225,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(context.l10n.done, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -256,7 +259,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Add Platform Administrator',
+                      context.l10n.addAdminTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -264,7 +267,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                       ),
                     ),
                     Text(
-                      'Assign role and permissions; invite links will be generated',
+                      context.l10n.addAdminSubtitle,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -289,7 +292,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Full Name',
+                    context.l10n.fullName,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -315,7 +318,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return 'Please enter the administrator full name';
+                        return context.l10n.addAdminEnterFullName;
                       }
                       return null;
                     },
@@ -323,7 +326,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                   const SizedBox(height: 14),
 
                   Text(
-                    'Official Work Email',
+                    context.l10n.addAdminWorkEmail,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -350,10 +353,10 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return 'Please enter a valid work email';
+                        return context.l10n.addAdminEnterWorkEmail;
                       }
                       if (!v.contains('@') || !v.contains('.')) {
-                        return 'Please enter a valid email format';
+                        return context.l10n.enterValidEmail;
                       }
                       return null;
                     },
@@ -361,7 +364,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                   const SizedBox(height: 14),
 
                   Text(
-                    'Mobile Phone (Optional)',
+                    context.l10n.addAdminMobileOptional,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -390,7 +393,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                   const SizedBox(height: 20),
 
                   Text(
-                    'Administrative Tier',
+                    context.l10n.addAdminTier,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -420,7 +423,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                   const SizedBox(height: 20),
 
                   Text(
-                    'Operational Permissions',
+                    context.l10n.addAdminOperationalPermissions,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -455,7 +458,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 2),
                         title: Text(
-                          permission.label,
+                          adminPermissionLabel(context, permission),
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -463,7 +466,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                           ),
                         ),
                         subtitle: Text(
-                          permission.description,
+                          adminPermissionDescription(context, permission),
                           style: TextStyle(
                             fontSize: 11,
                             color: context.themeTextSecondary,
@@ -495,7 +498,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
             children: [
               TextButton(
                 onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                child: Text('Cancel', style: TextStyle(color: context.themeTextSecondary)),
+                child: Text(context.l10n.cancel, style: TextStyle(color: context.themeTextSecondary)),
               ),
               const SizedBox(width: 10),
               ElevatedButton.icon(
@@ -511,7 +514,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                       )
                     : const Icon(Icons.send_rounded, size: 18),
                 label: Text(
-                  _isLoading ? 'Adding...' : 'Grant Admin Role',
+                  _isLoading ? context.l10n.addAdminAdding : context.l10n.addAdminGrantRole,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -580,7 +583,7 @@ class _RoleSelectCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              role.label,
+              adminRoleLabel(context, role),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11.5,

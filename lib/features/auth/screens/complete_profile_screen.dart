@@ -104,7 +104,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'GPS Location detected: ${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}',
+                context.l10n.authGpsLocationDetected(
+                    pos.latitude.toStringAsFixed(4),
+                    pos.longitude.toStringAsFixed(4)),
               ),
               backgroundColor: AppColors.primary,
             ),
@@ -144,7 +146,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick profile photo: $e'),
+            content: Text(context.l10n.authFailedToPickProfilePhoto('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -227,7 +229,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick photo: $e'),
+            content: Text('${context.l10n.failedToPickPhoto}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -999,7 +1001,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
                     decoration: _inputDecoration(
                       context,
-                      hint: '200012345678 or 881234567V',
+                      hint: context.l10n.provNicHintExample,
                       icon: Icons.badge_outlined,
                       isDark: context.isDark,
                     ),

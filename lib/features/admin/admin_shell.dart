@@ -100,10 +100,10 @@ class _AdminShellState extends State<AdminShell> {
                       onTap: (i) {
                         if (i == 3 && !roleProvider.isSuperAdmin) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Only Super Admins can access Administrator Management.'),
+                            SnackBar(
+                              content: Text(context.l10n.shellSuperAdminOnly),
                               backgroundColor: AppColors.error,
-                              duration: Duration(seconds: 2),
+                              duration: const Duration(seconds: 2),
                             ),
                           );
                           return;

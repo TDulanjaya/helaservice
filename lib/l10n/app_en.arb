@@ -1085,5 +1085,732 @@
   },
   "etaLabel": "ETA",
   "minsUnit": "min",
-  "certifiedArtisan": "Certified Artisan"
+  "certifiedArtisan": "Certified Artisan",
+  "addAdminGrantOnePermission": "Please grant at least one permission flag for this admin.",
+  "addAdminFailed": "Failed to add admin: {error}",
+  "@addAdminFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "addAdminAccountCreated": "Admin Account Created",
+  "addAdminSuccessBody": "The user has been successfully granted {role} privileges. The next time they sign in with this email, the administrative console will be accessible.",
+  "@addAdminSuccessBody": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "addAdminTitle": "Add Platform Administrator",
+  "addAdminSubtitle": "Assign role and permissions; invite links will be generated",
+  "addAdminEnterFullName": "Please enter the administrator full name",
+  "addAdminWorkEmail": "Official Work Email",
+  "addAdminEnterWorkEmail": "Please enter a valid work email",
+  "addAdminMobileOptional": "Mobile Phone (Optional)",
+  "addAdminTier": "Administrative Tier",
+  "addAdminOperationalPermissions": "Operational Permissions",
+  "addAdminAdding": "Adding...",
+  "addAdminGrantRole": "Grant Admin Role",
+  "editPermSelectOne": "Please select at least one permission flag.",
+  "editPermUpdatedFor": "Permissions updated for {name}.",
+  "@editPermUpdatedFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editPermFailed": "Failed to update permissions: {error}",
+  "@editPermFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editPermChangeTier": "Change Administrative Tier",
+  "editPermAssigned": "Assigned Operational Permissions",
+  "editPermUpdating": "Updating...",
+  "editPermSave": "Save Permissions",
+  "sidebarOnlySuperAdmins": "Only Super Admins can access Administrator Management.",
+  "sidebarNoPermission": "You do not have permission to access this section.",
+  "sidebarColomboCentralHub": "Colombo Central Hub",
+  "topBarSearch": "Search",
+  "topBarSupportMessages": "Support & Mediation Messages",
+  "topBarAdministrator": "Administrator",
+  "cdmPublishedCategoriesInfo": "Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.",
+  "cdmCategoryTitleHint": "e.g. Solar PV Maintenance",
+  "cdmServiceDescriptionHint": "Brief summary of the trade services offered...",
+  "cdmEnterCategoryTitle": "Please enter a category title",
+  "cdmCategorySaved": "Category \"{title}\" saved and published successfully",
+  "@cdmCategorySaved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmDeleteCategoryConfirm": "Are you sure you want to delete \"{name}\"? This will disable dispatch for this category island-wide.",
+  "@cdmDeleteCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmCategoryDeleted": "Category \"{name}\" deleted",
+  "@cdmCategoryDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmDelete": "Delete",
+  "cdmReadOnlyModeOpsGovernance": "Read-Only Mode (Ops Governance)",
+  "cdmFleetSubtitle": "Audit verified service technicians, moderate access, and enforce suspensions",
+  "cdmNoCategoriesDesc": "Add your service trades to publish them to Firebase so customers can discover and book technicians.",
+  "cdmDynamicQuotes": "Dynamic Quotes",
+  "cdmArtisansBidPerJob": "Artisans Bid Per Job",
+  "cdmPauseCategory": "Pause Category",
+  "cdmActivateCategory": "Activate Category",
+  "cdmFilterAllCount": "All ({count})",
+  "@cdmFilterAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmFilterOnlineCount": "Online ({count})",
+  "@cdmFilterOnlineCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmFilterSuspendedCount": "Suspended ({count})",
+  "@cdmFilterSuspendedCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmFilterOfflineCount": "Offline ({count})",
+  "@cdmFilterOfflineCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmNoArtisansMatchSearch": "No artisans match the search criteria",
+  "cdmNoArtisansInFilter": "No artisans registered in this filter view",
+  "cdmBadgeSuspended": "SUSPENDED",
+  "cdmBadgeOnline": "ONLINE",
+  "cdmBadgeOffline": "OFFLINE",
+  "cdmSriLanka": "Sri Lanka",
+  "cdmBaseRate": "Base: LKR {amount}",
+  "@cdmBaseRate": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmSuspensionReason": "Suspension Reason: \"{reason}\"",
+  "@cdmSuspensionReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmComplaints": "Complaints",
+  "cdmSuspend": "Suspend",
+  "cdmRestoreUnban": "Restore / Unban",
+  "cdmDeleteArtisanPermanently": "Delete Artisan Permanently",
+  "cdmSuspendName": "Suspend {name}",
+  "@cdmSuspendName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmSuspendConfirmBody": "Are you sure you want to suspend this artisan? They will be locked offline, hidden from customer searches, and prevented from submitting quotes.",
+  "cdmReasonForSuspension": "Reason for Suspension:",
+  "cdmArtisanSuspended": "{name} has been suspended.",
+  "@cdmArtisanSuspended": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmConfirmSuspension": "Confirm Suspension",
+  "cdmRestoreName": "Restore {name}",
+  "@cdmRestoreName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmRestoreConfirmBody": "Reactivate this artisan's profile? They will be allowed to go online and accept customer service requests.",
+  "cdmArtisanRestored": "{name} has been restored to active status.",
+  "@cdmArtisanRestored": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmRestoreAccess": "Restore Access",
+  "cdmDeleteArtisan": "Delete Artisan",
+  "cdmDeleteArtisanConfirm": "Are you sure you want to permanently delete \"{name}\" from the technician database? This operation cannot be reversed.",
+  "@cdmDeleteArtisanConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmArtisanDeleted": "{name} deleted from database.",
+  "@cdmArtisanDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmDeletePermanently": "Delete Permanently",
+  "cdmComplaintsFor": "Complaints for {name}",
+  "@cdmComplaintsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cdmNoComplaintsFiled": "No complaints filed",
+  "cdmNoComplaintsDesc": "This service provider has no recorded customer disputes.",
+  "cdmByCustomer": "By {name}",
+  "@cdmByCustomer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerStatusEnRoute": "En Route",
+  "ledgerJobsResolvedIsland": "{count} jobs resolved across island",
+  "@ledgerJobsResolvedIsland": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerDispatchesActive": "{count} dispatches active in field",
+  "@ledgerDispatchesActive": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerBasedOnReviews": "Based on {count} verified reviews",
+  "@ledgerBasedOnReviews": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerAwaitingFeedback": "Awaiting customer feedback",
+  "ledgerServiceBooking": "Service Booking",
+  "ledgerDelayMinutes": "{minutes}m delay",
+  "@ledgerDelayMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRoleDescSuper": "Root operational lead with team administration & full platform governance.",
+  "adminRoleDescOps": "Operational dispatch, artisan verifications, category & district hub management.",
+  "adminRoleDescSupport": "Support queue handler with KYC review and provider inquiry access.",
+  "permManageAdminsLabel": "Admin Team Governance",
+  "permVerifyNicLabel": "Artisan NIC & KYC Verification",
+  "permManageCategoriesLabel": "Categories & District Hubs",
+  "permBroadcastAlertsLabel": "Island-wide Emergency Alerts",
+  "permViewFinancesLabel": "Service & Financial Logs",
+  "permManageAdminsDesc": "Invite, configure, demote, and deactivate administrators.",
+  "permVerifyNicDesc": "Review smart NICs, police reports, and approve/reject artisan registrations.",
+  "permManageCategoriesDesc": "Configure trade categories, base rates, and provincial hub thresholds.",
+  "permBroadcastAlertsDesc": "Send push alerts and critical warnings to active island artisans.",
+  "permViewFinancesDesc": "Inspect service metrics, provider earnings, and completed job records.",
+  "adminStatusInvited": "Invited",
+  "adminStatusSuspended": "Suspended",
+  "custArtisanLabel": "Artisan",
+  "custDefaultSystemLanguage": "Default system language",
+  "custMetresAway": "{metres} m away",
+  "@custMetresAway": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "custKmAwayValue": "{km} km away",
+  "@custKmAwayValue": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "custFallbackAreaColombo03": "Colombo 03",
+  "custFallbackWesternProvince": "Western Province",
+  "custFallbackColombo": "Colombo",
+  "custShareTrackingText": "Track my HelaService artisan live here: {link}",
+  "@custShareTrackingText": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "custRatePerHour": "LKR {amount} / hr",
+  "@custRatePerHour": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "custGpsTapToUpdate": "GPS: {lat}, {lng} (Tap to update)",
+  "@custGpsTapToUpdate": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "custInspectionSuffix": "inspection",
+  "custServiceProviderLabel": "Service Provider",
+  "liveMapColArtisan": "Artisan",
+  "liveMapColAssignedZone": "Assigned Zone",
+  "liveMapColPayout": "Payout",
+  "liveMapColQuickDispatch": "Quick Dispatch",
+  "liveMapStatusAvailableIdle": "Available / Idle",
+  "liveMapStatusActiveVerified": "Active Verified",
+  "liveMapNicVerified": "NIC: Verified",
+  "liveMapNicPending": "NIC: Pending",
+  "liveMapZoneColomboMetro": "Colombo Metro",
+  "liveMapPayoutToday": "{amount} (Today)",
+  "@liveMapPayoutToday": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "liveMapTodayParen": "(Today)",
+  "liveMapActionDispatch": "Dispatch",
+  "liveMapActionReassign": "Re-assign",
+  "liveMapDispatchDialogTitle": "{action}: {name}",
+  "@liveMapDispatchDialogTitle": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "liveMapQuotesReceived": "{count} quotes received",
+  "@liveMapQuotesReceived": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveMapLiveCount": "+{count} Live",
+  "@liveMapLiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveMapActiveCount": "{count} Active",
+  "@liveMapActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveMapActionRequired": "Action Req",
+  "liveMapShowAllDistricts": "Show all districts",
+  "liveMapUnmappedProviderOne": "{count} active provider in unmapped/unknown zones",
+  "@liveMapUnmappedProviderOne": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveMapUnmappedProviderMany": "{count} active providers in unmapped/unknown zones",
+  "@liveMapUnmappedProviderMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "disputesNotAvailable": "N/A",
+  "disputesResolveNotesPrompt": "Add resolution notes detailing the outcome of the investigation or customer compensation.",
+  "disputesDismissNotesPrompt": "Add notes explaining why this dispute is dismissed.",
+  "disputesResolutionSummaryHint": "Enter internal admin resolution summary...",
+  "disputesMarkedResolvedSnack": "Complaint marked as Resolved.",
+  "disputesDismissedSnack": "Complaint dismissed.",
+  "disputesMarkResolved": "Mark Resolved",
+  "disputesConfirmDismiss": "Confirm Dismiss",
+  "disputesBanConfirm": "Are you sure you want to ban {name} ({trade})? They will be locked offline and hidden from customer discovery.",
+  "@disputesBanConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "trade": {
+        "type": "String"
+      }
+    }
+  },
+  "disputesSuspendProvider": "Suspend Provider",
+  "disputesProviderSuspendedSnack": "Provider {name} has been suspended.",
+  "@disputesProviderSuspendedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "disputesErrorLoading": "Error loading complaints: {error}",
+  "@disputesErrorLoading": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "disputesFilterAllCount": "All ({count})",
+  "@disputesFilterAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "disputesFilterPendingCount": "Pending ({count})",
+  "@disputesFilterPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "disputesFilterResolvedCount": "Resolved ({count})",
+  "@disputesFilterResolvedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "disputesFilterDismissedCount": "Dismissed ({count})",
+  "@disputesFilterDismissedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "disputesNoMatching": "No matching complaints found",
+  "disputesNoneRecorded": "No complaints recorded",
+  "disputesTryAdjustingSearch": "Try adjusting your search criteria.",
+  "disputesAllDisputeFree": "All service transactions are currently dispute-free.",
+  "disputesStatusResolvedCaps": "RESOLVED",
+  "disputesStatusDismissedCaps": "DISMISSED",
+  "disputesStatusPendingCaps": "PENDING",
+  "disputesFiledAgo": "Filed {time}",
+  "@disputesFiledAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "disputesCustomerCaps": "CUSTOMER",
+  "disputesReportedCaps": "REPORTED",
+  "disputesAdminNote": "Admin Note: {note}",
+  "@disputesAdminNote": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "disputesReopenCase": "Reopen Case",
+  "disputesCaseReopenedSnack": "Dispute case reopened.",
+  "shellSuperAdminOnly": "Only Super Admins can access Administrator Management.",
+  "provLocationNotSet": "Location not set",
+  "provDirectPay": "Direct Pay",
+  "provSpecialist": "Specialist",
+  "provNicImageTooLarge": "Image size is too large ({sizeKb} KB). Maximum allowed size is 600 KB. Please choose or capture a compressed photo.",
+  "@provNicImageTooLarge": {
+    "placeholders": {
+      "sizeKb": {
+        "type": "int"
+      }
+    }
+  },
+  "provNicDecodeFailed": "Failed to decode the captured document.",
+  "provNicTooLargeAfterCompression": "NIC image is too large even after compression. Please retake the photo.",
+  "provUserNotAuthenticated": "User not authenticated",
+  "provNotLoggedIn": "Not logged in",
+  "provNicHintExample": "200012345678 or 881234567V",
+  "provDurationHoursMins": "{hours}h {minutes}m",
+  "@provDurationHoursMins": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "authGpsLocationDetected": "GPS Location detected: {lat}, {lng}",
+  "@authGpsLocationDetected": {
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lng": {
+        "type": "String"
+      }
+    }
+  },
+  "authFailedToPickProfilePhoto": "Failed to pick profile photo: {error}",
+  "@authFailedToPickProfilePhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrUserNotFound": "No account found with this email. Please check your spelling or register.",
+  "authErrWrongCredentials": "Incorrect password or email. Please check your credentials.",
+  "authErrEmailInUse": "An account already exists with this email address.",
+  "authErrWeakPassword": "The password is too weak. Please use at least 6 characters.",
+  "authErrInvalidEmail": "Please enter a valid email address.",
+  "authErrUserDisabled": "This account has been disabled. Please contact support.",
+  "authErrTooManyRequests": "Too many attempts. Please wait a moment before trying again.",
+  "authErrNetwork": "Network connection issue. Please check your internet connection.",
+  "authErrSignInCancelled": "Sign-in cancelled by user.",
+  "authErrUserDataUnavailable": "Firebase user data is not available.",
+  "authErrAlreadyAdmin": "User is already registered as an administrator.",
+  "authErrAuthenticationFailed": "Authentication failed for {email}",
+  "@authErrAuthenticationFailed": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrRegistrationFailed": "Registration failed for {email}",
+  "@authErrRegistrationFailed": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authErrNoRegisteredUser": "No registered user found with email \"{email}\". The person must first register an account in the app before they can be promoted to an administrator.",
+  "@authErrNoRegisteredUser": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskApprovedActivated": "{name} approved & activated on HelaService!",
+  "@nicDeskApprovedActivated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskErrorApproving": "Error approving verification: {error}",
+  "@nicDeskErrorApproving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskVerificationRejected": "Verification for {name} rejected.",
+  "@nicDeskVerificationRejected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskErrorRejecting": "Error rejecting verification: {error}",
+  "@nicDeskErrorRejecting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskRequestedClearerPhoto": "Requested clearer photo from {name}.",
+  "@nicDeskRequestedClearerPhoto": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskErrorResubmission": "Error requesting resubmission: {error}",
+  "@nicDeskErrorResubmission": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskPendingCount": "{count} Pending",
+  "@nicDeskPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nicDeskSortedMostRecent": "Sorted by Most Recent",
+  "nicDeskDocsUploaded": "Docs Uploaded",
+  "nicDeskStandardDoc": "Standard Doc",
+  "nicDeskMatchPercent": "{percent}% Match",
+  "@nicDeskMatchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "nicDeskDefaultLocation": "Western Province, Sri Lanka",
+  "nicDeskVerifiedGnDivision": "{location} (Verified GN Division)",
+  "@nicDeskVerifiedGnDivision": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "nicDeskOcrFlagged": "Flagged",
+  "nicDeskOcrMatch": "Match",
+  "nicDeskOcrValid": "Valid",
+  "nicDeskReadOnlyMode": "Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.",
+  "nicDeskNoId": "No ID",
+  "nicDeskNoImage": "No image",
+  "nicDeskTapToZoom": "Tap to zoom",
+  "teamAdminNowStatus": "{name} is now {status}.",
+  "@teamAdminNowStatus": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "teamFailedUpdateStatus": "Failed to update status: {error}",
+  "@teamFailedUpdateStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "teamReadOnlyView": "Read-Only View: You are currently operating with Operations Admin privileges. Only Super Admins can add, reconfigure, or revoke administrative access.",
+  "teamStatusFilterLabel": "Status:",
+  "teamAllStatuses": "All Statuses",
+  "teamNoAdminsFound": "No administrators found",
+  "teamNoAdminMatching": "No admin matching \"{query}\" was found.",
+  "@teamNoAdminMatching": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "teamTryChangingFilter": "Try changing your role or status filter.",
+  "teamColAdministrator": "ADMINISTRATOR",
+  "teamColTierRole": "TIER & ROLE",
+  "teamColGrantedPermissions": "GRANTED PERMISSIONS",
+  "teamColStatus": "STATUS",
+  "teamColActions": "ACTIONS",
+  "teamManagedInFirebase": "Managed in Firebase Console",
+  "teamManageAdmin": "Manage Admin",
+  "teamEditPermissions": "Edit Permissions",
+  "teamProtected": "Protected",
+  "teamActiveLabel": "Active:",
+  "adminSetBroadcastHint": "e.g. Weather warning: Heavy rain alert in Western Province...",
+  "adminSetEnterAlertMessage": "Please enter an alert message.",
+  "adminSetBroadcastDispatched": "Broadcast alert dispatched and recorded in live operations feed.",
+  "adminSetBroadcastFailed": "Failed to dispatch broadcast: {error}",
+  "@adminSetBroadcastFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSetRecentRecords": "{count} Recent Governance & Dispatch Records",
+  "@adminSetRecentRecords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminSetExportAuditLog": "Export Audit Log (JSON)",
+  "adminSetAuditExported": "Audit log exported to clipboard as JSON.",
+  "adminSetNoAuditLogs": "No platform audit logs recorded yet.",
+  "adminSetSystemAction": "System Action",
+  "adminSetAuditTag": "AUDIT",
+  "adminSetRecent": "Recent",
+  "adminSetAdministratorFallback": "Administrator",
+  "adminSetPlatformGovernance": "Platform Governance",
+  "adminSetAssignedPermissions": "Assigned Permissions:",
+  "adminSetAuditLogsDesc": "Review administrator actions & access history",
+  "adminSetAuditAccessDenied": "Access Denied: Platform audit logs are restricted to Super Admins."
 }

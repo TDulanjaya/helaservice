@@ -92,7 +92,7 @@ class ProviderDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${technician.title} · ${technician.serviceArea.isNotEmpty ? technician.serviceArea : 'Colombo'}',
+                  '${technician.title} · ${technician.serviceArea.isNotEmpty ? technician.serviceArea : context.l10n.custFallbackColombo}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -150,10 +150,10 @@ class ProviderDetailScreen extends StatelessWidget {
                     'LKR ${technician.baseRateLkr}'),
                 const Divider(),
                 _PriceRow(context.l10n.standardHourlyLabour, null,
-                    'LKR ${technician.hourlyRateLkr} / hr'),
+                    context.l10n.custRatePerHour('${technician.hourlyRateLkr}')),
                 const Divider(),
                 _PriceRow(context.l10n.emergencyRate, null,
-                    'LKR ${technician.emergencyRateLkr} / hr'),
+                    context.l10n.custRatePerHour('${technician.emergencyRateLkr}')),
                 const SizedBox(height: 6),
                 Text(context.l10n.materialsBilledSeparately,
                     style: TextStyle(
@@ -260,7 +260,7 @@ class ProviderDetailScreen extends StatelessWidget {
                       final name =
                           (r['customerName'] as String?)?.isNotEmpty == true
                               ? r['customerName'] as String
-                              : 'Customer';
+                              : context.l10n.customerLabel;
                       final stars = (r['rating'] as num?)?.toInt() ?? 5;
                       final comment = (r['comment'] as String?) ?? '';
                       final tags = (r['tags'] as List?)

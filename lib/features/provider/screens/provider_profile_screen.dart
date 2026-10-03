@@ -120,8 +120,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         ? user!.email
         : '';
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
-    final category = user?.serviceCategory ?? 'Specialist';
-    final district = user?.district ?? 'Sri Lanka';
+    final category = user?.serviceCategory ?? context.l10n.provSpecialist;
+    final district = user?.district ?? context.l10n.cdmSriLanka;
     final nic = user?.nic?.isNotEmpty == true ? user!.nic! : '';
 
     return Scaffold(

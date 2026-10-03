@@ -921,7 +921,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                       child: Text(
                         tech.serviceArea.isNotEmpty
                             ? tech.serviceArea
-                            : 'Colombo',
+                            : context.l10n.custFallbackColombo,
                         style: TextStyle(
                           fontSize: 11.5,
                           color: context.themeTextSecondary,
@@ -955,7 +955,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               ),
               const SizedBox(height: 2),
               Text(
-                'inspection',
+                context.l10n.custInspectionSuffix,
                 style: TextStyle(
                   fontSize: 11,
                   color: context.themeMuted,

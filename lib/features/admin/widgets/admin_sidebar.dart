@@ -129,8 +129,8 @@ class AdminSidebar extends StatelessWidget {
                     SnackBar(
                       content: Text(
                         i == 3
-                            ? 'Only Super Admins can access Administrator Management.'
-                            : 'You do not have permission to access this section.',
+                            ? context.l10n.sidebarOnlySuperAdmins
+                            : context.l10n.sidebarNoPermission,
                       ),
                       backgroundColor: AppColors.error,
                       duration: const Duration(seconds: 2),
@@ -254,8 +254,8 @@ class AdminSidebar extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Colombo Central Hub',
-                        style: TextStyle(
+                    Text(context.l10n.sidebarColomboCentralHub,
+                        style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w600)),
                     Text('v2.4',
                         style:

@@ -67,7 +67,7 @@ class DashboardLiveMapScreen extends StatelessWidget {
               builder: (context, snapshot) {
                 final technicians = snapshot.data ?? [];
                 final roster = technicians
-                    .map((t) => _technicianToRosterRow(t))
+                    .map((t) => _technicianToRosterRow(context, t))
                     .toList();
 
                 if (roster.isEmpty) {
@@ -75,7 +75,7 @@ class DashboardLiveMapScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     alignment: Alignment.center,
                     child: Text(
-                      'No active artisans found in fleet',
+                      context.l10n.noActiveArtisansFleet,
                       style: TextStyle(
                         color: context.themeTextSecondary,
                         fontSize: 12,
@@ -111,15 +111,15 @@ class DashboardLiveMapScreen extends StatelessWidget {
                     builder: (context, snapshot) {
                       final technicians = snapshot.data ?? [];
                       final roster = technicians
-                          .map((t) => _technicianToRosterRow(t))
+                          .map((t) => _technicianToRosterRow(context, t))
                           .toList();
 
                       if (roster.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Center(
-                            child: Text('No active artisans found in fleet',
-                                style: TextStyle(
+                            child: Text(context.l10n.noActiveArtisansFleet,
+                                style: const TextStyle(
                                     color: AppColors.outline, fontSize: 12)),
                           ),
                         );
@@ -135,13 +135,13 @@ class DashboardLiveMapScreen extends StatelessWidget {
                         5: FlexColumnWidth(1.2),
                       },
                       children: [
-                        const TableRow(children: [
-                          _TableHeaderCell('Artisan'),
-                          _TableHeaderCell('Assigned Zone'),
-                          _TableHeaderCell('Status'),
-                          _TableHeaderCell('Payout'),
-                          _TableHeaderCell('Rating'),
-                          _TableHeaderCell('Quick Dispatch'),
+                        TableRow(children: [
+                          _TableHeaderCell(context.l10n.liveMapColArtisan),
+                          _TableHeaderCell(context.l10n.liveMapColAssignedZone),
+                          _TableHeaderCell(context.l10n.ocrStatus),
+                          _TableHeaderCell(context.l10n.liveMapColPayout),
+                          _TableHeaderCell(context.l10n.rating),
+                          _TableHeaderCell(context.l10n.liveMapColQuickDispatch),
                         ]),
                         ...roster.map((r) => TableRow(children: [
                               Padding(
@@ -192,7 +192,9 @@ class DashboardLiveMapScreen extends StatelessWidget {
                               Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 10),
-                                  child: Text(r.payoutToday,
+                                  child: Text(
+                                      context.l10n
+                                          .liveMapPayoutToday(r.payoutToday),
                                       style: const TextStyle(fontSize: 12))),
                               Padding(
                                 padding:
@@ -218,7 +220,8 @@ class DashboardLiveMapScreen extends StatelessWidget {
                                 child: TextButton(
                                     onPressed: () =>
                                         _showDispatchDialog(context, r),
-                                    child: Text(r.actionLabel,
+                                    child: Text(
+                                        _actionLabelText(context, r.actionLabel),
                                         style: const TextStyle(fontSize: 11))),
                               ),
                             ])),
@@ -235,7 +238,15 @@ class DashboardLiveMapScreen extends StatelessWidget {
   }
 }
 
-ArtisanRosterRow _technicianToRosterRow(Technician t) {
+// button label for dispatch action
+String _actionLabelText(BuildContext context, String action) {
+  return action == 'Dispatch'
+      ? context.l10n.liveMapActionDispatch
+      : context.l10n.liveMapActionReassign;
+}
+
+ArtisanRosterRow _technicianToRosterRow(BuildContext context, Technician t) {
+  final l10n = context.l10n;
   IconData getTradeIcon(String title) {
     final lower = title.toLowerCase();
     if (lower.contains('electr')) return Icons.bolt;
@@ -250,21 +261,26 @@ ArtisanRosterRow _technicianToRosterRow(Technician t) {
   }
 
   final statusStr = t.online
-      ? 'Available / Idle'
-      : (t.nicVerified ? 'Active Verified' : 'Pending Verification');
+      ? l10n.liveMapStatusAvailableIdle
+      : (t.nicVerified
+          ? l10n.liveMapStatusActiveVerified
+          : l10n.pendingVerificationStatus);
   final statusCol = t.online
       ? AppColors.primary
       : (t.nicVerified ? AppColors.secondaryContainer : AppColors.outline);
 
   return ArtisanRosterRow(
     name: t.name,
-    nic: t.nicVerified ? 'NIC: Verified' : 'NIC: Pending',
+    nic: t.nicVerified ? l10n.liveMapNicVerified : l10n.liveMapNicPending,
     trade: t.title,
     tradeIcon: getTradeIcon(t.title),
-    zone: t.serviceArea.isNotEmpty ? t.serviceArea : 'Colombo Metro',
+    zone: t.serviceArea.isNotEmpty
+        ? t.serviceArea
+        : l10n.liveMapZoneColomboMetro,
     status: statusStr,
     statusColor: statusCol,
-    payoutToday: 'LKR ${(t.jobsCount * t.baseRateLkr * 0.4).round()} (Today)',
+    // today suffix is added in the ui
+    payoutToday: 'LKR ${(t.jobsCount * t.baseRateLkr * 0.4).round()}',
     rating: t.rating,
     reviews: t.reviewCount,
     actionLabel: t.online ? 'Dispatch' : 'Re-assign',
@@ -281,7 +297,8 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '${r.actionLabel}: ${r.name}',
+              context.l10n.liveMapDispatchDialogTitle(
+                  _actionLabelText(context, r.actionLabel), r.name),
               style: const TextStyle(fontSize: 16),
             ),
           ),
@@ -297,9 +314,9 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                 style:
                     TextStyle(fontSize: 12, color: context.themeTextSecondary)),
             const SizedBox(height: 14),
-            const Text(
-              'Select Open Job Request to Dispatch:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            Text(
+              context.l10n.selectOpenJobRequest,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const SizedBox(height: 8),
             StreamBuilder<List<JobRequest>>(
@@ -311,7 +328,7 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Center(
                       child: Text(
-                        'No open customer requests awaiting dispatch.',
+                        context.l10n.noOpenCustomerRequests,
                         style: TextStyle(
                             fontSize: 12, color: context.themeTextSecondary),
                       ),
@@ -333,7 +350,7 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                             style: const TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                         subtitle: Text(
-                            '${req.address.isNotEmpty ? req.address : req.category} • ${req.quoteCount} quotes received',
+                            '${req.address.isNotEmpty ? req.address : req.category} • ${context.l10n.liveMapQuotesReceived(req.quoteCount)}',
                             style: const TextStyle(fontSize: 11)),
                         trailing: ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -359,15 +376,16 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      'Dispatched ${r.name} to "${req.title}"'),
+                                  content: Text(context.l10n
+                                      .dispatchedArtisanToJob(
+                                          r.name, '"${req.title}"')),
                                   backgroundColor: AppColors.primary,
                                 ),
                               );
                             }
                           },
-                          child: const Text('Assign',
-                              style: TextStyle(fontSize: 11)),
+                          child: Text(context.l10n.assignAction,
+                              style: const TextStyle(fontSize: 11)),
                         ),
                       );
                     },
@@ -381,7 +399,7 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Close'),
+          child: Text(context.l10n.close),
         ),
       ],
     ),
@@ -468,7 +486,7 @@ class _MobileRosterCard extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Payout ',
+                          text: '${context.l10n.liveMapColPayout} ',
                           style: TextStyle(
                             fontSize: 11.5,
                             color: context.themeTextSecondary,
@@ -476,7 +494,7 @@ class _MobileRosterCard extends StatelessWidget {
                           ),
                         ),
                         TextSpan(
-                          text: r.payoutToday.replaceAll(' (Today)', ''),
+                          text: r.payoutToday,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
@@ -487,7 +505,7 @@ class _MobileRosterCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '(Today)',
+                    context.l10n.liveMapTodayParen,
                     style: TextStyle(
                       fontSize: 10.5,
                       color: context.themeTextSecondary,
@@ -537,7 +555,7 @@ class _MobileRosterCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    r.actionLabel,
+                    _actionLabelText(context, r.actionLabel),
                     style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -557,7 +575,7 @@ class _MobileRosterCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    r.actionLabel,
+                    _actionLabelText(context, r.actionLabel),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -694,7 +712,7 @@ class _LiveDashboardStats extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
-                                  '+$onlineCount Live',
+                                  context.l10n.liveMapLiveCount(onlineCount),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -738,7 +756,9 @@ class _LiveDashboardStats extends StatelessWidget {
                   label: context.l10n.totalBookingsTitle,
                   value: '$totalBookings',
                   trailingBadge:
-                      activeBookings > 0 ? '$activeBookings Active' : null,
+                      activeBookings > 0
+                          ? context.l10n.liveMapActiveCount(activeBookings)
+                          : null,
                   subtitle: context.l10n.completedInProgressSummary(
                     '$completedBookings',
                     '$activeBookings',
@@ -750,7 +770,7 @@ class _LiveDashboardStats extends StatelessWidget {
                   label: context.l10n.nicScreeningTitle,
                   value: '$pendingQueue',
                   trailingBadge: pendingQueue > 0
-                      ? 'Action Req'
+                      ? context.l10n.liveMapActionRequired
                       : context.l10n.clearStatusBadge,
                   subtitle: context.l10n.verificationDossiersLogged(
                     '${queue.length}',
@@ -931,7 +951,7 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Show all districts',
+                    context.l10n.liveMapShowAllDistricts,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -1010,7 +1030,7 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Show all districts',
+                    context.l10n.liveMapShowAllDistricts,
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
@@ -1068,7 +1088,9 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$_unknownCount active provider${_unknownCount > 1 ? 's' : ''} in unmapped/unknown zones',
+                  _unknownCount > 1
+                      ? context.l10n.liveMapUnmappedProviderMany(_unknownCount)
+                      : context.l10n.liveMapUnmappedProviderOne(_unknownCount),
                   style: TextStyle(
                     fontSize: 11.5,
                     color: context.themeTextSecondary,

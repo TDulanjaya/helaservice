@@ -257,7 +257,7 @@ class JobQuotesScreen extends StatelessWidget {
         title: Text(context.l10n.acceptQuoteHire,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         content: Text(
-          '${quote.providerName} — LKR ${quote.quotedPrice.toStringAsFixed(0)}\nETA: ${quote.etaMinutes} mins.',
+          '${quote.providerName} — LKR ${quote.quotedPrice.toStringAsFixed(0)}\n${context.l10n.etaLabel}: ${context.l10n.durationMins(quote.etaMinutes)}',
           style: TextStyle(color: context.themeTextSecondary),
         ),
         actions: [
@@ -511,7 +511,7 @@ class _QuoteCard extends StatelessWidget {
         quote.providerLatitude!,
         quote.providerLongitude!,
       );
-      distanceLabel = LocationUtils.formatDistance(km);
+      distanceLabel = LocationUtils.formatDistanceL10n(context, km);
     }
 
     return AppCard(
@@ -594,7 +594,7 @@ class _QuoteCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'ETA: ${quote.etaMinutes} min',
+                    '${context.l10n.etaLabel}: ${context.l10n.durationMins(quote.etaMinutes)}',
                     style: TextStyle(
                       fontSize: 11,
                       color: context.themeTextSecondary,

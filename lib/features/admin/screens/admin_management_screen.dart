@@ -5,6 +5,7 @@ import '../../../models/admin_user.dart';
 import '../../../repositories/admin_repository.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
 import '../widgets/add_admin_dialog.dart';
 import '../widgets/edit_admin_permissions_dialog.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
@@ -52,7 +53,11 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${admin.displayName} is now ${makeActive ? 'Active' : 'Suspended'}.',
+            context.l10n.teamAdminNowStatus(
+              admin.displayName,
+              adminStatusLabel(context,
+                  makeActive ? AdminStatus.active : AdminStatus.suspended),
+            ),
           ),
           backgroundColor: makeActive ? AppColors.primary : AppColors.error,
         ),
@@ -61,7 +66,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to update status: $e'),
+          content: Text(context.l10n.teamFailedUpdateStatus('$e')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -74,20 +79,20 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.error),
-            SizedBox(width: 8),
-            Text('Revoke Administrator Access?'),
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            Text(ctx.l10n.revokeAdminAccess),
           ],
         ),
         content: Text(
-          'Are you sure you want to revoke back-office administrative access for ${admin.displayName} (${admin.email})? This action cannot be undone.',
+          ctx.l10n.revokeAccessConfirm(admin.displayName, admin.email),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(ctx.l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -97,7 +102,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Administrative access revoked for ${admin.displayName}.',
+                    context.l10n.adminAccessRevoked(admin.displayName),
                   ),
                   backgroundColor: AppColors.error,
                 ),
@@ -107,7 +112,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Revoke Access'),
+            child: Text(ctx.l10n.revokeAccess),
           ),
         ],
       ),
@@ -297,15 +302,15 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                 color: AppColors.primary.withValues(alpha: 0.2),
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(Icons.info_outline,
+                                const Icon(Icons.info_outline,
                                     size: 18, color: AppColors.primary),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    'Read-Only View: You are currently operating with Operations Admin privileges. Only Super Admins can add, reconfigure, or revoke administrative access.',
-                                    style: TextStyle(
+                                    context.l10n.teamReadOnlyView,
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.primary,
@@ -485,7 +490,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               ),
                               const SizedBox(width: 14),
                               Text(
-                                'Status:',
+                                context.l10n.teamStatusFilterLabel,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -494,20 +499,20 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               ),
                               const SizedBox(width: 8),
                               _FilterChip(
-                                label: 'All Statuses',
+                                label: context.l10n.teamAllStatuses,
                                 isSelected: _statusFilter == null,
                                 onSelected: () =>
                                     setState(() => _statusFilter = null),
                               ),
                               _FilterChip(
-                                label: 'Active',
+                                label: adminStatusLabel(context, AdminStatus.active),
                                 isSelected: _statusFilter == AdminStatus.active,
                                 color: const Color(0xFF2E7D32),
                                 onSelected: () => setState(
                                     () => _statusFilter = AdminStatus.active),
                               ),
                               _FilterChip(
-                                label: 'Invited',
+                                label: adminStatusLabel(context, AdminStatus.invited),
                                 isSelected:
                                     _statusFilter == AdminStatus.invited,
                                 color: AppColors.primary,
@@ -515,7 +520,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                     () => _statusFilter = AdminStatus.invited),
                               ),
                               _FilterChip(
-                                label: 'Suspended',
+                                label: adminStatusLabel(context, AdminStatus.suspended),
                                 isSelected:
                                     _statusFilter == AdminStatus.suspended,
                                 color: AppColors.error,
@@ -546,9 +551,9 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                             color: AppColors.outline.withValues(alpha: 0.4),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No administrators found',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.teamNoAdminsFound,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -556,8 +561,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _searchQuery.isNotEmpty
-                                ? 'No admin matching "$_searchQuery" was found.'
-                                : 'Try changing your role or status filter.',
+                                ? context.l10n.teamNoAdminMatching(_searchQuery)
+                                : context.l10n.teamTryChangingFilter,
                             style: TextStyle(
                               fontSize: 12.5,
                               color: context.themeTextSecondary,
@@ -780,38 +785,38 @@ class _AdminDesktopTable extends StatelessWidget {
           horizontalMargin: 20,
           columnSpacing: 24,
           headingRowColor: WidgetStateProperty.all(AppColors.surfaceLow),
-          columns: const [
+          columns: [
             DataColumn(
-              label: Text('ADMINISTRATOR',
-                  style: TextStyle(
+              label: Text(context.l10n.teamColAdministrator,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.outline)),
             ),
             DataColumn(
-              label: Text('TIER & ROLE',
-                  style: TextStyle(
+              label: Text(context.l10n.teamColTierRole,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.outline)),
             ),
             DataColumn(
-              label: Text('GRANTED PERMISSIONS',
-                  style: TextStyle(
+              label: Text(context.l10n.teamColGrantedPermissions,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.outline)),
             ),
             DataColumn(
-              label: Text('STATUS',
-                  style: TextStyle(
+              label: Text(context.l10n.teamColStatus,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.outline)),
             ),
             DataColumn(
-              label: Text('ACTIONS',
-                  style: TextStyle(
+              label: Text(context.l10n.teamColActions,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.outline)),
@@ -954,7 +959,7 @@ class _AdminDesktopTable extends StatelessWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  p.label,
+                                  adminPermissionLabel(context, p),
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -975,11 +980,7 @@ class _AdminDesktopTable extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      admin.status == AdminStatus.active
-                          ? context.l10n.statusActive
-                          : (admin.status == AdminStatus.suspended
-                              ? context.l10n.statusPaused
-                              : context.l10n.pendingInvitesCount),
+                      adminStatusLabel(context, admin.status),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -1002,15 +1003,15 @@ class _AdminDesktopTable extends StatelessWidget {
                             border: Border.all(
                                 color: AppColors.primary.withValues(alpha: 0.3)),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.lock_outline,
+                              const Icon(Icons.lock_outline,
                                   size: 12, color: AppColors.primary),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
-                                'Managed in Firebase Console',
-                                style: TextStyle(
+                                context.l10n.teamManagedInFirebase,
+                                style: const TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.primary,
@@ -1027,7 +1028,7 @@ class _AdminDesktopTable extends StatelessWidget {
                         ),
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.more_vert, size: 18),
-                          tooltip: 'Manage Admin',
+                          tooltip: context.l10n.teamManageAdmin,
                           onSelected: (val) {
                             switch (val) {
                               case 'edit':
@@ -1039,35 +1040,36 @@ class _AdminDesktopTable extends StatelessWidget {
                             }
                           },
                           itemBuilder: (ctx) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, size: 16),
-                                  SizedBox(width: 8),
-                                  Text('Edit Permissions'),
+                                  const Icon(Icons.edit_outlined, size: 16),
+                                  const SizedBox(width: 8),
+                                  Text(ctx.l10n.teamEditPermissions),
                                 ],
                               ),
                             ),
                             const PopupMenuDivider(),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'revoke',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete_outline,
+                                  const Icon(Icons.delete_outline,
                                       size: 16, color: AppColors.error),
-                                  SizedBox(width: 8),
-                                  Text('Revoke Access',
-                                      style: TextStyle(color: AppColors.error)),
+                                  const SizedBox(width: 8),
+                                  Text(ctx.l10n.revokeAccess,
+                                      style: const TextStyle(
+                                          color: AppColors.error)),
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ] else ...[
-                        const Text(
-                          'Protected',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.teamProtected,
+                          style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.outline,
                             fontStyle: FontStyle.italic,
@@ -1229,15 +1231,15 @@ class _AdminMobileCard extends StatelessWidget {
                       color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.lock_outline,
+                        const Icon(Icons.lock_outline,
                             size: 11, color: AppColors.primary),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          'Protected',
-                          style: TextStyle(
+                          context.l10n.teamProtected,
+                          style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
@@ -1256,7 +1258,7 @@ class _AdminMobileCard extends StatelessWidget {
                     size: 13, color: Colors.white.withValues(alpha: 0.5)),
                 const SizedBox(width: 6),
                 Text(
-                  'Managed in Firebase Console',
+                  context.l10n.teamManagedInFirebase,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.white.withValues(alpha: 0.65),
@@ -1358,11 +1360,7 @@ class _AdminMobileCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  admin.status == AdminStatus.active
-                      ? context.l10n.statusActive
-                      : (admin.status == AdminStatus.suspended
-                          ? context.l10n.statusPaused
-                          : context.l10n.pendingInvitesCount),
+                  adminStatusLabel(context, admin.status),
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -1421,7 +1419,7 @@ class _AdminMobileCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    p.label,
+                    adminPermissionLabel(context, p),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
@@ -1442,7 +1440,7 @@ class _AdminMobileCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Active:',
+                      context.l10n.teamActiveLabel,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1465,13 +1463,13 @@ class _AdminMobileCard extends StatelessWidget {
                     IconButton(
                       icon: Icon(Icons.edit_outlined,
                           size: 19, color: context.themeTextSecondary),
-                      tooltip: 'Edit Permissions',
+                      tooltip: context.l10n.teamEditPermissions,
                       onPressed: onEditPermissions,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline,
                           size: 19, color: AppColors.error),
-                      tooltip: 'Revoke Access',
+                      tooltip: context.l10n.revokeAccess,
                       onPressed: onRevoke,
                     ),
                   ],

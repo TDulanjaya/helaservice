@@ -101,7 +101,26 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     } catch (_) {}
   }
 
+  // translate upload error message
+  String _localizedUploadError(Object e, int? tooLargeKb) {
+    final raw = e.toString();
+    if (tooLargeKb != null && raw.contains('Image size is too large')) {
+      return context.l10n.provNicImageTooLarge(tooLargeKb);
+    }
+    if (raw.contains('Failed to decode the captured document')) {
+      return context.l10n.provNicDecodeFailed;
+    }
+    if (raw.contains('NIC image is too large even after compression')) {
+      return context.l10n.provNicTooLargeAfterCompression;
+    }
+    if (raw.contains('User not authenticated')) {
+      return context.l10n.provUserNotAuthenticated;
+    }
+    return raw;
+  }
+
   Future<void> _handleUpload(String docType) async {
+    int? tooLargeKb;
     setState(() {
       if (docType == 'front') _isUploadingFront = true;
       if (docType == 'back') _isUploadingBack = true;
@@ -131,6 +150,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       final Uint8List rawBytes = await photo.readAsBytes();
       final Uint8List imageBytes = await compute(_compressNicImage, rawBytes);
       if (imageBytes.lengthInBytes > 600 * 1024) {
+        tooLargeKb = (imageBytes.lengthInBytes / 1024).round();
         throw Exception(
           'Image size is too large (${(imageBytes.lengthInBytes / 1024).round()} KB). '
           'Maximum allowed size is 600 KB. Please choose or capture a compressed photo.',
@@ -170,7 +190,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:
-                Text(context.l10n.failedToUploadPhoto(e.toString())),
+                Text(context.l10n.failedToUploadPhoto(
+                    _localizedUploadError(e, tooLargeKb))),
             backgroundColor: AppColors.error,
           ),
         );

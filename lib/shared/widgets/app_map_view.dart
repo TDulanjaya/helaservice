@@ -27,7 +27,7 @@ class AppMapMarker {
   /// Marker for a customer location.
   factory AppMapMarker.customer({
     required LatLng point,
-    String label = 'Customer',
+    String? label,
     VoidCallback? onTap,
   }) {
     return AppMapMarker(
@@ -69,14 +69,16 @@ class AppMapMarker {
                 color: Colors.black87,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
+              child: Builder(
+                builder: (ctx) => Text(
+                  label ?? ctx.l10n.customerLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -89,7 +91,7 @@ class AppMapMarker {
   /// Marker for a technician location.
   factory AppMapMarker.provider({
     required LatLng point,
-    String label = 'Artisan',
+    String? label,
     bool enRoute = true,
     VoidCallback? onTap,
   }) {
@@ -132,14 +134,16 @@ class AppMapMarker {
                 color: AppColors.secondaryContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
+              child: Builder(
+                builder: (ctx) => Text(
+                  label ?? ctx.l10n.custArtisanLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

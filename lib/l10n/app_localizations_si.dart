@@ -2543,4 +2543,901 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get certifiedArtisan => 'සහතිකලත් ශිල්පී';
+
+  @override
+  String get addAdminGrantOnePermission =>
+      'කරුණාකර මෙම ඇඩ්මින්ට අවම වශයෙන් එක් අවසරයක් හෝ ලබා දෙන්න.';
+
+  @override
+  String addAdminFailed(String error) {
+    return 'ඇඩ්මින් එකතු කිරීමට නොහැකි විය: $error';
+  }
+
+  @override
+  String get addAdminAccountCreated => 'ඇඩ්මින් ගිණුම සෑදුවා';
+
+  @override
+  String addAdminSuccessBody(String role) {
+    return 'පරිශීලකයාට $role වරප්‍රසාද සාර්ථකව ලබා දී ඇත. ඊළඟ වතාවේ ඔවුන් මෙම ඊමේල් එකෙන් ලොග් වූ විට, ඇඩ්මින් කොන්සෝලයට පිවිසිය හැක.';
+  }
+
+  @override
+  String get addAdminTitle => 'පද්ධති ඇඩ්මින් කෙනෙක් එකතු කරන්න';
+
+  @override
+  String get addAdminSubtitle =>
+      'භූමිකාව සහ අවසර ලබා දෙන්න; ආරාධනා ලින්ක් සෑදෙනු ඇත';
+
+  @override
+  String get addAdminEnterFullName =>
+      'කරුණාකර ඇඩ්මින්ගේ සම්පූර්ණ නම ඇතුළත් කරන්න';
+
+  @override
+  String get addAdminWorkEmail => 'නිල රැකියා ඊමේල්';
+
+  @override
+  String get addAdminEnterWorkEmail =>
+      'කරුණාකර වලංගු රැකියා ඊමේල් එකක් ඇතුළත් කරන්න';
+
+  @override
+  String get addAdminMobileOptional => 'ජංගම දුරකථනය (අත්‍යවශ්‍ය නැත)';
+
+  @override
+  String get addAdminTier => 'ඇඩ්මින් මට්ටම';
+
+  @override
+  String get addAdminOperationalPermissions => 'මෙහෙයුම් අවසර';
+
+  @override
+  String get addAdminAdding => 'එකතු කරමින්...';
+
+  @override
+  String get addAdminGrantRole => 'ඇඩ්මින් භූමිකාව දෙන්න';
+
+  @override
+  String get editPermSelectOne => 'කරුණාකර අවම වශයෙන් එක් අවසරයක් හෝ තෝරන්න.';
+
+  @override
+  String editPermUpdatedFor(String name) {
+    return '$name සඳහා අවසර යාවත්කාලීන කළා.';
+  }
+
+  @override
+  String editPermFailed(String error) {
+    return 'අවසර යාවත්කාලීන කිරීමට නොහැකි විය: $error';
+  }
+
+  @override
+  String get editPermChangeTier => 'ඇඩ්මින් මට්ටම වෙනස් කරන්න';
+
+  @override
+  String get editPermAssigned => 'ලබා දී ඇති මෙහෙයුම් අවසර';
+
+  @override
+  String get editPermUpdating => 'යාවත්කාලීන කරමින්...';
+
+  @override
+  String get editPermSave => 'අවසර සුරකින්න';
+
+  @override
+  String get sidebarOnlySuperAdmins =>
+      'ඇඩ්මින් කළමනාකරණයට පිවිසිය හැක්කේ Super Admin අයට පමණි.';
+
+  @override
+  String get sidebarNoPermission => 'මෙම කොටසට පිවිසීමට ඔබට අවසර නැත.';
+
+  @override
+  String get sidebarColomboCentralHub => 'කොළඹ මධ්‍යම මධ්‍යස්ථානය';
+
+  @override
+  String get topBarSearch => 'සොයන්න';
+
+  @override
+  String get topBarSupportMessages => 'සහාය සහ මැදිහත්වීම් පණිවිඩ';
+
+  @override
+  String get topBarAdministrator => 'ඇඩ්මින්';
+
+  @override
+  String get cdmPublishedCategoriesInfo =>
+      'ප්‍රකාශිත කාණ්ඩ දිවයින පුරා ලබා ගත හැක. මිල ගණන් ගතිකයි — ළඟපාත තහවුරු කළ කාර්මිකයන් දුර සහ වැඩයේ විස්තර අනුව තමන්ගේ මිල ගණන් ඉදිරිපත් කරයි.';
+
+  @override
+  String get cdmCategoryTitleHint => 'උදා: සූර්ය PV නඩත්තුව';
+
+  @override
+  String get cdmServiceDescriptionHint =>
+      'ලබා දෙන සේවා පිළිබඳ කෙටි සාරාංශයක්...';
+
+  @override
+  String get cdmEnterCategoryTitle => 'කරුණාකර කාණ්ඩයේ නම ඇතුළත් කරන්න';
+
+  @override
+  String cdmCategorySaved(String title) {
+    return '\"$title\" කාණ්ඩය සාර්ථකව සුරැකී ප්‍රකාශයට පත් කළා';
+  }
+
+  @override
+  String cdmDeleteCategoryConfirm(String name) {
+    return '\"$name\" මකා දැමීමට ඔබට විශ්වාසද? මෙයින් දිවයින පුරා මෙම කාණ්ඩයට වැඩ යැවීම නවතිනු ඇත.';
+  }
+
+  @override
+  String cdmCategoryDeleted(String name) {
+    return '\"$name\" කාණ්ඩය මකා දැමුවා';
+  }
+
+  @override
+  String get cdmDelete => 'මකන්න';
+
+  @override
+  String get cdmReadOnlyModeOpsGovernance => 'කියවීමට පමණි (Ops පාලනය)';
+
+  @override
+  String get cdmFleetSubtitle =>
+      'තහවුරු කළ කාර්මිකයන් පරීක්ෂා කරන්න, ප්‍රවේශය පාලනය කරන්න, සහ අත්හිටුවීම් ක්‍රියාත්මක කරන්න';
+
+  @override
+  String get cdmNoCategoriesDesc =>
+      'පාරිභෝගිකයන්ට කාර්මිකයන් සොයා වෙන්කරවා ගැනීමට හැකි වන ලෙස ඔබේ සේවා කාණ්ඩ එකතු කර Firebase වෙත ප්‍රකාශයට පත් කරන්න.';
+
+  @override
+  String get cdmDynamicQuotes => 'ගතික මිල ගණන්';
+
+  @override
+  String get cdmArtisansBidPerJob =>
+      'එක් එක් වැඩයට කාර්මිකයන් මිල ඉදිරිපත් කරයි';
+
+  @override
+  String get cdmPauseCategory => 'කාණ්ඩය නවත්වන්න';
+
+  @override
+  String get cdmActivateCategory => 'කාණ්ඩය සක්‍රිය කරන්න';
+
+  @override
+  String cdmFilterAllCount(String count) {
+    return 'සියල්ල ($count)';
+  }
+
+  @override
+  String cdmFilterOnlineCount(String count) {
+    return 'ඔන්ලයින් ($count)';
+  }
+
+  @override
+  String cdmFilterSuspendedCount(String count) {
+    return 'අත්හිටුවා ඇති ($count)';
+  }
+
+  @override
+  String cdmFilterOfflineCount(String count) {
+    return 'ඕෆ්ලයින් ($count)';
+  }
+
+  @override
+  String get cdmNoArtisansMatchSearch => 'සෙවුමට ගැළපෙන කාර්මිකයන් නැත';
+
+  @override
+  String get cdmNoArtisansInFilter => 'මෙම පෙරහනේ ලියාපදිංචි කාර්මිකයන් නැත';
+
+  @override
+  String get cdmBadgeSuspended => 'අත්හිටුවා ඇත';
+
+  @override
+  String get cdmBadgeOnline => 'ඔන්ලයින්';
+
+  @override
+  String get cdmBadgeOffline => 'ඕෆ්ලයින්';
+
+  @override
+  String get cdmSriLanka => 'ශ්‍රී ලංකාව';
+
+  @override
+  String cdmBaseRate(String amount) {
+    return 'මූලික ගාස්තුව: LKR $amount';
+  }
+
+  @override
+  String cdmSuspensionReason(String reason) {
+    return 'අත්හිටුවීමට හේතුව: \"$reason\"';
+  }
+
+  @override
+  String get cdmComplaints => 'පැමිණිලි';
+
+  @override
+  String get cdmSuspend => 'අත්හිටුවන්න';
+
+  @override
+  String get cdmRestoreUnban => 'යළි සක්‍රිය කරන්න / තහනම ඉවත් කරන්න';
+
+  @override
+  String get cdmDeleteArtisanPermanently => 'කාර්මිකයා ස්ථිරවම මකන්න';
+
+  @override
+  String cdmSuspendName(String name) {
+    return '$name අත්හිටුවන්න';
+  }
+
+  @override
+  String get cdmSuspendConfirmBody =>
+      'මෙම කාර්මිකයා අත්හිටුවීමට ඔබට විශ්වාසද? ඔවුන් ඕෆ්ලයින් ලෙස අගුළු දමා, පාරිභෝගික සෙවුම්වලින් සඟවා, මිල ගණන් ඉදිරිපත් කිරීම වළක්වනු ඇත.';
+
+  @override
+  String get cdmReasonForSuspension => 'අත්හිටුවීමට හේතුව:';
+
+  @override
+  String cdmArtisanSuspended(String name) {
+    return '$name අත්හිටුවා ඇත.';
+  }
+
+  @override
+  String get cdmConfirmSuspension => 'අත්හිටුවීම තහවුරු කරන්න';
+
+  @override
+  String cdmRestoreName(String name) {
+    return '$name යළි සක්‍රිය කරන්න';
+  }
+
+  @override
+  String get cdmRestoreConfirmBody =>
+      'මෙම කාර්මිකයාගේ පැතිකඩ යළි සක්‍රිය කරන්නද? ඔවුන්ට නැවත ඔන්ලයින් වී පාරිභෝගික සේවා ඉල්ලීම් භාර ගැනීමට හැකි වේ.';
+
+  @override
+  String cdmArtisanRestored(String name) {
+    return '$name යළි සක්‍රිය තත්ත්වයට පත් කළා.';
+  }
+
+  @override
+  String get cdmRestoreAccess => 'ප්‍රවේශය යළි ලබා දෙන්න';
+
+  @override
+  String get cdmDeleteArtisan => 'කාර්මිකයා මකන්න';
+
+  @override
+  String cdmDeleteArtisanConfirm(String name) {
+    return '\"$name\" කාර්මික දත්ත ගබඩාවෙන් ස්ථිරවම මකා දැමීමට ඔබට විශ්වාසද? මෙය ආපසු හැරවිය නොහැක.';
+  }
+
+  @override
+  String cdmArtisanDeleted(String name) {
+    return '$name දත්ත ගබඩාවෙන් මකා දැමුවා.';
+  }
+
+  @override
+  String get cdmDeletePermanently => 'ස්ථිරවම මකන්න';
+
+  @override
+  String cdmComplaintsFor(String name) {
+    return '$name ට එරෙහි පැමිණිලි';
+  }
+
+  @override
+  String get cdmNoComplaintsFiled => 'පැමිණිලි කිසිවක් නැත';
+
+  @override
+  String get cdmNoComplaintsDesc =>
+      'මෙම සේවා සපයන්නාට එරෙහිව වාර්තා වූ පාරිභෝගික ආරවුල් නැත.';
+
+  @override
+  String cdmByCustomer(String name) {
+    return '$name විසින්';
+  }
+
+  @override
+  String get ledgerStatusEnRoute => 'එමින් පවතී';
+
+  @override
+  String ledgerJobsResolvedIsland(String count) {
+    return 'දිවයින පුරා වැඩ $countක් නිම කළා';
+  }
+
+  @override
+  String ledgerDispatchesActive(String count) {
+    return 'ක්ෂේත්‍රයේ සක්‍රිය වැඩ $countක්';
+  }
+
+  @override
+  String ledgerBasedOnReviews(String count) {
+    return 'තහවුරු කළ සමාලෝචන $countක් මත';
+  }
+
+  @override
+  String get ledgerAwaitingFeedback => 'පාරිභෝගික ප්‍රතිචාර බලාපොරොත්තුවෙන්';
+
+  @override
+  String get ledgerServiceBooking => 'සේවා වෙන්කිරීම';
+
+  @override
+  String ledgerDelayMinutes(String minutes) {
+    return 'මිනි. $minutes ප්‍රමාදය';
+  }
+
+  @override
+  String get adminRoleDescSuper =>
+      'කණ්ඩායම් පරිපාලනය සහ සම්පූර්ණ වේදිකා පාලනය සහිත ප්‍රධාන මෙහෙයුම් නායකයා.';
+
+  @override
+  String get adminRoleDescOps =>
+      'මෙහෙයුම් යැවීම්, ශිල්පී සත්‍යාපන, ප්‍රවර්ග සහ දිස්ත්‍රික් මධ්‍යස්ථාන කළමනාකරණය.';
+
+  @override
+  String get adminRoleDescSupport =>
+      'KYC සමාලෝචනය සහ සේවා සපයන්නන්ගේ විමසීම් ප්‍රවේශය සහිත සහාය පෝලිම් කළමනාකරු.';
+
+  @override
+  String get permManageAdminsLabel => 'පරිපාලක කණ්ඩායම් පාලනය';
+
+  @override
+  String get permVerifyNicLabel => 'ශිල්පී NIC සහ KYC සත්‍යාපනය';
+
+  @override
+  String get permManageCategoriesLabel => 'ප්‍රවර්ග සහ දිස්ත්‍රික් මධ්‍යස්ථාන';
+
+  @override
+  String get permBroadcastAlertsLabel => 'දිවයින පුරා හදිසි ඇඟවීම්';
+
+  @override
+  String get permViewFinancesLabel => 'සේවා සහ මූල්‍ය වාර්තා';
+
+  @override
+  String get permManageAdminsDesc =>
+      'පරිපාලකයින්ට ආරාධනා කිරීම, සැකසීම, තනතුර අඩු කිරීම සහ අක්‍රිය කිරීම.';
+
+  @override
+  String get permVerifyNicDesc =>
+      'ස්මාර්ට් NIC, පොලිස් වාර්තා සමාලෝචනය කර ශිල්පී ලියාපදිංචි කිරීම් අනුමත/ප්‍රතික්ෂේප කිරීම.';
+
+  @override
+  String get permManageCategoriesDesc =>
+      'වෘත්තීය ප්‍රවර්ග, මූලික ගාස්තු සහ පළාත් මධ්‍යස්ථාන සීමා සැකසීම.';
+
+  @override
+  String get permBroadcastAlertsDesc =>
+      'සක්‍රිය ශිල්පීන්ට දැනුම්දීම් සහ හදිසි අනතුරු ඇඟවීම් යැවීම.';
+
+  @override
+  String get permViewFinancesDesc =>
+      'සේවා මිනුම්, සේවා සපයන්නන්ගේ ඉපැයීම් සහ නිම කළ වැඩ වාර්තා පරීක්ෂා කිරීම.';
+
+  @override
+  String get adminStatusInvited => 'ආරාධිතයි';
+
+  @override
+  String get adminStatusSuspended => 'අත්හිටුවා ඇත';
+
+  @override
+  String get custArtisanLabel => 'කාර්මිකයා';
+
+  @override
+  String get custDefaultSystemLanguage => 'පද්ධතියේ පෙරනිමි භාෂාව';
+
+  @override
+  String custMetresAway(int metres) {
+    return 'මීටර් $metresක් දුරින්';
+  }
+
+  @override
+  String custKmAwayValue(String km) {
+    return 'කි.මී. $kmක් දුරින්';
+  }
+
+  @override
+  String get custFallbackAreaColombo03 => 'කොළඹ 03';
+
+  @override
+  String get custFallbackWesternProvince => 'බස්නාහිර පළාත';
+
+  @override
+  String get custFallbackColombo => 'කොළඹ';
+
+  @override
+  String custShareTrackingText(String link) {
+    return 'මගේ HelaService කාර්මිකයා සජීවීව මෙතැනින් බලන්න: $link';
+  }
+
+  @override
+  String custRatePerHour(String amount) {
+    return 'LKR $amount / පැයට';
+  }
+
+  @override
+  String custGpsTapToUpdate(String lat, String lng) {
+    return 'GPS: $lat, $lng (යාවත්කාලීන කිරීමට තට්ටු කරන්න)';
+  }
+
+  @override
+  String get custInspectionSuffix => 'පරීක්ෂාව';
+
+  @override
+  String get custServiceProviderLabel => 'සේවා සපයන්නා';
+
+  @override
+  String get liveMapColArtisan => 'කාර්මිකයා';
+
+  @override
+  String get liveMapColAssignedZone => 'පවරා ඇති කලාපය';
+
+  @override
+  String get liveMapColPayout => 'ගෙවීම';
+
+  @override
+  String get liveMapColQuickDispatch => 'ඉක්මන් යැවීම';
+
+  @override
+  String get liveMapStatusAvailableIdle => 'ලබා ගත හැක / නිදහස්';
+
+  @override
+  String get liveMapStatusActiveVerified => 'සක්‍රීය - තහවුරු කළ';
+
+  @override
+  String get liveMapNicVerified => 'NIC: තහවුරු කළා';
+
+  @override
+  String get liveMapNicPending => 'NIC: බලාපොරොත්තුවෙන්';
+
+  @override
+  String get liveMapZoneColomboMetro => 'කොළඹ නාගරික';
+
+  @override
+  String liveMapPayoutToday(String amount) {
+    return '$amount (අද)';
+  }
+
+  @override
+  String get liveMapTodayParen => '(අද)';
+
+  @override
+  String get liveMapActionDispatch => 'යවන්න';
+
+  @override
+  String get liveMapActionReassign => 'නැවත පවරන්න';
+
+  @override
+  String liveMapDispatchDialogTitle(String action, String name) {
+    return '$action: $name';
+  }
+
+  @override
+  String liveMapQuotesReceived(int count) {
+    return 'මිල ගණන් $countක් ලැබී ඇත';
+  }
+
+  @override
+  String liveMapLiveCount(int count) {
+    return '+$count සජීවී';
+  }
+
+  @override
+  String liveMapActiveCount(int count) {
+    return '$count සක්‍රීය';
+  }
+
+  @override
+  String get liveMapActionRequired => 'ක්‍රියාව අවශ්‍යයි';
+
+  @override
+  String get liveMapShowAllDistricts => 'සියලු දිස්ත්‍රික්ක පෙන්වන්න';
+
+  @override
+  String liveMapUnmappedProviderOne(int count) {
+    return 'සිතියම්ගත නොකළ/නොදන්නා කලාපවල සක්‍රීය සේවා සපයන්නන් $countක්';
+  }
+
+  @override
+  String liveMapUnmappedProviderMany(int count) {
+    return 'සිතියම්ගත නොකළ/නොදන්නා කලාපවල සක්‍රීය සේවා සපයන්නන් $countක්';
+  }
+
+  @override
+  String get disputesNotAvailable => 'නැත';
+
+  @override
+  String get disputesResolveNotesPrompt =>
+      'විමර්ශනයේ ප්‍රතිඵලය හෝ පාරිභෝගික වන්දිය ගැන විසඳුම් සටහන් එක් කරන්න.';
+
+  @override
+  String get disputesDismissNotesPrompt =>
+      'මෙම ආරවුල ප්‍රතික්ෂේප කරන්නේ ඇයිදැයි පැහැදිලි කරන සටහන් එක් කරන්න.';
+
+  @override
+  String get disputesResolutionSummaryHint =>
+      'අභ්‍යන්තර පරිපාලක විසඳුම් සාරාංශය ඇතුළත් කරන්න...';
+
+  @override
+  String get disputesMarkedResolvedSnack => 'පැමිණිල්ල විසඳූ ලෙස සලකුණු කළා.';
+
+  @override
+  String get disputesDismissedSnack => 'පැමිණිල්ල ප්‍රතික්ෂේප කළා.';
+
+  @override
+  String get disputesMarkResolved => 'විසඳූ ලෙස සලකුණු කරන්න';
+
+  @override
+  String get disputesConfirmDismiss => 'ප්‍රතික්ෂේප කිරීම තහවුරු කරන්න';
+
+  @override
+  String disputesBanConfirm(String name, String trade) {
+    return '$name ($trade) තහනම් කිරීමට ඔබට විශ්වාසද? ඔවුන් offline ලෙස අගුළු දමා පාරිභෝගිකයින්ට නොපෙනෙන ලෙස සඟවනු ලැබේ.';
+  }
+
+  @override
+  String get disputesSuspendProvider => 'සේවා සපයන්නා අත්හිටුවන්න';
+
+  @override
+  String disputesProviderSuspendedSnack(String name) {
+    return 'සේවා සපයන්නා $name අත්හිටුවා ඇත.';
+  }
+
+  @override
+  String disputesErrorLoading(String error) {
+    return 'පැමිණිලි පූරණය කිරීමේ දෝෂයක්: $error';
+  }
+
+  @override
+  String disputesFilterAllCount(int count) {
+    return 'සියල්ල ($count)';
+  }
+
+  @override
+  String disputesFilterPendingCount(int count) {
+    return 'බලාපොරොත්තුවෙන් ($count)';
+  }
+
+  @override
+  String disputesFilterResolvedCount(int count) {
+    return 'විසඳූ ($count)';
+  }
+
+  @override
+  String disputesFilterDismissedCount(int count) {
+    return 'ප්‍රතික්ෂේප කළ ($count)';
+  }
+
+  @override
+  String get disputesNoMatching => 'ගැළපෙන පැමිණිලි හමු නොවීය';
+
+  @override
+  String get disputesNoneRecorded => 'පැමිණිලි කිසිවක් වාර්තා වී නැත';
+
+  @override
+  String get disputesTryAdjustingSearch =>
+      'ඔබේ සෙවුම් නිර්ණායක වෙනස් කර බලන්න.';
+
+  @override
+  String get disputesAllDisputeFree => 'දැනට සියලු සේවා ගනුදෙනු ආරවුල් රහිතයි.';
+
+  @override
+  String get disputesStatusResolvedCaps => 'විසඳා ඇත';
+
+  @override
+  String get disputesStatusDismissedCaps => 'ප්‍රතික්ෂේප කළා';
+
+  @override
+  String get disputesStatusPendingCaps => 'බලාපොරොත්තුවෙන්';
+
+  @override
+  String disputesFiledAgo(String time) {
+    return 'ගොනු කළේ $time';
+  }
+
+  @override
+  String get disputesCustomerCaps => 'පාරිභෝගිකයා';
+
+  @override
+  String get disputesReportedCaps => 'වාර්තා කළ අය';
+
+  @override
+  String disputesAdminNote(String note) {
+    return 'පරිපාලක සටහන: $note';
+  }
+
+  @override
+  String get disputesReopenCase => 'නඩුව නැවත විවෘත කරන්න';
+
+  @override
+  String get disputesCaseReopenedSnack => 'ආරවුල් නඩුව නැවත විවෘත කළා.';
+
+  @override
+  String get shellSuperAdminOnly =>
+      'පරිපාලක කළමනාකරණයට ප්‍රවේශ විය හැක්කේ Super Admin හට පමණි.';
+
+  @override
+  String get provLocationNotSet => 'ස්ථානය සකසා නැත';
+
+  @override
+  String get provDirectPay => 'සෘජු ගෙවීම';
+
+  @override
+  String get provSpecialist => 'විශේෂඥ';
+
+  @override
+  String provNicImageTooLarge(int sizeKb) {
+    return 'රූපයේ ප්‍රමාණය වැඩියි ($sizeKb KB). උපරිම ප්‍රමාණය 600 KB යි. කරුණාකර කුඩා කළ ඡායාරූපයක් තෝරන්න හෝ ගන්න.';
+  }
+
+  @override
+  String get provNicDecodeFailed => 'ගත් ලේඛනය කියවීමට නොහැකි විය.';
+
+  @override
+  String get provNicTooLargeAfterCompression =>
+      'සම්පීඩනය කළ පසුත් NIC රූපය විශාල වැඩියි. කරුණාකර නැවත ඡායාරූපය ගන්න.';
+
+  @override
+  String get provUserNotAuthenticated => 'පරිශීලකයා සත්‍යාපනය කර නැත';
+
+  @override
+  String get provNotLoggedIn => 'ලොග් වී නැත';
+
+  @override
+  String get provNicHintExample => '200012345678 හෝ 881234567V';
+
+  @override
+  String provDurationHoursMins(int hours, int minutes) {
+    return 'පැය $hours මි. $minutes';
+  }
+
+  @override
+  String authGpsLocationDetected(String lat, String lng) {
+    return 'GPS ස්ථානය හඳුනාගත්තා: $lat, $lng';
+  }
+
+  @override
+  String authFailedToPickProfilePhoto(String error) {
+    return 'පැතිකඩ ඡායාරූපය තේරීම අසාර්ථක විය: $error';
+  }
+
+  @override
+  String get authErrUserNotFound =>
+      'මෙම ඊමේල් එකට ගිණුමක් නැත. අකුරු නිවැරදිදැයි බලන්න, නැත්නම් ලියාපදිංචි වන්න.';
+
+  @override
+  String get authErrWrongCredentials =>
+      'මුරපදය හෝ ඊමේල් වැරදියි. කරුණාකර ඔබේ විස්තර පරීක්ෂා කරන්න.';
+
+  @override
+  String get authErrEmailInUse => 'මෙම ඊමේල් ලිපිනයෙන් දැනටමත් ගිණුමක් ඇත.';
+
+  @override
+  String get authErrWeakPassword =>
+      'මුරපදය දුර්වලයි. අවම වශයෙන් අකුරු 6ක් භාවිතා කරන්න.';
+
+  @override
+  String get authErrInvalidEmail =>
+      'කරුණාකර වලංගු ඊමේල් ලිපිනයක් ඇතුළත් කරන්න.';
+
+  @override
+  String get authErrUserDisabled =>
+      'මෙම ගිණුම අක්‍රිය කර ඇත. කරුණාකර සහාය කණ්ඩායම අමතන්න.';
+
+  @override
+  String get authErrTooManyRequests =>
+      'උත්සාහයන් වැඩියි. නැවත උත්සාහ කිරීමට පෙර මොහොතක් රැඳී සිටින්න.';
+
+  @override
+  String get authErrNetwork =>
+      'ජාල සම්බන්ධතා ගැටලුවක්. කරුණාකර ඔබේ අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.';
+
+  @override
+  String get authErrSignInCancelled => 'පරිශීලකයා පුරනය වීම අවලංගු කළා.';
+
+  @override
+  String get authErrUserDataUnavailable => 'Firebase පරිශීලක දත්ත ලබාගත නොහැක.';
+
+  @override
+  String get authErrAlreadyAdmin =>
+      'මෙම පරිශීලකයා දැනටමත් පරිපාලකයෙකු ලෙස ලියාපදිංචි වී ඇත.';
+
+  @override
+  String authErrAuthenticationFailed(String email) {
+    return '$email සඳහා සත්‍යාපනය අසාර්ථක විය';
+  }
+
+  @override
+  String authErrRegistrationFailed(String email) {
+    return '$email සඳහා ලියාපදිංචිය අසාර්ථක විය';
+  }
+
+  @override
+  String authErrNoRegisteredUser(String email) {
+    return '\"$email\" ඊමේල් එකෙන් ලියාපදිංචි පරිශීලකයෙක් නැත. පරිපාලකයෙකු ලෙස උසස් කිරීමට පෙර එම පුද්ගලයා යෙදුමේ ගිණුමක් ලියාපදිංචි කළ යුතුය.';
+  }
+
+  @override
+  String nicDeskApprovedActivated(String name) {
+    return '$name අනුමත කර HelaService හි සක්‍රිය කළා!';
+  }
+
+  @override
+  String nicDeskErrorApproving(String error) {
+    return 'සත්‍යාපනය අනුමත කිරීමේ දෝෂයක්: $error';
+  }
+
+  @override
+  String nicDeskVerificationRejected(String name) {
+    return '$name ගේ සත්‍යාපනය ප්‍රතික්ෂේප කළා.';
+  }
+
+  @override
+  String nicDeskErrorRejecting(String error) {
+    return 'සත්‍යාපනය ප්‍රතික්ෂේප කිරීමේ දෝෂයක්: $error';
+  }
+
+  @override
+  String nicDeskRequestedClearerPhoto(String name) {
+    return '$name ගෙන් වඩා පැහැදිලි ඡායාරූපයක් ඉල්ලුවා.';
+  }
+
+  @override
+  String nicDeskErrorResubmission(String error) {
+    return 'නැවත ඉදිරිපත් කිරීමට ඉල්ලීමේ දෝෂයක්: $error';
+  }
+
+  @override
+  String nicDeskPendingCount(int count) {
+    return '$count ක් බලාපොරොත්තුවෙන්';
+  }
+
+  @override
+  String get nicDeskSortedMostRecent => 'අලුත්ම ඒවා මුලින්';
+
+  @override
+  String get nicDeskDocsUploaded => 'ලේඛන උඩුගත කළා';
+
+  @override
+  String get nicDeskStandardDoc => 'සාමාන්‍ය ලේඛනය';
+
+  @override
+  String nicDeskMatchPercent(int percent) {
+    return '$percent% ගැළපීම';
+  }
+
+  @override
+  String get nicDeskDefaultLocation => 'බස්නාහිර පළාත, ශ්‍රී ලංකාව';
+
+  @override
+  String nicDeskVerifiedGnDivision(String location) {
+    return '$location (තහවුරු කළ ග්‍රාම නිලධාරී වසම)';
+  }
+
+  @override
+  String get nicDeskOcrFlagged => 'සලකුණු කළා';
+
+  @override
+  String get nicDeskOcrMatch => 'ගැළපේ';
+
+  @override
+  String get nicDeskOcrValid => 'වලංගුයි';
+
+  @override
+  String get nicDeskReadOnlyMode =>
+      'කියවීමට පමණයි: ශිල්පීන්ගේ තොරතුරු අනුමත හෝ ප්‍රතික්ෂේප කිරීමට NIC සත්‍යාපන අවසරය අවශ්‍යයි.';
+
+  @override
+  String get nicDeskNoId => 'ID නැත';
+
+  @override
+  String get nicDeskNoImage => 'රූපයක් නැත';
+
+  @override
+  String get nicDeskTapToZoom => 'විශාල කිරීමට තට්ටු කරන්න';
+
+  @override
+  String teamAdminNowStatus(String name, String status) {
+    return '$name දැන් $status.';
+  }
+
+  @override
+  String teamFailedUpdateStatus(String error) {
+    return 'තත්ත්වය යාවත්කාලීන කිරීමට නොහැකි වුණා: $error';
+  }
+
+  @override
+  String get teamReadOnlyView =>
+      'කියවීමට පමණයි: ඔබ දැනට Operations Admin අවසර සමඟ ක්‍රියා කරනවා. පරිපාලක ප්‍රවේශය එක් කිරීමට, වෙනස් කිරීමට හෝ අවලංගු කිරීමට හැක්කේ Super Admin ලාට පමණයි.';
+
+  @override
+  String get teamStatusFilterLabel => 'තත්ත්වය:';
+
+  @override
+  String get teamAllStatuses => 'සියලු තත්ත්වයන්';
+
+  @override
+  String get teamNoAdminsFound => 'පරිපාලකයින් හමු වුණේ නැහැ';
+
+  @override
+  String teamNoAdminMatching(String query) {
+    return '\"$query\" ට ගැළපෙන පරිපාලකයෙක් හමු වුණේ නැහැ.';
+  }
+
+  @override
+  String get teamTryChangingFilter => 'භූමිකාව හෝ තත්ත්ව පෙරහන වෙනස් කර බලන්න.';
+
+  @override
+  String get teamColAdministrator => 'පරිපාලක';
+
+  @override
+  String get teamColTierRole => 'මට්ටම සහ භූමිකාව';
+
+  @override
+  String get teamColGrantedPermissions => 'ලබා දුන් අවසර';
+
+  @override
+  String get teamColStatus => 'තත්ත්වය';
+
+  @override
+  String get teamColActions => 'ක්‍රියා';
+
+  @override
+  String get teamManagedInFirebase => 'Firebase Console හරහා කළමනාකරණය කරයි';
+
+  @override
+  String get teamManageAdmin => 'පරිපාලක කළමනාකරණය';
+
+  @override
+  String get teamEditPermissions => 'අවසර සංස්කරණය';
+
+  @override
+  String get teamProtected => 'ආරක්ෂිතයි';
+
+  @override
+  String get teamActiveLabel => 'සක්‍රියයි:';
+
+  @override
+  String get adminSetBroadcastHint =>
+      'උදා: කාලගුණ අනතුරු ඇඟවීම: බස්නාහිර පළාතට තද වැසි...';
+
+  @override
+  String get adminSetEnterAlertMessage =>
+      'කරුණාකර අනතුරු ඇඟවීමේ පණිවිඩයක් ඇතුළත් කරන්න.';
+
+  @override
+  String get adminSetBroadcastDispatched =>
+      'අනතුරු ඇඟවීම යවා සජීවී මෙහෙයුම් සටහනේ සටහන් කළා.';
+
+  @override
+  String adminSetBroadcastFailed(String error) {
+    return 'අනතුරු ඇඟවීම යැවීමට නොහැකි වුණා: $error';
+  }
+
+  @override
+  String adminSetRecentRecords(int count) {
+    return 'මෑත පාලන සහ යැවීම් වාර්තා $count';
+  }
+
+  @override
+  String get adminSetExportAuditLog => 'විගණන සටහන අපනයනය (JSON)';
+
+  @override
+  String get adminSetAuditExported =>
+      'විගණන සටහන JSON ලෙස clipboard එකට පිටපත් කළා.';
+
+  @override
+  String get adminSetNoAuditLogs => 'තවම විගණන සටහන් කිසිවක් නැහැ.';
+
+  @override
+  String get adminSetSystemAction => 'පද්ධති ක්‍රියාව';
+
+  @override
+  String get adminSetAuditTag => 'විගණනය';
+
+  @override
+  String get adminSetRecent => 'මෑතදී';
+
+  @override
+  String get adminSetAdministratorFallback => 'පරිපාලක';
+
+  @override
+  String get adminSetPlatformGovernance => 'වේදිකා පාලනය';
+
+  @override
+  String get adminSetAssignedPermissions => 'ලබා දී ඇති අවසර:';
+
+  @override
+  String get adminSetAuditLogsDesc =>
+      'පරිපාලක ක්‍රියා සහ ප්‍රවේශ ඉතිහාසය බලන්න';
+
+  @override
+  String get adminSetAuditAccessDenied =>
+      'ප්‍රවේශය නැත: විගණන සටහන් බැලිය හැක්කේ Super Admin ලාට පමණයි.';
 }

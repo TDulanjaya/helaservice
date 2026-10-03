@@ -152,28 +152,32 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       Icons.traffic_rounded,
                       context.l10n.heavyTraffic,
                       onSelected: () =>
-                          _handleDelaySelected('Heavy Traffic'),
+                          _handleDelaySelected(
+                              'Heavy Traffic', context.l10n.heavyTraffic),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.water_drop_outlined,
                       context.l10n.monsoonRain,
                       onSelected: () =>
-                          _handleDelaySelected('Monsoon Rain'),
+                          _handleDelaySelected(
+                              'Monsoon Rain', context.l10n.monsoonRain),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.alt_route_rounded,
                       context.l10n.roadDetour,
                       onSelected: () =>
-                          _handleDelaySelected('Road Detour / Blocked'),
+                          _handleDelaySelected(
+                              'Road Detour / Blocked', context.l10n.roadDetour),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.local_gas_station_rounded,
                       context.l10n.refuelingStop,
                       onSelected: () =>
-                          _handleDelaySelected('Refueling Stop'),
+                          _handleDelaySelected(
+                              'Refueling Stop', context.l10n.refuelingStop),
                     ),
                   ],
                 ),
@@ -185,7 +189,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     );
   }
 
-  Future<void> _handleDelaySelected(String reason) async {
+  Future<void> _handleDelaySelected(String reason, String label) async {
     Navigator.pop(context);
     if (widget.booking != null && widget.booking!.id.isNotEmpty) {
       await BookingRepository().reportDelay(
@@ -197,7 +201,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.l10n.delayReportedNotice(reason)),
+          content: Text(context.l10n.delayReportedNotice(label)),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -343,7 +347,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                 Text(
                                   booking?.customerName.isNotEmpty == true
                                       ? booking!.customerName
-                                      : 'Customer',
+                                      : context.l10n.customerLabel,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 15,
@@ -371,7 +375,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                   child: Text(
                                     booking?.location.isNotEmpty == true
                                         ? booking!.location
-                                        : 'Western Province',
+                                        : context.l10n.provLocationNotSet,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -541,7 +545,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         ? 'LKR ${booking!.agreedPrice!.toStringAsFixed(0)}'
                         : (booking?.estRate.isNotEmpty == true
                             ? booking!.estRate
-                            : 'Direct Pay'),
+                            : context.l10n.provDirectPay),
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,

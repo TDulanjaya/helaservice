@@ -4791,6 +4791,1446 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Certified Artisan'**
   String get certifiedArtisan;
+
+  /// No description provided for @addAdminGrantOnePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Please grant at least one permission flag for this admin.'**
+  String get addAdminGrantOnePermission;
+
+  /// No description provided for @addAdminFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add admin: {error}'**
+  String addAdminFailed(String error);
+
+  /// No description provided for @addAdminAccountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Account Created'**
+  String get addAdminAccountCreated;
+
+  /// No description provided for @addAdminSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The user has been successfully granted {role} privileges. The next time they sign in with this email, the administrative console will be accessible.'**
+  String addAdminSuccessBody(String role);
+
+  /// No description provided for @addAdminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Platform Administrator'**
+  String get addAdminTitle;
+
+  /// No description provided for @addAdminSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign role and permissions; invite links will be generated'**
+  String get addAdminSubtitle;
+
+  /// No description provided for @addAdminEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the administrator full name'**
+  String get addAdminEnterFullName;
+
+  /// No description provided for @addAdminWorkEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Official Work Email'**
+  String get addAdminWorkEmail;
+
+  /// No description provided for @addAdminEnterWorkEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid work email'**
+  String get addAdminEnterWorkEmail;
+
+  /// No description provided for @addAdminMobileOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Phone (Optional)'**
+  String get addAdminMobileOptional;
+
+  /// No description provided for @addAdminTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrative Tier'**
+  String get addAdminTier;
+
+  /// No description provided for @addAdminOperationalPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational Permissions'**
+  String get addAdminOperationalPermissions;
+
+  /// No description provided for @addAdminAdding.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding...'**
+  String get addAdminAdding;
+
+  /// No description provided for @addAdminGrantRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Admin Role'**
+  String get addAdminGrantRole;
+
+  /// No description provided for @editPermSelectOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least one permission flag.'**
+  String get editPermSelectOne;
+
+  /// No description provided for @editPermUpdatedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions updated for {name}.'**
+  String editPermUpdatedFor(String name);
+
+  /// No description provided for @editPermFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update permissions: {error}'**
+  String editPermFailed(String error);
+
+  /// No description provided for @editPermChangeTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Administrative Tier'**
+  String get editPermChangeTier;
+
+  /// No description provided for @editPermAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned Operational Permissions'**
+  String get editPermAssigned;
+
+  /// No description provided for @editPermUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating...'**
+  String get editPermUpdating;
+
+  /// No description provided for @editPermSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Permissions'**
+  String get editPermSave;
+
+  /// No description provided for @sidebarOnlySuperAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Super Admins can access Administrator Management.'**
+  String get sidebarOnlySuperAdmins;
+
+  /// No description provided for @sidebarNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to access this section.'**
+  String get sidebarNoPermission;
+
+  /// No description provided for @sidebarColomboCentralHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Colombo Central Hub'**
+  String get sidebarColomboCentralHub;
+
+  /// No description provided for @topBarSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get topBarSearch;
+
+  /// No description provided for @topBarSupportMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Support & Mediation Messages'**
+  String get topBarSupportMessages;
+
+  /// No description provided for @topBarAdministrator.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get topBarAdministrator;
+
+  /// No description provided for @cdmPublishedCategoriesInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.'**
+  String get cdmPublishedCategoriesInfo;
+
+  /// No description provided for @cdmCategoryTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Solar PV Maintenance'**
+  String get cdmCategoryTitleHint;
+
+  /// No description provided for @cdmServiceDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief summary of the trade services offered...'**
+  String get cdmServiceDescriptionHint;
+
+  /// No description provided for @cdmEnterCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a category title'**
+  String get cdmEnterCategoryTitle;
+
+  /// No description provided for @cdmCategorySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Category \"{title}\" saved and published successfully'**
+  String cdmCategorySaved(String title);
+
+  /// No description provided for @cdmDeleteCategoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"? This will disable dispatch for this category island-wide.'**
+  String cdmDeleteCategoryConfirm(String name);
+
+  /// No description provided for @cdmCategoryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Category \"{name}\" deleted'**
+  String cdmCategoryDeleted(String name);
+
+  /// No description provided for @cdmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get cdmDelete;
+
+  /// No description provided for @cdmReadOnlyModeOpsGovernance.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-Only Mode (Ops Governance)'**
+  String get cdmReadOnlyModeOpsGovernance;
+
+  /// No description provided for @cdmFleetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit verified service technicians, moderate access, and enforce suspensions'**
+  String get cdmFleetSubtitle;
+
+  /// No description provided for @cdmNoCategoriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your service trades to publish them to Firebase so customers can discover and book technicians.'**
+  String get cdmNoCategoriesDesc;
+
+  /// No description provided for @cdmDynamicQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Quotes'**
+  String get cdmDynamicQuotes;
+
+  /// No description provided for @cdmArtisansBidPerJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Artisans Bid Per Job'**
+  String get cdmArtisansBidPerJob;
+
+  /// No description provided for @cdmPauseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Category'**
+  String get cdmPauseCategory;
+
+  /// No description provided for @cdmActivateCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Category'**
+  String get cdmActivateCategory;
+
+  /// No description provided for @cdmFilterAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String cdmFilterAllCount(String count);
+
+  /// No description provided for @cdmFilterOnlineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Online ({count})'**
+  String cdmFilterOnlineCount(String count);
+
+  /// No description provided for @cdmFilterSuspendedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended ({count})'**
+  String cdmFilterSuspendedCount(String count);
+
+  /// No description provided for @cdmFilterOfflineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline ({count})'**
+  String cdmFilterOfflineCount(String count);
+
+  /// No description provided for @cdmNoArtisansMatchSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No artisans match the search criteria'**
+  String get cdmNoArtisansMatchSearch;
+
+  /// No description provided for @cdmNoArtisansInFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No artisans registered in this filter view'**
+  String get cdmNoArtisansInFilter;
+
+  /// No description provided for @cdmBadgeSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'SUSPENDED'**
+  String get cdmBadgeSuspended;
+
+  /// No description provided for @cdmBadgeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'ONLINE'**
+  String get cdmBadgeOnline;
+
+  /// No description provided for @cdmBadgeOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFLINE'**
+  String get cdmBadgeOffline;
+
+  /// No description provided for @cdmSriLanka.
+  ///
+  /// In en, this message translates to:
+  /// **'Sri Lanka'**
+  String get cdmSriLanka;
+
+  /// No description provided for @cdmBaseRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Base: LKR {amount}'**
+  String cdmBaseRate(String amount);
+
+  /// No description provided for @cdmSuspensionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspension Reason: \"{reason}\"'**
+  String cdmSuspensionReason(String reason);
+
+  /// No description provided for @cdmComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints'**
+  String get cdmComplaints;
+
+  /// No description provided for @cdmSuspend.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get cdmSuspend;
+
+  /// No description provided for @cdmRestoreUnban.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore / Unban'**
+  String get cdmRestoreUnban;
+
+  /// No description provided for @cdmDeleteArtisanPermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Artisan Permanently'**
+  String get cdmDeleteArtisanPermanently;
+
+  /// No description provided for @cdmSuspendName.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend {name}'**
+  String cdmSuspendName(String name);
+
+  /// No description provided for @cdmSuspendConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to suspend this artisan? They will be locked offline, hidden from customer searches, and prevented from submitting quotes.'**
+  String get cdmSuspendConfirmBody;
+
+  /// No description provided for @cdmReasonForSuspension.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for Suspension:'**
+  String get cdmReasonForSuspension;
+
+  /// No description provided for @cdmArtisanSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has been suspended.'**
+  String cdmArtisanSuspended(String name);
+
+  /// No description provided for @cdmConfirmSuspension.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Suspension'**
+  String get cdmConfirmSuspension;
+
+  /// No description provided for @cdmRestoreName.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore {name}'**
+  String cdmRestoreName(String name);
+
+  /// No description provided for @cdmRestoreConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate this artisan\'s profile? They will be allowed to go online and accept customer service requests.'**
+  String get cdmRestoreConfirmBody;
+
+  /// No description provided for @cdmArtisanRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has been restored to active status.'**
+  String cdmArtisanRestored(String name);
+
+  /// No description provided for @cdmRestoreAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Access'**
+  String get cdmRestoreAccess;
+
+  /// No description provided for @cdmDeleteArtisan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Artisan'**
+  String get cdmDeleteArtisan;
+
+  /// No description provided for @cdmDeleteArtisanConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete \"{name}\" from the technician database? This operation cannot be reversed.'**
+  String cdmDeleteArtisanConfirm(String name);
+
+  /// No description provided for @cdmArtisanDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} deleted from database.'**
+  String cdmArtisanDeleted(String name);
+
+  /// No description provided for @cdmDeletePermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get cdmDeletePermanently;
+
+  /// No description provided for @cdmComplaintsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints for {name}'**
+  String cdmComplaintsFor(String name);
+
+  /// No description provided for @cdmNoComplaintsFiled.
+  ///
+  /// In en, this message translates to:
+  /// **'No complaints filed'**
+  String get cdmNoComplaintsFiled;
+
+  /// No description provided for @cdmNoComplaintsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This service provider has no recorded customer disputes.'**
+  String get cdmNoComplaintsDesc;
+
+  /// No description provided for @cdmByCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'By {name}'**
+  String cdmByCustomer(String name);
+
+  /// No description provided for @ledgerStatusEnRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'En Route'**
+  String get ledgerStatusEnRoute;
+
+  /// No description provided for @ledgerJobsResolvedIsland.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} jobs resolved across island'**
+  String ledgerJobsResolvedIsland(String count);
+
+  /// No description provided for @ledgerDispatchesActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} dispatches active in field'**
+  String ledgerDispatchesActive(String count);
+
+  /// No description provided for @ledgerBasedOnReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {count} verified reviews'**
+  String ledgerBasedOnReviews(String count);
+
+  /// No description provided for @ledgerAwaitingFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting customer feedback'**
+  String get ledgerAwaitingFeedback;
+
+  /// No description provided for @ledgerServiceBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Booking'**
+  String get ledgerServiceBooking;
+
+  /// No description provided for @ledgerDelayMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m delay'**
+  String ledgerDelayMinutes(String minutes);
+
+  /// No description provided for @adminRoleDescSuper.
+  ///
+  /// In en, this message translates to:
+  /// **'Root operational lead with team administration & full platform governance.'**
+  String get adminRoleDescSuper;
+
+  /// No description provided for @adminRoleDescOps.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational dispatch, artisan verifications, category & district hub management.'**
+  String get adminRoleDescOps;
+
+  /// No description provided for @adminRoleDescSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support queue handler with KYC review and provider inquiry access.'**
+  String get adminRoleDescSupport;
+
+  /// No description provided for @permManageAdminsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Team Governance'**
+  String get permManageAdminsLabel;
+
+  /// No description provided for @permVerifyNicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Artisan NIC & KYC Verification'**
+  String get permVerifyNicLabel;
+
+  /// No description provided for @permManageCategoriesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories & District Hubs'**
+  String get permManageCategoriesLabel;
+
+  /// No description provided for @permBroadcastAlertsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Island-wide Emergency Alerts'**
+  String get permBroadcastAlertsLabel;
+
+  /// No description provided for @permViewFinancesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service & Financial Logs'**
+  String get permViewFinancesLabel;
+
+  /// No description provided for @permManageAdminsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite, configure, demote, and deactivate administrators.'**
+  String get permManageAdminsDesc;
+
+  /// No description provided for @permVerifyNicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Review smart NICs, police reports, and approve/reject artisan registrations.'**
+  String get permVerifyNicDesc;
+
+  /// No description provided for @permManageCategoriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure trade categories, base rates, and provincial hub thresholds.'**
+  String get permManageCategoriesDesc;
+
+  /// No description provided for @permBroadcastAlertsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send push alerts and critical warnings to active island artisans.'**
+  String get permBroadcastAlertsDesc;
+
+  /// No description provided for @permViewFinancesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect service metrics, provider earnings, and completed job records.'**
+  String get permViewFinancesDesc;
+
+  /// No description provided for @adminStatusInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited'**
+  String get adminStatusInvited;
+
+  /// No description provided for @adminStatusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get adminStatusSuspended;
+
+  /// No description provided for @custArtisanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Artisan'**
+  String get custArtisanLabel;
+
+  /// No description provided for @custDefaultSystemLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Default system language'**
+  String get custDefaultSystemLanguage;
+
+  /// No description provided for @custMetresAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m away'**
+  String custMetresAway(int metres);
+
+  /// No description provided for @custKmAwayValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km away'**
+  String custKmAwayValue(String km);
+
+  /// No description provided for @custFallbackAreaColombo03.
+  ///
+  /// In en, this message translates to:
+  /// **'Colombo 03'**
+  String get custFallbackAreaColombo03;
+
+  /// No description provided for @custFallbackWesternProvince.
+  ///
+  /// In en, this message translates to:
+  /// **'Western Province'**
+  String get custFallbackWesternProvince;
+
+  /// No description provided for @custFallbackColombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Colombo'**
+  String get custFallbackColombo;
+
+  /// No description provided for @custShareTrackingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Track my HelaService artisan live here: {link}'**
+  String custShareTrackingText(String link);
+
+  /// No description provided for @custRatePerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'LKR {amount} / hr'**
+  String custRatePerHour(String amount);
+
+  /// No description provided for @custGpsTapToUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS: {lat}, {lng} (Tap to update)'**
+  String custGpsTapToUpdate(String lat, String lng);
+
+  /// No description provided for @custInspectionSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'inspection'**
+  String get custInspectionSuffix;
+
+  /// No description provided for @custServiceProviderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Provider'**
+  String get custServiceProviderLabel;
+
+  /// No description provided for @liveMapColArtisan.
+  ///
+  /// In en, this message translates to:
+  /// **'Artisan'**
+  String get liveMapColArtisan;
+
+  /// No description provided for @liveMapColAssignedZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned Zone'**
+  String get liveMapColAssignedZone;
+
+  /// No description provided for @liveMapColPayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout'**
+  String get liveMapColPayout;
+
+  /// No description provided for @liveMapColQuickDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Dispatch'**
+  String get liveMapColQuickDispatch;
+
+  /// No description provided for @liveMapStatusAvailableIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Available / Idle'**
+  String get liveMapStatusAvailableIdle;
+
+  /// No description provided for @liveMapStatusActiveVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Verified'**
+  String get liveMapStatusActiveVerified;
+
+  /// No description provided for @liveMapNicVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC: Verified'**
+  String get liveMapNicVerified;
+
+  /// No description provided for @liveMapNicPending.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC: Pending'**
+  String get liveMapNicPending;
+
+  /// No description provided for @liveMapZoneColomboMetro.
+  ///
+  /// In en, this message translates to:
+  /// **'Colombo Metro'**
+  String get liveMapZoneColomboMetro;
+
+  /// No description provided for @liveMapPayoutToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} (Today)'**
+  String liveMapPayoutToday(String amount);
+
+  /// No description provided for @liveMapTodayParen.
+  ///
+  /// In en, this message translates to:
+  /// **'(Today)'**
+  String get liveMapTodayParen;
+
+  /// No description provided for @liveMapActionDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch'**
+  String get liveMapActionDispatch;
+
+  /// No description provided for @liveMapActionReassign.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-assign'**
+  String get liveMapActionReassign;
+
+  /// No description provided for @liveMapDispatchDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{action}: {name}'**
+  String liveMapDispatchDialogTitle(String action, String name);
+
+  /// No description provided for @liveMapQuotesReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} quotes received'**
+  String liveMapQuotesReceived(int count);
+
+  /// No description provided for @liveMapLiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} Live'**
+  String liveMapLiveCount(int count);
+
+  /// No description provided for @liveMapActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Active'**
+  String liveMapActiveCount(int count);
+
+  /// No description provided for @liveMapActionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Req'**
+  String get liveMapActionRequired;
+
+  /// No description provided for @liveMapShowAllDistricts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all districts'**
+  String get liveMapShowAllDistricts;
+
+  /// No description provided for @liveMapUnmappedProviderOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active provider in unmapped/unknown zones'**
+  String liveMapUnmappedProviderOne(int count);
+
+  /// No description provided for @liveMapUnmappedProviderMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active providers in unmapped/unknown zones'**
+  String liveMapUnmappedProviderMany(int count);
+
+  /// No description provided for @disputesNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get disputesNotAvailable;
+
+  /// No description provided for @disputesResolveNotesPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add resolution notes detailing the outcome of the investigation or customer compensation.'**
+  String get disputesResolveNotesPrompt;
+
+  /// No description provided for @disputesDismissNotesPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add notes explaining why this dispute is dismissed.'**
+  String get disputesDismissNotesPrompt;
+
+  /// No description provided for @disputesResolutionSummaryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter internal admin resolution summary...'**
+  String get disputesResolutionSummaryHint;
+
+  /// No description provided for @disputesMarkedResolvedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaint marked as Resolved.'**
+  String get disputesMarkedResolvedSnack;
+
+  /// No description provided for @disputesDismissedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaint dismissed.'**
+  String get disputesDismissedSnack;
+
+  /// No description provided for @disputesMarkResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Resolved'**
+  String get disputesMarkResolved;
+
+  /// No description provided for @disputesConfirmDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Dismiss'**
+  String get disputesConfirmDismiss;
+
+  /// No description provided for @disputesBanConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to ban {name} ({trade})? They will be locked offline and hidden from customer discovery.'**
+  String disputesBanConfirm(String name, String trade);
+
+  /// No description provided for @disputesSuspendProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend Provider'**
+  String get disputesSuspendProvider;
+
+  /// No description provided for @disputesProviderSuspendedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider {name} has been suspended.'**
+  String disputesProviderSuspendedSnack(String name);
+
+  /// No description provided for @disputesErrorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading complaints: {error}'**
+  String disputesErrorLoading(String error);
+
+  /// No description provided for @disputesFilterAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String disputesFilterAllCount(int count);
+
+  /// No description provided for @disputesFilterPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending ({count})'**
+  String disputesFilterPendingCount(int count);
+
+  /// No description provided for @disputesFilterResolvedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved ({count})'**
+  String disputesFilterResolvedCount(int count);
+
+  /// No description provided for @disputesFilterDismissedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed ({count})'**
+  String disputesFilterDismissedCount(int count);
+
+  /// No description provided for @disputesNoMatching.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching complaints found'**
+  String get disputesNoMatching;
+
+  /// No description provided for @disputesNoneRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No complaints recorded'**
+  String get disputesNoneRecorded;
+
+  /// No description provided for @disputesTryAdjustingSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your search criteria.'**
+  String get disputesTryAdjustingSearch;
+
+  /// No description provided for @disputesAllDisputeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'All service transactions are currently dispute-free.'**
+  String get disputesAllDisputeFree;
+
+  /// No description provided for @disputesStatusResolvedCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'RESOLVED'**
+  String get disputesStatusResolvedCaps;
+
+  /// No description provided for @disputesStatusDismissedCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'DISMISSED'**
+  String get disputesStatusDismissedCaps;
+
+  /// No description provided for @disputesStatusPendingCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'PENDING'**
+  String get disputesStatusPendingCaps;
+
+  /// No description provided for @disputesFiledAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Filed {time}'**
+  String disputesFiledAgo(String time);
+
+  /// No description provided for @disputesCustomerCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'CUSTOMER'**
+  String get disputesCustomerCaps;
+
+  /// No description provided for @disputesReportedCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'REPORTED'**
+  String get disputesReportedCaps;
+
+  /// No description provided for @disputesAdminNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Note: {note}'**
+  String disputesAdminNote(String note);
+
+  /// No description provided for @disputesReopenCase.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen Case'**
+  String get disputesReopenCase;
+
+  /// No description provided for @disputesCaseReopenedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispute case reopened.'**
+  String get disputesCaseReopenedSnack;
+
+  /// No description provided for @shellSuperAdminOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Super Admins can access Administrator Management.'**
+  String get shellSuperAdminOnly;
+
+  /// No description provided for @provLocationNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not set'**
+  String get provLocationNotSet;
+
+  /// No description provided for @provDirectPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Pay'**
+  String get provDirectPay;
+
+  /// No description provided for @provSpecialist.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialist'**
+  String get provSpecialist;
+
+  /// No description provided for @provNicImageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Image size is too large ({sizeKb} KB). Maximum allowed size is 600 KB. Please choose or capture a compressed photo.'**
+  String provNicImageTooLarge(int sizeKb);
+
+  /// No description provided for @provNicDecodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to decode the captured document.'**
+  String get provNicDecodeFailed;
+
+  /// No description provided for @provNicTooLargeAfterCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC image is too large even after compression. Please retake the photo.'**
+  String get provNicTooLargeAfterCompression;
+
+  /// No description provided for @provUserNotAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'User not authenticated'**
+  String get provUserNotAuthenticated;
+
+  /// No description provided for @provNotLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Not logged in'**
+  String get provNotLoggedIn;
+
+  /// No description provided for @provNicHintExample.
+  ///
+  /// In en, this message translates to:
+  /// **'200012345678 or 881234567V'**
+  String get provNicHintExample;
+
+  /// No description provided for @provDurationHoursMins.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String provDurationHoursMins(int hours, int minutes);
+
+  /// No description provided for @authGpsLocationDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Location detected: {lat}, {lng}'**
+  String authGpsLocationDetected(String lat, String lng);
+
+  /// No description provided for @authFailedToPickProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pick profile photo: {error}'**
+  String authFailedToPickProfilePhoto(String error);
+
+  /// No description provided for @authErrUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email. Please check your spelling or register.'**
+  String get authErrUserNotFound;
+
+  /// No description provided for @authErrWrongCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password or email. Please check your credentials.'**
+  String get authErrWrongCredentials;
+
+  /// No description provided for @authErrEmailInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'An account already exists with this email address.'**
+  String get authErrEmailInUse;
+
+  /// No description provided for @authErrWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The password is too weak. Please use at least 6 characters.'**
+  String get authErrWeakPassword;
+
+  /// No description provided for @authErrInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get authErrInvalidEmail;
+
+  /// No description provided for @authErrUserDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled. Please contact support.'**
+  String get authErrUserDisabled;
+
+  /// No description provided for @authErrTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a moment before trying again.'**
+  String get authErrTooManyRequests;
+
+  /// No description provided for @authErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection issue. Please check your internet connection.'**
+  String get authErrNetwork;
+
+  /// No description provided for @authErrSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in cancelled by user.'**
+  String get authErrSignInCancelled;
+
+  /// No description provided for @authErrUserDataUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase user data is not available.'**
+  String get authErrUserDataUnavailable;
+
+  /// No description provided for @authErrAlreadyAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'User is already registered as an administrator.'**
+  String get authErrAlreadyAdmin;
+
+  /// No description provided for @authErrAuthenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed for {email}'**
+  String authErrAuthenticationFailed(String email);
+
+  /// No description provided for @authErrRegistrationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration failed for {email}'**
+  String authErrRegistrationFailed(String email);
+
+  /// No description provided for @authErrNoRegisteredUser.
+  ///
+  /// In en, this message translates to:
+  /// **'No registered user found with email \"{email}\". The person must first register an account in the app before they can be promoted to an administrator.'**
+  String authErrNoRegisteredUser(String email);
+
+  /// No description provided for @nicDeskApprovedActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} approved & activated on HelaService!'**
+  String nicDeskApprovedActivated(String name);
+
+  /// No description provided for @nicDeskErrorApproving.
+  ///
+  /// In en, this message translates to:
+  /// **'Error approving verification: {error}'**
+  String nicDeskErrorApproving(String error);
+
+  /// No description provided for @nicDeskVerificationRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification for {name} rejected.'**
+  String nicDeskVerificationRejected(String name);
+
+  /// No description provided for @nicDeskErrorRejecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Error rejecting verification: {error}'**
+  String nicDeskErrorRejecting(String error);
+
+  /// No description provided for @nicDeskRequestedClearerPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested clearer photo from {name}.'**
+  String nicDeskRequestedClearerPhoto(String name);
+
+  /// No description provided for @nicDeskErrorResubmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Error requesting resubmission: {error}'**
+  String nicDeskErrorResubmission(String error);
+
+  /// No description provided for @nicDeskPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Pending'**
+  String nicDeskPendingCount(int count);
+
+  /// No description provided for @nicDeskSortedMostRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted by Most Recent'**
+  String get nicDeskSortedMostRecent;
+
+  /// No description provided for @nicDeskDocsUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Docs Uploaded'**
+  String get nicDeskDocsUploaded;
+
+  /// No description provided for @nicDeskStandardDoc.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard Doc'**
+  String get nicDeskStandardDoc;
+
+  /// No description provided for @nicDeskMatchPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% Match'**
+  String nicDeskMatchPercent(int percent);
+
+  /// No description provided for @nicDeskDefaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Western Province, Sri Lanka'**
+  String get nicDeskDefaultLocation;
+
+  /// No description provided for @nicDeskVerifiedGnDivision.
+  ///
+  /// In en, this message translates to:
+  /// **'{location} (Verified GN Division)'**
+  String nicDeskVerifiedGnDivision(String location);
+
+  /// No description provided for @nicDeskOcrFlagged.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged'**
+  String get nicDeskOcrFlagged;
+
+  /// No description provided for @nicDeskOcrMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get nicDeskOcrMatch;
+
+  /// No description provided for @nicDeskOcrValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid'**
+  String get nicDeskOcrValid;
+
+  /// No description provided for @nicDeskReadOnlyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.'**
+  String get nicDeskReadOnlyMode;
+
+  /// No description provided for @nicDeskNoId.
+  ///
+  /// In en, this message translates to:
+  /// **'No ID'**
+  String get nicDeskNoId;
+
+  /// No description provided for @nicDeskNoImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No image'**
+  String get nicDeskNoImage;
+
+  /// No description provided for @nicDeskTapToZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to zoom'**
+  String get nicDeskTapToZoom;
+
+  /// No description provided for @teamAdminNowStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is now {status}.'**
+  String teamAdminNowStatus(String name, String status);
+
+  /// No description provided for @teamFailedUpdateStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update status: {error}'**
+  String teamFailedUpdateStatus(String error);
+
+  /// No description provided for @teamReadOnlyView.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-Only View: You are currently operating with Operations Admin privileges. Only Super Admins can add, reconfigure, or revoke administrative access.'**
+  String get teamReadOnlyView;
+
+  /// No description provided for @teamStatusFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status:'**
+  String get teamStatusFilterLabel;
+
+  /// No description provided for @teamAllStatuses.
+  ///
+  /// In en, this message translates to:
+  /// **'All Statuses'**
+  String get teamAllStatuses;
+
+  /// No description provided for @teamNoAdminsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No administrators found'**
+  String get teamNoAdminsFound;
+
+  /// No description provided for @teamNoAdminMatching.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin matching \"{query}\" was found.'**
+  String teamNoAdminMatching(String query);
+
+  /// No description provided for @teamTryChangingFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing your role or status filter.'**
+  String get teamTryChangingFilter;
+
+  /// No description provided for @teamColAdministrator.
+  ///
+  /// In en, this message translates to:
+  /// **'ADMINISTRATOR'**
+  String get teamColAdministrator;
+
+  /// No description provided for @teamColTierRole.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER & ROLE'**
+  String get teamColTierRole;
+
+  /// No description provided for @teamColGrantedPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'GRANTED PERMISSIONS'**
+  String get teamColGrantedPermissions;
+
+  /// No description provided for @teamColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS'**
+  String get teamColStatus;
+
+  /// No description provided for @teamColActions.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIONS'**
+  String get teamColActions;
+
+  /// No description provided for @teamManagedInFirebase.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed in Firebase Console'**
+  String get teamManagedInFirebase;
+
+  /// No description provided for @teamManageAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Admin'**
+  String get teamManageAdmin;
+
+  /// No description provided for @teamEditPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Permissions'**
+  String get teamEditPermissions;
+
+  /// No description provided for @teamProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get teamProtected;
+
+  /// No description provided for @teamActiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active:'**
+  String get teamActiveLabel;
+
+  /// No description provided for @adminSetBroadcastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Weather warning: Heavy rain alert in Western Province...'**
+  String get adminSetBroadcastHint;
+
+  /// No description provided for @adminSetEnterAlertMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an alert message.'**
+  String get adminSetEnterAlertMessage;
+
+  /// No description provided for @adminSetBroadcastDispatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast alert dispatched and recorded in live operations feed.'**
+  String get adminSetBroadcastDispatched;
+
+  /// No description provided for @adminSetBroadcastFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to dispatch broadcast: {error}'**
+  String adminSetBroadcastFailed(String error);
+
+  /// No description provided for @adminSetRecentRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Recent Governance & Dispatch Records'**
+  String adminSetRecentRecords(int count);
+
+  /// No description provided for @adminSetExportAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Audit Log (JSON)'**
+  String get adminSetExportAuditLog;
+
+  /// No description provided for @adminSetAuditExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log exported to clipboard as JSON.'**
+  String get adminSetAuditExported;
+
+  /// No description provided for @adminSetNoAuditLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No platform audit logs recorded yet.'**
+  String get adminSetNoAuditLogs;
+
+  /// No description provided for @adminSetSystemAction.
+  ///
+  /// In en, this message translates to:
+  /// **'System Action'**
+  String get adminSetSystemAction;
+
+  /// No description provided for @adminSetAuditTag.
+  ///
+  /// In en, this message translates to:
+  /// **'AUDIT'**
+  String get adminSetAuditTag;
+
+  /// No description provided for @adminSetRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get adminSetRecent;
+
+  /// No description provided for @adminSetAdministratorFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get adminSetAdministratorFallback;
+
+  /// No description provided for @adminSetPlatformGovernance.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Governance'**
+  String get adminSetPlatformGovernance;
+
+  /// No description provided for @adminSetAssignedPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned Permissions:'**
+  String get adminSetAssignedPermissions;
+
+  /// No description provided for @adminSetAuditLogsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Review administrator actions & access history'**
+  String get adminSetAuditLogsDesc;
+
+  /// No description provided for @adminSetAuditAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Denied: Platform audit logs are restricted to Super Admins.'**
+  String get adminSetAuditAccessDenied;
 }
 
 class _AppLocalizationsDelegate

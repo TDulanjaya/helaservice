@@ -45,7 +45,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
     if (mins == 60) return context.l10n.durationHours(1);
     if (mins == 90) return context.l10n.durationOneAndHalfHours;
     if (mins == 120) return context.l10n.durationHours(2);
-    return '${mins ~/ 60}h ${mins % 60}m';
+    return context.l10n.provDurationHoursMins(mins ~/ 60, mins % 60);
   }
 
   Future<void> _submit() async {
@@ -122,7 +122,10 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToSubmitQuote(e.toString())),
+            content: Text(context.l10n.failedToSubmitQuote(
+                e.toString() == 'Exception: Not logged in'
+                    ? context.l10n.provNotLoggedIn
+                    : e.toString())),
             backgroundColor: AppColors.error,
           ),
         );

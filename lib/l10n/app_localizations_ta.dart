@@ -2597,4 +2597,909 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get certifiedArtisan => 'சான்றளிக்கப்பட்ட கைவினைஞர்';
+
+  @override
+  String get addAdminGrantOnePermission =>
+      'இந்த நிர்வாகிக்கு குறைந்தது ஒரு அனுமதியையாவது வழங்கவும்.';
+
+  @override
+  String addAdminFailed(String error) {
+    return 'நிர்வாகியைச் சேர்க்க முடியவில்லை: $error';
+  }
+
+  @override
+  String get addAdminAccountCreated => 'நிர்வாகி கணக்கு உருவாக்கப்பட்டது';
+
+  @override
+  String addAdminSuccessBody(String role) {
+    return 'பயனருக்கு $role சிறப்புரிமைகள் வெற்றிகரமாக வழங்கப்பட்டுள்ளன. அடுத்த முறை இந்த மின்னஞ்சலுடன் உள்நுழையும்போது, நிர்வாகக் கன்சோலை அணுகலாம்.';
+  }
+
+  @override
+  String get addAdminTitle => 'தள நிர்வாகியைச் சேர்க்கவும்';
+
+  @override
+  String get addAdminSubtitle =>
+      'பங்கு மற்றும் அனுமதிகளை ஒதுக்கவும்; அழைப்பு இணைப்புகள் உருவாக்கப்படும்';
+
+  @override
+  String get addAdminEnterFullName => 'நிர்வாகியின் முழுப் பெயரை உள்ளிடவும்';
+
+  @override
+  String get addAdminWorkEmail => 'அதிகாரப்பூர்வ வேலை மின்னஞ்சல்';
+
+  @override
+  String get addAdminEnterWorkEmail => 'சரியான வேலை மின்னஞ்சலை உள்ளிடவும்';
+
+  @override
+  String get addAdminMobileOptional => 'கைபேசி எண் (விருப்பத்தேர்வு)';
+
+  @override
+  String get addAdminTier => 'நிர்வாக நிலை';
+
+  @override
+  String get addAdminOperationalPermissions => 'செயல்பாட்டு அனுமதிகள்';
+
+  @override
+  String get addAdminAdding => 'சேர்க்கிறது...';
+
+  @override
+  String get addAdminGrantRole => 'நிர்வாகி பங்கை வழங்கவும்';
+
+  @override
+  String get editPermSelectOne =>
+      'குறைந்தது ஒரு அனுமதியையாவது தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String editPermUpdatedFor(String name) {
+    return '$name க்கான அனுமதிகள் புதுப்பிக்கப்பட்டன.';
+  }
+
+  @override
+  String editPermFailed(String error) {
+    return 'அனுமதிகளைப் புதுப்பிக்க முடியவில்லை: $error';
+  }
+
+  @override
+  String get editPermChangeTier => 'நிர்வாக நிலையை மாற்றவும்';
+
+  @override
+  String get editPermAssigned => 'ஒதுக்கப்பட்ட செயல்பாட்டு அனுமதிகள்';
+
+  @override
+  String get editPermUpdating => 'புதுப்பிக்கிறது...';
+
+  @override
+  String get editPermSave => 'அனுமதிகளைச் சேமிக்கவும்';
+
+  @override
+  String get sidebarOnlySuperAdmins =>
+      'நிர்வாகி மேலாண்மையை Super Admin கள் மட்டுமே அணுக முடியும்.';
+
+  @override
+  String get sidebarNoPermission =>
+      'இந்தப் பகுதியை அணுக உங்களுக்கு அனுமதி இல்லை.';
+
+  @override
+  String get sidebarColomboCentralHub => 'கொழும்பு மத்திய மையம்';
+
+  @override
+  String get topBarSearch => 'தேடு';
+
+  @override
+  String get topBarSupportMessages => 'ஆதரவு மற்றும் மத்தியஸ்த செய்திகள்';
+
+  @override
+  String get topBarAdministrator => 'நிர்வாகி';
+
+  @override
+  String get cdmPublishedCategoriesInfo =>
+      'வெளியிடப்பட்ட வகைகள் நாடு முழுவதும் கிடைக்கும். விலை மாறக்கூடியது — அருகிலுள்ள சரிபார்க்கப்பட்ட தொழில்நுட்பவியலாளர்கள் தூரம் மற்றும் வேலை விவரங்களின் அடிப்படையில் தனிப்பயன் விலைகளை வழங்குவார்கள்.';
+
+  @override
+  String get cdmCategoryTitleHint => 'எ.கா. சோலார் PV பராமரிப்பு';
+
+  @override
+  String get cdmServiceDescriptionHint =>
+      'வழங்கப்படும் சேவைகளின் சுருக்கமான விளக்கம்...';
+
+  @override
+  String get cdmEnterCategoryTitle => 'வகையின் தலைப்பை உள்ளிடவும்';
+
+  @override
+  String cdmCategorySaved(String title) {
+    return '\"$title\" வகை வெற்றிகரமாகச் சேமிக்கப்பட்டு வெளியிடப்பட்டது';
+  }
+
+  @override
+  String cdmDeleteCategoryConfirm(String name) {
+    return '\"$name\" ஐ நீக்க விரும்புகிறீர்களா? இது நாடு முழுவதும் இந்த வகைக்கான பணி அனுப்புதலை நிறுத்தும்.';
+  }
+
+  @override
+  String cdmCategoryDeleted(String name) {
+    return '\"$name\" வகை நீக்கப்பட்டது';
+  }
+
+  @override
+  String get cdmDelete => 'நீக்கு';
+
+  @override
+  String get cdmReadOnlyModeOpsGovernance => 'படிக்க மட்டும் (Ops நிர்வாகம்)';
+
+  @override
+  String get cdmFleetSubtitle =>
+      'சரிபார்க்கப்பட்ட தொழில்நுட்பவியலாளர்களைத் தணிக்கை செய்யவும், அணுகலை நிர்வகிக்கவும், இடைநீக்கங்களைச் செயல்படுத்தவும்';
+
+  @override
+  String get cdmNoCategoriesDesc =>
+      'வாடிக்கையாளர்கள் தொழில்நுட்பவியலாளர்களைக் கண்டறிந்து முன்பதிவு செய்ய, உங்கள் சேவை வகைகளைச் சேர்த்து Firebase இல் வெளியிடவும்.';
+
+  @override
+  String get cdmDynamicQuotes => 'மாறும் விலைமதிப்பீடுகள்';
+
+  @override
+  String get cdmArtisansBidPerJob =>
+      'ஒவ்வொரு வேலைக்கும் கைவினைஞர்கள் விலை கோருவார்கள்';
+
+  @override
+  String get cdmPauseCategory => 'வகையை இடைநிறுத்து';
+
+  @override
+  String get cdmActivateCategory => 'வகையைச் செயல்படுத்து';
+
+  @override
+  String cdmFilterAllCount(String count) {
+    return 'அனைத்தும் ($count)';
+  }
+
+  @override
+  String cdmFilterOnlineCount(String count) {
+    return 'ஆன்லைன் ($count)';
+  }
+
+  @override
+  String cdmFilterSuspendedCount(String count) {
+    return 'இடைநீக்கப்பட்டவை ($count)';
+  }
+
+  @override
+  String cdmFilterOfflineCount(String count) {
+    return 'ஆஃப்லைன் ($count)';
+  }
+
+  @override
+  String get cdmNoArtisansMatchSearch =>
+      'தேடலுக்குப் பொருந்தும் கைவினைஞர்கள் இல்லை';
+
+  @override
+  String get cdmNoArtisansInFilter =>
+      'இந்த வடிகட்டியில் பதிவுசெய்த கைவினைஞர்கள் இல்லை';
+
+  @override
+  String get cdmBadgeSuspended => 'இடைநீக்கம்';
+
+  @override
+  String get cdmBadgeOnline => 'ஆன்லைன்';
+
+  @override
+  String get cdmBadgeOffline => 'ஆஃப்லைன்';
+
+  @override
+  String get cdmSriLanka => 'இலங்கை';
+
+  @override
+  String cdmBaseRate(String amount) {
+    return 'அடிப்படை: LKR $amount';
+  }
+
+  @override
+  String cdmSuspensionReason(String reason) {
+    return 'இடைநீக்கக் காரணம்: \"$reason\"';
+  }
+
+  @override
+  String get cdmComplaints => 'புகார்கள்';
+
+  @override
+  String get cdmSuspend => 'இடைநீக்கு';
+
+  @override
+  String get cdmRestoreUnban => 'மீட்டமை / தடை நீக்கு';
+
+  @override
+  String get cdmDeleteArtisanPermanently => 'கைவினைஞரை நிரந்தரமாக நீக்கு';
+
+  @override
+  String cdmSuspendName(String name) {
+    return '$name ஐ இடைநீக்கு';
+  }
+
+  @override
+  String get cdmSuspendConfirmBody =>
+      'இந்தக் கைவினைஞரை இடைநீக்க விரும்புகிறீர்களா? அவர் ஆஃப்லைனில் பூட்டப்பட்டு, வாடிக்கையாளர் தேடல்களில் மறைக்கப்பட்டு, விலைமதிப்பீடுகளைச் சமர்ப்பிக்க முடியாமல் தடுக்கப்படுவார்.';
+
+  @override
+  String get cdmReasonForSuspension => 'இடைநீக்கத்திற்கான காரணம்:';
+
+  @override
+  String cdmArtisanSuspended(String name) {
+    return '$name இடைநீக்கம் செய்யப்பட்டார்.';
+  }
+
+  @override
+  String get cdmConfirmSuspension => 'இடைநீக்கத்தை உறுதிப்படுத்து';
+
+  @override
+  String cdmRestoreName(String name) {
+    return '$name ஐ மீட்டமை';
+  }
+
+  @override
+  String get cdmRestoreConfirmBody =>
+      'இந்தக் கைவினைஞரின் சுயவிவரத்தை மீண்டும் செயல்படுத்தவா? அவர் ஆன்லைனுக்கு வந்து வாடிக்கையாளர் சேவை கோரிக்கைகளை ஏற்க அனுமதிக்கப்படுவார்.';
+
+  @override
+  String cdmArtisanRestored(String name) {
+    return '$name மீண்டும் செயலில் உள்ள நிலைக்கு மீட்டமைக்கப்பட்டார்.';
+  }
+
+  @override
+  String get cdmRestoreAccess => 'அணுகலை மீட்டமை';
+
+  @override
+  String get cdmDeleteArtisan => 'கைவினைஞரை நீக்கு';
+
+  @override
+  String cdmDeleteArtisanConfirm(String name) {
+    return '\"$name\" ஐ தொழில்நுட்பவியலாளர் தரவுத்தளத்திலிருந்து நிரந்தரமாக நீக்க விரும்புகிறீர்களா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.';
+  }
+
+  @override
+  String cdmArtisanDeleted(String name) {
+    return '$name தரவுத்தளத்திலிருந்து நீக்கப்பட்டார்.';
+  }
+
+  @override
+  String get cdmDeletePermanently => 'நிரந்தரமாக நீக்கு';
+
+  @override
+  String cdmComplaintsFor(String name) {
+    return '$name மீதான புகார்கள்';
+  }
+
+  @override
+  String get cdmNoComplaintsFiled => 'புகார்கள் எதுவும் இல்லை';
+
+  @override
+  String get cdmNoComplaintsDesc =>
+      'இந்தச் சேவை வழங்குநருக்கு எதிராகப் பதிவுசெய்யப்பட்ட வாடிக்கையாளர் முரண்பாடுகள் இல்லை.';
+
+  @override
+  String cdmByCustomer(String name) {
+    return '$name அவர்களால்';
+  }
+
+  @override
+  String get ledgerStatusEnRoute => 'வழியில்';
+
+  @override
+  String ledgerJobsResolvedIsland(String count) {
+    return 'நாடு முழுவதும் $count வேலைகள் முடிக்கப்பட்டன';
+  }
+
+  @override
+  String ledgerDispatchesActive(String count) {
+    return 'களத்தில் $count பணிகள் செயலில் உள்ளன';
+  }
+
+  @override
+  String ledgerBasedOnReviews(String count) {
+    return '$count சரிபார்க்கப்பட்ட மதிப்புரைகளின் அடிப்படையில்';
+  }
+
+  @override
+  String get ledgerAwaitingFeedback =>
+      'வாடிக்கையாளர் கருத்துக்காகக் காத்திருக்கிறது';
+
+  @override
+  String get ledgerServiceBooking => 'சேவை முன்பதிவு';
+
+  @override
+  String ledgerDelayMinutes(String minutes) {
+    return '$minutes நிமிட தாமதம்';
+  }
+
+  @override
+  String get adminRoleDescSuper =>
+      'குழு நிர்வாகம் மற்றும் முழு தள ஆளுகையுடன் கூடிய முதன்மை செயல்பாட்டுத் தலைவர்.';
+
+  @override
+  String get adminRoleDescOps =>
+      'செயல்பாட்டு அனுப்புதல், கைவினைஞர் சரிபார்ப்புகள், வகை மற்றும் மாவட்ட மைய மேலாண்மை.';
+
+  @override
+  String get adminRoleDescSupport =>
+      'KYC மதிப்பாய்வு மற்றும் வழங்குநர் விசாரணை அணுகலுடன் கூடிய ஆதரவு வரிசை கையாளுபவர்.';
+
+  @override
+  String get permManageAdminsLabel => 'நிர்வாகக் குழு ஆளுகை';
+
+  @override
+  String get permVerifyNicLabel => 'கைவினைஞர் NIC மற்றும் KYC சரிபார்ப்பு';
+
+  @override
+  String get permManageCategoriesLabel => 'வகைகள் மற்றும் மாவட்ட மையங்கள்';
+
+  @override
+  String get permBroadcastAlertsLabel => 'நாடு முழுவதும் அவசர எச்சரிக்கைகள்';
+
+  @override
+  String get permViewFinancesLabel => 'சேவை மற்றும் நிதிப் பதிவுகள்';
+
+  @override
+  String get permManageAdminsDesc =>
+      'நிர்வாகிகளை அழைக்க, கட்டமைக்க, பதவி இறக்க மற்றும் செயலிழக்கச் செய்ய.';
+
+  @override
+  String get permVerifyNicDesc =>
+      'ஸ்மார்ட் NIC, காவல்துறை அறிக்கைகளை மதிப்பாய்வு செய்து கைவினைஞர் பதிவுகளை அங்கீகரிக்க/நிராகரிக்க.';
+
+  @override
+  String get permManageCategoriesDesc =>
+      'தொழில் வகைகள், அடிப்படைக் கட்டணங்கள் மற்றும் மாகாண மைய வரம்புகளை அமைக்க.';
+
+  @override
+  String get permBroadcastAlertsDesc =>
+      'செயலில் உள்ள கைவினைஞர்களுக்கு அறிவிப்புகள் மற்றும் முக்கிய எச்சரிக்கைகளை அனுப்ப.';
+
+  @override
+  String get permViewFinancesDesc =>
+      'சேவை அளவீடுகள், வழங்குநர் வருமானம் மற்றும் முடிந்த வேலைப் பதிவுகளை ஆய்வு செய்ய.';
+
+  @override
+  String get adminStatusInvited => 'அழைக்கப்பட்டது';
+
+  @override
+  String get adminStatusSuspended => 'இடைநிறுத்தப்பட்டது';
+
+  @override
+  String get custArtisanLabel => 'கைவினைஞர்';
+
+  @override
+  String get custDefaultSystemLanguage => 'இயல்புநிலை கணினி மொழி';
+
+  @override
+  String custMetresAway(int metres) {
+    return '$metres மீ தொலைவில்';
+  }
+
+  @override
+  String custKmAwayValue(String km) {
+    return '$km கி.மீ தொலைவில்';
+  }
+
+  @override
+  String get custFallbackAreaColombo03 => 'கொழும்பு 03';
+
+  @override
+  String get custFallbackWesternProvince => 'மேல் மாகாணம்';
+
+  @override
+  String get custFallbackColombo => 'கொழும்பு';
+
+  @override
+  String custShareTrackingText(String link) {
+    return 'எனது HelaService கைவினைஞரை இங்கே நேரலையில் கண்காணிக்கவும்: $link';
+  }
+
+  @override
+  String custRatePerHour(String amount) {
+    return 'LKR $amount / மணிக்கு';
+  }
+
+  @override
+  String custGpsTapToUpdate(String lat, String lng) {
+    return 'GPS: $lat, $lng (புதுப்பிக்கத் தட்டவும்)';
+  }
+
+  @override
+  String get custInspectionSuffix => 'பரிசோதனை';
+
+  @override
+  String get custServiceProviderLabel => 'சேவை வழங்குநர்';
+
+  @override
+  String get liveMapColArtisan => 'கைவினைஞர்';
+
+  @override
+  String get liveMapColAssignedZone => 'ஒதுக்கப்பட்ட மண்டலம்';
+
+  @override
+  String get liveMapColPayout => 'கொடுப்பனவு';
+
+  @override
+  String get liveMapColQuickDispatch => 'விரைவு அனுப்புதல்';
+
+  @override
+  String get liveMapStatusAvailableIdle => 'கிடைக்கிறார் / சும்மா';
+
+  @override
+  String get liveMapStatusActiveVerified => 'செயலில் - சரிபார்க்கப்பட்டது';
+
+  @override
+  String get liveMapNicVerified => 'NIC: சரிபார்க்கப்பட்டது';
+
+  @override
+  String get liveMapNicPending => 'NIC: நிலுவையில்';
+
+  @override
+  String get liveMapZoneColomboMetro => 'கொழும்பு பெருநகர்';
+
+  @override
+  String liveMapPayoutToday(String amount) {
+    return '$amount (இன்று)';
+  }
+
+  @override
+  String get liveMapTodayParen => '(இன்று)';
+
+  @override
+  String get liveMapActionDispatch => 'அனுப்பு';
+
+  @override
+  String get liveMapActionReassign => 'மீண்டும் ஒதுக்கு';
+
+  @override
+  String liveMapDispatchDialogTitle(String action, String name) {
+    return '$action: $name';
+  }
+
+  @override
+  String liveMapQuotesReceived(int count) {
+    return '$count விலைக்குறிப்புகள் கிடைத்தன';
+  }
+
+  @override
+  String liveMapLiveCount(int count) {
+    return '+$count நேரலை';
+  }
+
+  @override
+  String liveMapActiveCount(int count) {
+    return '$count செயலில்';
+  }
+
+  @override
+  String get liveMapActionRequired => 'நடவடிக்கை தேவை';
+
+  @override
+  String get liveMapShowAllDistricts => 'அனைத்து மாவட்டங்களையும் காட்டு';
+
+  @override
+  String liveMapUnmappedProviderOne(int count) {
+    return 'வரைபடமிடப்படாத/தெரியாத மண்டலங்களில் $count செயலில் உள்ள சேவை வழங்குநர்';
+  }
+
+  @override
+  String liveMapUnmappedProviderMany(int count) {
+    return 'வரைபடமிடப்படாத/தெரியாத மண்டலங்களில் $count செயலில் உள்ள சேவை வழங்குநர்கள்';
+  }
+
+  @override
+  String get disputesNotAvailable => 'இல்லை';
+
+  @override
+  String get disputesResolveNotesPrompt =>
+      'விசாரணையின் முடிவு அல்லது வாடிக்கையாளர் இழப்பீடு பற்றிய தீர்வு குறிப்புகளைச் சேர்க்கவும்.';
+
+  @override
+  String get disputesDismissNotesPrompt =>
+      'இந்த முறைப்பாடு ஏன் நிராகரிக்கப்படுகிறது என்பதை விளக்கும் குறிப்புகளைச் சேர்க்கவும்.';
+
+  @override
+  String get disputesResolutionSummaryHint =>
+      'உள் நிர்வாக தீர்வு சுருக்கத்தை உள்ளிடவும்...';
+
+  @override
+  String get disputesMarkedResolvedSnack =>
+      'முறைப்பாடு தீர்க்கப்பட்டதாகக் குறிக்கப்பட்டது.';
+
+  @override
+  String get disputesDismissedSnack => 'முறைப்பாடு நிராகரிக்கப்பட்டது.';
+
+  @override
+  String get disputesMarkResolved => 'தீர்க்கப்பட்டதாகக் குறி';
+
+  @override
+  String get disputesConfirmDismiss => 'நிராகரிப்பை உறுதிப்படுத்து';
+
+  @override
+  String disputesBanConfirm(String name, String trade) {
+    return '$name ($trade) ஐ தடை செய்ய விரும்புகிறீர்களா? அவர் offline இல் பூட்டப்பட்டு வாடிக்கையாளர் தேடலில் இருந்து மறைக்கப்படுவார்.';
+  }
+
+  @override
+  String get disputesSuspendProvider => 'சேவை வழங்குநரை இடைநிறுத்து';
+
+  @override
+  String disputesProviderSuspendedSnack(String name) {
+    return 'சேவை வழங்குநர் $name இடைநிறுத்தப்பட்டார்.';
+  }
+
+  @override
+  String disputesErrorLoading(String error) {
+    return 'முறைப்பாடுகளை ஏற்றுவதில் பிழை: $error';
+  }
+
+  @override
+  String disputesFilterAllCount(int count) {
+    return 'அனைத்தும் ($count)';
+  }
+
+  @override
+  String disputesFilterPendingCount(int count) {
+    return 'நிலுவையில் ($count)';
+  }
+
+  @override
+  String disputesFilterResolvedCount(int count) {
+    return 'தீர்க்கப்பட்டவை ($count)';
+  }
+
+  @override
+  String disputesFilterDismissedCount(int count) {
+    return 'நிராகரிக்கப்பட்டவை ($count)';
+  }
+
+  @override
+  String get disputesNoMatching => 'பொருந்தும் முறைப்பாடுகள் எதுவும் இல்லை';
+
+  @override
+  String get disputesNoneRecorded => 'முறைப்பாடுகள் எதுவும் பதிவாகவில்லை';
+
+  @override
+  String get disputesTryAdjustingSearch =>
+      'உங்கள் தேடல் நிபந்தனைகளை மாற்றிப் பாருங்கள்.';
+
+  @override
+  String get disputesAllDisputeFree =>
+      'தற்போது அனைத்து சேவை பரிவர்த்தனைகளும் முறைப்பாடுகள் இல்லாமல் உள்ளன.';
+
+  @override
+  String get disputesStatusResolvedCaps => 'தீர்க்கப்பட்டது';
+
+  @override
+  String get disputesStatusDismissedCaps => 'நிராகரிக்கப்பட்டது';
+
+  @override
+  String get disputesStatusPendingCaps => 'நிலுவையில்';
+
+  @override
+  String disputesFiledAgo(String time) {
+    return 'பதிவு செய்தது $time';
+  }
+
+  @override
+  String get disputesCustomerCaps => 'வாடிக்கையாளர்';
+
+  @override
+  String get disputesReportedCaps => 'புகாரளிக்கப்பட்டவர்';
+
+  @override
+  String disputesAdminNote(String note) {
+    return 'நிர்வாகக் குறிப்பு: $note';
+  }
+
+  @override
+  String get disputesReopenCase => 'வழக்கை மீண்டும் திற';
+
+  @override
+  String get disputesCaseReopenedSnack =>
+      'முறைப்பாட்டு வழக்கு மீண்டும் திறக்கப்பட்டது.';
+
+  @override
+  String get shellSuperAdminOnly =>
+      'நிர்வாகி மேலாண்மையை Super Admin மட்டுமே அணுக முடியும்.';
+
+  @override
+  String get provLocationNotSet => 'இருப்பிடம் அமைக்கப்படவில்லை';
+
+  @override
+  String get provDirectPay => 'நேரடி கட்டணம்';
+
+  @override
+  String get provSpecialist => 'நிபுணர்';
+
+  @override
+  String provNicImageTooLarge(int sizeKb) {
+    return 'படத்தின் அளவு மிகப் பெரியது ($sizeKb KB). அதிகபட்ச அளவு 600 KB. சுருக்கப்பட்ட புகைப்படத்தைத் தேர்வுசெய்யவும் அல்லது எடுக்கவும்.';
+  }
+
+  @override
+  String get provNicDecodeFailed =>
+      'எடுக்கப்பட்ட ஆவணத்தைப் படிக்க முடியவில்லை.';
+
+  @override
+  String get provNicTooLargeAfterCompression =>
+      'சுருக்கிய பின்னரும் NIC படம் மிகப் பெரியதாக உள்ளது. மீண்டும் புகைப்படம் எடுக்கவும்.';
+
+  @override
+  String get provUserNotAuthenticated => 'பயனர் அங்கீகரிக்கப்படவில்லை';
+
+  @override
+  String get provNotLoggedIn => 'உள்நுழையவில்லை';
+
+  @override
+  String get provNicHintExample => '200012345678 அல்லது 881234567V';
+
+  @override
+  String provDurationHoursMins(int hours, int minutes) {
+    return '$hours மணி $minutes நிமி';
+  }
+
+  @override
+  String authGpsLocationDetected(String lat, String lng) {
+    return 'GPS இருப்பிடம் கண்டறியப்பட்டது: $lat, $lng';
+  }
+
+  @override
+  String authFailedToPickProfilePhoto(String error) {
+    return 'சுயவிவரப் புகைப்படத்தைத் தேர்வுசெய்ய முடியவில்லை: $error';
+  }
+
+  @override
+  String get authErrUserNotFound =>
+      'இந்த மின்னஞ்சலுக்கு கணக்கு இல்லை. எழுத்துப்பிழையைச் சரிபார்க்கவும் அல்லது பதிவுசெய்யவும்.';
+
+  @override
+  String get authErrWrongCredentials =>
+      'கடவுச்சொல் அல்லது மின்னஞ்சல் தவறானது. உங்கள் விவரங்களைச் சரிபார்க்கவும்.';
+
+  @override
+  String get authErrEmailInUse =>
+      'இந்த மின்னஞ்சல் முகவரியுடன் ஏற்கனவே ஒரு கணக்கு உள்ளது.';
+
+  @override
+  String get authErrWeakPassword =>
+      'கடவுச்சொல் மிகவும் பலவீனமானது. குறைந்தது 6 எழுத்துகளைப் பயன்படுத்தவும்.';
+
+  @override
+  String get authErrInvalidEmail => 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.';
+
+  @override
+  String get authErrUserDisabled =>
+      'இந்தக் கணக்கு முடக்கப்பட்டுள்ளது. உதவி மையத்தைத் தொடர்புகொள்ளவும்.';
+
+  @override
+  String get authErrTooManyRequests =>
+      'அதிக முயற்சிகள். மீண்டும் முயற்சிக்கும் முன் சிறிது நேரம் காத்திருக்கவும்.';
+
+  @override
+  String get authErrNetwork =>
+      'இணைய இணைப்பில் சிக்கல். உங்கள் இணைய இணைப்பைச் சரிபார்க்கவும்.';
+
+  @override
+  String get authErrSignInCancelled => 'பயனர் உள்நுழைவை ரத்துசெய்தார்.';
+
+  @override
+  String get authErrUserDataUnavailable => 'Firebase பயனர் தரவு கிடைக்கவில்லை.';
+
+  @override
+  String get authErrAlreadyAdmin =>
+      'இந்தப் பயனர் ஏற்கனவே நிர்வாகியாகப் பதிவுசெய்யப்பட்டுள்ளார்.';
+
+  @override
+  String authErrAuthenticationFailed(String email) {
+    return '$email க்கான அங்கீகாரம் தோல்வியடைந்தது';
+  }
+
+  @override
+  String authErrRegistrationFailed(String email) {
+    return '$email க்கான பதிவு தோல்வியடைந்தது';
+  }
+
+  @override
+  String authErrNoRegisteredUser(String email) {
+    return '\"$email\" மின்னஞ்சலுடன் பதிவுசெய்த பயனர் இல்லை. நிர்வாகியாக உயர்த்தப்படும் முன் அவர் முதலில் செயலியில் கணக்கைப் பதிவுசெய்ய வேண்டும்.';
+  }
+
+  @override
+  String nicDeskApprovedActivated(String name) {
+    return '$name அங்கீகரிக்கப்பட்டு HelaService இல் செயல்படுத்தப்பட்டார்!';
+  }
+
+  @override
+  String nicDeskErrorApproving(String error) {
+    return 'சரிபார்ப்பை அங்கீகரிப்பதில் பிழை: $error';
+  }
+
+  @override
+  String nicDeskVerificationRejected(String name) {
+    return '$name இன் சரிபார்ப்பு நிராகரிக்கப்பட்டது.';
+  }
+
+  @override
+  String nicDeskErrorRejecting(String error) {
+    return 'சரிபார்ப்பை நிராகரிப்பதில் பிழை: $error';
+  }
+
+  @override
+  String nicDeskRequestedClearerPhoto(String name) {
+    return '$name இடம் தெளிவான புகைப்படம் கோரப்பட்டது.';
+  }
+
+  @override
+  String nicDeskErrorResubmission(String error) {
+    return 'மீண்டும் சமர்ப்பிக்கக் கோருவதில் பிழை: $error';
+  }
+
+  @override
+  String nicDeskPendingCount(int count) {
+    return '$count நிலுவையில்';
+  }
+
+  @override
+  String get nicDeskSortedMostRecent => 'சமீபத்தியவை முதலில்';
+
+  @override
+  String get nicDeskDocsUploaded => 'ஆவணங்கள் பதிவேற்றப்பட்டன';
+
+  @override
+  String get nicDeskStandardDoc => 'நிலையான ஆவணம்';
+
+  @override
+  String nicDeskMatchPercent(int percent) {
+    return '$percent% பொருத்தம்';
+  }
+
+  @override
+  String get nicDeskDefaultLocation => 'மேல் மாகாணம், இலங்கை';
+
+  @override
+  String nicDeskVerifiedGnDivision(String location) {
+    return '$location (சரிபார்க்கப்பட்ட கிராம சேவகர் பிரிவு)';
+  }
+
+  @override
+  String get nicDeskOcrFlagged => 'குறிக்கப்பட்டது';
+
+  @override
+  String get nicDeskOcrMatch => 'பொருந்துகிறது';
+
+  @override
+  String get nicDeskOcrValid => 'செல்லுபடியானது';
+
+  @override
+  String get nicDeskReadOnlyMode =>
+      'படிக்க மட்டும்: கைவினைஞர் சான்றுகளை அங்கீகரிக்க அல்லது நிராகரிக்க NIC சரிபார்ப்பு அனுமதி தேவை.';
+
+  @override
+  String get nicDeskNoId => 'ID இல்லை';
+
+  @override
+  String get nicDeskNoImage => 'படம் இல்லை';
+
+  @override
+  String get nicDeskTapToZoom => 'பெரிதாக்க தட்டவும்';
+
+  @override
+  String teamAdminNowStatus(String name, String status) {
+    return '$name இப்போது $status.';
+  }
+
+  @override
+  String teamFailedUpdateStatus(String error) {
+    return 'நிலையைப் புதுப்பிக்க முடியவில்லை: $error';
+  }
+
+  @override
+  String get teamReadOnlyView =>
+      'படிக்க மட்டும்: நீங்கள் தற்போது Operations Admin அனுமதிகளுடன் செயல்படுகிறீர்கள். நிர்வாக அணுகலைச் சேர்க்க, மாற்ற அல்லது ரத்து செய்ய Super Admin களால் மட்டுமே முடியும்.';
+
+  @override
+  String get teamStatusFilterLabel => 'நிலை:';
+
+  @override
+  String get teamAllStatuses => 'அனைத்து நிலைகளும்';
+
+  @override
+  String get teamNoAdminsFound => 'நிர்வாகிகள் எவரும் இல்லை';
+
+  @override
+  String teamNoAdminMatching(String query) {
+    return '\"$query\" உடன் பொருந்தும் நிர்வாகி இல்லை.';
+  }
+
+  @override
+  String get teamTryChangingFilter =>
+      'பங்கு அல்லது நிலை வடிகட்டியை மாற்றிப் பாருங்கள்.';
+
+  @override
+  String get teamColAdministrator => 'நிர்வாகி';
+
+  @override
+  String get teamColTierRole => 'நிலை & பங்கு';
+
+  @override
+  String get teamColGrantedPermissions => 'வழங்கப்பட்ட அனுமதிகள்';
+
+  @override
+  String get teamColStatus => 'நிலை';
+
+  @override
+  String get teamColActions => 'செயல்கள்';
+
+  @override
+  String get teamManagedInFirebase =>
+      'Firebase Console இல் நிர்வகிக்கப்படுகிறது';
+
+  @override
+  String get teamManageAdmin => 'நிர்வாகியை நிர்வகி';
+
+  @override
+  String get teamEditPermissions => 'அனுமதிகளைத் திருத்து';
+
+  @override
+  String get teamProtected => 'பாதுகாக்கப்பட்டது';
+
+  @override
+  String get teamActiveLabel => 'செயலில்:';
+
+  @override
+  String get adminSetBroadcastHint =>
+      'எ.கா. வானிலை எச்சரிக்கை: மேல் மாகாணத்தில் கடும் மழை...';
+
+  @override
+  String get adminSetEnterAlertMessage => 'எச்சரிக்கை செய்தியை உள்ளிடவும்.';
+
+  @override
+  String get adminSetBroadcastDispatched =>
+      'எச்சரிக்கை அனுப்பப்பட்டு நேரடி செயல்பாட்டுப் பதிவில் சேர்க்கப்பட்டது.';
+
+  @override
+  String adminSetBroadcastFailed(String error) {
+    return 'எச்சரிக்கையை அனுப்ப முடியவில்லை: $error';
+  }
+
+  @override
+  String adminSetRecentRecords(int count) {
+    return '$count சமீபத்திய நிர்வாக & அனுப்புதல் பதிவுகள்';
+  }
+
+  @override
+  String get adminSetExportAuditLog => 'தணிக்கைப் பதிவை ஏற்றுமதி செய் (JSON)';
+
+  @override
+  String get adminSetAuditExported =>
+      'தணிக்கைப் பதிவு JSON ஆக clipboard இல் நகலெடுக்கப்பட்டது.';
+
+  @override
+  String get adminSetNoAuditLogs => 'இதுவரை தணிக்கைப் பதிவுகள் எதுவும் இல்லை.';
+
+  @override
+  String get adminSetSystemAction => 'கணினி செயல்';
+
+  @override
+  String get adminSetAuditTag => 'தணிக்கை';
+
+  @override
+  String get adminSetRecent => 'சமீபத்தில்';
+
+  @override
+  String get adminSetAdministratorFallback => 'நிர்வாகி';
+
+  @override
+  String get adminSetPlatformGovernance => 'தள நிர்வாகம்';
+
+  @override
+  String get adminSetAssignedPermissions => 'வழங்கப்பட்ட அனுமதிகள்:';
+
+  @override
+  String get adminSetAuditLogsDesc =>
+      'நிர்வாகி செயல்கள் & அணுகல் வரலாற்றைப் பாருங்கள்';
+
+  @override
+  String get adminSetAuditAccessDenied =>
+      'அணுகல் மறுக்கப்பட்டது: தணிக்கைப் பதிவுகள் Super Admin களுக்கு மட்டுமே.';
 }

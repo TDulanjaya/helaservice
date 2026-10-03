@@ -6,6 +6,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -91,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(authErrorMessage(context, e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -123,7 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(authErrorMessage(context, e)),
             backgroundColor: AppColors.error,
           ),
         );

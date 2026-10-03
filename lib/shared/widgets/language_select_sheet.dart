@@ -33,7 +33,7 @@ class LanguageSelectSheet extends StatelessWidget {
         'code': 'en',
         'name': 'English',
         'native': 'English',
-        'subtitle': 'Default system language',
+        'subtitle': context.l10n.custDefaultSystemLanguage,
       },
       {
         'code': 'si',

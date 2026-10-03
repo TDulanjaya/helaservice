@@ -3,6 +3,8 @@ import '../../../theme/app_theme.dart';
 import '../../../models/admin_user.dart';
 import '../../../repositories/admin_repository.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
 
 class EditAdminPermissionsDialog extends StatefulWidget {
   final AdminUser admin;
@@ -55,8 +57,8 @@ class _EditAdminPermissionsDialogState
   Future<void> _submit() async {
     if (_selectedPermissions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one permission flag.'),
+        SnackBar(
+          content: Text(context.l10n.editPermSelectOne),
           backgroundColor: AppColors.error,
         ),
       );
@@ -73,11 +75,13 @@ class _EditAdminPermissionsDialogState
       );
 
       if (!mounted) return;
+      final successMsg =
+          context.l10n.editPermUpdatedFor(widget.admin.displayName);
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Permissions updated for ${widget.admin.displayName}.',
+            successMsg,
           ),
           backgroundColor: AppColors.primary,
         ),
@@ -86,7 +90,7 @@ class _EditAdminPermissionsDialogState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to update permissions: $e'),
+          content: Text(context.l10n.editPermFailed('$e')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -165,7 +169,7 @@ class _EditAdminPermissionsDialogState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Change Administrative Tier',
+                        context.l10n.editPermChangeTier,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -177,7 +181,7 @@ class _EditAdminPermissionsDialogState
                         children: [
                           Expanded(
                             child: _RoleCard(
-                              label: 'Ops Admin',
+                              label: adminRoleLabel(context, AdminRole.opsAdmin),
                               icon: Icons.verified_user,
                               color: AppColors.primary,
                               isSelected: _selectedRole == AdminRole.opsAdmin,
@@ -187,7 +191,7 @@ class _EditAdminPermissionsDialogState
                           const SizedBox(width: 8),
                           Expanded(
                             child: _RoleCard(
-                              label: 'Support Admin',
+                              label: adminRoleLabel(context, AdminRole.supportAdmin),
                               icon: Icons.support_agent,
                               color: const Color(0xFF4A6572),
                               isSelected: _selectedRole == AdminRole.supportAdmin,
@@ -199,7 +203,7 @@ class _EditAdminPermissionsDialogState
                       const SizedBox(height: 20),
 
                       Text(
-                        'Assigned Operational Permissions',
+                        context.l10n.editPermAssigned,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -234,7 +238,7 @@ class _EditAdminPermissionsDialogState
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 2),
                             title: Text(
-                              permission.label,
+                              adminPermissionLabel(context, permission),
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
@@ -242,7 +246,7 @@ class _EditAdminPermissionsDialogState
                               ),
                             ),
                             subtitle: Text(
-                              permission.description,
+                              adminPermissionDescription(context, permission),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: context.themeTextSecondary,
@@ -274,7 +278,7 @@ class _EditAdminPermissionsDialogState
                 children: [
                   TextButton(
                     onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: Text('Cancel', style: TextStyle(color: context.themeTextSecondary)),
+                    child: Text(context.l10n.cancel, style: TextStyle(color: context.themeTextSecondary)),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton.icon(
@@ -290,7 +294,7 @@ class _EditAdminPermissionsDialogState
                           )
                         : const Icon(Icons.save, size: 18),
                     label: Text(
-                      _isLoading ? 'Updating...' : 'Save Permissions',
+                      _isLoading ? context.l10n.editPermUpdating : context.l10n.editPermSave,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(

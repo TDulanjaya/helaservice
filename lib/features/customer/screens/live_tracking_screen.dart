@@ -201,7 +201,7 @@ class LiveTrackingScreen extends StatelessWidget {
                     child: PillBadge(
                         label: tech.serviceArea.isNotEmpty
                             ? tech.serviceArea
-                            : 'Colombo 03',
+                            : context.l10n.custFallbackAreaColombo03,
                         icon: Icons.location_on)),
               ),
             ],
@@ -280,7 +280,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                                   color: context
                                                       .themeTextSecondary)),
                                           Text(
-                                              '${context.l10n.arrivingIn} ${route.formattedDuration}',
+                                              '${context.l10n.arrivingIn} ${context.l10n.durationMins(route.durationMinutes)}',
                                               style: const TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w800)),
@@ -400,7 +400,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                   child: Text(
                                     tech.serviceArea.isNotEmpty
                                         ? tech.serviceArea
-                                        : 'Western Province',
+                                        : context.l10n.custFallbackWesternProvince,
                                     style: TextStyle(
                                         fontSize: 11,
                                         color: context.themeTextSecondary),
@@ -540,7 +540,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                 'https://helaservice.lk/track/${currentBooking?.id ?? tech.id}';
                             Clipboard.setData(ClipboardData(
                                 text:
-                                    'Track my HelaService artisan live here: $trackingLink'));
+                                    context.l10n.custShareTrackingText(trackingLink)));
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -649,7 +649,7 @@ class _CustomerLiveTrackingMapCardState
     return [
       AppMapMarker.provider(
         point: widget.techPoint,
-        label: widget.techName.isNotEmpty ? widget.techName : 'Artisan',
+        label: widget.techName.isNotEmpty ? widget.techName : null,
         enRoute: true,
       ),
       AppMapMarker.customer(

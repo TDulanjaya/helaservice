@@ -10,6 +10,7 @@ import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
 
 class NicVerificationWorkspaceScreen extends StatefulWidget {
   const NicVerificationWorkspaceScreen({super.key});
@@ -55,7 +56,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${item.name} approved & activated on HelaService!'),
+            content: Text(context.l10n.nicDeskApprovedActivated(item.name)),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -64,7 +65,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error approving verification: $e'),
+            content: Text(context.l10n.nicDeskErrorApproving('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -92,7 +93,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Verification for ${item.name} rejected.'),
+            content: Text(context.l10n.nicDeskVerificationRejected(item.name)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -101,7 +102,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error rejecting verification: $e'),
+            content: Text(context.l10n.nicDeskErrorRejecting('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -130,7 +131,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Requested clearer photo from ${item.name}.'),
+            content: Text(context.l10n.nicDeskRequestedClearerPhoto(item.name)),
           ),
         );
       }
@@ -138,7 +139,7 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error requesting resubmission: $e'),
+            content: Text(context.l10n.nicDeskErrorResubmission('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -313,7 +314,7 @@ class _NicVerificationWorkspaceScreenState
                                   color: context.themeTextPrimary),
                             ),
                           ),
-                          Text('$pendingCount Pending',
+                          Text(context.l10n.nicDeskPendingCount(pendingCount),
                               style: const TextStyle(
                                   fontSize: 10.5,
                                   color: AppColors.primary,
@@ -372,7 +373,9 @@ class _NicVerificationWorkspaceScreenState
                                               color: context.themeTextPrimary),
                                         ),
                                       ),
-                                      Text(item.timeAgo,
+                                      Text(
+                                          timeAgoL10n(context, item.submittedAt,
+                                              fallback: item.timeAgo),
                                           style: TextStyle(
                                               fontSize: 10,
                                               color:
@@ -441,20 +444,20 @@ class _NicVerificationWorkspaceScreenState
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Text('Incoming Verification Stream',
+                                    child: Text(context.l10n.incomingVerificationStream,
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 13,
                                             color: context.themeTextPrimary)),
                                   ),
-                                  Text('$pendingCount Pending',
+                                  Text(context.l10n.nicDeskPendingCount(pendingCount),
                                       style: const TextStyle(
                                           fontSize: 10.5,
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold)),
                                 ],
                               ),
-                              Text('Sorted by Most Recent',
+                              Text(context.l10n.nicDeskSortedMostRecent,
                                   style: TextStyle(
                                       fontSize: 10,
                                       color: context.themeTextSecondary)),
@@ -495,7 +498,9 @@ class _NicVerificationWorkspaceScreenState
                                                       fontSize: 12.5,
                                                       color: context
                                                           .themeTextPrimary))),
-                                          Text(item.timeAgo,
+                                          Text(
+                                          timeAgoL10n(context, item.submittedAt,
+                                              fallback: item.timeAgo),
                                               style: TextStyle(
                                                   fontSize: 10,
                                                   color: context
@@ -518,8 +523,8 @@ class _NicVerificationWorkspaceScreenState
                                             Expanded(
                                               child: Text(
                                                 item.fileKey.isNotEmpty
-                                                    ? 'Docs Uploaded'
-                                                    : 'Standard Doc',
+                                                    ? context.l10n.nicDeskDocsUploaded
+                                                    : context.l10n.nicDeskStandardDoc,
                                                 style: TextStyle(
                                                     fontSize: 10,
                                                     color: context
@@ -562,7 +567,7 @@ class _NicVerificationWorkspaceScreenState
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          'Approved',
+          context.l10n.statApproved,
           style: TextStyle(
             fontSize: 10.5,
             color: context.themeSuccess,
@@ -613,7 +618,7 @@ class _NicVerificationWorkspaceScreenState
       ),
       child: Text(
         item.hasComputedMatch
-            ? '${item.matchPercent}% Match'
+            ? context.l10n.nicDeskMatchPercent(item.matchPercent)
             : context.l10n.manualReview,
         style: TextStyle(
           fontSize: 10.5,
@@ -693,7 +698,7 @@ class _NicVerificationWorkspaceScreenState
                 icon: Icons.home,
                 text: selectedItem.location.isNotEmpty
                     ? selectedItem.location
-                    : 'Western Province, Sri Lanka'),
+                    : context.l10n.nicDeskDefaultLocation),
             _InfoRow(
                 icon: Icons.translate,
                 text: selectedItem.preferredLanguage.isNotEmpty
@@ -820,7 +825,8 @@ class _NicVerificationWorkspaceScreenState
                   icon: Icons.home_outlined,
                   field: context.l10n.ocrLocation,
                   extracted: selectedItem.location,
-                  registry: '${selectedItem.location} (Verified GN Division)',
+                  registry: context.l10n
+                      .nicDeskVerifiedGnDivision(selectedItem.location),
                   status: 'Valid',
                 ),
                 OcrField(
@@ -831,6 +837,20 @@ class _NicVerificationWorkspaceScreenState
                   status: selectedItem.status.toUpperCase(),
                 ),
               ];
+
+              // translate status text for display
+              String displayStatus(String status) {
+                switch (status) {
+                  case 'Flagged':
+                    return context.l10n.nicDeskOcrFlagged;
+                  case 'Match':
+                    return context.l10n.nicDeskOcrMatch;
+                  case 'Valid':
+                    return context.l10n.nicDeskOcrValid;
+                  default:
+                    return status;
+                }
+              }
 
               Widget buildBadge(String status) {
                 final isMatch = status.toLowerCase().contains('match') ||
@@ -863,7 +883,7 @@ class _NicVerificationWorkspaceScreenState
                         Icon(Icons.warning_amber_rounded, size: 11, color: fg),
                       if (isMatch || isFlag) const SizedBox(width: 4),
                       Text(
-                        status,
+                        displayStatus(status),
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -928,7 +948,7 @@ class _NicVerificationWorkspaceScreenState
                                         ),
                                       ),
                                       Text(
-                                        'Registry: ${f.registry}',
+                                        '${context.l10n.ocrRegistry}: ${f.registry}',
                                         style: TextStyle(
                                           fontSize: 10.5,
                                           color: context.themeTextSecondary,
@@ -1028,7 +1048,7 @@ class _NicVerificationWorkspaceScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Read-Only Mode: NIC Verification permission required to approve or reject artisan credentials.',
+                      context.l10n.nicDeskReadOnlyMode,
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -1385,7 +1405,7 @@ class _NicDocImagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (providerId.isEmpty) {
-      return _buildFallback(context, 'No ID');
+      return _buildFallback(context, context.l10n.nicDeskNoId);
     }
 
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -1424,7 +1444,7 @@ class _NicDocImagePreview extends StatelessWidget {
         }
 
         if (bytes == null || bytes.isEmpty) {
-          return _buildFallback(context, 'No image');
+          return _buildFallback(context, context.l10n.nicDeskNoImage);
         }
 
         return Expanded(
@@ -1462,10 +1482,10 @@ class _NicDocImagePreview extends StatelessWidget {
                     style: const TextStyle(
                         fontSize: 10, fontWeight: FontWeight.w600),
                   ),
-                  const Text(
-                    'Tap to zoom',
+                  Text(
+                    context.l10n.nicDeskTapToZoom,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 9.5,
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,

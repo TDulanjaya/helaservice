@@ -6,6 +6,7 @@ import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/auth_error_l10n.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../models/admin_models.dart';
@@ -130,7 +131,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AuthService.getReadableAuthError(e)),
+          content: Text(authErrorMessage(context, e)),
           backgroundColor: AppColors.error,
         ),
       );
@@ -276,7 +277,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
               _Field(
                 label: context.l10n.nicNumberLabel,
                 controller: _nicController,
-                hint: '200012345678 or 881234567V',
+                hint: context.l10n.provNicHintExample,
                 prefixIcon: Icons.badge_outlined,
                 isDarkField: context.isDark,
               ),

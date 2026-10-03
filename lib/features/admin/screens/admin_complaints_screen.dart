@@ -34,12 +34,13 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   }
 
   String _formatDate(DateTime? dt) {
-    if (dt == null) return 'N/A';
+    final l10n = context.l10n;
+    if (dt == null) return l10n.disputesNotAvailable;
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return l10n.timeJustNow;
+    if (diff.inMinutes < 60) return l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.timeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.timeDaysAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -68,8 +69,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
             children: [
               Text(
                 isResolve
-                    ? 'Add resolution notes detailing the outcome of the investigation or customer compensation.'
-                    : 'Add notes explaining why this dispute is dismissed.',
+                    ? context.l10n.disputesResolveNotesPrompt
+                    : context.l10n.disputesDismissNotesPrompt,
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.getTextSecondary(ctx),
@@ -83,7 +84,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 style: TextStyle(
                     color: AppColors.getTextPrimary(ctx), fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Enter internal admin resolution summary...',
+                  hintText: context.l10n.disputesResolutionSummaryHint,
                   hintStyle: TextStyle(
                     color:
                         AppColors.getTextSecondary(ctx).withValues(alpha: 0.6),
@@ -104,7 +105,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Cancel',
+              context.l10n.cancel,
               style: TextStyle(color: AppColors.getTextSecondary(ctx)),
             ),
           ),
@@ -129,15 +130,17 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(isResolve
-                        ? 'Complaint marked as Resolved.'
-                        : 'Complaint dismissed.'),
+                        ? context.l10n.disputesMarkedResolvedSnack
+                        : context.l10n.disputesDismissedSnack),
                     backgroundColor:
                         isResolve ? AppColors.primary : AppColors.outline,
                   ),
                 );
               }
             },
-            child: Text(isResolve ? 'Mark Resolved' : 'Confirm Dismiss'),
+            child: Text(isResolve
+                ? context.l10n.disputesMarkResolved
+                : context.l10n.disputesConfirmDismiss),
           ),
         ],
       ),
@@ -175,7 +178,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Are you sure you want to ban ${complaint.providerName} (${complaint.providerTrade})? They will be locked offline and hidden from customer discovery.',
+                context.l10n.disputesBanConfirm(
+                    complaint.providerName, complaint.providerTrade),
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.getTextSecondary(ctx),
@@ -214,7 +218,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Cancel',
+              context.l10n.cancel,
               style: TextStyle(color: AppColors.getTextSecondary(ctx)),
             ),
           ),
@@ -242,14 +246,14 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                        'Provider ${complaint.providerName} has been suspended.'),
+                    content: Text(context.l10n
+                        .disputesProviderSuspendedSnack(complaint.providerName)),
                     backgroundColor: AppColors.error,
                   ),
                 );
               }
             },
-            child: const Text('Suspend Provider'),
+            child: Text(context.l10n.disputesSuspendProvider),
           ),
         ],
       ),
@@ -294,7 +298,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Text(
-                'Error loading complaints: ${snapshot.error}',
+                context.l10n.disputesErrorLoading('${snapshot.error}'),
                 style: const TextStyle(color: AppColors.error),
               ),
             ),
@@ -433,15 +437,23 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildFilterChip('all', 'All ($totalCount)'),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('pending', 'Pending ($pendingCount)'),
-                          const SizedBox(width: 8),
-                          _buildFilterChip(
-                              'resolved', 'Resolved ($resolvedCount)'),
+                          _buildFilterChip('all',
+                              context.l10n.disputesFilterAllCount(totalCount)),
                           const SizedBox(width: 8),
                           _buildFilterChip(
-                              'dismissed', 'Dismissed ($dismissedCount)'),
+                              'pending',
+                              context.l10n
+                                  .disputesFilterPendingCount(pendingCount)),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                              'resolved',
+                              context.l10n
+                                  .disputesFilterResolvedCount(resolvedCount)),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                              'dismissed',
+                              context.l10n.disputesFilterDismissedCount(
+                                  dismissedCount)),
                         ],
                       ),
                     ),
@@ -466,8 +478,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         const SizedBox(height: 16),
                         Text(
                           _searchQuery.isNotEmpty
-                              ? 'No matching complaints found'
-                              : 'No complaints recorded',
+                              ? context.l10n.disputesNoMatching
+                              : context.l10n.disputesNoneRecorded,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -477,8 +489,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         const SizedBox(height: 6),
                         Text(
                           _searchQuery.isNotEmpty
-                              ? 'Try adjusting your search criteria.'
-                              : 'All service transactions are currently dispute-free.',
+                              ? context.l10n.disputesTryAdjustingSearch
+                              : context.l10n.disputesAllDisputeFree,
                           style: TextStyle(
                             fontSize: 13,
                             color: context.themeTextSecondary,
@@ -594,17 +606,17 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
       case 'resolved':
         statusColor = AppColors.success;
         statusBg = context.themeSuccessTint;
-        statusLabel = 'RESOLVED';
+        statusLabel = context.l10n.disputesStatusResolvedCaps;
         break;
       case 'dismissed':
         statusColor = context.themeTextSecondary;
         statusBg = context.themeSoft;
-        statusLabel = 'DISMISSED';
+        statusLabel = context.l10n.disputesStatusDismissedCaps;
         break;
       default:
         statusColor = AppColors.error;
         statusBg = context.themeDangerTint;
-        statusLabel = 'PENDING';
+        statusLabel = context.l10n.disputesStatusPendingCaps;
         break;
     }
 
@@ -662,7 +674,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Filed ${_formatDate(complaint.createdAt)}',
+            context.l10n.disputesFiledAgo(_formatDate(complaint.createdAt)),
             style: TextStyle(
               fontSize: 12,
               color: context.themeTextSecondary,
@@ -682,7 +694,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'CUSTOMER',
+                        context.l10n.disputesCustomerCaps,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -748,9 +760,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'REPORTED',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.disputesReportedCaps,
+                        style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8,
@@ -834,7 +846,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Admin Note: ${complaint.adminNotes}',
+                      context.l10n.disputesAdminNote(complaint.adminNotes!),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.info,
@@ -863,9 +875,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       ),
                       icon: const Icon(Icons.chat_bubble_outline_rounded,
                           size: 16),
-                      label: const Text(
-                        'Message',
-                        style: TextStyle(
+                      label: Text(
+                        context.l10n.message,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -974,8 +986,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.refresh, size: 14),
-                label:
-                    const Text('Reopen Case', style: TextStyle(fontSize: 12)),
+                label: Text(context.l10n.disputesReopenCase,
+                    style: const TextStyle(fontSize: 12)),
                 onPressed: () async {
                   await _complaintRepo.updateComplaintStatus(
                     complaint.id,
@@ -983,7 +995,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   );
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Dispute case reopened.')),
+                      SnackBar(
+                          content: Text(context.l10n.disputesCaseReopenedSnack)),
                     );
                   }
                 },

@@ -8,6 +8,7 @@ import '../../../models/user_profile.dart';
 import '../../../models/admin_user.dart';
 import '../../../repositories/admin_repository.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
 import 'register_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
@@ -110,7 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!msg.contains('cancelled') && !msg.contains('ABORTED')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.googleSignIn}: $msg'),
+            content: Text(
+                '${context.l10n.googleSignIn}: ${authErrorMessage(context, e)}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -159,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await _routeUser(user);
     } catch (e) {
       if (!mounted) return;
-      final errorMsg = AuthService.getReadableAuthError(e);
+      final errorMsg = authErrorMessage(context, e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -300,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content:
-                                  Text(AuthService.getReadableAuthError(e)),
+                                  Text(authErrorMessage(context, e)),
                               backgroundColor: AppColors.error,
                             ),
                           );

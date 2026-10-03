@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/l10n_extension.dart';
+
 class ThemeProvider extends ChangeNotifier {
   static const String _prefKey = 'app_theme_mode';
   ThemeMode _mode;
@@ -50,13 +52,14 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   String getModeDisplayName(BuildContext context) {
+    final l10n = context.l10n;
     switch (_mode) {
       case ThemeMode.light:
-        return 'Light';
+        return l10n.themeLight;
       case ThemeMode.dark:
-        return 'Dark';
+        return l10n.themeDark;
       case ThemeMode.system:
-        return 'System';
+        return l10n.themeSystem;
     }
   }
 

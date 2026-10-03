@@ -74,10 +74,11 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
       case 'cancelled':
         return context.l10n.filterCancelled;
       case 'en_route':
-        return 'En Route';
+        return context.l10n.ledgerStatusEnRoute;
       case 'accepted':
-        return 'Accepted';
+        return context.l10n.statusAccepted;
       case 'pending':
+        return context.l10n.statusPending;
       default:
         return status.isNotEmpty ? status : context.l10n.notRecorded;
     }
@@ -256,7 +257,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '$completedCount jobs resolved across island',
+                context.l10n.ledgerJobsResolvedIsland('$completedCount'),
                 style: const TextStyle(
                   fontSize: 13,
                   color: Colors.white70,
@@ -304,9 +305,9 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                               color: context.themeInfoTint,
                               borderRadius: BorderRadius.circular(999),
                             ),
-                            child: const Text(
-                              'Active',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.statusActive,
+                              style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.info,
@@ -326,7 +327,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$inProgressCount dispatches active in field',
+                      context.l10n.ledgerDispatchesActive('$inProgressCount'),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -382,8 +383,8 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                     const SizedBox(height: 4),
                     Text(
                       ratedCount > 0
-                          ? 'Based on $ratedCount verified reviews'
-                          : 'Awaiting customer feedback',
+                          ? context.l10n.ledgerBasedOnReviews('$ratedCount')
+                          : context.l10n.ledgerAwaitingFeedback,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -566,7 +567,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                     Text(
                       booking.title.isNotEmpty
                           ? booking.title
-                          : 'Service Booking',
+                          : context.l10n.ledgerServiceBooking,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -733,7 +734,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${context.l10n.delayReported}: ${booking.delayMinutes != null && booking.delayMinutes! > 0 ? "${booking.delayMinutes}m delay • " : ""}${booking.delayReason ?? ""}',
+                      '${context.l10n.delayReported}: ${booking.delayMinutes != null && booking.delayMinutes! > 0 ? "${context.l10n.ledgerDelayMinutes('${booking.delayMinutes}')} • " : ""}${booking.delayReason ?? ""}',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,

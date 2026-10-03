@@ -9,6 +9,7 @@ import '../../../state/role_provider.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class AdminTopBar extends StatelessWidget {
@@ -26,7 +27,7 @@ class AdminTopBar extends StatelessWidget {
         ? adminUser!.displayName
         : (roleProvider.currentUser?.displayName.isNotEmpty == true
             ? roleProvider.currentUser!.displayName
-            : 'Administrator');
+            : context.l10n.topBarAdministrator);
     final adminRole = adminUser != null
         ? (adminUser.isSuperAdmin
             ? context.l10n.roleSuperAdminBadge
@@ -93,7 +94,7 @@ class AdminTopBar extends StatelessWidget {
               child: IconButton(
                 icon: Icon(Icons.search, size: 18, color: context.themeTextPrimary),
                 onPressed: onSearchTap ?? () {},
-                tooltip: 'Search',
+                tooltip: context.l10n.topBarSearch,
                 padding: EdgeInsets.zero,
               ),
             ),
@@ -116,7 +117,7 @@ class AdminTopBar extends StatelessWidget {
                     ),
                   );
                 },
-                tooltip: 'Messages',
+                tooltip: context.l10n.messages,
                 padding: EdgeInsets.zero,
               ),
             ),
@@ -206,7 +207,7 @@ class AdminTopBar extends StatelessWidget {
             },
             icon: Icon(Icons.chat_bubble_outline,
                 color: context.themeTextSecondary),
-            tooltip: 'Support & Mediation Messages',
+            tooltip: context.l10n.topBarSupportMessages,
           ),
           const SizedBox(width: 6),
           GestureDetector(
@@ -303,7 +304,7 @@ class AdminTopBar extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Text(
-                              'No active system alerts or broadcasts logged.',
+                              context.l10n.noActiveSystemAlerts,
                               style: TextStyle(
                                   color: context.themeTextSecondary,
                                   fontSize: 13)),
@@ -336,7 +337,9 @@ class AdminTopBar extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(event.timeAgo,
+                              Text(
+                                  timeAgoL10n(context, event.timestamp,
+                                      fallback: event.timeAgo),
                                   style: TextStyle(
                                       fontSize: 10,
                                       color: context.themeTextSecondary)),

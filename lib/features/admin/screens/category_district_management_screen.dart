@@ -83,7 +83,7 @@ class _CategoryDistrictManagementScreenState
               ),
               const SizedBox(width: 10),
               Text(
-                'Add Service Category',
+                context.l10n.addServiceCategory,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -118,7 +118,7 @@ class _CategoryDistrictManagementScreenState
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.',
+                            context.l10n.cdmPublishedCategoriesInfo,
                             style: TextStyle(
                                 fontSize: 11.5,
                                 color: context.themeTextPrimary,
@@ -129,7 +129,7 @@ class _CategoryDistrictManagementScreenState
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Category Title',
+                  Text(context.l10n.categoryTitle,
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -139,7 +139,7 @@ class _CategoryDistrictManagementScreenState
                     controller: titleController,
                     style: TextStyle(color: context.themeTextPrimary),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Solar PV Maintenance',
+                      hintText: context.l10n.cdmCategoryTitleHint,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
                       prefixIcon: Icon(selectedIcon,
                           size: 20, color: AppColors.primary),
@@ -152,7 +152,7 @@ class _CategoryDistrictManagementScreenState
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text('Service Description',
+                  Text(context.l10n.serviceDescription,
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -163,8 +163,7 @@ class _CategoryDistrictManagementScreenState
                     maxLines: 2,
                     style: TextStyle(color: context.themeTextPrimary),
                     decoration: InputDecoration(
-                      hintText:
-                          'Brief summary of the trade services offered...',
+                      hintText: context.l10n.cdmServiceDescriptionHint,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
@@ -175,7 +174,7 @@ class _CategoryDistrictManagementScreenState
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text('Select Trade Icon',
+                  Text(context.l10n.selectTradeIcon,
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -226,7 +225,7 @@ class _CategoryDistrictManagementScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: Text('Cancel',
+              child: Text(context.l10n.cancel,
                   style: TextStyle(color: context.themeTextSecondary)),
             ),
             ElevatedButton.icon(
@@ -234,8 +233,8 @@ class _CategoryDistrictManagementScreenState
                 final title = titleController.text.trim();
                 if (title.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a category title'),
+                    SnackBar(
+                      content: Text(context.l10n.cdmEnterCategoryTitle),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -270,8 +269,7 @@ class _CategoryDistrictManagementScreenState
                           const Icon(Icons.check_circle_outline,
                               color: Colors.white, size: 18),
                           const SizedBox(width: 8),
-                          Text(
-                              'Category "$title" saved and published successfully'),
+                          Text(context.l10n.cdmCategorySaved(title)),
                         ],
                       ),
                       backgroundColor: AppColors.primary,
@@ -280,7 +278,7 @@ class _CategoryDistrictManagementScreenState
                 }
               },
               icon: const Icon(Icons.check, size: 16),
-              label: const Text('Save & Publish Category'),
+              label: Text(context.l10n.savePublishCategory),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -305,7 +303,7 @@ class _CategoryDistrictManagementScreenState
             const Icon(Icons.warning_amber_rounded,
                 color: AppColors.error, size: 22),
             const SizedBox(width: 8),
-            Text('Delete Category',
+            Text(context.l10n.deleteCategory,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -313,13 +311,13 @@ class _CategoryDistrictManagementScreenState
           ],
         ),
         content: Text(
-          'Are you sure you want to delete "${c.name}"? This will disable dispatch for this category island-wide.',
+          context.l10n.cdmDeleteCategoryConfirm(c.name),
           style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Cancel',
+            child: Text(context.l10n.cancel,
                 style: TextStyle(color: context.themeTextSecondary)),
           ),
           ElevatedButton(
@@ -329,7 +327,7 @@ class _CategoryDistrictManagementScreenState
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Category "${c.name}" deleted'),
+                    content: Text(context.l10n.cdmCategoryDeleted(c.name)),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -339,7 +337,7 @@ class _CategoryDistrictManagementScreenState
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text(context.l10n.cdmDelete),
           ),
         ],
       ),
@@ -471,15 +469,15 @@ class _CategoryDistrictManagementScreenState
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.2)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.lock_outline,
+                          const Icon(Icons.lock_outline,
                               size: 16, color: AppColors.primary),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            'Read-Only Mode (Ops Governance)',
-                            style: TextStyle(
+                            context.l10n.cdmReadOnlyModeOpsGovernance,
+                            style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.primary),
@@ -495,7 +493,7 @@ class _CategoryDistrictManagementScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Active Artisan Fleet',
+                  context.l10n.activeArtisanFleetTitle,
                   style: TextStyle(
                     fontSize: isMobile ? 18 : 20,
                     fontWeight: FontWeight.bold,
@@ -504,7 +502,7 @@ class _CategoryDistrictManagementScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Audit verified service technicians, moderate access, and enforce suspensions',
+                  context.l10n.cdmFleetSubtitle,
                   style: TextStyle(
                     fontSize: 12,
                     color: context.themeTextSecondary,
@@ -610,7 +608,7 @@ class _CategoryDistrictManagementScreenState
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'No Categories in Database',
+                                context.l10n.noCategoriesInDb,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -619,7 +617,7 @@ class _CategoryDistrictManagementScreenState
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Add your service trades to publish them to Firebase so customers can discover and book technicians.',
+                                context.l10n.cdmNoCategoriesDesc,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     fontSize: 12,
@@ -630,9 +628,9 @@ class _CategoryDistrictManagementScreenState
                                 onPressed: () =>
                                     _openAddCategoryDialog(context),
                                 icon: const Icon(Icons.add, size: 16),
-                                label: const Text('Add First Category',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
+                                label: Text(context.l10n.addFirstCategory,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
@@ -771,7 +769,7 @@ class _CategoryDistrictManagementScreenState
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'Dynamic Quotes',
+                                                  context.l10n.cdmDynamicQuotes,
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.w700,
                                                     fontSize: 11,
@@ -780,7 +778,7 @@ class _CategoryDistrictManagementScreenState
                                                   ),
                                                 ),
                                                 Text(
-                                                  'Artisans Bid Per Job',
+                                                  context.l10n.cdmArtisansBidPerJob,
                                                   style: TextStyle(
                                                     fontSize: 9.5,
                                                     color: context
@@ -893,21 +891,21 @@ class _CategoryDistrictManagementScreenState
                                             ),
                                             const SizedBox(width: 8),
                                             Text(isActive
-                                                ? 'Pause Category'
-                                                : 'Activate Category'),
+                                                ? context.l10n.cdmPauseCategory
+                                                : context.l10n.cdmActivateCategory),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'delete',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.delete_outline,
+                                            const Icon(Icons.delete_outline,
                                                 size: 16,
                                                 color: AppColors.error),
-                                            SizedBox(width: 8),
-                                            Text('Delete Category',
-                                                style: TextStyle(
+                                            const SizedBox(width: 8),
+                                            Text(context.l10n.deleteCategory,
+                                                style: const TextStyle(
                                                     color: AppColors.error)),
                                           ],
                                         ),
@@ -1049,17 +1047,23 @@ class _CategoryDistrictManagementScreenState
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
+                    _buildArtisanFilterChip('all',
+                        context.l10n.cdmFilterAllCount('${technicians.length}')),
+                    const SizedBox(width: 8),
                     _buildArtisanFilterChip(
-                        'all', 'All (${technicians.length})'),
+                        'active',
+                        context.l10n.cdmFilterOnlineCount(
+                            '${technicians.where((t) => !t.isBanned && t.online).length}')),
                     const SizedBox(width: 8),
-                    _buildArtisanFilterChip('active',
-                        'Online (${technicians.where((t) => !t.isBanned && t.online).length})'),
+                    _buildArtisanFilterChip(
+                        'suspended',
+                        context.l10n.cdmFilterSuspendedCount(
+                            '${technicians.where((t) => t.isBanned).length}')),
                     const SizedBox(width: 8),
-                    _buildArtisanFilterChip('suspended',
-                        'Suspended (${technicians.where((t) => t.isBanned).length})'),
-                    const SizedBox(width: 8),
-                    _buildArtisanFilterChip('offline',
-                        'Offline (${technicians.where((t) => !t.isBanned && !t.online).length})'),
+                    _buildArtisanFilterChip(
+                        'offline',
+                        context.l10n.cdmFilterOfflineCount(
+                            '${technicians.where((t) => !t.isBanned && !t.online).length}')),
                   ],
                 ),
               ),
@@ -1087,8 +1091,8 @@ class _CategoryDistrictManagementScreenState
                       const SizedBox(height: 8),
                       Text(
                         _artisanSearch.isNotEmpty
-                            ? 'No artisans match the search criteria'
-                            : 'No artisans registered in this filter view',
+                            ? context.l10n.cdmNoArtisansMatchSearch
+                            : context.l10n.cdmNoArtisansInFilter,
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
@@ -1220,8 +1224,10 @@ class _CategoryDistrictManagementScreenState
                           ),
                           child: Text(
                             isBanned
-                                ? 'SUSPENDED'
-                                : (t.online ? 'ONLINE' : 'OFFLINE'),
+                                ? context.l10n.cdmBadgeSuspended
+                                : (t.online
+                                    ? context.l10n.cdmBadgeOnline
+                                    : context.l10n.cdmBadgeOffline),
                             style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.bold,
@@ -1265,7 +1271,7 @@ class _CategoryDistrictManagementScreenState
                           child: Text(
                             t.serviceArea.isNotEmpty
                                 ? t.serviceArea
-                                : 'Sri Lanka',
+                                : context.l10n.cdmSriLanka,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1292,14 +1298,14 @@ class _CategoryDistrictManagementScreenState
                           ),
                         ),
                         Text(
-                          '(${t.jobsCount} jobs)',
+                          '(${context.l10n.nJobsCompleted(t.jobsCount)})',
                           style: TextStyle(
                             fontSize: 11,
                             color: context.themeTextSecondary,
                           ),
                         ),
                         Text(
-                          '· Base: LKR ${t.baseRateLkr}',
+                          '· ${context.l10n.cdmBaseRate('${t.baseRateLkr}')}',
                           style: TextStyle(
                             fontSize: 11,
                             color: context.themeTextSecondary,
@@ -1324,7 +1330,7 @@ class _CategoryDistrictManagementScreenState
                     Border.all(color: AppColors.error.withValues(alpha: 0.3)),
               ),
               child: Text(
-                'Suspension Reason: "${t.banReason}"',
+                context.l10n.cdmSuspensionReason(t.banReason!),
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.error,
@@ -1366,7 +1372,8 @@ class _CategoryDistrictManagementScreenState
                       borderRadius: BorderRadius.circular(8)),
                 ),
                 icon: const Icon(Icons.flag_outlined, size: 14),
-                label: const Text('Complaints', style: TextStyle(fontSize: 11)),
+                label: Text(context.l10n.cdmComplaints,
+                    style: const TextStyle(fontSize: 11)),
                 onPressed: () => _showProviderComplaintsModal(context, t),
               ),
               if (!isBanned)
@@ -1380,9 +1387,9 @@ class _CategoryDistrictManagementScreenState
                         borderRadius: BorderRadius.circular(8)),
                   ),
                   icon: const Icon(Icons.gavel, size: 14),
-                  label: const Text('Suspend',
-                      style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: Text(context.l10n.cdmSuspend,
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.bold)),
                   onPressed: () => _confirmBanTechnician(context, t),
                 )
               else
@@ -1396,15 +1403,15 @@ class _CategoryDistrictManagementScreenState
                         borderRadius: BorderRadius.circular(8)),
                   ),
                   icon: const Icon(Icons.check_circle_outline, size: 14),
-                  label: const Text('Restore / Unban',
-                      style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: Text(context.l10n.cdmRestoreUnban,
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.bold)),
                   onPressed: () => _confirmUnbanTechnician(context, t),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete_outline,
                     size: 18, color: AppColors.error),
-                tooltip: 'Delete Artisan Permanently',
+                tooltip: context.l10n.cdmDeleteArtisanPermanently,
                 onPressed: () => _confirmDeleteTechnician(context, t),
               ),
             ],
@@ -1429,7 +1436,7 @@ class _CategoryDistrictManagementScreenState
             const Icon(Icons.gavel_rounded, color: AppColors.error),
             const SizedBox(width: 8),
             Text(
-              'Suspend ${t.name}',
+              context.l10n.cdmSuspendName(t.name),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
@@ -1444,12 +1451,12 @@ class _CategoryDistrictManagementScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Are you sure you want to suspend this artisan? They will be locked offline, hidden from customer searches, and prevented from submitting quotes.',
+                context.l10n.cdmSuspendConfirmBody,
                 style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 12),
               Text(
-                'Reason for Suspension:',
+                context.l10n.cdmReasonForSuspension,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -1477,7 +1484,7 @@ class _CategoryDistrictManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Cancel',
+            child: Text(context.l10n.cancel,
                 style: TextStyle(color: context.themeTextSecondary)),
           ),
           ElevatedButton(
@@ -1495,13 +1502,13 @@ class _CategoryDistrictManagementScreenState
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${t.name} has been suspended.'),
+                    content: Text(context.l10n.cdmArtisanSuspended(t.name)),
                     backgroundColor: AppColors.error,
                   ),
                 );
               }
             },
-            child: const Text('Confirm Suspension'),
+            child: Text(context.l10n.cdmConfirmSuspension),
           ),
         ],
       ),
@@ -1519,7 +1526,7 @@ class _CategoryDistrictManagementScreenState
             const Icon(Icons.check_circle_outline, color: Colors.teal),
             const SizedBox(width: 8),
             Text(
-              'Restore ${t.name}',
+              context.l10n.cdmRestoreName(t.name),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
@@ -1529,13 +1536,13 @@ class _CategoryDistrictManagementScreenState
           ],
         ),
         content: Text(
-          'Reactivate this artisan\'s profile? They will be allowed to go online and accept customer service requests.',
+          context.l10n.cdmRestoreConfirmBody,
           style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Cancel',
+            child: Text(context.l10n.cancel,
                 style: TextStyle(color: context.themeTextSecondary)),
           ),
           ElevatedButton(
@@ -1549,14 +1556,13 @@ class _CategoryDistrictManagementScreenState
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content:
-                        Text('${t.name} has been restored to active status.'),
+                    content: Text(context.l10n.cdmArtisanRestored(t.name)),
                     backgroundColor: Colors.teal,
                   ),
                 );
               }
             },
-            child: const Text('Restore Access'),
+            child: Text(context.l10n.cdmRestoreAccess),
           ),
         ],
       ),
@@ -1574,7 +1580,7 @@ class _CategoryDistrictManagementScreenState
             const Icon(Icons.warning_amber_rounded, color: AppColors.error),
             const SizedBox(width: 8),
             Text(
-              'Delete Artisan',
+              context.l10n.cdmDeleteArtisan,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
@@ -1584,13 +1590,13 @@ class _CategoryDistrictManagementScreenState
           ],
         ),
         content: Text(
-          'Are you sure you want to permanently delete "${t.name}" from the technician database? This operation cannot be reversed.',
+          context.l10n.cdmDeleteArtisanConfirm(t.name),
           style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('Cancel',
+            child: Text(context.l10n.cancel,
                 style: TextStyle(color: context.themeTextSecondary)),
           ),
           ElevatedButton(
@@ -1604,13 +1610,13 @@ class _CategoryDistrictManagementScreenState
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${t.name} deleted from database.'),
+                    content: Text(context.l10n.cdmArtisanDeleted(t.name)),
                     backgroundColor: AppColors.error,
                   ),
                 );
               }
             },
-            child: const Text('Delete Permanently'),
+            child: Text(context.l10n.cdmDeletePermanently),
           ),
         ],
       ),
@@ -1654,7 +1660,7 @@ class _CategoryDistrictManagementScreenState
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Complaints for ${t.name}',
+                        sheetCtx.l10n.cdmComplaintsFor(t.name),
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -1686,7 +1692,7 @@ class _CategoryDistrictManagementScreenState
                                   size: 40, color: Colors.teal),
                               const SizedBox(height: 10),
                               Text(
-                                'No complaints filed',
+                                sheetCtx.l10n.cdmNoComplaintsFiled,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -1695,7 +1701,7 @@ class _CategoryDistrictManagementScreenState
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'This service provider has no recorded customer disputes.',
+                                sheetCtx.l10n.cdmNoComplaintsDesc,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: sheetCtx.themeTextSecondary,
@@ -1761,7 +1767,7 @@ class _CategoryDistrictManagementScreenState
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'By ${c.customerName}',
+                                  sheetCtx.l10n.cdmByCustomer(c.customerName),
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: sheetCtx.themeTextSecondary,
@@ -1921,19 +1927,21 @@ class _MobileCategoryCard extends StatelessWidget {
                                 : Icons.play_arrow_outlined,
                             size: 16),
                         const SizedBox(width: 8),
-                        Text(isActive ? 'Pause Category' : 'Activate Category'),
+                        Text(isActive
+                            ? context.l10n.cdmPauseCategory
+                            : context.l10n.cdmActivateCategory),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline,
+                        const Icon(Icons.delete_outline,
                             size: 16, color: AppColors.error),
-                        SizedBox(width: 8),
-                        Text('Delete Category',
-                            style: TextStyle(color: AppColors.error)),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.deleteCategory,
+                            style: const TextStyle(color: AppColors.error)),
                       ],
                     ),
                   ),

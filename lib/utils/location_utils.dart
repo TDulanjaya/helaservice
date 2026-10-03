@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
+import 'l10n_extension.dart';
 
 class LocationUtils {
   LocationUtils._();
@@ -118,6 +120,14 @@ class LocationUtils {
       return '${(km * 1000).round()} m away';
     }
     return '${km.toStringAsFixed(1)} km away';
+  }
+
+  // format distance for ui
+  static String formatDistanceL10n(BuildContext context, double km) {
+    if (km < 1.0) {
+      return context.l10n.custMetresAway((km * 1000).round());
+    }
+    return context.l10n.custKmAwayValue(km.toStringAsFixed(1));
   }
 
   static Future<Position?> getCurrentPosition() async {

@@ -76,7 +76,7 @@ class CustomerProfileScreen extends StatelessWidget {
               Center(
                 child: UserAvatar(
                   uid: user?.id,
-                  displayName: user?.displayName ?? 'Customer',
+                  displayName: user?.displayName ?? ctx.l10n.customerLabel,
                   photoUrl: user?.photoUrl,
                   radius: 40,
                   editable: true,
@@ -179,7 +179,7 @@ class CustomerProfileScreen extends StatelessWidget {
 
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
-        : 'Customer';
+        : context.l10n.customerLabel;
     final email = user?.email.isNotEmpty == true
         ? user!.email
         : '';
@@ -187,7 +187,7 @@ class CustomerProfileScreen extends StatelessWidget {
     final address = user?.address?.isNotEmpty == true
         ? user!.address!
         : '';
-    final district = user?.district ?? 'Colombo';
+    final district = user?.district ?? context.l10n.custFallbackColombo;
 
     return Scaffold(
       appBar: AppBar(
@@ -350,7 +350,7 @@ class CustomerProfileScreen extends StatelessWidget {
               icon: Icons.my_location,
               title: context.l10n.homeServiceGpsLocation,
               subtitle: user?.latitude != null
-                  ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)} (Tap to update)'
+                  ? context.l10n.custGpsTapToUpdate(user!.latitude!.toStringAsFixed(4), user.longitude!.toStringAsFixed(4))
                   : context.l10n.tapToAutoDetectGps,
               onTap: () async {
                 final pos = await LocationUtils.getCurrentPosition();
@@ -393,7 +393,7 @@ class CustomerProfileScreen extends StatelessWidget {
                       ? Icons.dark_mode_outlined
                       : Icons.light_mode_outlined,
                   title: context.l10n.appearanceAndTheme,
-                  subtitle: context.l10n.currentMode(themeProvider.modeName),
+                  subtitle: context.l10n.currentMode(themeProvider.getModeDisplayName(context)),
                   onTap: () {
                     showModalBottomSheet(
                       context: context,

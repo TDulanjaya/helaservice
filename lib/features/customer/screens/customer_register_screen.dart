@@ -6,6 +6,7 @@ import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/auth_error_l10n.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'home_discovery_screen.dart';
 
@@ -104,7 +105,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AuthService.getReadableAuthError(e)),
+          content: Text(authErrorMessage(context, e)),
           backgroundColor: AppColors.error,
         ),
       );

@@ -129,6 +129,16 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     });
   }
 
+  // display label for chat role
+  String _roleDisplay(BuildContext context, String? role) {
+    final r = (role ?? '').trim().toLowerCase();
+    if (r.isEmpty || r == 'service provider' || r == 'provider' || r == 'technician') {
+      return context.l10n.custServiceProviderLabel;
+    }
+    if (r == 'customer') return context.l10n.customerLabel;
+    return role!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,7 +167,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    widget.otherPartyRole ?? 'Service Provider',
+                    _roleDisplay(context, widget.otherPartyRole),
                     style: TextStyle(
                       fontSize: 11,
                       color: context.themeTextSecondary,

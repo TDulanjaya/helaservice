@@ -991,7 +991,7 @@ class _JobRequestCard extends StatelessWidget {
         request.latitude!,
         request.longitude!,
       );
-      distanceText = LocationUtils.formatDistance(km);
+      distanceText = LocationUtils.formatDistanceL10n(context, km);
     }
 
     return Container(
@@ -1059,7 +1059,7 @@ class _JobRequestCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        context.l10n.distanceAway(distanceText),
+                        distanceText,
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,

@@ -13,6 +13,7 @@ import '../../../state/locale_provider.dart';
 import '../../../shared/widgets/language_select_sheet.dart';
 import '../../../app_router.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/admin_l10n_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
@@ -83,10 +84,9 @@ class AdminProfileScreen extends StatelessWidget {
               TextField(
                 controller: messageController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText:
-                      'e.g. Weather warning: Heavy rain alert in Western Province...',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: context.l10n.adminSetBroadcastHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
@@ -102,7 +102,8 @@ class AdminProfileScreen extends StatelessWidget {
               final text = messageController.text.trim();
               if (text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter an alert message.')),
+                  SnackBar(
+                      content: Text(context.l10n.adminSetEnterAlertMessage)),
                 );
                 return;
               }
@@ -121,9 +122,8 @@ class AdminProfileScreen extends StatelessWidget {
                 });
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'Broadcast alert dispatched and recorded in live operations feed.'),
+                    SnackBar(
+                      content: Text(context.l10n.adminSetBroadcastDispatched),
                       backgroundColor: AppColors.primary,
                     ),
                   );
@@ -132,7 +132,7 @@ class AdminProfileScreen extends StatelessWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to dispatch broadcast: $e'),
+                      content: Text(context.l10n.adminSetBroadcastFailed('$e')),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -189,7 +189,7 @@ class AdminProfileScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '${docs.length} Recent Governance & Dispatch Records',
+                                context.l10n.adminSetRecentRecords(docs.length),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: context.themeTextSecondary,
@@ -201,7 +201,7 @@ class AdminProfileScreen extends StatelessWidget {
                         if (docs.isNotEmpty)
                           IconButton(
                             icon: const Icon(Icons.copy_all, size: 20),
-                            tooltip: 'Export Audit Log (JSON)',
+                            tooltip: context.l10n.adminSetExportAuditLog,
                             onPressed: () {
                               final logData = docs.map((d) {
                                 final data = d.data();
@@ -222,8 +222,9 @@ class AdminProfileScreen extends StatelessWidget {
                                 ClipboardData(text: jsonEncode(logData)),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Audit log exported to clipboard as JSON.'),
+                                SnackBar(
+                                  content: Text(
+                                      context.l10n.adminSetAuditExported),
                                   backgroundColor: AppColors.primary,
                                 ),
                               );
@@ -249,7 +250,7 @@ class AdminProfileScreen extends StatelessWidget {
                                         size: 40, color: AppColors.outline),
                                     const SizedBox(height: 10),
                                     Text(
-                                      'No platform audit logs recorded yet.',
+                                      context.l10n.adminSetNoAuditLogs,
                                       style: TextStyle(
                                         color: context.themeTextSecondary,
                                         fontSize: 13,
@@ -264,14 +265,17 @@ class AdminProfileScreen extends StatelessWidget {
                             separatorBuilder: (_, __) => const Divider(height: 1),
                             itemBuilder: (context, i) {
                               final d = docs[i].data();
-                              final title = d['title'] as String? ?? 'System Action';
+                              final title = d['title'] as String? ??
+                                  context.l10n.adminSetSystemAction;
                               final detail = d['detail'] as String? ?? '';
-                              final tag = d['tagLabel'] as String? ?? 'AUDIT';
+                              final tag = d['tagLabel'] as String? ??
+                                  context.l10n.adminSetAuditTag;
                               final author = d['author'] as String?;
                               final ts = d['timestamp'];
                               final dateStr = ts is Timestamp
                                   ? '${ts.toDate().hour.toString().padLeft(2, '0')}:${ts.toDate().minute.toString().padLeft(2, '0')} • ${ts.toDate().day}/${ts.toDate().month}/${ts.toDate().year}'
-                                  : (d['timeAgo'] as String? ?? 'Recent');
+                                  : (d['timeAgo'] as String? ??
+                                      context.l10n.adminSetRecent);
 
                               return ListTile(
                                 dense: true,
@@ -314,7 +318,7 @@ class AdminProfileScreen extends StatelessWidget {
                                     ],
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${author != null ? 'By: $author • ' : ''}$dateStr',
+                                      '${author != null ? '${context.l10n.byTechnician(author)} • ' : ''}$dateStr',
                                       style: TextStyle(fontSize: 10, color: context.themeTextSecondary),
                                     ),
                                   ],
@@ -343,16 +347,16 @@ class AdminProfileScreen extends StatelessWidget {
         ? user!.displayName
         : (adminUser?.displayName.isNotEmpty == true
             ? adminUser!.displayName
-            : 'Administrator');
+            : context.l10n.adminSetAdministratorFallback);
     final email = user?.email.isNotEmpty == true
         ? user!.email
         : (adminUser?.email ?? '');
 
     final roleTag = isSuperAdmin
-        ? 'Super Admin • Platform Governance'
+        ? '${context.l10n.roleSuperAdminBadge} • ${context.l10n.adminSetPlatformGovernance}'
         : (adminUser != null
-            ? '${adminUser.role.label} • Operations'
-            : 'Operations Admin');
+            ? '${adminRoleLabel(context, adminUser.role)} • ${context.l10n.navOperations}'
+            : context.l10n.roleOpsAdminBadge);
 
     final permissions = isSuperAdmin
         ? AdminPermission.values
@@ -462,9 +466,9 @@ class AdminProfileScreen extends StatelessWidget {
                 ),
                 if (permissions.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  const Text(
-                    'Assigned Permissions:',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.adminSetAssignedPermissions,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.white70,
@@ -485,7 +489,7 @@ class AdminProfileScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          p.label,
+                          adminPermissionLabel(context, p),
                           style: const TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
@@ -548,15 +552,15 @@ class AdminProfileScreen extends StatelessWidget {
                   iconBg: context.themeSoft,
                   iconColor: AppColors.primary,
                   title: context.l10n.auditLogs,
-                  subtitle: 'Review administrator actions & access history',
+                  subtitle: context.l10n.adminSetAuditLogsDesc,
                   onTap: () {
                     if (isSuperAdmin) {
                       _showAuditLogsSheet(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                            'Access Denied: Platform audit logs are restricted to Super Admins.',
+                            context.l10n.adminSetAuditAccessDenied,
                           ),
                           backgroundColor: AppColors.error,
                         ),
@@ -569,7 +573,7 @@ class AdminProfileScreen extends StatelessWidget {
           ),
           SizedBox(height: isMobile ? 20 : 26),
           Text(
-            'PREFERENCES & APPEARANCE',
+            context.l10n.appearance.toUpperCase(),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -595,7 +599,7 @@ class AdminProfileScreen extends StatelessWidget {
                           : Icons.light_mode_outlined,
                       title: context.l10n.themeMode,
                       subtitle:
-                          'Current: ${themeProvider.getModeDisplayName(context)}',
+                          '${context.l10n.currentTheme}: ${themeProvider.getModeDisplayName(context)}',
                       onTap: () {
                         showModalBottomSheet(
                           context: context,

@@ -1,29 +1,27 @@
 # HelaService
 
-HelaService is an on-demand home and local services mobile application built with Flutter and Firebase. It seamlessly connects customers seeking reliable home repairs and services with skilled, verified local service providers and technicians.
+An on-demand home services app built with Flutter and Firebase. Customers can book local service providers or post job requests for quotes - with real-time tracking, in-app chat, and support for English, Sinhala, and Tamil.
 
 ---
 
 ## Features
 
-- **Role-Based Experience**: Dedicated workflows for Customers and Service Providers, with seamless role switching.
-- **Job Requests & Quoting**: Customers can post broadcast job requests; providers can review requests and submit price estimates/quotes.
-- **Direct Bookings**: Customers can discover nearby providers by trade, view ratings, and book services directly.
-- **Live Location Tracking**: Real-time provider en-route tracking and interactive map views powered by `flutter_map`.
-- **In-App Messaging**: Real-time direct chat between customers and service providers.
-- **Provider Verification**: Identity verification workflow (NIC document submission and approval).
-- **Ratings & Reviews**: Transparent post-service rating and review system.
-- **Trilingual Support**: Fully localized in English, Sinhala (`si`), and Tamil (`ta`).
+- **Job Requests & Quotes** - Post a broadcast request and receive price estimates from providers
+- **Direct Bookings** - Browse nearby providers by trade, check ratings, and book instantly
+- **Live Tracking & Chat** - Track providers en route and message them in-app
+- **Verified Providers** - NIC-based identity verification before providers go live
+- **Multilingual** - English, Sinhala (`si`), and Tamil (`ta`)
 
 ---
 
 ## Tech Stack
 
-- **Framework**: [Flutter](https://flutter.dev/) (Dart)
-- **Backend & Database**: [Google Firebase](https://firebase.google.com/) (Cloud Firestore, Firebase Authentication, Firebase Remote Config)
-- **State Management**: [Provider](https://pub.dev/packages/provider)
-- **Maps & Geospatial**: `flutter_map`, `latlong2`, `vector_map_tiles`, OpenFreeMap / OpenStreetMap
-- **Security Rules**: Granular Firestore Security Rules with unit test coverage
+| Layer    | Tools                       |
+| -------- | --------------------------- |
+| Frontend | Flutter                     |
+| Backend  | Firebase                    |
+| State    | Provider                    |
+| Maps     | flutter_map + OpenStreetMap |
 
 ---
 
@@ -31,62 +29,20 @@ HelaService is an on-demand home and local services mobile application built wit
 
 ### Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x or higher)
-- [Dart SDK](https://dart.dev/get-dart)
-- [Firebase CLI](https://firebase.google.com/docs/cli) (optional, for deploying Firestore rules)
+- Flutter SDK 3.x+
+- Firebase project ([create one here](https://console.firebase.google.com/))
 
-### 1. Clone the Repository
+### Setup
 
 ```bash
 git clone https://github.com/your-username/helaservice.git
 cd helaservice
-```
-
-### 2. Install Dependencies
-
-```bash
 flutter pub get
 ```
 
-### 3. Firebase Configuration
+> **Note:** This repo doesn't include Firebase credentials. You'll need to connect your own Firebase project.
 
-> **Firebase config: create your own project**  
-> This repository does not bundle production Firebase credentials. You must connect your own Firebase project to run the application.
-
-1. Create a new Firebase project in the [Firebase Console](https://console.firebase.google.com/).
-2. Enable the following services in your Firebase project:
-   - **Authentication**: Enable Email/Password and Google Sign-In.
-   - **Cloud Firestore**: Create a Firestore database in your preferred region.
-   - **Remote Config** (optional): For dynamic configuration values.
-3. Configure the Flutter application with your Firebase project:
-   - Use the [FlutterFire CLI](https://firebase.flutter.dev/docs/cli/):
-     ```bash
-     flutterfire configure
-     ```
-   - Alternatively, manually place your `google-services.json` in `android/app/` and `GoogleService-Info.plist` in `ios/Runner/`.
-4. Deploy the Firestore security rules:
-   ```bash
-   firebase deploy --only firestore:rules
-   ```
-
-### 4. Running the Application
-
-Run the app (OpenFreeMap vector tiles require no API keys):
-
-```bash
-flutter run
-```
-
-Optional: If supplying custom environment definitions during development:
-
-```bash
-flutter run --dart-define-from-file=secrets.env
-```
-
----
-
----
-
-## License
-
-This project is licensed under the terms specified in the repository.
+1. Enable **Authentication** (Email/Password + Google) and **Cloud Firestore** in your Firebase project
+2. Run `flutterfire configure` to link the app, or manually add `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
+3. Deploy security rules: `firebase deploy --only firestore:rules`
+4. Run the app: `flutter run`

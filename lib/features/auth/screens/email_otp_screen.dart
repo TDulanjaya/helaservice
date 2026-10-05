@@ -82,7 +82,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   void _onDigitChanged(int index, String value) {
     setState(() => _errorMessage = null);
 
-    // Support pasting the entire 6-digit code into any box
+    // paste code
     if (value.length > 1) {
       final digits = value.replaceAll(RegExp(r'\D'), '');
       if (digits.isNotEmpty) {
@@ -101,7 +101,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     }
 
     if (value.isNotEmpty) {
-      // Advance to next box
+      // next box
       if (index < _codeLength - 1) {
         _focusNodes[index + 1].requestFocus();
       } else {
@@ -138,7 +138,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         return;
       }
 
-      // Code is valid: execute registration/callback
+      // submit callback
       await widget.onVerified();
     } catch (e) {
       if (mounted) {
@@ -216,7 +216,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 12),
-              // Security Shield Icon
+              // icon
               Container(
                 width: 72,
                 height: 72,
@@ -261,7 +261,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
               ),
               const SizedBox(height: 32),
 
-              // 6-digit code inputs
+              // otp input boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(_codeLength, (index) {
@@ -362,7 +362,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
 
               const SizedBox(height: 24),
 
-              // Resend cooldown & button
+              // resend button
               if (_secondsRemaining > 0)
                 Text(
                   context.l10n.resendCodeIn(_secondsRemaining),

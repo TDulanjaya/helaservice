@@ -69,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (_) {}
 
-    // Route users to their home screen
+    // navigate user
     UserProfile? user = roleProvider.currentUser;
     if (user == null) {
       try {
@@ -78,6 +78,22 @@ class _SplashScreenState extends State<SplashScreen> {
           roleProvider.setUser(user);
         }
       } catch (_) {}
+    }
+
+    if (user != null && user.isBanned) {
+      await roleProvider.logout();
+      await minDelay;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.accountSuspendedDesc),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
     }
 
     await minDelay;
@@ -91,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       switch (user.role!) {
         case AppRole.customer:
-        case AppRole.admin: // Admin role here routes as customer
+        case AppRole.admin:
           destination = const HomeDiscoveryScreen();
           break;
         case AppRole.provider:

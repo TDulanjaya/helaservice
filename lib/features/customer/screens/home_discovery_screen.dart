@@ -10,6 +10,7 @@ import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
+import '../../../utils/permission_utils.dart';
 import '../widgets/customer_bookings_view.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import 'customer_profile_screen.dart';
@@ -51,6 +52,11 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   void initState() {
     super.initState();
     _navIndex = widget.initialIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        PermissionUtils.checkAndPromptInitialPermissions(context);
+      }
+    });
   }
 
   @override
@@ -425,16 +431,26 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(
+              16, 12, 16, AppBottomNav.contentBottomPadding),
           children: [
-            Text(
-              '${context.l10n.greetingAyubowan}, ${pv.Provider.of<RoleProvider>(context).currentUser?.displayName.split(' ').first ?? context.l10n.friend}!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: context.themeInk,
-                letterSpacing: -0.3,
-              ),
+            Builder(
+              builder: (ctx) {
+                final user = pv.Provider.of<RoleProvider>(ctx).currentUser;
+                final rawName = user?.displayName.trim() ?? '';
+                final cleanName = (rawName.isNotEmpty && !rawName.contains('@'))
+                    ? rawName.split(' ').first
+                    : 'Customer';
+                return Text(
+                  '${context.l10n.greetingAyubowan}, $cleanName!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: context.themeInk,
+                    letterSpacing: -0.3,
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 4),
             Text(
@@ -453,12 +469,13 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                     decoration: BoxDecoration(
                       color: context.themeSurface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: context.themeBorder, width: 1.5),
+                      border:
+                          Border.all(color: context.themeBorder, width: 1.5),
                     ),
                     child: TextField(
                       controller: _searchController,
-                      onChanged: (val) =>
-                          setState(() => _searchQuery = val.trim().toLowerCase()),
+                      onChanged: (val) => setState(
+                          () => _searchQuery = val.trim().toLowerCase()),
                       style: TextStyle(color: context.themeInk, fontSize: 14),
                       decoration: InputDecoration(
                         border: InputBorder.none,
@@ -830,7 +847,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       ),
     );
   }
-}class _ArtisanCard extends StatelessWidget {
+}
+
+class _ArtisanCard extends StatelessWidget {
   final Technician tech;
   const _ArtisanCard({required this.tech});
 
@@ -934,8 +953,12 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 ),
                 const SizedBox(height: 8),
                 StatusPill(
-                  type: tech.online ? StatusPillType.online : StatusPillType.offline,
-                  label: tech.online ? context.l10n.statusOnline : context.l10n.statusOffline,
+                  type: tech.online
+                      ? StatusPillType.online
+                      : StatusPillType.offline,
+                  label: tech.online
+                      ? context.l10n.statusOnline
+                      : context.l10n.statusOffline,
                   showDot: true,
                 ),
               ],

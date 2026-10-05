@@ -58,7 +58,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top header
+            // header
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Row(
@@ -84,7 +84,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
               ),
             ),
 
-            // Search bar
+            // search bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
@@ -135,8 +135,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Chat list
-
+            // chat list
             Expanded(
               child: !isUserAuthenticated || effectiveUid.isEmpty
                   ? Center(

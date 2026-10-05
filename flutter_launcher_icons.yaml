@@ -1,3 +1,4 @@
+# Generates Android, iOS, and Web app icons from assets/images/app_logo.png
 flutter_launcher_icons:
   android: true
   ios: true

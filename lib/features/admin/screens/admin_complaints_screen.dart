@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../models/complaint.dart';
 import '../../../repositories/complaint_repository.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../repositories/user_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/map_launcher.dart';
 import '../../customer/screens/direct_chat_screen.dart';
@@ -11,7 +12,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
-/// Screen for admins to review and resolve customer complaints.
+// admin complaints screen
 class AdminComplaintsScreen extends StatefulWidget {
   const AdminComplaintsScreen({super.key});
 
@@ -22,6 +23,7 @@ class AdminComplaintsScreen extends StatefulWidget {
 class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   final ComplaintRepository _complaintRepo = ComplaintRepository();
   final TechnicianRepository _techRepo = TechnicianRepository();
+  final UserRepository _userRepo = UserRepository();
 
   String _filterStatus = 'all';
   String _searchQuery = '';
@@ -254,6 +256,117 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               }
             },
             child: Text(context.l10n.disputesSuspendProvider),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBanCustomerDialog(Complaint complaint) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.getSurface(ctx),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.no_accounts_outlined, color: AppColors.error, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.disputesSuspendCustomer,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: AppColors.getTextPrimary(ctx),
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to suspend customer "${complaint.customerName}"? Their account will be locked and they will be barred from creating requests or accessing the platform.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.getTextSecondary(ctx),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                context.l10n.reasonForBan,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextPrimary(ctx),
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: reasonController,
+                minLines: 2,
+                maxLines: 4,
+                style: TextStyle(
+                  color: AppColors.getTextPrimary(ctx),
+                  fontSize: 13,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Enter reason for suspension...',
+                  filled: true,
+                  fillColor: AppColors.getSurfaceLow(ctx),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppColors.getBorder(ctx)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              context.l10n.cancel,
+              style: TextStyle(color: AppColors.getTextSecondary(ctx)),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _userRepo.toggleUserBanStatus(
+                userId: complaint.customerId,
+                isBanned: true,
+                reason: reasonController.text.trim(),
+              );
+              await _complaintRepo.updateComplaintStatus(
+                complaint.id,
+                'resolved',
+                adminNotes:
+                    'Customer suspended by admin. Reason: ${reasonController.text.trim()}',
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(context.l10n
+                        .disputesCustomerSuspendedSnack(complaint.customerName)),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(context.l10n.disputesSuspendCustomer),
           ),
         ],
       ),
@@ -950,25 +1063,76 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 Expanded(
                   child: SizedBox(
                     height: 44,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: BorderSide(
-                          color: AppColors.error.withValues(alpha: 0.5),
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Suspend Account',
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      onSelected: (val) {
+                        if (val == 'provider') {
+                          _showBanProviderDialog(complaint);
+                        } else if (val == 'customer') {
+                          _showBanCustomerDialog(complaint);
+                        }
+                      },
+                      itemBuilder: (ctx) => [
+                        PopupMenuItem(
+                          value: 'provider',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.block_flipped, size: 18, color: AppColors.error),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${context.l10n.disputesSuspendProvider} (${complaint.providerName})',
+                                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
+                        PopupMenuItem(
+                          value: 'customer',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.no_accounts_outlined, size: 18, color: AppColors.error),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${context.l10n.disputesSuspendCustomer} (${complaint.customerName})',
+                                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Container(
+                        decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.gavel_rounded, size: 16, color: AppColors.error),
+                            SizedBox(width: 6),
+                            Text(
+                              'Suspend Account',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.error,
+                              ),
+                            ),
+                            Icon(Icons.arrow_drop_down, color: AppColors.error, size: 18),
+                          ],
                         ),
                       ),
-                      icon: const Icon(Icons.block_flipped, size: 16),
-                      label: Text(
-                        context.l10n.suspendServiceProvider,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      onPressed: () => _showBanProviderDialog(complaint),
                     ),
                   ),
                 ),

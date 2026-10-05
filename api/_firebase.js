@@ -5,7 +5,7 @@ if (!admin.apps.length) {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY || '';
 
-  // Ensure newlines in PEM private key are correctly unescaped
+  // fix newlines in private key
   const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
 
   if (projectId && clientEmail && privateKey) {
@@ -17,7 +17,7 @@ if (!admin.apps.length) {
       }),
     });
   } else {
-    // Fallback for default Google Application Credentials if present
+    // default credentials fallback
     admin.initializeApp();
   }
 }

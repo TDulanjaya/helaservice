@@ -10,6 +10,7 @@ import '../../../repositories/complaint_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/app_localizations_helpers.dart';
 import '../../../services/review_service.dart';
 import 'live_tracking_screen.dart';
 import 'direct_chat_screen.dart';
@@ -92,7 +93,7 @@ class ProviderDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${technician.title} · ${technician.serviceArea.isNotEmpty ? technician.serviceArea : context.l10n.custFallbackColombo}',
+                  '${LocalizedData.getCategory(context, technician.title)} · ${technician.serviceArea.isNotEmpty ? LocalizedData.getDistrict(context, technician.serviceArea) : context.l10n.custFallbackColombo}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -174,7 +175,7 @@ class ProviderDetailScreen extends StatelessWidget {
                 Wrap(spacing: 8, runSpacing: 8, children: [
                   PillBadge(label: technician.languages, icon: Icons.translate),
                   PillBadge(
-                      label: technician.serviceArea, icon: Icons.location_on),
+                      label: LocalizedData.getDistrict(context, technician.serviceArea), icon: Icons.location_on),
                   PillBadge(
                       label: technician.certification,
                       icon: Icons.workspace_premium),

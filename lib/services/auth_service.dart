@@ -255,7 +255,7 @@ class AuthService {
           final existingData = verSnap.data();
           final existingStatus = existingData?['status'] as String?;
 
-          // Only submit for review if new or previously rejected with new photos.
+          // queue review if new or new photos uploaded
           bool shouldQueue = false;
           if (!docExists) {
             shouldQueue = true;

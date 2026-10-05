@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -17,6 +16,9 @@ import '../../../repositories/category_repository.dart';
 import '../../../models/admin_models.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
+import '../../../services/storage_service.dart';
+import '../../../utils/permission_utils.dart';
+import '../../../shared/widgets/searchable_select_picker.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   final UserProfile? initialProfile;
@@ -48,6 +50,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   XFile? _profileImage;
   XFile? _nicFrontImage;
   XFile? _nicBackImage;
+  final List<XFile> _certificationImages = [];
   final ImagePicker _picker = ImagePicker();
 
   static List<String> get _districts =>
@@ -68,7 +71,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   void initState() {
     super.initState();
     final profile = widget.initialProfile;
-    _nameController = TextEditingController(text: profile?.displayName ?? '');
+    final rawName = profile?.displayName ?? '';
+    final cleanName = rawName.contains('@') ? '' : rawName;
+    _nameController = TextEditingController(text: cleanName);
     _phoneController.text = profile?.phone ?? '';
     _addressController.text = profile?.address ?? '';
     _latitude = profile?.latitude;
@@ -88,6 +93,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _detectGpsLocation() async {
+    final granted = await PermissionUtils.requestLocationWithRationale(context);
+    if (!granted) return;
+
     setState(() => _detectingLocation = true);
 
     try {
@@ -130,6 +138,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _pickProfileImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final ok = await PermissionUtils.requestCameraWithRationale(context,
+          title: 'Take Profile Photo',
+          description:
+              'A clear photo of your face builds trust with clients and speeds up verification.');
+      if (!ok) return;
+    } else {
+      final ok = await PermissionUtils.requestGalleryWithRationale(context,
+          title: 'Select Profile Photo',
+          description:
+              'Choose a professional portrait photo from your gallery.');
+      if (!ok) return;
+    }
+
     try {
       final picked = await _picker.pickImage(
         source: source,
@@ -186,16 +208,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
-                title: Text(context.l10n.takePhoto, style: TextStyle(color: context.themeTextPrimary)),
+                leading: const Icon(Icons.camera_alt_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.takePhoto,
+                    style: TextStyle(color: context.themeTextPrimary)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickProfileImage(ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-                title: Text(context.l10n.chooseFromGallery, style: TextStyle(color: context.themeTextPrimary)),
+                leading: const Icon(Icons.photo_library_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.chooseFromGallery,
+                    style: TextStyle(color: context.themeTextPrimary)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickProfileImage(ImageSource.gallery);
@@ -209,6 +235,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _pickNicImage(bool isFront, ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final ok = await PermissionUtils.requestCameraWithRationale(context,
+          title: isFront ? 'Scan NIC Front' : 'Scan NIC Back',
+          description:
+              'Capture a clear, readable photo of your National Identity Card.');
+      if (!ok) return;
+    } else {
+      final ok = await PermissionUtils.requestGalleryWithRationale(context,
+          title: isFront ? 'Select NIC Front' : 'Select NIC Back',
+          description:
+              'Select your National Identity Card photo from gallery.');
+      if (!ok) return;
+    }
+
     try {
       final picked = await _picker.pickImage(
         source: source,
@@ -237,6 +277,99 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
+  Future<void> _pickCertificationImage(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final ok = await PermissionUtils.requestCameraWithRationale(context,
+          title: 'Capture Certificate / License',
+          description:
+              'Photograph your NVQ, trade certificate, or vocational license for verification.');
+      if (!ok) return;
+    } else {
+      final ok = await PermissionUtils.requestGalleryWithRationale(context,
+          title: 'Select Certificate / License',
+          description:
+              'Choose your qualification certificate from gallery or files.');
+      if (!ok) return;
+    }
+
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        setState(() {
+          _certificationImages.add(picked);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick certificate: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCertificationSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.themeBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Upload Trade Certificate / License',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
+                title: Text(context.l10n.takePhoto, style: TextStyle(color: context.themeTextPrimary)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickCertificationImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                title: Text(context.l10n.chooseFromGallery, style: TextStyle(color: context.themeTextPrimary)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickCertificationImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showImageSourceSheet(bool isFront) {
     showModalBottomSheet(
       context: context,
@@ -260,7 +393,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ),
               const SizedBox(height: 14),
               Text(
-                isFront ? context.l10n.uploadNicFront : context.l10n.uploadNicBack,
+                isFront
+                    ? context.l10n.uploadNicFront
+                    : context.l10n.uploadNicBack,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -269,16 +404,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
-                title: Text(context.l10n.takePhoto, style: TextStyle(color: context.themeTextPrimary)),
+                leading: const Icon(Icons.camera_alt_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.takePhoto,
+                    style: TextStyle(color: context.themeTextPrimary)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickNicImage(isFront, ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-                title: Text(context.l10n.chooseFromGallery, style: TextStyle(color: context.themeTextPrimary)),
+                leading: const Icon(Icons.photo_library_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.chooseFromGallery,
+                    style: TextStyle(color: context.themeTextPrimary)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickNicImage(isFront, ImageSource.gallery);
@@ -305,11 +444,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    final localeProvider = pv.Provider.of<LocaleProvider>(context, listen: false);
+    final localeProvider =
+        pv.Provider.of<LocaleProvider>(context, listen: false);
     final current = widget.initialProfile ?? roleProvider.currentUser;
 
     if (_selectedRole == AppRole.provider) {
-      if (_profileImage == null && (current?.photoUrl == null || current!.photoUrl!.isEmpty)) {
+      if (_profileImage == null &&
+          (current?.photoUrl == null || current!.photoUrl!.isEmpty)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.profilePhotoRequired),
@@ -332,21 +473,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      String? photoBase64;
+      String? photoUploadedUrl;
       if (_profileImage != null) {
-        final bytes = await _profileImage!.readAsBytes();
-        photoBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        photoUploadedUrl = await StorageService.instance.uploadFile(File(_profileImage!.path));
       }
 
-      String? nicFrontBase64;
-      String? nicBackBase64;
+      String? nicFrontUploadedUrl;
+      String? nicBackUploadedUrl;
       if (_nicFrontImage != null) {
-        final bytes = await _nicFrontImage!.readAsBytes();
-        nicFrontBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        nicFrontUploadedUrl = await StorageService.instance.uploadFile(File(_nicFrontImage!.path));
       }
       if (_nicBackImage != null) {
-        final bytes = await _nicBackImage!.readAsBytes();
-        nicBackBase64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        nicBackUploadedUrl = await StorageService.instance.uploadFile(File(_nicBackImage!.path));
+      }
+
+      final List<String> certUploadedUrls = [];
+      for (final cert in _certificationImages) {
+        final url = await StorageService.instance.uploadFile(File(cert.path));
+        certUploadedUrls.add(url);
       }
 
       final updatedProfile = (current ??
@@ -359,7 +503,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         displayName: _nameController.text.trim(),
         role: _selectedRole,
         isProfileComplete: true,
-        photoUrl: photoBase64 ?? current?.photoUrl,
+        photoUrl: photoUploadedUrl ?? current?.photoUrl,
+        photoStatus: photoUploadedUrl != null ? 'pending' : current?.photoStatus,
         phone: _phoneController.text.trim(),
         district: _district,
         address: _addressController.text.trim().isNotEmpty
@@ -367,9 +512,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             : '$_district, Sri Lanka',
         latitude: _latitude,
         longitude: _longitude,
-        nic: _selectedRole == AppRole.provider ? _nicController.text.trim() : null,
-        nicFrontUrl: nicFrontBase64,
-        nicBackUrl: nicBackBase64,
+        nic: _selectedRole == AppRole.provider
+            ? _nicController.text.trim()
+            : null,
+        nicFrontUrl: nicFrontUploadedUrl ?? current?.nicFrontUrl,
+        nicBackUrl: nicBackUploadedUrl ?? current?.nicBackUrl,
+        certificationUrls: certUploadedUrls.isNotEmpty
+            ? certUploadedUrls
+            : (current?.certificationUrls ?? const []),
+        certificationsStatus: certUploadedUrls.isNotEmpty
+            ? 'pending'
+            : current?.certificationsStatus,
         serviceCategory: _selectedRole == AppRole.provider ? _category : null,
         preferredLanguage: localeProvider.languageCode,
       );
@@ -421,7 +574,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ),
               child: IconButton(
                 padding: EdgeInsets.zero,
-                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: context.themeTextPrimary),
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 18, color: context.themeTextPrimary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -437,21 +591,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (profile != null)
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (profile != null)
                   Container(
                     padding: const EdgeInsets.all(14),
                     margin: const EdgeInsets.only(bottom: 22),
                     decoration: BoxDecoration(
                       color: isFieldBg,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: context.themeBorder, width: 1.5),
+                      border:
+                          Border.all(color: context.themeBorder, width: 1.5),
                     ),
                     child: Row(
                       children: [
@@ -469,7 +627,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                profile.email.isNotEmpty ? profile.email : profile.displayName,
+                                profile.email.isNotEmpty
+                                    ? profile.email
+                                    : profile.displayName,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -480,7 +640,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(Icons.check, color: AppColors.success, size: 14),
+                                  const Icon(Icons.check,
+                                      color: AppColors.success, size: 14),
                                   const SizedBox(width: 4),
                                   Text(
                                     context.l10n.accountVerified,
@@ -498,7 +659,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ],
                     ),
                   ),
-
                 Text(
                   context.l10n.preferredLanguage,
                   style: TextStyle(
@@ -522,22 +682,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       _SegmentedLanguageItem(
                         label: 'English',
                         selected: localeProvider.languageCode == 'en',
-                        onTap: () => localeProvider.setLocale(const Locale('en')),
+                        onTap: () =>
+                            localeProvider.setLocale(const Locale('en')),
                       ),
                       _SegmentedLanguageItem(
                         label: 'සිංහල',
                         selected: localeProvider.languageCode == 'si',
-                        onTap: () => localeProvider.setLocale(const Locale('si')),
+                        onTap: () =>
+                            localeProvider.setLocale(const Locale('si')),
                       ),
                       _SegmentedLanguageItem(
                         label: 'தமிழ்',
                         selected: localeProvider.languageCode == 'ta',
-                        onTap: () => localeProvider.setLocale(const Locale('ta')),
+                        onTap: () =>
+                            localeProvider.setLocale(const Locale('ta')),
                       ),
                     ],
                   ),
                 ),
-
                 Text(
                   context.l10n.selectAccountType,
                   style: TextStyle(
@@ -555,7 +717,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         description: context.l10n.customerRoleDesc,
                         icon: Icons.home_outlined,
                         selected: _selectedRole == AppRole.customer,
-                        onTap: () => setState(() => _selectedRole = AppRole.customer),
+                        onTap: () =>
+                            setState(() => _selectedRole = AppRole.customer),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -565,12 +728,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         description: context.l10n.providerRoleDesc,
                         icon: Icons.handyman_outlined,
                         selected: _selectedRole == AppRole.provider,
-                        onTap: () => setState(() => _selectedRole = AppRole.provider),
+                        onTap: () =>
+                            setState(() => _selectedRole = AppRole.provider),
                       ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 22),
                 Text(
                   context.l10n.fullName,
@@ -583,7 +746,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                  style: TextStyle(
+                      color: context.themeTextPrimary, fontSize: 14.5),
                   decoration: _inputDecoration(
                     context,
                     hint: context.l10n.fullNameAsNic,
@@ -597,7 +761,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.phoneLabel,
@@ -611,7 +774,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                  style: TextStyle(
+                      color: context.themeTextPrimary, fontSize: 14.5),
                   decoration: _inputDecoration(
                     context,
                     hint: '07X XXXXXXX',
@@ -626,39 +790,36 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
-                Text(
-                  context.l10n.district,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: _district,
-                  dropdownColor: context.themeSurface,
-                  style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
-                  decoration: _inputDecoration(
-                    context,
-                    hint: context.l10n.district,
-                    icon: Icons.map_outlined,
-                    isDark: context.isDark,
-                  ),
+                SearchableSelectPicker<String>(
+                  label: context.l10n.district,
+                  selectedValue: _district,
+                  prefixIcon: Icons.map_outlined,
+                  isDarkField: context.isDark,
+                  modalTitle: context.l10n.district,
+                  searchHint: 'Search district...',
                   items: _districts.map((d) {
-                    return DropdownMenuItem(
+                    final localizedName = LocalizedData.getDistrict(context, d);
+                    final sin = LocalizedData.districts[d]?['si'] ?? '';
+                    final tam = LocalizedData.districts[d]?['ta'] ?? '';
+                    return SearchableSelectItem<String>(
                       value: d,
-                      child: Text(LocalizedData.getDistrict(context, d)),
+                      label: localizedName,
+                      subtitle: localizedName != d ? d : null,
+                      icon: Icons.location_on_outlined,
+                      searchTerms: [d, sin, tam],
                     );
                   }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _district = val);
+                  onSelected: (val) {
+                    setState(() {
+                      _district = val;
+                      if (_addressController.text.trim().isEmpty ||
+                          _addressController.text.contains(', Sri Lanka')) {
+                        _addressController.text = '$val, Sri Lanka';
+                      }
+                    });
                   },
                 ),
-
                 const SizedBox(height: 22),
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -682,7 +843,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.my_location, color: AppColors.primary, size: 20),
+                            child: const Icon(Icons.my_location,
+                                color: AppColors.primary, size: 20),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -715,7 +877,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           width: double.infinity,
                           height: 44,
                           child: OutlinedButton.icon(
-                            onPressed: _detectingLocation ? null : _detectGpsLocation,
+                            onPressed:
+                                _detectingLocation ? null : _detectGpsLocation,
                             icon: _detectingLocation
                                 ? const SizedBox(
                                     width: 16,
@@ -728,10 +891,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 : const Icon(Icons.gps_fixed, size: 16),
                             label: Text(
                               context.l10n.detectGps,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w700),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.primary, width: 1.5),
+                              side: const BorderSide(
+                                  color: AppColors.primary, width: 1.5),
                               foregroundColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -742,14 +907,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       else ...[
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: context.themeSuccessTint,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle_outline_rounded, size: 16, color: context.themeSuccess),
+                              Icon(Icons.check_circle_outline_rounded,
+                                  size: 16, color: context.themeSuccess),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -769,7 +936,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           width: double.infinity,
                           height: 42,
                           child: OutlinedButton.icon(
-                            onPressed: _detectingLocation ? null : _detectGpsLocation,
+                            onPressed:
+                                _detectingLocation ? null : _detectGpsLocation,
                             icon: _detectingLocation
                                 ? const SizedBox(
                                     width: 16,
@@ -782,10 +950,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 : const Icon(Icons.refresh_rounded, size: 16),
                             label: Text(
                               context.l10n.refreshGps,
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w700),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: context.themeBorder, width: 1.5),
+                              side: BorderSide(
+                                  color: context.themeBorder, width: 1.5),
                               foregroundColor: context.themeTextPrimary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -806,7 +976,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _addressController,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                        style: TextStyle(
+                            color: context.themeTextPrimary, fontSize: 14.5),
                         decoration: _inputDecoration(
                           context,
                           hint: context.l10n.addressHint,
@@ -817,7 +988,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ],
                   ),
                 ),
-
                 if (_selectedRole == AppRole.provider) ...[
                   const SizedBox(height: 24),
                   Text(
@@ -834,7 +1004,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     decoration: BoxDecoration(
                       color: isFieldBg,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: context.themeBorder, width: 1.5),
+                      border:
+                          Border.all(color: context.themeBorder, width: 1.5),
                     ),
                     child: Row(
                       children: [
@@ -845,14 +1016,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             height: 72,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              color: context.isDark ? context.themeBg : const Color(0xFFF6F5F2),
+                              color: context.isDark
+                                  ? context.themeBg
+                                  : const Color(0xFFF6F5F2),
                               border: Border.all(
-                                color: _profileImage != null ? AppColors.primary : context.themeBorder,
+                                color: _profileImage != null
+                                    ? AppColors.primary
+                                    : context.themeBorder,
                                 width: 1.5,
                               ),
                               image: _profileImage != null
                                   ? DecorationImage(
-                                      image: FileImage(File(_profileImage!.path)),
+                                      image:
+                                          FileImage(File(_profileImage!.path)),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
@@ -885,7 +1061,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                         color: AppColors.primary,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.edit, size: 12, color: Colors.white),
+                                      child: const Icon(Icons.edit,
+                                          size: 12, color: Colors.white),
                                     ),
                                   ),
                           ),
@@ -907,9 +1084,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: AppColors.error.withValues(alpha: 0.12),
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -938,17 +1117,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
-                  Text(
-                    context.l10n.primaryCategory,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: context.themeTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   StreamBuilder<List<CategoryRow>>(
                     stream: CategoryRepository().streamCategoryRows(),
                     builder: (context, snapshot) {
@@ -960,32 +1129,31 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           liveCats.isNotEmpty ? liveCats : _categories;
                       final effectiveVal = allCats.contains(_category)
                           ? _category
-                          : (allCats.isNotEmpty ? allCats.first : null);
+                          : (allCats.isNotEmpty ? allCats.first : 'Electrical Services');
 
-                      return DropdownButtonFormField<String>(
-                        initialValue: effectiveVal,
-                        dropdownColor: context.themeSurface,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
-                        decoration: _inputDecoration(
-                          context,
-                          hint: context.l10n.category,
-                          icon: Icons.bolt_outlined,
-                          isDark: context.isDark,
-                        ),
+                      return SearchableSelectPicker<String>(
+                        label: context.l10n.primaryCategory,
+                        selectedValue: effectiveVal,
+                        prefixIcon: Icons.bolt_outlined,
+                        isDarkField: context.isDark,
+                        modalTitle: context.l10n.category,
+                        searchHint: 'Search category...',
                         items: allCats.map((c) {
-                          return DropdownMenuItem(
+                          final localized = LocalizedData.getCategory(context, c);
+                          final sin = LocalizedData.categories[c]?['si'] ?? '';
+                          final tam = LocalizedData.categories[c]?['ta'] ?? '';
+                          return SearchableSelectItem<String>(
                             value: c,
-                            child: Text(c),
+                            label: localized,
+                            subtitle: localized != c ? c : null,
+                            icon: Icons.handyman_outlined,
+                            searchTerms: [c, sin, tam],
                           );
                         }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _category = val);
-                        },
+                        onSelected: (val) => setState(() => _category = val),
                       );
                     },
                   ),
-
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.nicNumber,
@@ -998,7 +1166,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _nicController,
-                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+                    style: TextStyle(
+                        color: context.themeTextPrimary, fontSize: 14.5),
                     decoration: _inputDecoration(
                       context,
                       hint: context.l10n.provNicHintExample,
@@ -1006,13 +1175,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       isDark: context.isDark,
                     ),
                     validator: (val) {
-                      if (_selectedRole == AppRole.provider && (val == null || val.trim().isEmpty)) {
+                      if (_selectedRole == AppRole.provider &&
+                          (val == null || val.trim().isEmpty)) {
                         return context.l10n.nicNumber;
                       }
                       return null;
                     },
                   ),
-
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.nicFront,
@@ -1044,8 +1213,90 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Trade Certifications & Licenses',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        '(Optional)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Upload NVQ certificates, trade licenses, or vocational diplomas to earn a Verified Artisan badge.',
+                    style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary, height: 1.3),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_certificationImages.isNotEmpty) ...[
+                    SizedBox(
+                      height: 80,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _certificationImages.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (ctx, idx) {
+                          final file = _certificationImages[idx];
+                          return Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(file.path),
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 2,
+                                right: 2,
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _certificationImages.removeAt(idx)),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  OutlinedButton.icon(
+                    onPressed: _showCertificationSourceSheet,
+                    icon: const Icon(Icons.upload_file_outlined, size: 18),
+                    label: Text(
+                      _certificationImages.isEmpty ? 'Add Certificate / License' : 'Add Another Certificate',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(color: context.themeBorder, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
                 ],
-
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -1055,8 +1306,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       child: Checkbox(
                         value: _agreeTerms,
                         activeColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        onChanged: (val) => setState(() => _agreeTerms = val ?? false),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4)),
+                        onChanged: (val) =>
+                            setState(() => _agreeTerms = val ?? false),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -1071,10 +1324,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 20),
                 PrimaryButton(
-                  label: _isSubmitting ? context.l10n.statusPending : context.l10n.completeRegistration,
+                  label: _isSubmitting
+                      ? context.l10n.statusPending
+                      : context.l10n.completeRegistration,
                   onPressed: _isSubmitting ? null : _submit,
                   loading: _isSubmitting,
                 ),
@@ -1083,8 +1337,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   InputDecoration _inputDecoration(
     BuildContext context, {
@@ -1150,7 +1406,8 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withValues(alpha: 0.08) : isFieldBg,
+          color:
+              selected ? AppColors.primary.withValues(alpha: 0.08) : isFieldBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? AppColors.primary : context.themeBorder,
@@ -1166,12 +1423,16 @@ class _RoleCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E2024) : const Color(0xFFF2EFE9),
+                    color: isDark
+                        ? const Color(0xFF1E2024)
+                        : const Color(0xFFF2EFE9),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
-                    color: selected ? AppColors.primary : context.themeTextSecondary,
+                    color: selected
+                        ? AppColors.primary
+                        : context.themeTextSecondary,
                     size: 20,
                   ),
                 ),
@@ -1283,13 +1544,15 @@ class _NicUploadBox extends StatelessWidget {
                       ),
                     );
                   }
-                  return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                  return const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2));
                 },
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.credit_card_outlined, color: context.themeTextSecondary, size: 24),
+                  Icon(Icons.credit_card_outlined,
+                      color: context.themeTextSecondary, size: 24),
                   const SizedBox(height: 6),
                   Text(
                     label,
@@ -1346,7 +1609,9 @@ class _SegmentedLanguageItem extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? context.themeTextPrimary : context.themeTextSecondary,
+              color: selected
+                  ? context.themeTextPrimary
+                  : context.themeTextSecondary,
             ),
           ),
         ),

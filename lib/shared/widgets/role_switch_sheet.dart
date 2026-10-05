@@ -4,91 +4,129 @@ import '../../theme/app_theme.dart';
 import '../../state/role_provider.dart';
 import '../../features/customer/screens/home_discovery_screen.dart';
 import '../../features/provider/screens/provider_dashboard_screen.dart';
+import '../../features/auth/screens/complete_profile_screen.dart';
 import '../../features/admin/admin_shell.dart';
 import '../../utils/l10n_extension.dart';
 
 void showRoleSwitchSheet(BuildContext context) {
   final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
   final isAuthorizedAdmin = roleProvider.isAuthorizedAdmin;
+  final isDesktop = MediaQuery.of(context).size.width >= 600;
 
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: context.themeSurface,
-    showDragHandle: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-    ),
-    builder: (sheetContext) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.switchRole,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: context.themeInk,
-                ),
+  Widget buildContent(BuildContext popContext) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.l10n.switchRole,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: context.themeInk,
               ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.roleSwitchDesc,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: context.themeTextSecondary,
-                ),
+            ),
+            if (isDesktop)
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 20),
+                onPressed: () => Navigator.of(popContext).pop(),
               ),
-              const SizedBox(height: 20),
-              _RoleTile(
-                icon: Icons.person_outline_rounded,
-                title: context.l10n.roleCustomer,
-                subtitle: context.l10n.roleCustomerSubtitle,
-                selected: roleProvider.role == AppRole.customer,
-                onTap: () => _switchTo(
-                  sheetContext,
-                  context,
-                  roleProvider,
-                  AppRole.customer,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _RoleTile(
-                icon: Icons.build_outlined,
-                title: context.l10n.roleProvider,
-                subtitle: context.l10n.roleProviderSubtitle,
-                selected: roleProvider.role == AppRole.provider,
-                onTap: () => _switchTo(
-                  sheetContext,
-                  context,
-                  roleProvider,
-                  AppRole.provider,
-                ),
-              ),
-              if (isAuthorizedAdmin) ...[
-                const SizedBox(height: 10),
-                _RoleTile(
-                  icon: Icons.admin_panel_settings_outlined,
-                  title: context.l10n.roleAdmin,
-                  subtitle: context.l10n.roleAdminSubtitle,
-                  selected: roleProvider.role == AppRole.admin,
-                  onTap: () => _switchTo(
-                    sheetContext,
-                    context,
-                    roleProvider,
-                    AppRole.admin,
-                  ),
-                ),
-              ],
-            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.l10n.roleSwitchDesc,
+          style: TextStyle(
+            fontSize: 13,
+            color: context.themeTextSecondary,
           ),
         ),
-      );
-    },
-  );
+        const SizedBox(height: 20),
+        _RoleTile(
+          icon: Icons.person_outline_rounded,
+          title: context.l10n.roleCustomer,
+          subtitle: context.l10n.roleCustomerSubtitle,
+          selected: roleProvider.role == AppRole.customer,
+          onTap: () => _switchTo(
+            popContext,
+            context,
+            roleProvider,
+            AppRole.customer,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _RoleTile(
+          icon: Icons.build_outlined,
+          title: context.l10n.roleProvider,
+          subtitle: context.l10n.roleProviderSubtitle,
+          selected: roleProvider.role == AppRole.provider,
+          onTap: () => _switchTo(
+            popContext,
+            context,
+            roleProvider,
+            AppRole.provider,
+          ),
+        ),
+        if (isAuthorizedAdmin) ...[
+          const SizedBox(height: 10),
+          _RoleTile(
+            icon: Icons.admin_panel_settings_outlined,
+            title: context.l10n.roleAdmin,
+            subtitle: context.l10n.roleAdminSubtitle,
+            selected: roleProvider.role == AppRole.admin,
+            onTap: () => _switchTo(
+              popContext,
+              context,
+              roleProvider,
+              AppRole.admin,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  if (isDesktop) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: context.themeSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: context.themeBorder, width: 1.5),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: buildContent(dialogContext),
+            ),
+          ),
+        );
+      },
+    );
+  } else {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.themeSurface,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: buildContent(sheetContext),
+          ),
+        );
+      },
+    );
+  }
 }
 
 void _switchTo(
@@ -113,7 +151,16 @@ void _switchTo(
       destination = const HomeDiscoveryScreen();
       break;
     case AppRole.provider:
-      destination = const ProviderDashboardScreen();
+      final user = roleProvider.currentUser;
+      final hasProviderDetails = (user?.serviceCategory != null && user!.serviceCategory!.isNotEmpty) ||
+          (user?.nic != null && user!.nic!.isNotEmpty);
+      if (!hasProviderDetails) {
+        destination = CompleteProfileScreen(
+          initialProfile: user?.copyWith(role: AppRole.provider),
+        );
+      } else {
+        destination = const ProviderDashboardScreen();
+      }
       break;
     case AppRole.admin:
       destination = const AdminShell();
@@ -221,4 +268,3 @@ class _RoleTile extends StatelessWidget {
     );
   }
 }
-

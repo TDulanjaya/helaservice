@@ -1758,7 +1758,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get statusActive => 'සක්‍රීයයි';
+  String get statusActive => 'සක්‍රියයි';
 
   @override
   String get statusPaused => 'අත්හිටුවා ඇත';
@@ -3070,6 +3070,24 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
+  String get disputesSuspendCustomer => 'පාරිභෝගිකයා අත්හිටුවන්න';
+
+  @override
+  String disputesCustomerSuspendedSnack(String name) {
+    return 'පාරිභෝගික $name අත්හිටුවන ලදී.';
+  }
+
+  @override
+  String get accountSuspendedTitle => 'ගිණුම අත්හිටුවා ඇත';
+
+  @override
+  String get accountSuspendedDesc =>
+      'පරිපාලනය විසින් ඔබගේ ගිණුම අත්හිටුවා ඇත. මෙය දෝෂයක් යැයි සිතන්නේ නම් සහාය අමතන්න.';
+
+  @override
+  String get contactHelpline => 'සහාය අංකය අමතන්න';
+
+  @override
   String disputesErrorLoading(String error) {
     return 'පැමිණිලි පූරණය කිරීමේ දෝෂයක්: $error';
   }
@@ -3473,4 +3491,284 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get emailVerifiedSuccess => 'ඊමේල් ලිපිනය සාර්ථකව තහවුරු විය!';
+
+  @override
+  String get myJobPosts => 'මගේ රැකියා ඉල්ලීම්';
+
+  @override
+  String yourPostedJobs(int count) {
+    return 'ඔබ පළ කළ රැකියා ($count)';
+  }
+
+  @override
+  String get postNewJob => 'නව රැකියාවක් පළ කරන්න';
+
+  @override
+  String get noJobPostsYet => 'තවම රැකියා ඉල්ලීම් පළ කර නැත';
+
+  @override
+  String get noJobPostsDesc =>
+      'ඔබේ ප්‍රදේශයේ සත්‍යාපිත කාර්මික ශිල්පීන්ගෙන් මිල කැඳවීම් සහ යෝජනා ලබා ගැනීමට සේවා ඉල්ලීමක් පළ කරන්න.';
+
+  @override
+  String reviewQuotesCount(int count) {
+    return 'මිල කැඳවීම් බලන්න ($count)';
+  }
+
+  @override
+  String get locationNotSpecified => 'ස්ථානය සඳහන් කර නැත';
+
+  @override
+  String get permissionLocationTitle => 'ස්ථාන ප්‍රවේශයට අවසර දෙනවාද?';
+
+  @override
+  String get permissionLocationDesc =>
+      'ඔබ අසල සිටින සත්‍යාපිත ශිල්පීන් හා සම්බන්ධ කිරීමට සහ නිවැරදි ප්‍රවාහන ගාස්තු ගණනය කිරීමට HelaService ඔබගේ ස්ථානය භාවිත කරයි.';
+
+  @override
+  String get permissionLocationBullet1 =>
+      'ඔබගේ ස්ථානයට ආසන්නවම සිටින කාර්මික ශිල්පීන් සොයා ගන්න.';
+
+  @override
+  String get permissionLocationBullet2 =>
+      'ඔබේ දොරකඩටම ශිල්පියා පැමිණෙන ආකාරය සජීවීව නිරීක්ෂණය කරන්න.';
+
+  @override
+  String get permissionLocationBullet3 =>
+      'සැඟවුණු ගාස්තු රහිත දුර පදනම් කරගත් සාධාරණ ගාස්තු.';
+
+  @override
+  String get permissionAllowAndContinue => 'අවසර දී ඉදිරියට යන්න';
+
+  @override
+  String get permissionSelectDistrictManually => 'දිස්ත්‍රික්කය අතින් තෝරන්න';
+
+  @override
+  String get permissionCameraTitle => 'කැමරා ප්‍රවේශයට අවසර දෙනවාද?';
+
+  @override
+  String get permissionCameraDesc =>
+      'සත්‍යාපිත ශිල්පීන්ගෙන් නිවැරදි මිල කැඳවීම් ලබා ගැනීමට ගැටලුවේ ඡායාරූප ගන්න.';
+
+  @override
+  String get permissionCameraBullet1 =>
+      'දෝෂය, විදුලි රැහැන් හෝ ජලනල ගැටලුවේ පැහැදිලි ඡායාරූප ලබා ගන්න.';
+
+  @override
+  String get permissionCameraBullet2 =>
+      'මිල නියම කිරීමට පෙර අලුත්වැඩියාව පරීක්ෂා කිරීමට ශිල්පීන්ට උදවු වන්න.';
+
+  @override
+  String get permissionCameraBullet3 =>
+      'ඔබගේ රැකියා ඉතිහාසය සඳහා සුරක්ෂිතව ගබඩා කෙරේ.';
+
+  @override
+  String get permissionOpenCamera => 'කැමරාව විවෘත කරන්න';
+
+  @override
+  String get permissionGalleryTitle => 'ඡායාරූප සහ ලිපිගොනු වලින් තෝරන්නද?';
+
+  @override
+  String get permissionGalleryDesc =>
+      'ඔබගේ සුදුසුකම් හෝ රැකියා විස්තර තහවුරු කිරීමට පවතින ඡායාරූප හෝ සහතික එක් කරන්න.';
+
+  @override
+  String get permissionGalleryBullet1 =>
+      'පැහැදිලි සහතික, NVQ බලපත්‍ර හෝ හානි වූ ස්ථානවල ඡායාරූප තෝරන්න.';
+
+  @override
+  String get permissionGalleryBullet2 =>
+      'ගිණුම සත්‍යාපනය සහ නිවැරදි රැකියා ඇස්තමේන්තුව සඳහා භාවිත වේ.';
+
+  @override
+  String get permissionGalleryBullet3 =>
+      'සුරක්ෂිතව ගබඩා කෙරෙන අතර අනවසර පාර්ශව සමඟ බෙදා නොගනී.';
+
+  @override
+  String get permissionChoosePhotos => 'ඡායාරූප තෝරන්න';
+
+  @override
+  String get permissionLocationPermanentlyDisabled =>
+      'ස්ථාන අවසරය ස්ථිරවම අක්‍රිය කර ඇත. කරුණාකර ඔබගේ ලිපිනය හඳුනා ගැනීමට පද්ධති සැකසුම් තුළින් එය සක්‍රිය කරන්න.';
+
+  @override
+  String get permissionLocationNeeded => 'ස්ථාන අවසරය අවශ්‍යයි';
+
+  @override
+  String get navUserManagement => 'පරිශීලක සහ තහනම් කළමනාකරණය';
+
+  @override
+  String get searchUsersHint =>
+      'නම, විද්‍යුත් තැපෑල, දුරකථන හෝ ජා.හැ. අංකයෙන් සොයන්න...';
+
+  @override
+  String get filterByRole => 'භූමිකාව';
+
+  @override
+  String get allRoles => 'සියලු භූමිකා';
+
+  @override
+  String get allDistricts => 'සියලු දිස්ත්‍රික්ක';
+
+  @override
+  String get filterByStatus => 'තත්ත්වය';
+
+  @override
+  String get statusSuspended => 'අත්හිටුවා ඇත';
+
+  @override
+  String get suspendAccount => 'ගිණුම අත්හිටුවන්න';
+
+  @override
+  String get unbanAccount => 'අත්හිටුවීම ඉවත් කරන්න';
+
+  @override
+  String get enterBanReason => 'අත්හිටුවීමට හේතුව ඇතුළත් කරන්න';
+
+  @override
+  String get banReasonHint => 'උදා: නීති කඩකිරීම, නොමඟ යැවීම හෝ ආරවුල්';
+
+  @override
+  String get confirmUnbanDesc =>
+      'මෙම ගිණුමේ අත්හිටුවීම ඉවත් කිරීමට ඔබට විශ්වාසද? පරිශීලකයාට වහාම නැවත ප්‍රවේශය ලැබෙනු ඇත.';
+
+  @override
+  String get userSuspendedSnack => 'ගිණුම සාර්ථකව අත්හිටුවන ලදී.';
+
+  @override
+  String get userRestoredSnack => 'ගිණුමේ ප්‍රවේශය යථා තත්ත්වයට පත් කරන ලදී.';
+
+  @override
+  String get totalUsers => 'මුළු පරිශීලකයින්';
+
+  @override
+  String get activeCustomers => 'සක්‍රිය පාරිභෝගිකයින්';
+
+  @override
+  String get activeProviders => 'සක්‍රිය සේවාදායකයින්';
+
+  @override
+  String get suspendedAccounts => 'අත්හිටුවූ ගිණුම්';
+
+  @override
+  String get noUsersFound => 'ගැළපෙන පරිශීලකයින් හමු නොවීය';
+
+  @override
+  String get navUserManagementSubtitle =>
+      'ශ්‍රී ලංකාව පුරා සිටින පාරිභෝගිකයින් සහ සේවා සපයන්නන් නිරීක්ෂණය සහ කළමනාකරණය කරන්න.';
+
+  @override
+  String get filterCustomers => 'පාරිභෝගිකයින්';
+
+  @override
+  String get filterProviders => 'සේවා සපයන්නන්';
+
+  @override
+  String get filterAdmins => 'පරිපාලකයින්';
+
+  @override
+  String get filterByDistrictTitle => 'දිස්ත්‍රික්කය අනුව පෙරන්න';
+
+  @override
+  String get searchDistrictHintText => 'දිස්ත්‍රික්කය සොයන්න...';
+
+  @override
+  String get suspendUserConfirmDesc =>
+      'මෙම ගිණුම අත්හිටුවීමට ඔබට විශ්වාසද? පරිශීලකයා වහාම පද්ධතියෙන් ඉවත් කර නැවත ඇතුළුවීම අවහිර කරනු ඇත.';
+
+  @override
+  String get pleaseEnterSuspensionReason =>
+      'කරුණාකර අත්හිටුවීමට හේතුවක් ඇතුළත් කරන්න.';
+
+  @override
+  String get presetAbusiveComm => 'අනර්ථකාරී සන්නිවේදනය';
+
+  @override
+  String get presetFraudActivity => 'වංචනික ක්‍රියාකාරකම්';
+
+  @override
+  String get presetFailedDispute => 'විසඳාගත නොහැකි වූ ආරවුලක්';
+
+  @override
+  String get presetPolicyViolation => 'ප්‍රතිපත්ති උල්ලංඝනය';
+
+  @override
+  String get reasonLabel => 'හේතුව';
+
+  @override
+  String get suspendedByAdmin => 'පරිපාලක විසින් අත්හිටුවන ලදී';
+
+  @override
+  String get zoomIn => 'විශාල කරන්න';
+
+  @override
+  String get zoomOut => 'කුඩා කරන්න';
+
+  @override
+  String get recenterMap => 'සිතියම නැවත කේන්ද්‍රගත කරන්න';
+
+  @override
+  String get superAdminCannotBeSuspended =>
+      'ප්‍රධාන පරිපාලක ගිණුම් ආරක්ෂිත බැවින් අත්හිටුවිය නොහැක.';
+
+  @override
+  String get openSettings => 'සැකසීම් විවෘත කරන්න';
+
+  @override
+  String get ok => 'හරි';
+
+  @override
+  String get permissionCameraPermanentlyDisabled =>
+      'කැමරා ප්‍රවේශය සම්පූර්ණයෙන්ම අක්‍රිය කර ඇත. ඡායාරූප ලබා ගැනීමට කරුණාකර එය සැකසීම් වලින් සක්‍රිය කරන්න.';
+
+  @override
+  String get permissionCameraDisabled =>
+      'කැමරා ප්‍රවේශය අක්‍රිය කර ඇත. කරුණාකර එය යෙදුම් සැකසීම් වලින් සක්‍රිය කරන්න.';
+
+  @override
+  String get permissionGalleryPermanentlyDisabled =>
+      'ගැලරි ප්‍රවේශය සම්පූර්ණයෙන්ම අක්‍රිය කර ඇත. කරුණාකර එය සැකසීම් වලින් සක්‍රිය කරන්න.';
+
+  @override
+  String get permissionGalleryDisabled =>
+      'ඡායාරූප ප්‍රවේශය අක්‍රිය කර ඇත. කරුණාකර එය යෙදුම් සැකසීම් වලින් සක්‍රිය කරන්න.';
+
+  @override
+  String get permissionNotificationTitle =>
+      'සජීවී සේවා දැනුම්දීම් සක්‍රිය කරන්නද?';
+
+  @override
+  String get permissionNotificationDesc =>
+      'කාර්මික ශිල්පීන් ඔබේ රැකියා පිළිගන්නා විට, මිල ගණන් එවන විට හෝ ඔබ වෙත පැමිණෙන විට තථ්‍ය කාලීන දැනුම්දීම් ලබා ගන්න.';
+
+  @override
+  String get permissionNotificationBullet1 =>
+      'සේවා ශිල්පියෙකු ඔබේ රැකියාව පිළිගන්නා විට හෝ මිලක් ඉදිරිපත් කරන විට ක්ෂණික දැනුම්දීම්.';
+
+  @override
+  String get permissionNotificationBullet2 =>
+      'ඔබගේ සේවා ශිල්පියා ඔබ වෙත එමින් සිටින විට සජීවී ලුහුබැඳීමේ තොරතුරු.';
+
+  @override
+  String get permissionNotificationBullet3 =>
+      'සෘජු කතාබස් සහ හදිසි සේවා යැවීමේ දැනුම්දීම්.';
+
+  @override
+  String get permissionEnableNotifications => 'දැනුම්දීම් සක්‍රිය කරන්න';
+
+  @override
+  String get permissionNotNow => 'දැන් නොවේ';
+
+  @override
+  String get permissionNotificationNeeded => 'දැනුම්දීම් අවසරය අවශ්‍යයි';
+
+  @override
+  String get permissionNotificationPermanentlyDisabled =>
+      'උපාංග සැකසීම් තුළ දැනුම්දීම් අක්‍රිය කර ඇත. රැකියා දැනුම්දීම් ලබා ගැනීමට කරුණාකර ඒවා සක්‍රිය කරන්න.';
+
+  @override
+  String get noMatchesFound => 'ගැළපීම් කිසිවක් හමු නොවීය';
+
+  @override
+  String get selectOption => 'තෝරන්න';
 }

@@ -14,6 +14,7 @@ import 'register_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../admin/admin_shell.dart';
+import '../../../utils/map_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,6 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _routeUser(UserProfile user) async {
+    // check if user is banned
+    if (user.isBanned) {
+      await AuthService().signOut();
+      if (!mounted) return;
+      _showAccountSuspendedDialog(user.banReason);
+      return;
+    }
+
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     roleProvider.setUser(user);
 
@@ -338,306 +347,544 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showAccountSuspendedDialog(String? reason) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.block_flipped, color: AppColors.error, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                context.l10n.accountSuspendedTitle,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.accountSuspendedDesc,
+              style: TextStyle(fontSize: 13.5, color: context.themeTextSecondary, height: 1.4),
+            ),
+            if (reason != null && reason.trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Suspension Reason:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      reason,
+                      style: TextStyle(fontSize: 12.5, color: context.themeTextPrimary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.ok),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              MapLauncher.openPhoneCall('1340');
+            },
+            icon: const Icon(Icons.phone, size: 16),
+            label: Text(context.l10n.contactHelpline),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturePill(BuildContext context, IconData icon, String text) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 16, color: AppColors.primary),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+            color: context.themeTextPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent(BuildContext context, Color isFieldBg, {required bool showHeader}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showHeader) ...[
+          Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/app_logo.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                context.l10n.appTitle,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+        ],
+        Text(
+          context.l10n.loginTitle,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: context.themeTextPrimary,
+            height: 1.25,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.loginSubtitle,
+          style: TextStyle(
+            fontSize: 13.5,
+            color: context.themeTextSecondary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 28),
+
+        Text(
+          context.l10n.emailAddress,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: context.themeTextPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+          decoration: InputDecoration(
+            hintText: 'name@example.com',
+            hintStyle: TextStyle(
+              color: context.themeTextSecondary.withValues(alpha: 0.6),
+            ),
+            prefixIcon: Icon(
+              Icons.email_outlined,
+              size: 20,
+              color: context.themeTextSecondary,
+            ),
+            filled: true,
+            fillColor: isFieldBg,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 18),
+        Text(
+          context.l10n.password,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: context.themeTextPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
+          decoration: InputDecoration(
+            hintText: '••••••••',
+            prefixIcon: Icon(
+              Icons.lock_outline_rounded,
+              size: 20,
+              color: context.themeTextSecondary,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                size: 20,
+                color: context.themeTextSecondary,
+              ),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+            filled: true,
+            fillColor: isFieldBg,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: GestureDetector(
+            onTap: _showForgotPasswordDialog,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                context.l10n.forgotPassword,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 18),
+        PrimaryButton(
+          label: context.l10n.signIn,
+          loading: _isEmailLoading,
+          onPressed: (_isEmailLoading || _isGoogleLoading) ? null : _handleEmailSignIn,
+        ),
+
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                context.l10n.orContinueWith,
+                style: TextStyle(
+                  color: context.themeTextSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton(
+            onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: isFieldBg,
+              side: BorderSide(color: context.themeBorder, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: _isGoogleLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const _GoogleMark(),
+                      const SizedBox(width: 12),
+                      Text(
+                        context.l10n.googleSignIn,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.5,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+
+        const SizedBox(height: 32),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isFieldBg,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: context.themeBorder, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.newToHelaService,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegisterScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.isDark ? Colors.white : const Color(0xFF141517),
+                  foregroundColor: context.isDark ? const Color(0xFF141517) : Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  context.l10n.createAccount,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
+    final width = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      backgroundColor: context.themeBg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/app_logo.png',
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    context.l10n.appTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: context.themeTextPrimary,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Text(
-                context.l10n.loginTitle,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: context.themeTextPrimary,
-                  height: 1.25,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.loginSubtitle,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  color: context.themeTextSecondary,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              Text(
-                context.l10n.emailAddress,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: context.themeTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                decoration: InputDecoration(
-                  hintText: 'name@example.com',
-                  hintStyle: TextStyle(
-                    color: context.themeTextSecondary.withValues(alpha: 0.6),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.email_outlined,
-                    size: 20,
-                    color: context.themeTextSecondary,
-                  ),
-                  filled: true,
-                  fillColor: isFieldBg,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 18),
-              Text(
-                context.l10n.password,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: context.themeTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                decoration: InputDecoration(
-                  hintText: '••••••••',
-                  hintStyle: TextStyle(
-                    color: context.themeTextSecondary.withValues(alpha: 0.6),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.lock_outline,
-                    size: 20,
-                    color: context.themeTextSecondary,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: context.themeTextSecondary,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  filled: true,
-                  fillColor: isFieldBg,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: _showForgotPasswordDialog,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      context.l10n.forgotPassword,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 18),
-              PrimaryButton(
-                label: context.l10n.signIn,
-                loading: _isEmailLoading,
-                onPressed: (_isEmailLoading || _isGoogleLoading) ? null : _handleEmailSignIn,
-              ),
-
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      context.l10n.orContinueWith,
-                      style: TextStyle(
-                        color: context.themeTextSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton(
-                  onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: isFieldBg,
-                    side: BorderSide(color: context.themeBorder, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: _isGoogleLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const _GoogleMark(),
-                            const SizedBox(width: 12),
-                            Text(
-                              context.l10n.googleSignIn,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14.5,
-                                color: context.themeTextPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 36),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    // wide desktop dual-pane
+    if (width >= 960) {
+      return Scaffold(
+        backgroundColor: context.themeBg,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(36),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 960),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: isFieldBg,
-                  borderRadius: BorderRadius.circular(20),
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: context.themeBorder, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: context.isDark ? 0.35 : 0.06),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // left brand hero
                     Expanded(
-                      child: Text(
-                        context.l10n.newToHelaService,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: context.themeTextSecondary,
+                      flex: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(44),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: context.isDark ? 0.12 : 0.08),
+                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(26)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Image.asset('assets/images/app_logo.png', width: 56, height: 56),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              context.l10n.appTitle,
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: context.themeTextPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              context.l10n.loginSubtitle,
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                color: context.themeTextSecondary,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 36),
+                            _buildFeaturePill(context, Icons.verified_user_outlined, 'Verified Service Artisans'),
+                            const SizedBox(height: 14),
+                            _buildFeaturePill(context, Icons.navigation_outlined, 'Live GPS Motorcycle Tracking'),
+                            const SizedBox(height: 14),
+                            _buildFeaturePill(context, Icons.price_check_outlined, 'Transparent Local Quotes'),
+                          ],
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.isDark ? Colors.white : const Color(0xFF141517),
-                        foregroundColor: context.isDark ? const Color(0xFF141517) : Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        context.l10n.createAccount,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    // right form
+                    Expanded(
+                      flex: 6,
+                      child: Padding(
+                        padding: const EdgeInsets.all(44),
+                        child: _buildFormContent(context, isFieldBg, showHeader: false),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
+        ),
+      );
+    }
+
+    // tablet / medium desktop centered card
+    if (width >= 600) {
+      return Scaffold(
+        backgroundColor: context.themeBg,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Container(
+                padding: const EdgeInsets.all(36),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: context.themeBorder, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: _buildFormContent(context, isFieldBg, showHeader: true),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // mobile layout
+    return Scaffold(
+      backgroundColor: context.themeBg,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          child: _buildFormContent(context, isFieldBg, showHeader: true),
         ),
       ),
     );

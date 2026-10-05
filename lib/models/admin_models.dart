@@ -178,6 +178,13 @@ class VerificationQueueItem {
   final bool flagged;
   final String phone;
   final String preferredLanguage;
+  final String? photoUrl;
+  final String? nicFrontUrl;
+  final String? nicBackUrl;
+  final List<String> certificationUrls;
+  final bool photoApproved;
+  final bool nicApproved;
+  final bool certsApproved;
 
   bool get hasComputedMatch => matchPercent > 0;
 
@@ -200,6 +207,13 @@ class VerificationQueueItem {
     this.flagged = false,
     this.phone = '',
     this.preferredLanguage = '',
+    this.photoUrl,
+    this.nicFrontUrl,
+    this.nicBackUrl,
+    this.certificationUrls = const [],
+    this.photoApproved = false,
+    this.nicApproved = false,
+    this.certsApproved = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -219,6 +233,13 @@ class VerificationQueueItem {
       'flagged': flagged,
       if (phone.isNotEmpty) 'phone': phone,
       if (preferredLanguage.isNotEmpty) 'preferredLanguage': preferredLanguage,
+      if (photoUrl != null) 'photoUrl': photoUrl,
+      if (nicFrontUrl != null) 'nicFrontUrl': nicFrontUrl,
+      if (nicBackUrl != null) 'nicBackUrl': nicBackUrl,
+      if (certificationUrls.isNotEmpty) 'certificationUrls': certificationUrls,
+      'photoApproved': photoApproved,
+      'nicApproved': nicApproved,
+      'certsApproved': certsApproved,
     };
   }
 
@@ -252,6 +273,11 @@ class VerificationQueueItem {
       return Icons.engineering;
     }
 
+    final certsRaw = map['certificationUrls'];
+    final certList = (certsRaw is List)
+        ? certsRaw.map((e) => e.toString()).toList()
+        : <String>[];
+
     return VerificationQueueItem(
       id: id,
       providerId: map['providerId'] as String? ?? '',
@@ -271,6 +297,13 @@ class VerificationQueueItem {
       flagged: map['flagged'] as bool? ?? false,
       phone: map['phone'] as String? ?? '',
       preferredLanguage: map['preferredLanguage'] as String? ?? '',
+      photoUrl: map['photoUrl'] as String?,
+      nicFrontUrl: map['nicFrontUrl'] as String?,
+      nicBackUrl: map['nicBackUrl'] as String?,
+      certificationUrls: certList,
+      photoApproved: map['photoApproved'] as bool? ?? false,
+      nicApproved: map['nicApproved'] as bool? ?? false,
+      certsApproved: map['certsApproved'] as bool? ?? false,
     );
   }
 }

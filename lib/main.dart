@@ -17,7 +17,7 @@ import 'constants/app_config.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Ignore cancelled map tile requests when panning or zooming fast.
+  // ignore cancelled map tile requests
   final originalFlutterOnError = FlutterError.onError;
   FlutterError.onError = (FlutterErrorDetails details) {
     if (details.silent &&

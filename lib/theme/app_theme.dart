@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppColors {
   AppColors._();
 
-  // Brand colors
+  // brand colors
   static const primary = Color(0xFFD6900F);
   static const onPrimary = Color(0xFF17140F);
   static const primaryContainer = Color(0xFFD6900F);
@@ -13,7 +13,7 @@ class AppColors {
   static const secondaryContainer = Color(0xFFD6900F);
   static const onSecondaryContainer = Color(0xFF17140F);
 
-  // Light mode colors
+  // light mode
   static const amberDark = Color(0xFF9A6206);
   static const amberTint = Color(0xFFFBF0DA);
   static const ink = Color(0xFF17140F);
@@ -25,7 +25,7 @@ class AppColors {
   static const soft = Color(0xFFF2EEE5);
   static const border = Color(0xFFECE6D9);
 
-  // Status colors
+  // status colors
   static const success = Color(0xFF1E7F47);
   static const successTint = Color(0xFFE2F3E8);
   static const danger = Color(0xFFB3261E);
@@ -33,7 +33,7 @@ class AppColors {
   static const info = Color(0xFF1F5FBF);
   static const infoTint = Color(0xFFE3ECFA);
 
-  // Legacy names kept so nothing breaks
+  // legacy aliases
   static const surfaceLow = Color(0xFFF4F2EB);
   static const surfaceContainer = Color(0xFFEDE9DF);
   static const surfaceHigh = Color(0xFFE5E0D3);
@@ -45,7 +45,7 @@ class AppColors {
   static const error = Color(0xFFB3261E);
   static const errorContainer = Color(0xFFFCE4E1);
 
-  // Dynamic theme colors
+  // theme helpers
 
   static Color getBackground(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

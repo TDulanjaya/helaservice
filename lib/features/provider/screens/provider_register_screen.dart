@@ -13,6 +13,7 @@ import '../../../repositories/category_repository.dart';
 import '../../../models/admin_models.dart';
 import 'nic_verification_screen.dart';
 import '../../auth/screens/email_otp_screen.dart';
+import '../../../shared/widgets/searchable_select_picker.dart';
 
 class ProviderRegisterScreen extends StatefulWidget {
   const ProviderRegisterScreen({super.key});
@@ -200,11 +201,14 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               Text(
                 context.l10n.providerRegisterSubtitle,
                 style: TextStyle(
@@ -310,27 +314,54 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                       .map((c) => c.name)
                       .toList();
                   final allCats = liveCats.isNotEmpty ? liveCats : _categories;
+                  final effectiveVal = allCats.contains(_category)
+                      ? _category
+                      : (allCats.isNotEmpty ? allCats.first : 'Electrical');
 
-                  return _Dropdown(
+                  return SearchableSelectPicker<String>(
                     label: context.l10n.primaryCategory,
-                    value: allCats.contains(_category) ? _category : allCats.first,
-                    items: allCats,
-                    itemLabel: (c) => LocalizedData.getCategory(context, c),
-                    onChanged: (v) => setState(() => _category = v ?? _category),
-                    isDarkField: context.isDark,
+                    selectedValue: effectiveVal,
                     prefixIcon: Icons.bolt_outlined,
+                    isDarkField: context.isDark,
+                    modalTitle: context.l10n.category,
+                    searchHint: 'Search category...',
+                    items: allCats.map((c) {
+                      final localized = LocalizedData.getCategory(context, c);
+                      final sin = LocalizedData.categories[c]?['si'] ?? '';
+                      final tam = LocalizedData.categories[c]?['ta'] ?? '';
+                      return SearchableSelectItem<String>(
+                        value: c,
+                        label: localized,
+                        subtitle: localized != c ? c : null,
+                        icon: Icons.handyman_outlined,
+                        searchTerms: [c, sin, tam],
+                      );
+                    }).toList(),
+                    onSelected: (v) => setState(() => _category = v),
                   );
                 },
               ),
               const SizedBox(height: 16),
-              _Dropdown(
+              SearchableSelectPicker<String>(
                 label: context.l10n.primaryDistrict,
-                value: _districts.contains(_district) ? _district : _districts.first,
-                items: _districts,
-                itemLabel: (d) => LocalizedData.getDistrict(context, d),
-                onChanged: (v) => setState(() => _district = v ?? _district),
-                isDarkField: context.isDark,
+                selectedValue: _districts.contains(_district) ? _district : _districts.first,
                 prefixIcon: Icons.map_outlined,
+                isDarkField: context.isDark,
+                modalTitle: context.l10n.district,
+                searchHint: 'Search district...',
+                items: _districts.map((d) {
+                  final localizedName = LocalizedData.getDistrict(context, d);
+                  final sin = LocalizedData.districts[d]?['si'] ?? '';
+                  final tam = LocalizedData.districts[d]?['ta'] ?? '';
+                  return SearchableSelectItem<String>(
+                    value: d,
+                    label: localizedName,
+                    subtitle: localizedName != d ? d : null,
+                    icon: Icons.location_on_outlined,
+                    searchTerms: [d, sin, tam],
+                  );
+                }).toList(),
+                onSelected: (v) => setState(() => _district = v),
               ),
               const SizedBox(height: 20),
               CheckboxListTile(
@@ -385,7 +416,9 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 
@@ -469,83 +502,3 @@ class _Field extends StatelessWidget {
   }
 }
 
-class _Dropdown extends StatelessWidget {
-  final String label;
-  final String value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
-  final String Function(String)? itemLabel;
-  final bool isDarkField;
-  final IconData? prefixIcon;
-
-  const _Dropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    this.itemLabel,
-    required this.isDarkField,
-    this.prefixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveValue = items.contains(value)
-        ? value
-        : (items.isNotEmpty ? items.first : null);
-    final bg = isDarkField ? context.themeSurfaceLow : Colors.white;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: context.themeTextPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: context.themeBorder,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              if (prefixIcon != null) ...[
-                Icon(prefixIcon, size: 20, color: context.themeTextSecondary),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: effectiveValue,
-                    dropdownColor: context.themeSurface,
-                    isExpanded: true,
-                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
-                    items: items
-                        .map((d) => DropdownMenuItem(
-                            value: d,
-                            child: Text(
-                              itemLabel != null ? itemLabel!(d) : d,
-                              style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                            )))
-                        .toList(),
-                    onChanged: onChanged,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}

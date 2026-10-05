@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/profile_image_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
+import '../../utils/permission_utils.dart';
 
 
 class UserAvatar extends StatefulWidget {
@@ -31,7 +32,7 @@ class UserAvatar extends StatefulWidget {
     Color(0xFF7A4A28), // Bronze
   ];
 
-  // Pick color by user id
+  // avatar color
   static Color computeBackgroundColor(String? uid) {
     if (uid == null || uid.isEmpty) {
       return avatarPalette[0];
@@ -43,7 +44,7 @@ class UserAvatar extends StatefulWidget {
     return avatarPalette[hash % avatarPalette.length];
   }
 
-  // Initials from name or email
+  // initials
   static String computeInitials({String? displayName, String? email}) {
     final name = (displayName ?? '').trim();
     if (name.isNotEmpty) {
@@ -123,6 +124,24 @@ class _UserAvatarState extends State<UserAvatar> {
 
   Future<void> _handlePick(ImageSource source) async {
     Navigator.of(context).pop();
+
+    if (source == ImageSource.camera) {
+      final allowed = await PermissionUtils.requestCameraWithRationale(
+        context,
+        title: context.l10n.takePhoto,
+        description: 'Camera access is required to take your profile photo.',
+      );
+      if (!allowed) return;
+    } else {
+      final allowed = await PermissionUtils.requestGalleryWithRationale(
+        context,
+        title: context.l10n.chooseFromGallery,
+        description: 'Photo library access is required to select your profile photo.',
+      );
+      if (!allowed) return;
+    }
+
+    if (!mounted) return;
     setState(() => _isUploading = true);
 
     try {
@@ -238,7 +257,7 @@ class _UserAvatarState extends State<UserAvatar> {
   Widget _buildAvatarContent(Uint8List? dpBytes) {
     final double diameter = widget.radius * 2;
 
-    // Show photo if available
+    // photo if exists
     if (dpBytes != null && dpBytes.isNotEmpty) {
       return Image.memory(
         dpBytes,
@@ -249,7 +268,7 @@ class _UserAvatarState extends State<UserAvatar> {
       );
     }
 
-    // Fallback to initials
+    // fallback initials
     return _buildFallback(diameter);
   }
 
@@ -279,7 +298,7 @@ class _UserAvatarState extends State<UserAvatar> {
 
     Widget avatarCore;
 
-    // Watch photo for current user
+    // watch photo
     if (widget.editable && isCurrentUser) {
       avatarCore = StreamBuilder<Uint8List?>(
         stream: _imageService.watchImage(widget.uid!),

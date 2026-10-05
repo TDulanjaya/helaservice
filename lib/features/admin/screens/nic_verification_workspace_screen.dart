@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +24,117 @@ class _NicVerificationWorkspaceScreenState
     extends State<NicVerificationWorkspaceScreen> {
   int _selected = 0;
   bool _isProcessing = false;
+
+  Future<void> _handleApproveDp(VerificationQueueItem item) async {
+    setState(() => _isProcessing = true);
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      if (item.id.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
+          {'photoApproved': true},
+        );
+      }
+      if (item.providerId.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
+          {'photoStatus': 'approved'},
+        );
+        batch.update(
+          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+          {'photoStatus': 'approved'},
+        );
+      }
+      await batch.commit();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo (DP) approved!'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error approving DP: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleApproveNic(VerificationQueueItem item) async {
+    setState(() => _isProcessing = true);
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      if (item.id.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
+          {'nicApproved': true},
+        );
+      }
+      if (item.providerId.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
+          {'nicVerified': true},
+        );
+        batch.update(
+          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+          {'nicVerified': true},
+        );
+      }
+      await batch.commit();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('NIC identity approved!'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error approving NIC: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleApproveCerts(VerificationQueueItem item) async {
+    setState(() => _isProcessing = true);
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      if (item.id.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
+          {'certsApproved': true},
+        );
+      }
+      if (item.providerId.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
+          {'certificationsStatus': 'approved', 'isVerified': true},
+        );
+        batch.update(
+          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+          {'certificationsStatus': 'approved'},
+        );
+      }
+      await batch.commit();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trade certifications approved!'), backgroundColor: AppColors.primary),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error approving certifications: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   Future<void> _handleApprove(VerificationQueueItem item) async {
     setState(() => _isProcessing = true);
@@ -838,7 +949,7 @@ class _NicVerificationWorkspaceScreenState
                 ),
               ];
 
-              // translate status text for display
+              // status text
               String displayStatus(String status) {
                 switch (status) {
                   case 'Flagged':
@@ -1011,6 +1122,15 @@ class _NicVerificationWorkspaceScreenState
           Row(children: [
             _NicDocImagePreview(
               providerId: selectedItem.providerId,
+              directUrl: selectedItem.photoUrl,
+              docType: 'photo',
+              label: 'Profile Photo',
+              fallbackIcon: Icons.account_circle,
+            ),
+            const SizedBox(width: 8),
+            _NicDocImagePreview(
+              providerId: selectedItem.providerId,
+              directUrl: selectedItem.nicFrontUrl,
               docType: 'front',
               label: context.l10n.docNicFront,
               fallbackIcon: Icons.badge,
@@ -1018,18 +1138,160 @@ class _NicVerificationWorkspaceScreenState
             const SizedBox(width: 8),
             _NicDocImagePreview(
               providerId: selectedItem.providerId,
+              directUrl: selectedItem.nicBackUrl,
               docType: 'back',
               label: context.l10n.docNicBack,
               fallbackIcon: Icons.qr_code_scanner,
             ),
-            const SizedBox(width: 8),
-            _NicDocImagePreview(
-              providerId: selectedItem.providerId,
-              docType: 'selfie',
-              label: context.l10n.docLiveness,
-              fallbackIcon: Icons.face,
-            ),
           ]),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: selectedItem.photoApproved
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: context.themeSuccessTint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('DP Approved',
+                            style: TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
+                      )
+                    : OutlinedButton(
+                        onPressed: canVerifyNic ? () => _handleApproveDp(selectedItem) : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                          minimumSize: const Size(0, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Approve DP', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                      ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: selectedItem.nicApproved
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: context.themeSuccessTint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('NIC Approved',
+                            style: TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
+                      )
+                    : OutlinedButton(
+                        onPressed: canVerifyNic ? () => _handleApproveNic(selectedItem) : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                          minimumSize: const Size(0, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Approve NIC (Front+Back)', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                      ),
+              ),
+            ],
+          ),
+          // certifications preview
+          FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            future: FirebaseFirestore.instance
+                .collection(FirestorePaths.technicians)
+                .doc(selectedItem.providerId)
+                .get(),
+            builder: (ctx, snap) {
+              final techData = snap.data?.data();
+              final certsRaw = techData?['certificationUrls'] ?? selectedItem.certificationUrls;
+              final certs = (certsRaw is List)
+                  ? certsRaw.map((e) => e.toString()).toList()
+                  : <String>[];
+              if (certs.isEmpty) return const SizedBox.shrink();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Trade Certifications & Licenses (${certs.length})',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      if (selectedItem.certsApproved)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: context.themeSuccessTint,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text('Approved',
+                              style: TextStyle(fontSize: 10, color: AppColors.success, fontWeight: FontWeight.bold)),
+                        )
+                      else if (canVerifyNic)
+                        TextButton(
+                          onPressed: () => _handleApproveCerts(selectedItem),
+                          child: const Text('Approve Certs', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 76,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: certs.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (c, idx) {
+                        final certUrl = certs[idx];
+                        return GestureDetector(
+                          onTap: () => _showZoomDialog(context, certUrl, 'Certificate #${idx + 1}'),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  width: 76,
+                                  height: 76,
+                                  color: context.themeSurfaceLow,
+                                  child: certUrl.startsWith('data:')
+                                      ? Image.memory(base64Decode(certUrl.split(',').last), fit: BoxFit.cover)
+                                      : Image.network(
+                                          certUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.broken_image_outlined, size: 24),
+                                        ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 2,
+                                right: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 18),
           if (!canVerifyNic)
             Container(
@@ -1360,60 +1622,76 @@ class _TCell extends StatelessWidget {
   }
 }
 
+void _showZoomDialog(BuildContext context, String imageUrl, String title) {
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              color: Colors.black87,
+              child: InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 4.0,
+                child: imageUrl.startsWith('data:')
+                    ? Image.memory(base64Decode(imageUrl.split(',').last), fit: BoxFit.contain)
+                    : Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (_, child, prog) => prog == null
+                            ? child
+                            : const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                        errorBuilder: (_, __, ___) =>
+                            const Center(child: Icon(Icons.broken_image_outlined, color: Colors.white, size: 48)),
+                      ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white, size: 28),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _NicDocImagePreview extends StatelessWidget {
   final String providerId;
   final String docType;
   final String label;
   final IconData fallbackIcon;
+  final String? directUrl;
 
   const _NicDocImagePreview({
     required this.providerId,
     required this.docType,
     required this.label,
     required this.fallbackIcon,
+    this.directUrl,
   });
-
-  void _showZoomDialog(BuildContext context, Uint8List bytes, String title) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                color: Colors.black87,
-                child: InteractiveViewer(
-                  maxScale: 4.0,
-                  child: Image.memory(bytes, fit: BoxFit.contain),
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 28),
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
+    if (directUrl != null && directUrl!.isNotEmpty) {
+      return _buildImageCard(context, directUrl!);
+    }
+
     if (providerId.isEmpty) {
       return _buildFallback(context, context.l10n.nicDeskNoId);
     }
 
+    // fallback lookup
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       future: FirebaseFirestore.instance
-          .collection('nicImages')
+          .collection(FirestorePaths.technicians)
           .doc(providerId)
-          .collection('files')
-          .doc(docType)
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1437,66 +1715,78 @@ class _NicDocImagePreview extends StatelessWidget {
         }
 
         final data = snapshot.data?.data();
-        final rawBlob = data?['data'];
-        Uint8List? bytes;
-        if (rawBlob is Blob) {
-          bytes = rawBlob.bytes;
+        String? resolvedUrl;
+        if (docType == 'photo') {
+          resolvedUrl = data?['photoUrl'] as String?;
+        } else if (docType == 'front') {
+          resolvedUrl = data?['nicFrontUrl'] as String?;
+        } else if (docType == 'back') {
+          resolvedUrl = data?['nicBackUrl'] as String?;
         }
 
-        if (bytes == null || bytes.isEmpty) {
+        if (resolvedUrl == null || resolvedUrl.isEmpty) {
           return _buildFallback(context, context.l10n.nicDeskNoImage);
         }
 
-        return Expanded(
-          child: InkWell(
-            onTap: () => _showZoomDialog(context, bytes!, label),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.themeSurfaceLow,
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      height: 68,
-                      width: double.infinity,
-                      child: Image.memory(
-                        bytes,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(fallbackIcon,
-                            color: context.themeTextSecondary),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 10, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    context.l10n.nicDeskTapToZoom,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 9.5,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return _buildImageCard(context, resolvedUrl);
       },
+    );
+  }
+
+  Widget _buildImageCard(BuildContext context, String url) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => _showZoomDialog(context, url, label),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: context.themeSurfaceLow,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  height: 68,
+                  width: double.infinity,
+                  child: url.startsWith('data:')
+                      ? Image.memory(
+                          base64Decode(url.split(',').last),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(fallbackIcon, color: context.themeTextSecondary),
+                        )
+                      : Image.network(
+                          url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(fallbackIcon, color: context.themeTextSecondary),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+              ),
+              Text(
+                context.l10n.nicDeskTapToZoom,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1541,3 +1831,4 @@ class _NicDocImagePreview extends StatelessWidget {
     );
   }
 }
+

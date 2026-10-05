@@ -13,13 +13,25 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async function handler(req, res) {
-  // CORS Preflight
+  // cors
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-helaservice-key');
+
+  // cors preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  // verify api key
+  const expectedKey = (process.env.HELASERVICE_API_KEY || 'hela_app_sec_k9827x_prod').trim();
+  const clientKey = (req.headers['x-helaservice-key'] || '').trim();
+  if (clientKey !== expectedKey) {
+    return res.status(401).json({ error: 'Unauthorized: Valid API key required.' });
   }
 
   try {
@@ -38,7 +50,7 @@ module.exports = async function handler(req, res) {
     const docRef = db.collection('otp_verifications').doc(cleanEmail);
     const existingDoc = await docRef.get();
 
-    // Enforce 60-second rate limiting cooldown
+    // 60s cooldown check
     if (existingDoc.exists) {
       const data = existingDoc.data();
       const timeSinceLast = Date.now() - (data.createdAt || 0);
@@ -51,13 +63,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Generate secure 6-digit OTP and SHA-256 hash
+    // generate 6 digit code
     const otp = crypto.randomInt(100000, 1000000).toString();
     const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
     const now = Date.now();
-    const expiresAt = now + 5 * 60 * 1000; // 5 minutes TTL
+    const expiresAt = now + 5 * 60 * 1000; // 5 min expiry
 
-    // Save hash and metadata to Firestore
+    // save to db
     await docRef.set({
       hashedOtp,
       createdAt: now,
@@ -65,7 +77,7 @@ module.exports = async function handler(req, res) {
       attempts: 0,
     });
 
-    // Send branded HTML email via Gmail SMTP
+    // send email
     const htmlContent = `
       <!DOCTYPE html>
       <html>

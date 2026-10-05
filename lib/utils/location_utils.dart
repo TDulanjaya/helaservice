@@ -90,7 +90,8 @@ class LocationUtils {
       ..sort((a, b) => b.length.compareTo(a.length));
 
     for (final d in sortedDistricts) {
-      final pattern = RegExp(r'\b' + RegExp.escape(d) + r'\b', caseSensitive: false);
+      final pattern =
+          RegExp(r'\b' + RegExp.escape(d) + r'\b', caseSensitive: false);
       if (pattern.hasMatch(candidate)) {
         return d;
       }

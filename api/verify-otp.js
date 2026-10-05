@@ -2,13 +2,25 @@ const crypto = require('crypto');
 const { admin, db } = require('./_firebase');
 
 module.exports = async function handler(req, res) {
-  // CORS Preflight
+  // cors
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-helaservice-key');
+
+  // cors preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  // verify api key
+  const expectedKey = (process.env.HELASERVICE_API_KEY || 'hela_app_sec_k9827x_prod').trim();
+  const clientKey = (req.headers['x-helaservice-key'] || '').trim();
+  if (clientKey !== expectedKey) {
+    return res.status(401).json({ error: 'Unauthorized: Valid API key required.' });
   }
 
   try {
@@ -32,7 +44,7 @@ module.exports = async function handler(req, res) {
 
     const data = doc.data();
 
-    // Check expiration (5 minutes TTL)
+    // check if expired
     if (Date.now() > data.expiresAt) {
       await docRef.delete();
       return res.status(400).json({
@@ -40,7 +52,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Check brute-force attempts
+    // max 5 attempts check
     if (data.attempts >= 5) {
       await docRef.delete();
       return res.status(403).json({
@@ -48,7 +60,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Compare SHA-256 hashes using timingSafeEqual
+    // compare hashes
     const incomingHash = crypto.createHash('sha256').update(cleanOtp).digest('hex');
     const storedHash = data.hashedOtp || '';
 
@@ -77,7 +89,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Success: Delete the OTP record immediately
+    // delete otp once verified
     await docRef.delete();
 
     return res.status(200).json({

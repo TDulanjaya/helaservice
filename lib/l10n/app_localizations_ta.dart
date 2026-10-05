@@ -3128,6 +3128,24 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
+  String get disputesSuspendCustomer => 'வாடிக்கையாளரை இடைநிறுத்து';
+
+  @override
+  String disputesCustomerSuspendedSnack(String name) {
+    return 'வாடிக்கையாளர் $name இடைநிறுத்தப்பட்டார்.';
+  }
+
+  @override
+  String get accountSuspendedTitle => 'கணக்கு இடைநிறுத்தப்பட்டது';
+
+  @override
+  String get accountSuspendedDesc =>
+      'நிர்வாகத்தால் உங்கள் கணக்கு இடைநிறுத்தப்பட்டுள்ளது. இது பிழை என நீங்கள் நம்பினால் உதவி மையத்தை தொடர்பு கொள்ளவும்.';
+
+  @override
+  String get contactHelpline => 'உதவி மையத்தை அழைக்கவும்';
+
+  @override
   String disputesErrorLoading(String error) {
     return 'முறைப்பாடுகளை ஏற்றுவதில் பிழை: $error';
   }
@@ -3536,4 +3554,285 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get emailVerifiedSuccess =>
       'மின்னஞ்சல் வெற்றிகரமாக சரிபார்க்கப்பட்டது!';
+
+  @override
+  String get myJobPosts => 'எனது வேலை இடுகைகள்';
+
+  @override
+  String yourPostedJobs(int count) {
+    return 'நீங்கள் இட்ட வேலைகள் ($count)';
+  }
+
+  @override
+  String get postNewJob => 'புதிய வேலையை இடுகையிடவும்';
+
+  @override
+  String get noJobPostsYet => 'இன்னும் வேலை இடுகைகள் இல்லை';
+
+  @override
+  String get noJobPostsDesc =>
+      'உங்கள் பகுதியிலுள்ள சரிபார்க்கப்பட்ட தொழில்நுட்ப வல்லுநர்களிடமிருந்து விலைப்புள்ளிகளைப் பெற சேவை கோரிக்கையை இடுகையிடவும்.';
+
+  @override
+  String reviewQuotesCount(int count) {
+    return 'விலைப்புள்ளிகளைப் பார்க்கவும் ($count)';
+  }
+
+  @override
+  String get locationNotSpecified => 'இடம் குறிப்பிடப்படவில்லை';
+
+  @override
+  String get permissionLocationTitle => 'இருப்பிட அணுகலை அனுமதிக்கவா?';
+
+  @override
+  String get permissionLocationDesc =>
+      'அருகிலுள்ள சரிபார்க்கப்பட்ட கைவினைஞர்களுடன் உங்களை இணைக்கவும் துல்லியமான பயணக் கட்டணத்தைக் கணக்கிடவும் HelaService உங்கள் இருப்பிடத்தைப் பயன்படுத்துகிறது.';
+
+  @override
+  String get permissionLocationBullet1 =>
+      'உங்கள் இருப்பிடத்திற்கு மிக அருகில் உள்ள தொழில்நுட்ப வல்லுநர்களைக் கண்டறியவும்.';
+
+  @override
+  String get permissionLocationBullet2 =>
+      'உங்கள் வீட்டு வாசலுக்கு தொழில்நுட்ப வல்லுநர் வருவதை நேரடியாகக் கண்காணிக்கவும்.';
+
+  @override
+  String get permissionLocationBullet3 =>
+      'மறைமுகக் கட்டணங்கள் இல்லாத நியாயமான தூர அடிப்படையிலான கட்டணங்கள்.';
+
+  @override
+  String get permissionAllowAndContinue => 'அனுமதித்து தொடரவும்';
+
+  @override
+  String get permissionSelectDistrictManually =>
+      'மாவட்டத்தை கைமுறையாகத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get permissionCameraTitle => 'கேமரா அணுகலை அனுமதிக்கவா?';
+
+  @override
+  String get permissionCameraDesc =>
+      'சரிபார்க்கப்பட்ட கைவினைஞர்களிடமிருந்து துல்லியமான விலைப்புள்ளிகளைப் பெற சிக்கலின் புகைப்படங்களை எடுக்கவும்.';
+
+  @override
+  String get permissionCameraBullet1 =>
+      'சிக்கல், மின் வயரிங் அல்லது பிளம்பிங் கோளாறின் தெளிவான புகைப்படங்களை எடுக்கவும்.';
+
+  @override
+  String get permissionCameraBullet2 =>
+      'விலைப்புள்ளி வழங்குவதற்கு முன் பழுதுபார்ப்பு தேவைகளை ஆய்வு செய்ய கைவினைஞர்களுக்கு உதவுங்கள்.';
+
+  @override
+  String get permissionCameraBullet3 =>
+      'உங்கள் வேலை வரலாற்றிற்காக கிளவுட் சேமிப்பகத்தில் பாதுகாப்பாக சேமிக்கப்படும்.';
+
+  @override
+  String get permissionOpenCamera => 'கேமராவைத் திறக்கவும்';
+
+  @override
+  String get permissionGalleryTitle =>
+      'புகைப்படங்கள் & கோப்புகளிலிருந்து தேர்ந்தெடுக்கவா?';
+
+  @override
+  String get permissionGalleryDesc =>
+      'உங்கள் தகுதிகள் அல்லது வேலை விவரங்களை சரிபார்க்க ஏற்கனவே உள்ள புகைப்படங்கள் அல்லது சான்றிதழ்களைப் பதிவேற்றவும்.';
+
+  @override
+  String get permissionGalleryBullet1 =>
+      'தெளிவான சான்றிதழ்கள், NVQ உரிமங்கள் அல்லது சேதமடைந்த புகைப்படங்களைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get permissionGalleryBullet2 =>
+      'சுயவிவர சரிபார்ப்பு மற்றும் துல்லியமான வேலை மதிப்பீட்டிற்குப் பயன்படுத்தப்படுகிறது.';
+
+  @override
+  String get permissionGalleryBullet3 =>
+      'பாதுகாப்பாக சேமிக்கப்பட்டு அங்கீகரிக்கப்படாத தரப்பினருடன் பகிரப்படாது.';
+
+  @override
+  String get permissionChoosePhotos => 'புகைப்படங்களைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get permissionLocationPermanentlyDisabled =>
+      'இருப்பிட அனுமதி நிரந்தரமாக முடக்கப்பட்டுள்ளது. உங்கள் முகவரியைக் கண்டறிய கணினி அமைப்புகளில் அதை இயக்கவும்.';
+
+  @override
+  String get permissionLocationNeeded => 'இருப்பிட அனுமதி தேவை';
+
+  @override
+  String get navUserManagement => 'பயனர்கள் & தடைகள்';
+
+  @override
+  String get searchUsersHint =>
+      'பெயர், மின்னஞ்சல், தொலைபேசி அல்லது தேசிய அடையாள அட்டை மூலம் தேடவும்...';
+
+  @override
+  String get filterByRole => 'பங்கு';
+
+  @override
+  String get allRoles => 'அனைத்து பங்குகள்';
+
+  @override
+  String get allDistricts => 'அனைத்து மாவட்டங்கள்';
+
+  @override
+  String get filterByStatus => 'நிலை';
+
+  @override
+  String get statusSuspended => 'இடைநிறுத்தப்பட்டது';
+
+  @override
+  String get suspendAccount => 'கணக்கை இடைநிறுத்துக';
+
+  @override
+  String get unbanAccount => 'இடைநிறுத்தத்தை நீக்குக';
+
+  @override
+  String get enterBanReason => 'இடைநிறுத்தத்திற்கான காரணத்தை உள்ளிடவும்';
+
+  @override
+  String get banReasonHint => 'எ.கா: கொள்கை மீறல், முறைகேடு அல்லது புகார்கள்';
+
+  @override
+  String get confirmUnbanDesc =>
+      'இந்த கணக்கிற்கான இடைநிறுத்தத்தை நீக்க விரும்புகிறீர்களா? பயனர் உடனடியாக மீண்டும் தளத்திற்கான அணுகலைப் பெறுவார்.';
+
+  @override
+  String get userSuspendedSnack => 'கணக்கு வெற்றிகரமாக இடைநிறுத்தப்பட்டது.';
+
+  @override
+  String get userRestoredSnack => 'கணக்கு அணுகல் மீட்டமைக்கப்பட்டது.';
+
+  @override
+  String get totalUsers => 'மொத்த பயனர்கள்';
+
+  @override
+  String get activeCustomers => 'செயலில் உள்ள வாடிக்கையாளர்கள்';
+
+  @override
+  String get activeProviders => 'செயலில் உள்ள சேவை வழங்குநர்கள்';
+
+  @override
+  String get suspendedAccounts => 'இடைநிறுத்தப்பட்ட கணக்குகள்';
+
+  @override
+  String get noUsersFound => 'பொருத்தமான பயனர்கள் எவரும் காணப்படவில்லை';
+
+  @override
+  String get navUserManagementSubtitle =>
+      'இலங்கை முழுவதிலும் உள்ள வாடிக்கையாளர்கள் மற்றும் சேவை வழங்குநர்களைப் பார்வையிட்டு நிர்வகிக்கவும்.';
+
+  @override
+  String get filterCustomers => 'வாடிக்கையாளர்கள்';
+
+  @override
+  String get filterProviders => 'வழங்குநர்கள்';
+
+  @override
+  String get filterAdmins => 'நிர்வாகிகள்';
+
+  @override
+  String get filterByDistrictTitle => 'மாவட்டம் வாரியாக வடிகட்டவும்';
+
+  @override
+  String get searchDistrictHintText => 'மாவட்டத்தைத் தேடுங்கள்...';
+
+  @override
+  String get suspendUserConfirmDesc =>
+      'இந்தக் கணக்கை இடைநிறுத்த நிச்சயமாக விரும்புகிறீர்களா? பயனர் உடனடியாக வெளியேற்றப்பட்டு உள்நுழைவது தடுக்கப்படும்.';
+
+  @override
+  String get pleaseEnterSuspensionReason =>
+      'இடைநிறுத்தத்திற்கான காரணத்தை உள்ளிடவும்.';
+
+  @override
+  String get presetAbusiveComm => 'தவறான தொடர்பு';
+
+  @override
+  String get presetFraudActivity => 'மோசடி நடவடிக்கை';
+
+  @override
+  String get presetFailedDispute => 'தோல்வியடைந்த தகராறு தீர்வு';
+
+  @override
+  String get presetPolicyViolation => 'கொள்கை மீறல்';
+
+  @override
+  String get reasonLabel => 'காரணம்';
+
+  @override
+  String get suspendedByAdmin => 'நிர்வாகியால் இடைநிறுத்தப்பட்டது';
+
+  @override
+  String get zoomIn => 'பெரிதாக்கு';
+
+  @override
+  String get zoomOut => 'சிறிதாக்கு';
+
+  @override
+  String get recenterMap => 'வரைபடத்தை மையப்படுத்து';
+
+  @override
+  String get superAdminCannotBeSuspended =>
+      'முதன்மை நிர்வாகி கணக்குகள் பாதுகாக்கப்பட்டுள்ளன, அவற்றை இடைநிறுத்த முடியாது.';
+
+  @override
+  String get openSettings => 'அமைப்புகளைத் திறக்கவும்';
+
+  @override
+  String get ok => 'சரி';
+
+  @override
+  String get permissionCameraPermanentlyDisabled =>
+      'கேமரா அணுகல் நிரந்தரமாக முடக்கப்பட்டுள்ளது. புகைப்படங்களை எடுக்க அமைப்புகளில் அதை இயக்கவும்.';
+
+  @override
+  String get permissionCameraDisabled =>
+      'கேமரா அணுகல் முடக்கப்பட்டுள்ளது. பயன்பாட்டு அமைப்புகளில் அதை இயக்கவும்.';
+
+  @override
+  String get permissionGalleryPermanentlyDisabled =>
+      'கேலரி அணுகல் நிரந்தரமாக முடக்கப்பட்டுள்ளது. அமைப்புகளில் அதை இயக்கவும்.';
+
+  @override
+  String get permissionGalleryDisabled =>
+      'புகைப்பட அணுகல் முடக்கப்பட்டுள்ளது. பயன்பாட்டு அமைப்புகளில் அதை இயக்கவும்.';
+
+  @override
+  String get permissionNotificationTitle => 'நேரடி சேவை அறிவிப்புகளை இயக்கவா?';
+
+  @override
+  String get permissionNotificationDesc =>
+      'தொழில்நுட்ப வல்லுநர்கள் உங்கள் பணிகளை ஏற்கும் போது, விலைப்புள்ளிகளை அனுப்பும் போது அல்லது உங்கள் இருப்பிடத்திற்கு வரும்போது நிகழ்நேர விழிப்பூட்டல்களைப் பெறுங்கள்.';
+
+  @override
+  String get permissionNotificationBullet1 =>
+      'ஒரு கைவினைஞர் உங்கள் பணியை ஏற்கும் போது அல்லது மதிப்பீட்டை சமர்ப்பிக்கும் போது உடனடி விழிப்பூட்டல்கள்.';
+
+  @override
+  String get permissionNotificationBullet2 =>
+      'உங்கள் தொழில்நுட்ப வல்லுநர் வரும் வழியில் இருக்கும்போது நேரலை கண்காணிப்பு புதுப்பிப்புகள்.';
+
+  @override
+  String get permissionNotificationBullet3 =>
+      'நேரடி அரட்டை மற்றும் அவசர சேவை விநியோக விழிப்பூட்டல்கள்.';
+
+  @override
+  String get permissionEnableNotifications => 'அறிவிப்புகளை இயக்கு';
+
+  @override
+  String get permissionNotNow => 'இப்போது இல்லை';
+
+  @override
+  String get permissionNotificationNeeded => 'அறிவிப்பு அனுமதி தேவை';
+
+  @override
+  String get permissionNotificationPermanentlyDisabled =>
+      'சாதன அமைப்புகளில் அறிவிப்புகள் முடக்கப்பட்டுள்ளன. பணி விழிப்பூட்டல்களைப் பெற அவற்றை இயக்கவும்.';
+
+  @override
+  String get noMatchesFound => 'பொருத்தங்கள் எதுவும் காணப்படவில்லை';
+
+  @override
+  String get selectOption => 'தெரிவுசெய்க';
 }

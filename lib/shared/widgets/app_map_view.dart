@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -5,7 +6,14 @@ import 'package:vector_map_tiles/vector_map_tiles.dart' as vmt;
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
 
-/// Center point of Sri Lanka.
+bool get _isDesktopOrWeb {
+  if (kIsWeb) return true;
+  return defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
+}
+
+// sri lanka center
 const LatLng kSriLankaCenter = LatLng(7.8731, 80.7718);
 const LatLng kColomboCenter = LatLng(6.9271, 79.8612);
 
@@ -24,7 +32,7 @@ class AppMapMarker {
     this.onTap,
   });
 
-  /// Marker for a customer location.
+  // customer marker
   factory AppMapMarker.customer({
     required LatLng point,
     String? label,
@@ -88,7 +96,7 @@ class AppMapMarker {
     );
   }
 
-  /// Marker for a technician location.
+  // technician marker
   factory AppMapMarker.provider({
     required LatLng point,
     String? label,
@@ -153,7 +161,7 @@ class AppMapMarker {
     );
   }
 
-  /// Marker for a district hub.
+  // district marker
   factory AppMapMarker.hub({
     required LatLng point,
     required String label,
@@ -268,7 +276,6 @@ class _AppMapViewState extends State<AppMapView> {
   static Future<vmt.Style>? _pendingLightStyleLoad;
 
   vmt.Style? _vectorStyle;
-  bool _hasStyleError = false;
 
   @override
   void initState() {
@@ -278,20 +285,22 @@ class _AppMapViewState extends State<AppMapView> {
   }
 
   void _loadLightStyle() {
+    // on desktop platforms or web, rely on the fast, reliable raster tile layer
+    if (_isDesktopOrWeb) {
+      return;
+    }
+
     if (_cachedLightStyle != null) {
       _vectorStyle = _cachedLightStyle;
-      _hasStyleError = false;
       return;
     }
 
     _vectorStyle = null;
-    _hasStyleError = false;
 
     _getOrFetchLightStyle().then((style) {
       if (mounted) {
         setState(() {
           _vectorStyle = style;
-          _hasStyleError = false;
         });
       }
     }).catchError((error) {
@@ -300,7 +309,6 @@ class _AppMapViewState extends State<AppMapView> {
       if (mounted) {
         setState(() {
           _vectorStyle = null;
-          _hasStyleError = true;
         });
       }
     });
@@ -324,7 +332,7 @@ class _AppMapViewState extends State<AppMapView> {
   }
 
   static Future<vmt.Style> _fetchLightStyle() async {
-    // Keep map bright, clear, and readable with standard light tiles across all modes
+    // light map tiles
     const primaryUri = 'https://tiles.openfreemap.org/styles/liberty';
 
     try {
@@ -358,78 +366,88 @@ class _AppMapViewState extends State<AppMapView> {
         color: context.themeSurface,
         child: Stack(
           children: [
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: widget.initialCameraFit != null
-                    ? (widget.initialCenter ?? const LatLng(7.85, 80.725))
-                    : center,
-                initialZoom: widget.initialZoom,
-                initialCameraFit: widget.initialCameraFit,
-                minZoom: 5.0,
-                maxZoom: 18.0,
-                interactionOptions: InteractionOptions(
-                  flags: widget.interactive
-                      ? InteractiveFlag.all
-                      : InteractiveFlag.none,
-                ),
-                onMapReady: widget.onMapReady,
-              ),
-              children: [
-                if (_vectorStyle != null)
-                  vmt.VectorTileLayer(
-                    key: const ValueKey('vmt_light_layer'),
-                    theme: _vectorStyle!.theme,
-                    sprites: _vectorStyle!.sprites,
-                    tileProviders: _vectorStyle!.providers,
-                  )
-                else if (_hasStyleError)
-                  TileLayer(
-                    key: const ValueKey('osm_raster_fallback'),
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.helaservice.helaservice',
-                    maxZoom: 19,
+            MouseRegion(
+              cursor: widget.interactive
+                  ? SystemMouseCursors.grab
+                  : MouseCursor.defer,
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: widget.initialCameraFit != null
+                      ? (widget.initialCenter ?? const LatLng(7.85, 80.725))
+                      : center,
+                  initialZoom: widget.initialZoom,
+                  initialCameraFit: widget.initialCameraFit,
+                  minZoom: 5.0,
+                  maxZoom: 18.0,
+                  interactionOptions: InteractionOptions(
+                    flags: widget.interactive
+                        ? InteractiveFlag.all
+                        : InteractiveFlag.none,
+                    scrollWheelVelocity: 0.005,
                   ),
-                if (widget.routePoints != null && widget.routePoints!.length > 1)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: widget.routePoints!,
-                        strokeWidth: 4.0,
-                        color: AppColors.primary,
-                        borderStrokeWidth: 2.0,
-                        borderColor: Colors.white,
-                      ),
+                  onMapReady: widget.onMapReady,
+                ),
+                children: [
+                  // on mobile when vector style is loaded, render crisp vector tiles
+                  if (!_isDesktopOrWeb && _vectorStyle != null)
+                    vmt.VectorTileLayer(
+                      key: const ValueKey('vmt_light_layer'),
+                      theme: _vectorStyle!.theme,
+                      sprites: _vectorStyle!.sprites,
+                      tileProviders: _vectorStyle!.providers,
+                    )
+                  else
+                    // on desktop/web or while mobile style is loading, render fast reliable raster tiles
+                    TileLayer(
+                      key: const ValueKey('osm_raster_layer'),
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.helaservice.helaservice',
+                      maxZoom: 19,
+                    ),
+                  if (widget.routePoints != null &&
+                      widget.routePoints!.length > 1)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: widget.routePoints!,
+                          strokeWidth: 4.0,
+                          color: AppColors.primary,
+                          borderStrokeWidth: 2.0,
+                          borderColor: Colors.white,
+                        ),
+                      ],
+                    ),
+                  if (widget.markers.isNotEmpty)
+                    MarkerLayer(
+                      markers: widget.markers.map((m) {
+                        return Marker(
+                          point: m.point,
+                          width: m.width,
+                          height: m.height,
+                          child: GestureDetector(
+                            onTap: m.onTap,
+                            child: m.child,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  RichAttributionWidget(
+                    alignment: AttributionAlignment.bottomLeft,
+                    popupInitialDisplayDuration: const Duration(seconds: 4),
+                    showFlutterMapAttribution: false,
+                    popupBackgroundColor: context.themeSurface,
+                    animationConfig: const FadeRAWA(),
+                    attributions: const [
+                      TextSourceAttribution('OpenFreeMap'),
+                      TextSourceAttribution('OpenStreetMap contributors'),
                     ],
                   ),
-                if (widget.markers.isNotEmpty)
-                  MarkerLayer(
-                    markers: widget.markers.map((m) {
-                      return Marker(
-                        point: m.point,
-                        width: m.width,
-                        height: m.height,
-                        child: GestureDetector(
-                          onTap: m.onTap,
-                          child: m.child,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                RichAttributionWidget(
-                  alignment: AttributionAlignment.bottomLeft,
-                  popupInitialDisplayDuration: const Duration(seconds: 4),
-                  showFlutterMapAttribution: false,
-                  popupBackgroundColor: context.themeSurface,
-                  animationConfig: const FadeRAWA(),
-                  attributions: const [
-                    TextSourceAttribution('OpenFreeMap'),
-                    TextSourceAttribution('OpenStreetMap contributors'),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-            // expand button in top right corner
+            // expand button
             if (widget.onExpand != null)
               Positioned(
                 top: 10,
@@ -459,7 +477,7 @@ class _AppMapViewState extends State<AppMapView> {
                   ),
                 ),
               ),
-            // zoom buttons when map is interactive
+            // zoom controls
             if (widget.interactive)
               Positioned(
                 right: 10,
@@ -469,6 +487,7 @@ class _AppMapViewState extends State<AppMapView> {
                   children: [
                     _MapCtrlBtn(
                       icon: Icons.add,
+                      tooltip: context.l10n.zoomIn,
                       onPressed: () {
                         final currentZoom = _mapController.camera.zoom;
                         _mapController.move(
@@ -480,6 +499,7 @@ class _AppMapViewState extends State<AppMapView> {
                     const SizedBox(height: 4),
                     _MapCtrlBtn(
                       icon: Icons.remove,
+                      tooltip: context.l10n.zoomOut,
                       onPressed: () {
                         final currentZoom = _mapController.camera.zoom;
                         _mapController.move(
@@ -488,6 +508,24 @@ class _AppMapViewState extends State<AppMapView> {
                         );
                       },
                     ),
+                    if (widget.initialCameraFit != null ||
+                        widget.initialCenter != null) ...[
+                      const SizedBox(height: 4),
+                      _MapCtrlBtn(
+                        icon: Icons.filter_center_focus_rounded,
+                        tooltip: context.l10n.recenterMap,
+                        onPressed: () {
+                          if (widget.initialCameraFit != null) {
+                            _mapController.fitCamera(widget.initialCameraFit!);
+                          } else {
+                            _mapController.move(
+                              widget.initialCenter ?? center,
+                              widget.initialZoom,
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -498,16 +536,20 @@ class _AppMapViewState extends State<AppMapView> {
   }
 }
 
-
 class _MapCtrlBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
+  final String? tooltip;
 
-  const _MapCtrlBtn({required this.icon, required this.onPressed});
+  const _MapCtrlBtn({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    Widget btn = Material(
       color: context.themeSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -524,5 +566,13 @@ class _MapCtrlBtn extends StatelessWidget {
         ),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(
+        message: tooltip!,
+        child: btn,
+      );
+    }
+    return btn;
   }
 }

@@ -14,6 +14,11 @@ class LocalizedData {
       'si': 'විදුලි කාර්මික',
       'ta': 'மின்சாரம்',
     },
+    'Electrician': {
+      'en': 'Electrician',
+      'si': 'විදුලි කාර්මික',
+      'ta': 'மின்சார பணியாளர்',
+    },
     'Plumbing & Sanitary': {
       'en': 'Plumbing & Sanitary',
       'si': 'ජලනල හා සනීපාරක්ෂක සේවා',
@@ -23,6 +28,11 @@ class LocalizedData {
       'en': 'Plumbing',
       'si': 'ජලනල කාර්මික',
       'ta': 'பிளம்பிங்',
+    },
+    'Plumber': {
+      'en': 'Plumber',
+      'si': 'ජලනල කාර්මික',
+      'ta': 'பிளம்பர்',
     },
     'AC & Refrigeration': {
       'en': 'AC & Refrigeration',
@@ -34,6 +44,11 @@ class LocalizedData {
       'si': 'වායුසමීකරණ අලුත්වැඩියාව',
       'ta': 'ஏசி பழுதுபார்ப்பு',
     },
+    'AC Technician': {
+      'en': 'AC Technician',
+      'si': 'වායුසමීකරණ කාර්මික',
+      'ta': 'ஏசி தொழில்நுட்ப வல்லுநர்',
+    },
     'Carpentry & Woodwork': {
       'en': 'Carpentry & Woodwork',
       'si': 'වඩුවැඩ සහ ලී වැඩ',
@@ -43,6 +58,11 @@ class LocalizedData {
       'en': 'Carpentry',
       'si': 'වඩුවැඩ',
       'ta': 'மரவேலை',
+    },
+    'Carpenter': {
+      'en': 'Carpenter',
+      'si': 'වඩු කාර්මික',
+      'ta': 'தச்சர்',
     },
     'Masonry & Construction': {
       'en': 'Masonry & Construction',
@@ -54,6 +74,11 @@ class LocalizedData {
       'si': 'පෙදරේරු',
       'ta': 'கொத்துவேலை',
     },
+    'Mason': {
+      'en': 'Mason',
+      'si': 'පෙදරේරු',
+      'ta': 'கொத்தனார்',
+    },
     'Appliance Repair': {
       'en': 'Appliance Repair',
       'si': 'ගෘහ විදුලි උපකරණ අලුත්වැඩියාව',
@@ -64,10 +89,95 @@ class LocalizedData {
       'si': 'නිවාස තීන්ත ආලේපනය',
       'ta': 'வீட்டு பெயிண்டிங்',
     },
+    'Painting': {
+      'en': 'Painting',
+      'si': 'තීන්ත ආලේපනය',
+      'ta': 'பெயிண்டிங்',
+    },
+    'Painter': {
+      'en': 'Painter',
+      'si': 'තීන්ත ආලේපක',
+      'ta': 'பெயிண்டர்',
+    },
     'Roofing & Waterproofing': {
       'en': 'Roofing & Waterproofing',
       'si': 'වහල සෙවිලි සහ ජලරෝධක සේවා',
       'ta': 'கூரை மற்றும் நீர்ப்புகாப்பு சேவைகள்',
+    },
+    'Roofing': {
+      'en': 'Roofing',
+      'si': 'වහල සෙවිලි',
+      'ta': 'கூரை வேலை',
+    },
+    'Roofer': {
+      'en': 'Roofer',
+      'si': 'වහල කාර්මික',
+      'ta': 'கூரை தொழில்நுட்ப வல்லுநர்',
+    },
+    'Welding': {
+      'en': 'Welding',
+      'si': 'පෑස්සුම් වැඩ',
+      'ta': 'வெல்டிங்',
+    },
+    'Welder': {
+      'en': 'Welder',
+      'si': 'පෑස්සුම්කරු',
+      'ta': 'வெல்டர்',
+    },
+    'Tile & Flooring': {
+      'en': 'Tile & Flooring',
+      'si': 'ටයිල් සහ බිම් ඇතුරුම්',
+      'ta': 'டைல்ஸ் மற்றும் தரை வேலைகள்',
+    },
+    'Tiler': {
+      'en': 'Tiler',
+      'si': 'ටයිල් කාර්මික',
+      'ta': 'டைல்ஸ் பதிப்பாளர்',
+    },
+    'Aluminium Work': {
+      'en': 'Aluminium Work',
+      'si': 'ඇලුමිනියම් වැඩ',
+      'ta': 'அலுமினியம் வேலை',
+    },
+    'CCTV & Security': {
+      'en': 'CCTV & Security',
+      'si': 'සීසීටීවී සහ ආරක්ෂක පද්ධති',
+      'ta': 'சிசிடிவி மற்றும் பாதுகாப்பு',
+    },
+    'Solar Systems': {
+      'en': 'Solar Systems',
+      'si': 'සූර්ය බලශක්ති පද්ධති',
+      'ta': 'சூரிய சக்தி அமைப்புகள்',
+    },
+    'Gardening & Landscaping': {
+      'en': 'Gardening & Landscaping',
+      'si': 'වතු නඩත්තු සහ අලංකරණය',
+      'ta': 'தோட்ட பராமரிப்பு',
+    },
+    'Gardener': {
+      'en': 'Gardener',
+      'si': 'වතු කම්කරු',
+      'ta': 'தோட்டக்காரர்',
+    },
+    'Cleaning Services': {
+      'en': 'Cleaning Services',
+      'si': 'පිරිසිදු කිරීමේ සේවා',
+      'ta': 'துப்புரவு சேவைகள்',
+    },
+    'Cleaner': {
+      'en': 'Cleaner',
+      'si': 'පිරිසිදු කරන්නා',
+      'ta': 'துப்புரவாளர்',
+    },
+    'Mechanic': {
+      'en': 'Mechanic',
+      'si': 'කාර්මිකයා',
+      'ta': 'மெக்கானிக்',
+    },
+    'Technician': {
+      'en': 'Technician',
+      'si': 'කාර්මික ශිල්පී',
+      'ta': 'தொழில்நுட்ப வல்லுநர்',
     },
   };
 
@@ -119,19 +229,111 @@ class LocalizedData {
     'Kegalle': {'en': 'Kegalle', 'si': 'කෑගල්ල', 'ta': 'கேகாலை'},
   };
 
-  /// Category names come from Firestore and are shown exactly as stored.
+  // get translated category
   static String getCategory(BuildContext context, String key) {
+    if (key.trim().isEmpty) return key;
+    final lang = Localizations.localeOf(context).languageCode;
+    final trimmed = key.trim();
+    final entry = categories[trimmed];
+    if (entry != null && entry[lang] != null && entry[lang]!.isNotEmpty) {
+      return entry[lang]!;
+    }
+    for (final e in categories.entries) {
+      if (e.key.toLowerCase() == trimmed.toLowerCase()) {
+        final val = e.value[lang];
+        if (val != null && val.isNotEmpty) return val;
+      }
+    }
+
+    // smart root-keyword fallback
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('electr')) {
+      return lang == 'si' ? 'විදුලි කාර්මික' : (lang == 'ta' ? 'மின்சார சேவைகள்' : 'Electrical');
+    }
+    if (lower.contains('plumb')) {
+      return lang == 'si' ? 'ජලනල කාර්මික' : (lang == 'ta' ? 'பிளம்பிங்' : 'Plumbing');
+    }
+    if (lower.contains('carpent') || lower.contains('wood')) {
+      return lang == 'si' ? 'වඩුවැඩ' : (lang == 'ta' ? 'மரவேலை' : 'Carpentry');
+    }
+    if (lower.contains('mason') || lower.contains('construct')) {
+      return lang == 'si' ? 'පෙදරේරු' : (lang == 'ta' ? 'கொத்துவேலை' : 'Masonry');
+    }
+    if (lower.contains('paint')) {
+      return lang == 'si' ? 'තීන්ත ආලේපනය' : (lang == 'ta' ? 'பெயிண்டிங்' : 'Painting');
+    }
+    if (lower.contains('roof')) {
+      return lang == 'si' ? 'වහල සෙවිලි' : (lang == 'ta' ? 'கூரை வேலை' : 'Roofing');
+    }
+    if (lower.contains('appliance')) {
+      return lang == 'si' ? 'ගෘහ උපකරණ' : (lang == 'ta' ? 'வீட்டு உபகரணங்கள்' : 'Appliance Repair');
+    }
+    if (lower.contains('ac') || lower.contains('air cond') || lower.contains('refrig')) {
+      return lang == 'si' ? 'වායුසමීකරණ' : (lang == 'ta' ? 'ஏசி பழுதுபார்ப்பு' : 'AC & Refrigeration');
+    }
+    if (lower.contains('weld')) {
+      return lang == 'si' ? 'පෑස්සුම් වැඩ' : (lang == 'ta' ? 'வெல்டிங்' : 'Welding');
+    }
+    if (lower.contains('tile') || lower.contains('floor')) {
+      return lang == 'si' ? 'ටයිල් වැඩ' : (lang == 'ta' ? 'டைல்ஸ் வேலை' : 'Tiling');
+    }
+    if (lower.contains('cctv') || lower.contains('security')) {
+      return lang == 'si' ? 'සීසීටීවී' : (lang == 'ta' ? 'சிசிடிவி' : 'CCTV');
+    }
+    if (lower.contains('solar')) {
+      return lang == 'si' ? 'සූර්ය බලශක්ති' : (lang == 'ta' ? 'சூரிய சக்தி' : 'Solar');
+    }
+    if (lower.contains('clean')) {
+      return lang == 'si' ? 'පිරිසිදු කිරීම්' : (lang == 'ta' ? 'துப்புரவு' : 'Cleaning');
+    }
+    if (lower.contains('garden')) {
+      return lang == 'si' ? 'වතු නඩත්තු' : (lang == 'ta' ? 'தோட்ட பராமரிப்பு' : 'Gardening');
+    }
+    if (lower.contains('mechanic') || lower.contains('auto') || lower.contains('vehicle')) {
+      return lang == 'si' ? 'මෝටර් රථ කාර්මික' : (lang == 'ta' ? 'வாகன பழுதுபார்ப்பு' : 'Mechanic');
+    }
+
     return key;
   }
 
-  /// District names come from Firestore and are shown exactly as stored.
+  // get translated district
   static String getDistrict(BuildContext context, String key) {
+    if (key.trim().isEmpty) return key;
+    final lang = Localizations.localeOf(context).languageCode;
+    final trimmed = key.trim();
+    final entry = districts[trimmed];
+    if (entry != null && entry[lang] != null && entry[lang]!.isNotEmpty) {
+      return entry[lang]!;
+    }
+    for (final e in districts.entries) {
+      if (e.key.toLowerCase() == trimmed.toLowerCase()) {
+        final val = e.value[lang];
+        if (val != null && val.isNotEmpty) return val;
+      }
+    }
     return key;
   }
 
   static String getStatus(BuildContext context, String status) {
     final lang = Localizations.localeOf(context).languageCode;
     switch (status.toLowerCase()) {
+      case 'open':
+        return lang == 'si'
+            ? 'මිල කැඳවීම් සඳහා විවෘතයි'
+            : (lang == 'ta' ? 'விலைப்புள்ளிகளுக்கு திறந்துள்ளது' : 'Open for Quotes');
+      case 'assigned':
+        return lang == 'si'
+            ? 'ශිල්පියෙකු පත් කර ඇත'
+            : (lang == 'ta' ? 'வல்லுநர் நியமிக்கப்பட்டுள்ளார்' : 'Artisan Assigned');
+      case 'dispatched':
+        return lang == 'si'
+            ? 'පිටත්ව ඇත'
+            : (lang == 'ta' ? 'புறப்பட்டுவிட்டது' : 'Dispatched');
+      case 'en_route':
+      case 'en route':
+        return lang == 'si'
+            ? 'පැමිණෙමින් සිටී'
+            : (lang == 'ta' ? 'வருகை தருகிறார்' : 'En Route');
       case 'pending':
         return lang == 'si'
             ? 'තහවුරු කිරීමට ඇත'

@@ -5638,6 +5638,36 @@ abstract class AppLocalizations {
   /// **'Provider {name} has been suspended.'**
   String disputesProviderSuspendedSnack(String name);
 
+  /// No description provided for @disputesSuspendCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend Customer'**
+  String get disputesSuspendCustomer;
+
+  /// No description provided for @disputesCustomerSuspendedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer {name} has been suspended.'**
+  String disputesCustomerSuspendedSnack(String name);
+
+  /// No description provided for @accountSuspendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Suspended'**
+  String get accountSuspendedTitle;
+
+  /// No description provided for @accountSuspendedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been suspended by administration. If you believe this is an error, please contact customer support.'**
+  String get accountSuspendedDesc;
+
+  /// No description provided for @contactHelpline.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Support Helpline'**
+  String get contactHelpline;
+
   /// No description provided for @disputesErrorLoading.
   ///
   /// In en, this message translates to:
@@ -6285,6 +6315,498 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email verified successfully!'**
   String get emailVerifiedSuccess;
+
+  /// No description provided for @myJobPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Job Posts'**
+  String get myJobPosts;
+
+  /// No description provided for @yourPostedJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Posted Jobs ({count})'**
+  String yourPostedJobs(int count);
+
+  /// No description provided for @postNewJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Post New Job'**
+  String get postNewJob;
+
+  /// No description provided for @noJobPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Job Posts Yet'**
+  String get noJobPostsYet;
+
+  /// No description provided for @noJobPostsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a service request to receive quotes and proposals from verified technicians in your area.'**
+  String get noJobPostsDesc;
+
+  /// No description provided for @reviewQuotesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Quotes ({count})'**
+  String reviewQuotesCount(int count);
+
+  /// No description provided for @locationNotSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not specified'**
+  String get locationNotSpecified;
+
+  /// No description provided for @permissionLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Location Access?'**
+  String get permissionLocationTitle;
+
+  /// No description provided for @permissionLocationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'HelaService uses your location to connect you with verified tradespeople nearby and calculate accurate, transparent travel costs.'**
+  String get permissionLocationDesc;
+
+  /// No description provided for @permissionLocationBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Find available technicians closest to your exact location.'**
+  String get permissionLocationBullet1;
+
+  /// No description provided for @permissionLocationBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Accurate en-route arrival tracking directly to your doorstep.'**
+  String get permissionLocationBullet2;
+
+  /// No description provided for @permissionLocationBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair, distance-based travel rates without hidden costs.'**
+  String get permissionLocationBullet3;
+
+  /// No description provided for @permissionAllowAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow & Continue'**
+  String get permissionAllowAndContinue;
+
+  /// No description provided for @permissionSelectDistrictManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Select District Manually'**
+  String get permissionSelectDistrictManually;
+
+  /// No description provided for @permissionCameraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Camera Access?'**
+  String get permissionCameraTitle;
+
+  /// No description provided for @permissionCameraDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photos of the issue to receive accurate, transparent quotes from verified artisans.'**
+  String get permissionCameraDesc;
+
+  /// No description provided for @permissionCameraBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture clear photos of the defect, wiring, or plumbing issue.'**
+  String get permissionCameraBullet1;
+
+  /// No description provided for @permissionCameraBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Help artisans inspect the repair requirements before quoting.'**
+  String get permissionCameraBullet2;
+
+  /// No description provided for @permissionCameraBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored securely in cloud storage for your job history.'**
+  String get permissionCameraBullet3;
+
+  /// No description provided for @permissionOpenCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Camera'**
+  String get permissionOpenCamera;
+
+  /// No description provided for @permissionGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from Photos & Files?'**
+  String get permissionGalleryTitle;
+
+  /// No description provided for @permissionGalleryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload existing photos or certificates to help verify your credentials or job details.'**
+  String get permissionGalleryDesc;
+
+  /// No description provided for @permissionGalleryBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Select clear certificates, NVQ licenses, or damage photos.'**
+  String get permissionGalleryBullet1;
+
+  /// No description provided for @permissionGalleryBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for profile verification and accurate job estimation.'**
+  String get permissionGalleryBullet2;
+
+  /// No description provided for @permissionGalleryBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored securely and never shared with unauthorized parties.'**
+  String get permissionGalleryBullet3;
+
+  /// No description provided for @permissionChoosePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Photos'**
+  String get permissionChoosePhotos;
+
+  /// No description provided for @permissionLocationPermanentlyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is permanently disabled. Please enable it in system settings to detect your exact address.'**
+  String get permissionLocationPermanentlyDisabled;
+
+  /// No description provided for @permissionLocationNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Location Permission Needed'**
+  String get permissionLocationNeeded;
+
+  /// No description provided for @navUserManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Users & Bans'**
+  String get navUserManagement;
+
+  /// No description provided for @searchUsersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, email, phone, or NIC...'**
+  String get searchUsersHint;
+
+  /// No description provided for @filterByRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get filterByRole;
+
+  /// No description provided for @allRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'All Roles'**
+  String get allRoles;
+
+  /// No description provided for @allDistricts.
+  ///
+  /// In en, this message translates to:
+  /// **'All Districts'**
+  String get allDistricts;
+
+  /// No description provided for @filterByStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get filterByStatus;
+
+  /// No description provided for @statusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get statusSuspended;
+
+  /// No description provided for @suspendAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend Account'**
+  String get suspendAccount;
+
+  /// No description provided for @unbanAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift Suspension'**
+  String get unbanAccount;
+
+  /// No description provided for @enterBanReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Reason for Suspension'**
+  String get enterBanReason;
+
+  /// No description provided for @banReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Repeated fraud, abusive conduct, or policy violation'**
+  String get banReasonHint;
+
+  /// No description provided for @confirmUnbanDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to lift the suspension for this account? The user will immediately regain access to the platform.'**
+  String get confirmUnbanDesc;
+
+  /// No description provided for @userSuspendedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Account has been suspended.'**
+  String get userSuspendedSnack;
+
+  /// No description provided for @userRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Account access has been restored.'**
+  String get userRestoredSnack;
+
+  /// No description provided for @totalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Users'**
+  String get totalUsers;
+
+  /// No description provided for @activeCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Customers'**
+  String get activeCustomers;
+
+  /// No description provided for @activeProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Providers'**
+  String get activeProviders;
+
+  /// No description provided for @suspendedAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended Accounts'**
+  String get suspendedAccounts;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found matching your filters'**
+  String get noUsersFound;
+
+  /// No description provided for @navUserManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View, filter, and moderate customers and service providers across Sri Lanka.'**
+  String get navUserManagementSubtitle;
+
+  /// No description provided for @filterCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers'**
+  String get filterCustomers;
+
+  /// No description provided for @filterProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get filterProviders;
+
+  /// No description provided for @filterAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins'**
+  String get filterAdmins;
+
+  /// No description provided for @filterByDistrictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by District'**
+  String get filterByDistrictTitle;
+
+  /// No description provided for @searchDistrictHintText.
+  ///
+  /// In en, this message translates to:
+  /// **'Search district...'**
+  String get searchDistrictHintText;
+
+  /// No description provided for @suspendUserConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to suspend this user? The user will be immediately logged out and blocked from logging in.'**
+  String get suspendUserConfirmDesc;
+
+  /// No description provided for @pleaseEnterSuspensionReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a suspension reason.'**
+  String get pleaseEnterSuspensionReason;
+
+  /// No description provided for @presetAbusiveComm.
+  ///
+  /// In en, this message translates to:
+  /// **'Abusive communication'**
+  String get presetAbusiveComm;
+
+  /// No description provided for @presetFraudActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Fraudulent activity'**
+  String get presetFraudActivity;
+
+  /// No description provided for @presetFailedDispute.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed dispute resolution'**
+  String get presetFailedDispute;
+
+  /// No description provided for @presetPolicyViolation.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy violation'**
+  String get presetPolicyViolation;
+
+  /// No description provided for @reasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reasonLabel;
+
+  /// No description provided for @suspendedByAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended by Administrator'**
+  String get suspendedByAdmin;
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom In'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom Out'**
+  String get zoomOut;
+
+  /// No description provided for @recenterMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Recenter Map'**
+  String get recenterMap;
+
+  /// No description provided for @superAdminCannotBeSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Super Admin accounts are protected and cannot be suspended.'**
+  String get superAdminCannotBeSuspended;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @permissionCameraPermanentlyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is permanently disabled. Please enable it in Settings to capture photos.'**
+  String get permissionCameraPermanentlyDisabled;
+
+  /// No description provided for @permissionCameraDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is disabled. Please enable it in App Settings.'**
+  String get permissionCameraDisabled;
+
+  /// No description provided for @permissionGalleryPermanentlyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery access is permanently disabled. Please enable it in Settings.'**
+  String get permissionGalleryPermanentlyDisabled;
+
+  /// No description provided for @permissionGalleryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access is disabled. Please enable it in App Settings.'**
+  String get permissionGalleryDisabled;
+
+  /// No description provided for @permissionNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Live Service Notifications?'**
+  String get permissionNotificationTitle;
+
+  /// No description provided for @permissionNotificationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get real-time alerts when technicians accept your jobs, send quotes, or arrive at your location.'**
+  String get permissionNotificationDesc;
+
+  /// No description provided for @permissionNotificationBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate alerts when an artisan accepts your job or submits a quote.'**
+  String get permissionNotificationBullet1;
+
+  /// No description provided for @permissionNotificationBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Live tracking updates when your technician is en-route.'**
+  String get permissionNotificationBullet2;
+
+  /// No description provided for @permissionNotificationBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct chat and urgent service dispatch alerts.'**
+  String get permissionNotificationBullet3;
+
+  /// No description provided for @permissionEnableNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Notifications'**
+  String get permissionEnableNotifications;
+
+  /// No description provided for @permissionNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Now'**
+  String get permissionNotNow;
+
+  /// No description provided for @permissionNotificationNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Permission Needed'**
+  String get permissionNotificationNeeded;
+
+  /// No description provided for @permissionNotificationPermanentlyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are disabled in device settings. Please enable them to receive job alerts.'**
+  String get permissionNotificationPermanentlyDisabled;
+
+  /// No description provided for @noMatchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get noMatchesFound;
+
+  /// No description provided for @selectOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Option'**
+  String get selectOption;
 }
 
 class _AppLocalizationsDelegate

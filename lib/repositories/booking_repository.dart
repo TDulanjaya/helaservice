@@ -9,7 +9,7 @@ class BookingRepository {
   Future<String> createBooking(Booking booking) async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? booking.customerId;
 
-    // Save directly if this booking already has a job request.
+    // save existing booking
     if (booking.jobRequestId != null && booking.jobRequestId!.isNotEmpty) {
       final data = booking.toMap();
       if (currentUid.isNotEmpty) {
@@ -19,7 +19,7 @@ class BookingRepository {
       return docRef.id;
     }
 
-    // Create the job request, accepted quote, and booking together in one batch.
+    // create booking batch
     final batch = FirebaseFirestore.instance.batch();
     final jobReqRef = FirebaseFirestore.instance.collection(FirestorePaths.jobRequests).doc();
     final quoteRef = jobReqRef.collection(FirestorePaths.quotes).doc();

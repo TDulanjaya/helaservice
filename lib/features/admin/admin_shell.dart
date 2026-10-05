@@ -10,6 +10,7 @@ import 'widgets/admin_sidebar.dart';
 import 'widgets/admin_top_bar.dart';
 import 'screens/dashboard_live_map_screen.dart';
 import 'screens/nic_verification_workspace_screen.dart';
+import 'screens/admin_user_management_screen.dart';
 import 'screens/category_district_management_screen.dart';
 import 'screens/admin_management_screen.dart';
 import 'screens/job_ledger_screen.dart';
@@ -55,6 +56,7 @@ class _AdminShellState extends State<AdminShell> {
             final adminNavItems = [
               NavItem(Icons.grid_view_rounded, context.l10n.navOverview),
               NavItem(Icons.badge_outlined, context.l10n.navVerify, badge: verifyBadge),
+              NavItem(Icons.manage_accounts_outlined, context.l10n.navUserManagement),
               NavItem(Icons.layers_outlined, context.l10n.navCoverage),
               NavItem(Icons.people_outline, context.l10n.navTeam),
               NavItem(Icons.format_list_bulleted, context.l10n.jobLedgerNav),
@@ -66,13 +68,14 @@ class _AdminShellState extends State<AdminShell> {
             final screens = [
               const DashboardLiveMapScreen(),
               const NicVerificationWorkspaceScreen(),
+              const AdminUserManagementScreen(),
               const CategoryDistrictManagementScreen(),
               const AdminManagementScreen(),
               const JobLedgerScreen(),
               const AdminComplaintsScreen(),
               AdminProfileScreen(
                 onNavigateToVerifications: () => setState(() => _navIndex = 1),
-                onNavigateToAdmins: () => setState(() => _navIndex = 3),
+                onNavigateToAdmins: () => setState(() => _navIndex = 4),
               ),
             ];
 
@@ -82,7 +85,7 @@ class _AdminShellState extends State<AdminShell> {
                       child: Column(
                         children: [
                           AdminTopBar(
-                            onProfileTap: () => setState(() => _navIndex = 6),
+                            onProfileTap: () => setState(() => _navIndex = 7),
                           ),
                           Expanded(
                             child: IndexedStack(
@@ -98,7 +101,7 @@ class _AdminShellState extends State<AdminShell> {
                       currentIndex: _navIndex,
                       compact: true,
                       onTap: (i) {
-                        if (i == 3 && !roleProvider.isSuperAdmin) {
+                        if (i == 4 && !roleProvider.isSuperAdmin) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(context.l10n.shellSuperAdminOnly),
@@ -124,7 +127,7 @@ class _AdminShellState extends State<AdminShell> {
                             children: [
                               AdminTopBar(
                                 onProfileTap: () =>
-                                    setState(() => _navIndex = 6),
+                                    setState(() => _navIndex = 7),
                               ),
                               Expanded(
                                 child: IndexedStack(

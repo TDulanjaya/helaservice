@@ -9,7 +9,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/l10n_extension.dart';
 
 
-// Chat screen between customers and providers
+// direct chat screen
 class DirectChatScreen extends StatefulWidget {
   final String otherPartyId;
   final String otherPartyName;
@@ -129,7 +129,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     });
   }
 
-  // display label for chat role
+  // role label
   String _roleDisplay(BuildContext context, String? role) {
     final r = (role ?? '').trim().toLowerCase();
     if (r.isEmpty || r == 'service provider' || r == 'provider' || r == 'technician') {

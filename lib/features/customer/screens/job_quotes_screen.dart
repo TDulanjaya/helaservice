@@ -66,6 +66,12 @@ class JobQuotesScreen extends StatelessWidget {
                   child: StreamBuilder<List<Quote>>(
                     stream: repo.streamQuotesForRequest(requestId),
                     builder: (context, quotesSnap) {
+                      if (quotesSnap.connectionState == ConnectionState.waiting && !quotesSnap.hasData) {
+                        return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        );
+                      }
+
                       final quotes = quotesSnap.data ?? [];
 
                       if (request.status == 'assigned') {
@@ -73,7 +79,7 @@ class JobQuotesScreen extends StatelessWidget {
                       }
 
                       if (quotes.isEmpty) {
-                        return _buildWaitingView(context);
+                        return _buildWaitingView(context, request);
                       }
 
                       return ListView.builder(
@@ -126,40 +132,138 @@ class JobQuotesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWaitingView(BuildContext context) {
+  Widget _buildWaitingView(BuildContext context, JobRequest request) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // status pill
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
               ),
-              child: const Icon(Icons.hourglass_top,
-                  color: AppColors.primary, size: 36),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    LocalizedData.getStatus(context, request.status),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+            // icon badge
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                ),
+              ),
+              child: const Icon(
+                Icons.mark_email_unread_outlined,
+                color: AppColors.primary,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               context.l10n.waitingForQuotes,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               context.l10n.waitingForQuotesDesc,
               textAlign: TextAlign.center,
-              style:
-                  TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.45,
+                color: context.themeTextSecondary,
+              ),
             ),
-            const SizedBox(height: 20),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child:
-                  CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            const SizedBox(height: 24),
+            // info tips
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.notifications_active_outlined,
+                          size: 18, color: AppColors.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          context.l10n.noQuotes,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.verified_outlined,
+                          size: 18, color: AppColors.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          context.l10n.quotesAlert,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: Text(context.l10n.backToHome),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
           ],
         ),
@@ -292,7 +396,7 @@ class JobQuotesScreen extends StatelessWidget {
         quote: quote,
       );
 
-      // Opens chat with the technician
+      // open chat
       try {
         final chatRoomId = await ChatService.instance.getOrCreateChatRoom(
           userId1: request.customerId,
@@ -431,8 +535,10 @@ class _JobSummaryCard extends StatelessWidget {
                 ),
                 child: Text(
                   request.status == 'open'
-                      ? '${request.quoteCount} ${context.l10n.quotesTitle}'
-                      : LocalizedData.getStatus(context, 'assigned'),
+                      ? (request.quoteCount > 0
+                          ? '${request.quoteCount} ${context.l10n.quotesTitle}'
+                          : LocalizedData.getStatus(context, 'open'))
+                      : LocalizedData.getStatus(context, request.status),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,

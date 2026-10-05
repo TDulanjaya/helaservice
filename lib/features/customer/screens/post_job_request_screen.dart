@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,6 +17,8 @@ import 'job_quotes_screen.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../services/storage_service.dart';
+import '../../../utils/permission_utils.dart';
 
 class PostJobRequestScreen extends StatefulWidget {
   const PostJobRequestScreen({super.key});
@@ -93,6 +94,15 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       );
       return;
     }
+
+    if (source == ImageSource.camera) {
+      final allowed = await PermissionUtils.requestCameraWithRationale(context);
+      if (!allowed) return;
+    } else {
+      final allowed = await PermissionUtils.requestGalleryWithRationale(context);
+      if (!allowed) return;
+    }
+
     try {
       final picked = await _picker.pickImage(
         source: source,
@@ -129,7 +139,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(context.l10n.addPhoto,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: AppColors.primary),
@@ -162,35 +173,16 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(context.l10n.enableLocationServices)),
+            SnackBar(content: Text(context.l10n.enableLocationServices)),
           );
         }
         setState(() => _detectingLocation = false);
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.locationPermissionDenied)),
-            );
-          }
-          setState(() => _detectingLocation = false);
-          return;
-        }
-      }
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    context.l10n.locationPermissionPermanentlyDenied)),
-          );
-        }
+      if (!mounted) return;
+      final granted = await PermissionUtils.requestLocationWithRationale(context);
+      if (!granted) {
         setState(() => _detectingLocation = false);
         return;
       }
@@ -238,9 +230,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final List<String> photoUrls = [];
       for (final photo in _photos) {
-        final bytes = await File(photo.path).readAsBytes();
-        final base64Str = base64Encode(bytes);
-        photoUrls.add('data:image/jpeg;base64,$base64Str');
+        final uploaded = await StorageService.instance.uploadFile(File(photo.path));
+        photoUrls.add(uploaded);
       }
 
       final districtCoords =
@@ -253,7 +244,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final request = JobRequest(
         customerId: user.uid,
-        customerName: user.displayName ?? user.email?.split('@').first ?? 'Customer',
+        customerName:
+            user.displayName ?? user.email?.split('@').first ?? 'Customer',
         customerPhone: user.phoneNumber ?? '',
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -264,8 +256,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         address: resolvedAddress,
       );
 
-      final requestId =
-          await JobRequestRepository().createJobRequest(request);
+      final requestId = await JobRequestRepository().createJobRequest(request);
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -366,7 +357,6 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 18),
               Text(
                 context.l10n.category,
@@ -388,11 +378,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       dbCategories.isNotEmpty ? dbCategories : _categories;
 
                   return DropdownButtonFormField<String>(
-                    initialValue: categoryList.contains(_selectedCategory) ? _selectedCategory : null,
+                    initialValue: categoryList.contains(_selectedCategory)
+                        ? _selectedCategory
+                        : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.selectTradeCategory,
-                      hintStyle:
-                          TextStyle(fontSize: 13, color: context.themeTextSecondary),
+                      hintStyle: TextStyle(
+                          fontSize: 13, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
                       border: OutlineInputBorder(
@@ -405,11 +397,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide:
-                            const BorderSide(color: AppColors.primary, width: 2),
+                        borderSide: const BorderSide(
+                            color: AppColors.primary, width: 2),
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                     ),
                     items: categoryList
                         .map((c) => DropdownMenuItem(
@@ -427,10 +419,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   );
                 },
               ),
-
               const SizedBox(height: 16),
               Text(context.l10n.jobTitle,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
@@ -444,10 +436,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ? context.l10n.enterJobTitleError
                     : null,
               ),
-
               const SizedBox(height: 16),
               Text(context.l10n.jobDescription,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
@@ -467,8 +459,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(context.l10n.photosOfIssue,
-                      style:
-                          const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w800)),
                   Text('${_photos.length}/$_maxPhotos',
                       style: TextStyle(
                           fontSize: 11.5, color: context.themeTextSecondary)),
@@ -532,7 +524,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.add_a_photo_outlined,
-                                  color: AppColors.primary.withValues(alpha: 0.7),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.7),
                                   size: 26),
                               const SizedBox(height: 4),
                               Text(context.l10n.add,
@@ -669,7 +662,6 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 28),
               SizedBox(
                 height: 54,

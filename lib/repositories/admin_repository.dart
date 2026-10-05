@@ -41,6 +41,12 @@ class AdminRepository {
   }
 
   Future<void> toggleAdminStatus(String adminId, bool isActive) async {
+    if (!isActive) {
+      final admin = await getAdminById(adminId);
+      if (admin != null && admin.isSuperAdmin) {
+        throw Exception('Super Admin accounts cannot be suspended.');
+      }
+    }
     await _col.doc(adminId).update({
       'status': isActive ? 'active' : 'suspended',
     });

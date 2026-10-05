@@ -780,13 +780,18 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: AppMapView(
-              initialCenter: widget.midPoint,
-              initialZoom: 14.0,
-              interactive: true,
-              routePoints: route.points,
-              markers: _markersNotifier.value,
-              onExpand: _openFullScreen,
+            child: ValueListenableBuilder<List<AppMapMarker>>(
+              valueListenable: _markersNotifier,
+              builder: (context, markers, _) {
+                return AppMapView(
+                  initialCenter: widget.midPoint,
+                  initialZoom: 14.0,
+                  interactive: true,
+                  routePoints: route.points,
+                  markers: markers,
+                  onExpand: _openFullScreen,
+                );
+              },
             ),
           ),
           Positioned(

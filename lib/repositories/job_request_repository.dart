@@ -144,4 +144,15 @@ class JobRequestRepository {
         .map((snap) =>
             snap.docs.map((d) => Quote.fromMap(d.id, d.data())).toList());
   }
+
+  // stream all requests for admin
+  Stream<List<JobRequest>> streamAllCustomerRequests({String? statusFilter}) {
+    Query query = _col.orderBy('createdAt', descending: true);
+    if (statusFilter != null && statusFilter != 'all') {
+      query = query.where('status', isEqualTo: statusFilter);
+    }
+    return query.snapshots().map((snap) => snap.docs
+        .map((d) => JobRequest.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .toList());
+  }
 }

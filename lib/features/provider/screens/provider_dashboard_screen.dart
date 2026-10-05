@@ -19,6 +19,7 @@ import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
+import '../../../utils/permission_utils.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../../customer/screens/direct_chat_screen.dart';
 import '../../../services/chat_service.dart';
@@ -41,6 +42,16 @@ class ProviderDashboardScreen extends StatefulWidget {
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   bool _online = true;
   int _navIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        PermissionUtils.checkAndPromptInitialPermissions(context);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -505,8 +516,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.primary
-                                    .withValues(alpha: 0.14),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -627,7 +638,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                 decoration: BoxDecoration(
                                   color: context.themeSurface,
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: context.themeBorder),
+                                  border:
+                                      Border.all(color: context.themeBorder),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -688,8 +700,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
                                                 SnackBar(
-                                                  content: Text(
-                                                      context.l10n.customerPhoneNotAvailable),
+                                                  content: Text(context.l10n
+                                                      .customerPhoneNotAvailable),
                                                 ),
                                               );
                                             }
@@ -720,7 +732,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 destinationTitle:
                                                     b.customerName.isNotEmpty
                                                         ? b.customerName
-                                                        : context.l10n.customerLocation,
+                                                        : context.l10n
+                                                            .customerLocation,
                                               );
                                             } else {
                                               final coords = LocationUtils
@@ -734,7 +747,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 destinationTitle:
                                                     b.location.isNotEmpty
                                                         ? b.location
-                                                        : context.l10n.customerLocation,
+                                                        : context.l10n
+                                                            .customerLocation,
                                               );
                                             }
                                           },
@@ -1015,7 +1029,8 @@ class _JobRequestCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -1030,7 +1045,8 @@ class _JobRequestCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 3),
                     Text(
-                      LocalizedData.getCategory(context, request.category).toUpperCase(),
+                      LocalizedData.getCategory(context, request.category)
+                          .toUpperCase(),
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1044,7 +1060,8 @@ class _JobRequestCard extends StatelessWidget {
               const Spacer(),
               if (distanceText != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFF22C55E).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -1321,7 +1338,8 @@ class _QuoteHistoryTile extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -1351,4 +1369,3 @@ class _QuoteHistoryTile extends StatelessWidget {
     );
   }
 }
-

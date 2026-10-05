@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 
-// Manages customer reviews and technician ratings.
+// review service
 class ReviewService {
   ReviewService._();
   static final ReviewService instance = ReviewService._();
 
   final _db = FirebaseFirestore.instance;
 
-  // Saves the review and completes the booking in one batch.
+  // submit review
   Future<void> submitReview({
     required String customerId,
     required String customerName,
@@ -22,7 +22,7 @@ class ReviewService {
   }) async {
     final batch = _db.batch();
 
-    // Use bookingId as doc ID to block duplicate reviews.
+    // prevent duplicates
     final reviewRef = _db.collection(FirestorePaths.reviews).doc(bookingId);
     batch.set(reviewRef, {
       'customerId': customerId,
@@ -55,7 +55,7 @@ class ReviewService {
     await batch.commit();
   }
 
-  // Listens to recent reviews for a technician.
+  // stream tech reviews
   Stream<List<Map<String, dynamic>>> streamProviderReviews(String providerId) {
     return _db
         .collection(FirestorePaths.reviews)

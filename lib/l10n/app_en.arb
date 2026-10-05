@@ -1509,6 +1509,18 @@
       }
     }
   },
+  "disputesSuspendCustomer": "Suspend Customer",
+  "disputesCustomerSuspendedSnack": "Customer {name} has been suspended.",
+  "@disputesCustomerSuspendedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSuspendedTitle": "Account Suspended",
+  "accountSuspendedDesc": "Your account has been suspended by administration. If you believe this is an error, please contact customer support.",
+  "contactHelpline": "Call Support Helpline",
   "disputesErrorLoading": "Error loading complaints: {error}",
   "@disputesErrorLoading": {
     "placeholders": {
@@ -1835,5 +1847,102 @@
   "verifyAndContinue": "Verify & Continue",
   "codeExpired": "Verification code expired. Please request a new one.",
   "codeIncorrect": "Incorrect verification code. Please check and try again.",
-  "emailVerifiedSuccess": "Email verified successfully!"
+  "emailVerifiedSuccess": "Email verified successfully!",
+  "myJobPosts": "My Job Posts",
+  "yourPostedJobs": "Your Posted Jobs ({count})",
+  "@yourPostedJobs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "postNewJob": "Post New Job",
+  "noJobPostsYet": "No Job Posts Yet",
+  "noJobPostsDesc": "Post a service request to receive quotes and proposals from verified technicians in your area.",
+  "reviewQuotesCount": "Review Quotes ({count})",
+  "@reviewQuotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationNotSpecified": "Location not specified",
+  "permissionLocationTitle": "Allow Location Access?",
+  "permissionLocationDesc": "HelaService uses your location to connect you with verified tradespeople nearby and calculate accurate, transparent travel costs.",
+  "permissionLocationBullet1": "Find available technicians closest to your exact location.",
+  "permissionLocationBullet2": "Accurate en-route arrival tracking directly to your doorstep.",
+  "permissionLocationBullet3": "Fair, distance-based travel rates without hidden costs.",
+  "permissionAllowAndContinue": "Allow & Continue",
+  "permissionSelectDistrictManually": "Select District Manually",
+  "permissionCameraTitle": "Allow Camera Access?",
+  "permissionCameraDesc": "Take photos of the issue to receive accurate, transparent quotes from verified artisans.",
+  "permissionCameraBullet1": "Capture clear photos of the defect, wiring, or plumbing issue.",
+  "permissionCameraBullet2": "Help artisans inspect the repair requirements before quoting.",
+  "permissionCameraBullet3": "Stored securely in cloud storage for your job history.",
+  "permissionOpenCamera": "Open Camera",
+  "permissionGalleryTitle": "Select from Photos & Files?",
+  "permissionGalleryDesc": "Upload existing photos or certificates to help verify your credentials or job details.",
+  "permissionGalleryBullet1": "Select clear certificates, NVQ licenses, or damage photos.",
+  "permissionGalleryBullet2": "Used for profile verification and accurate job estimation.",
+  "permissionGalleryBullet3": "Stored securely and never shared with unauthorized parties.",
+  "permissionChoosePhotos": "Choose Photos",
+  "permissionLocationPermanentlyDisabled": "Location permission is permanently disabled. Please enable it in system settings to detect your exact address.",
+  "permissionLocationNeeded": "Location Permission Needed",
+  "navUserManagement": "Users & Bans",
+  "searchUsersHint": "Search by name, email, phone, or NIC...",
+  "filterByRole": "Role",
+  "allRoles": "All Roles",
+  "allDistricts": "All Districts",
+  "filterByStatus": "Status",
+  "statusActive": "Active",
+  "statusSuspended": "Suspended",
+  "suspendAccount": "Suspend Account",
+  "unbanAccount": "Lift Suspension",
+  "enterBanReason": "Enter Reason for Suspension",
+  "banReasonHint": "e.g. Repeated fraud, abusive conduct, or policy violation",
+  "confirmUnbanDesc": "Are you sure you want to lift the suspension for this account? The user will immediately regain access to the platform.",
+  "userSuspendedSnack": "Account has been suspended.",
+  "userRestoredSnack": "Account access has been restored.",
+  "totalUsers": "Total Users",
+  "activeCustomers": "Active Customers",
+  "activeProviders": "Active Providers",
+  "suspendedAccounts": "Suspended Accounts",
+  "noUsersFound": "No users found matching your filters",
+  "navUserManagementSubtitle": "View, filter, and moderate customers and service providers across Sri Lanka.",
+  "filterCustomers": "Customers",
+  "filterProviders": "Providers",
+  "filterAdmins": "Admins",
+  "filterByDistrictTitle": "Filter by District",
+  "searchDistrictHintText": "Search district...",
+  "suspendUserConfirmDesc": "Are you sure you want to suspend this user? The user will be immediately logged out and blocked from logging in.",
+  "pleaseEnterSuspensionReason": "Please enter a suspension reason.",
+  "presetAbusiveComm": "Abusive communication",
+  "presetFraudActivity": "Fraudulent activity",
+  "presetFailedDispute": "Failed dispute resolution",
+  "presetPolicyViolation": "Policy violation",
+  "reasonLabel": "Reason",
+  "suspendedByAdmin": "Suspended by Administrator",
+  "zoomIn": "Zoom In",
+  "zoomOut": "Zoom Out",
+  "recenterMap": "Recenter Map",
+  "superAdminCannotBeSuspended": "Super Admin accounts are protected and cannot be suspended.",
+  "openSettings": "Open Settings",
+  "ok": "OK",
+  "permissionCameraPermanentlyDisabled": "Camera access is permanently disabled. Please enable it in Settings to capture photos.",
+  "permissionCameraDisabled": "Camera access is disabled. Please enable it in App Settings.",
+  "permissionGalleryPermanentlyDisabled": "Gallery access is permanently disabled. Please enable it in Settings.",
+  "permissionGalleryDisabled": "Photo access is disabled. Please enable it in App Settings.",
+  "permissionNotificationTitle": "Enable Live Service Notifications?",
+  "permissionNotificationDesc": "Get real-time alerts when technicians accept your jobs, send quotes, or arrive at your location.",
+  "permissionNotificationBullet1": "Immediate alerts when an artisan accepts your job or submits a quote.",
+  "permissionNotificationBullet2": "Live tracking updates when your technician is en-route.",
+  "permissionNotificationBullet3": "Direct chat and urgent service dispatch alerts.",
+  "permissionEnableNotifications": "Enable Notifications",
+  "permissionNotNow": "Not Now",
+  "permissionNotificationNeeded": "Notification Permission Needed",
+  "permissionNotificationPermanentlyDisabled": "Notifications are disabled in device settings. Please enable them to receive job alerts.",
+  "noMatchesFound": "No matches found",
+  "selectOption": "Select Option"
 }

@@ -4,7 +4,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 class AppConfig {
   AppConfig._();
 
-  /// Loads remote config values when the app starts.
+  // load remote config on startup
   static Future<void> initializeRemoteConfig() async {
     try {
       final remoteConfig = FirebaseRemoteConfig.instance;
@@ -17,7 +17,7 @@ class AppConfig {
         ),
       );
 
-      // Fetch new values in the background.
+      // fetch latest values
       await remoteConfig
           .fetchAndActivate()
           .timeout(const Duration(seconds: 8), onTimeout: () => false);
@@ -31,7 +31,7 @@ class AppConfig {
     }
   }
 
-  /// Safely get string from Remote Config with optional fallback
+  // get string config or fallback
   static String getString(String key, {String fallback = ''}) {
     try {
       final value = FirebaseRemoteConfig.instance.getString(key);
@@ -43,14 +43,19 @@ class AppConfig {
 
   static String _localOtpApiUrl = '';
 
-  /// Optional override for local testing (e.g. `http://10.0.2.2:3000/api`)
+  // override for local testing if needed
   static void setOtpApiUrl(String url) {
     _localOtpApiUrl = url.trim();
   }
 
-  /// Base URL for Vercel OTP endpoints (Remote Config key: `otp_api_url`)
+  // api base url
   static String get otpApiUrl {
     if (_localOtpApiUrl.isNotEmpty) return _localOtpApiUrl;
     return getString('otp_api_url', fallback: 'https://helaservice.vercel.app/api');
+  }
+
+  // api secret key
+  static String get apiSecretKey {
+    return getString('api_secret_key', fallback: 'hela_app_sec_k9827x_prod');
   }
 }

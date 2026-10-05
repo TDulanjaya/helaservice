@@ -47,6 +47,15 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
   }
 
   void _toggleAdminStatus(AdminUser admin, bool makeActive) async {
+    if (admin.isSuperAdmin && !makeActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Super Admin accounts cannot be suspended.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     try {
       await AdminRepository().toggleAdminStatus(admin.id, makeActive);
       if (!mounted) return;
@@ -1430,7 +1439,7 @@ class _AdminMobileCard extends StatelessWidget {
               }).toList(),
             ),
           ],
-          if (isSuperAdmin && !isSelf) ...[
+          if (isSuperAdmin && !isSelf && !admin.isSuperAdmin) ...[
             const SizedBox(height: 12),
             Divider(height: 1, color: context.themeBorder),
             const SizedBox(height: 8),

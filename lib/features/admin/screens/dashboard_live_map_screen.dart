@@ -1059,22 +1059,27 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
           const SizedBox(height: 10),
           SizedBox(
             height: widget.isMobile ? 360 : 440,
-            child: AppMapView(
-              initialCenter: const LatLng(7.85, 80.725),
-              initialZoom: widget.isMobile ? 6.5 : 7.2,
-              initialCameraFit: CameraFit.bounds(
-                bounds: LatLngBounds(
-                  const LatLng(5.85, 79.5),
-                  const LatLng(9.85, 81.95),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
-                ),
-              ),
-              interactive: true,
-              markers: _markersNotifier.value,
-              onExpand: _openFullScreen,
+            child: ValueListenableBuilder<List<AppMapMarker>>(
+              valueListenable: _markersNotifier,
+              builder: (context, markers, _) {
+                return AppMapView(
+                  initialCenter: const LatLng(7.85, 80.725),
+                  initialZoom: widget.isMobile ? 6.5 : 7.2,
+                  initialCameraFit: CameraFit.bounds(
+                    bounds: LatLngBounds(
+                      const LatLng(5.85, 79.5),
+                      const LatLng(9.85, 81.95),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
+                  ),
+                  interactive: true,
+                  markers: markers,
+                  onExpand: _openFullScreen,
+                );
+              },
             ),
           ),
           if (_unknownCount > 0) ...[

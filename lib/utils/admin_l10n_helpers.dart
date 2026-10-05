@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../models/admin_user.dart';
 import 'l10n_extension.dart';
 
-// ui labels for admin enums and relative time
+// admin label helpers
 
 String adminRoleLabel(BuildContext context, AdminRole role) {
   final l10n = context.l10n;
@@ -73,7 +73,7 @@ String adminStatusLabel(BuildContext context, AdminStatus s) {
   }
 }
 
-// relative time string (e.g. 5m ago, just now)
+// relative time string
 String timeAgoL10n(BuildContext context, DateTime? dt, {String fallback = ''}) {
   if (dt == null) return fallback;
   final l10n = context.l10n;

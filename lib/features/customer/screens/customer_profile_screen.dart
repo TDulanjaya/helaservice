@@ -64,7 +64,8 @@ class CustomerProfileScreen extends StatelessWidget {
                 children: [
                   Text(
                     context.l10n.editProfileAndPhoto,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                   IconSquareButton.small(
                     icon: Icons.close,
@@ -163,7 +164,8 @@ class CustomerProfileScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(context.l10n.logout),
           ),
@@ -180,13 +182,9 @@ class CustomerProfileScreen extends StatelessWidget {
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : context.l10n.customerLabel;
-    final email = user?.email.isNotEmpty == true
-        ? user!.email
-        : '';
+    final email = user?.email.isNotEmpty == true ? user!.email : '';
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
-    final address = user?.address?.isNotEmpty == true
-        ? user!.address!
-        : '';
+    final address = user?.address?.isNotEmpty == true ? user!.address! : '';
     final district = user?.district ?? context.l10n.custFallbackColombo;
 
     return Scaffold(
@@ -210,7 +208,8 @@ class CustomerProfileScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, AppBottomNav.contentBottomPadding),
+          padding: const EdgeInsets.fromLTRB(
+              16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
             AppCard(
               padding: const EdgeInsets.all(20),
@@ -243,7 +242,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   ],
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
@@ -251,7 +251,8 @@ class CustomerProfileScreen extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified, color: AppColors.primary, size: 14),
+                        const Icon(Icons.verified,
+                            color: AppColors.primary, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           context.l10n.verifiedCustomer,
@@ -267,7 +268,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 14),
             AppCard(
               padding: const EdgeInsets.all(16),
@@ -332,7 +332,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -350,7 +349,9 @@ class CustomerProfileScreen extends StatelessWidget {
               icon: Icons.my_location,
               title: context.l10n.homeServiceGpsLocation,
               subtitle: user?.latitude != null
-                  ? context.l10n.custGpsTapToUpdate(user!.latitude!.toStringAsFixed(4), user.longitude!.toStringAsFixed(4))
+                  ? context.l10n.custGpsTapToUpdate(
+                      user!.latitude!.toStringAsFixed(4),
+                      user.longitude!.toStringAsFixed(4))
                   : context.l10n.tapToAutoDetectGps,
               onTap: () async {
                 final pos = await LocationUtils.getCurrentPosition();
@@ -369,7 +370,9 @@ class CustomerProfileScreen extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          context.l10n.gpsLocationUpdated(pos.latitude.toStringAsFixed(4), pos.longitude.toStringAsFixed(4)),
+                          context.l10n.gpsLocationUpdated(
+                              pos.latitude.toStringAsFixed(4),
+                              pos.longitude.toStringAsFixed(4)),
                         ),
                         backgroundColor: AppColors.primary,
                       ),
@@ -385,7 +388,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 }
               },
             ),
-
             pv.Consumer<ThemeProvider>(
               builder: (context, themeProvider, _) {
                 return _SettingsTile(
@@ -393,7 +395,8 @@ class CustomerProfileScreen extends StatelessWidget {
                       ? Icons.dark_mode_outlined
                       : Icons.light_mode_outlined,
                   title: context.l10n.appearanceAndTheme,
-                  subtitle: context.l10n.currentMode(themeProvider.getModeDisplayName(context)),
+                  subtitle: context.l10n
+                      .currentMode(themeProvider.getModeDisplayName(context)),
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
@@ -428,11 +431,10 @@ class CustomerProfileScreen extends StatelessWidget {
                               ListTile(
                                 leading: const Icon(Icons.brightness_auto),
                                 title: Text(context.l10n.systemDefault),
-                                trailing:
-                                    themeProvider.mode == ThemeMode.system
-                                        ? const Icon(Icons.check,
-                                            color: AppColors.primary)
-                                        : null,
+                                trailing: themeProvider.mode == ThemeMode.system
+                                    ? const Icon(Icons.check,
+                                        color: AppColors.primary)
+                                    : null,
                                 onTap: () {
                                   themeProvider.setSystem();
                                   Navigator.pop(sheetCtx);
@@ -471,19 +473,17 @@ class CustomerProfileScreen extends StatelessWidget {
                 );
               },
             ),
-
             pv.Consumer<LocaleProvider>(
               builder: (context, localeProvider, _) {
                 return _SettingsTile(
                   icon: Icons.language,
                   title: 'App Language / භාෂාව / மொழி',
-                  subtitle:
-                      context.l10n.currentMode(localeProvider.languageDisplayName),
+                  subtitle: context.l10n
+                      .currentMode(localeProvider.languageDisplayName),
                   onTap: () => LanguageSelectSheet.show(context),
                 );
               },
             ),
-
             const SizedBox(height: 12),
             AppCard(
               onTap: () => showRoleSwitchSheet(context),
@@ -531,7 +531,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 18),
             AppOutlineButton(
               label: context.l10n.logout,
@@ -583,12 +582,14 @@ class _SettingsTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      fontSize: 13.5, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                  style: TextStyle(
+                      fontSize: 11.5, color: context.themeTextSecondary),
                 ),
               ],
             ),

@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 import '../services/auth_service.dart';
 import 'l10n_extension.dart';
 
-// maps auth errors to translated ui messages
+// auth error translations
 String authErrorMessage(BuildContext context, Object error) {
   final l10n = context.l10n;
 
@@ -32,10 +32,10 @@ String authErrorMessage(BuildContext context, Object error) {
     }
   }
 
-  // fallback text from auth service
+  // service fallback
   final readable = AuthService.getReadableAuthError(error);
 
-  // English messages thrown by AuthService as Exception.
+  // match known exceptions
   switch (readable) {
     case 'No account found with this email. Please check your spelling or register.':
       return l10n.authErrUserNotFound;

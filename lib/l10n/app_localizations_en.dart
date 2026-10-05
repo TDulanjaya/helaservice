@@ -3063,6 +3063,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get disputesSuspendCustomer => 'Suspend Customer';
+
+  @override
+  String disputesCustomerSuspendedSnack(String name) {
+    return 'Customer $name has been suspended.';
+  }
+
+  @override
+  String get accountSuspendedTitle => 'Account Suspended';
+
+  @override
+  String get accountSuspendedDesc =>
+      'Your account has been suspended by administration. If you believe this is an error, please contact customer support.';
+
+  @override
+  String get contactHelpline => 'Call Support Helpline';
+
+  @override
   String disputesErrorLoading(String error) {
     return 'Error loading complaints: $error';
   }
@@ -3468,4 +3486,283 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailVerifiedSuccess => 'Email verified successfully!';
+
+  @override
+  String get myJobPosts => 'My Job Posts';
+
+  @override
+  String yourPostedJobs(int count) {
+    return 'Your Posted Jobs ($count)';
+  }
+
+  @override
+  String get postNewJob => 'Post New Job';
+
+  @override
+  String get noJobPostsYet => 'No Job Posts Yet';
+
+  @override
+  String get noJobPostsDesc =>
+      'Post a service request to receive quotes and proposals from verified technicians in your area.';
+
+  @override
+  String reviewQuotesCount(int count) {
+    return 'Review Quotes ($count)';
+  }
+
+  @override
+  String get locationNotSpecified => 'Location not specified';
+
+  @override
+  String get permissionLocationTitle => 'Allow Location Access?';
+
+  @override
+  String get permissionLocationDesc =>
+      'HelaService uses your location to connect you with verified tradespeople nearby and calculate accurate, transparent travel costs.';
+
+  @override
+  String get permissionLocationBullet1 =>
+      'Find available technicians closest to your exact location.';
+
+  @override
+  String get permissionLocationBullet2 =>
+      'Accurate en-route arrival tracking directly to your doorstep.';
+
+  @override
+  String get permissionLocationBullet3 =>
+      'Fair, distance-based travel rates without hidden costs.';
+
+  @override
+  String get permissionAllowAndContinue => 'Allow & Continue';
+
+  @override
+  String get permissionSelectDistrictManually => 'Select District Manually';
+
+  @override
+  String get permissionCameraTitle => 'Allow Camera Access?';
+
+  @override
+  String get permissionCameraDesc =>
+      'Take photos of the issue to receive accurate, transparent quotes from verified artisans.';
+
+  @override
+  String get permissionCameraBullet1 =>
+      'Capture clear photos of the defect, wiring, or plumbing issue.';
+
+  @override
+  String get permissionCameraBullet2 =>
+      'Help artisans inspect the repair requirements before quoting.';
+
+  @override
+  String get permissionCameraBullet3 =>
+      'Stored securely in cloud storage for your job history.';
+
+  @override
+  String get permissionOpenCamera => 'Open Camera';
+
+  @override
+  String get permissionGalleryTitle => 'Select from Photos & Files?';
+
+  @override
+  String get permissionGalleryDesc =>
+      'Upload existing photos or certificates to help verify your credentials or job details.';
+
+  @override
+  String get permissionGalleryBullet1 =>
+      'Select clear certificates, NVQ licenses, or damage photos.';
+
+  @override
+  String get permissionGalleryBullet2 =>
+      'Used for profile verification and accurate job estimation.';
+
+  @override
+  String get permissionGalleryBullet3 =>
+      'Stored securely and never shared with unauthorized parties.';
+
+  @override
+  String get permissionChoosePhotos => 'Choose Photos';
+
+  @override
+  String get permissionLocationPermanentlyDisabled =>
+      'Location permission is permanently disabled. Please enable it in system settings to detect your exact address.';
+
+  @override
+  String get permissionLocationNeeded => 'Location Permission Needed';
+
+  @override
+  String get navUserManagement => 'Users & Bans';
+
+  @override
+  String get searchUsersHint => 'Search by name, email, phone, or NIC...';
+
+  @override
+  String get filterByRole => 'Role';
+
+  @override
+  String get allRoles => 'All Roles';
+
+  @override
+  String get allDistricts => 'All Districts';
+
+  @override
+  String get filterByStatus => 'Status';
+
+  @override
+  String get statusSuspended => 'Suspended';
+
+  @override
+  String get suspendAccount => 'Suspend Account';
+
+  @override
+  String get unbanAccount => 'Lift Suspension';
+
+  @override
+  String get enterBanReason => 'Enter Reason for Suspension';
+
+  @override
+  String get banReasonHint =>
+      'e.g. Repeated fraud, abusive conduct, or policy violation';
+
+  @override
+  String get confirmUnbanDesc =>
+      'Are you sure you want to lift the suspension for this account? The user will immediately regain access to the platform.';
+
+  @override
+  String get userSuspendedSnack => 'Account has been suspended.';
+
+  @override
+  String get userRestoredSnack => 'Account access has been restored.';
+
+  @override
+  String get totalUsers => 'Total Users';
+
+  @override
+  String get activeCustomers => 'Active Customers';
+
+  @override
+  String get activeProviders => 'Active Providers';
+
+  @override
+  String get suspendedAccounts => 'Suspended Accounts';
+
+  @override
+  String get noUsersFound => 'No users found matching your filters';
+
+  @override
+  String get navUserManagementSubtitle =>
+      'View, filter, and moderate customers and service providers across Sri Lanka.';
+
+  @override
+  String get filterCustomers => 'Customers';
+
+  @override
+  String get filterProviders => 'Providers';
+
+  @override
+  String get filterAdmins => 'Admins';
+
+  @override
+  String get filterByDistrictTitle => 'Filter by District';
+
+  @override
+  String get searchDistrictHintText => 'Search district...';
+
+  @override
+  String get suspendUserConfirmDesc =>
+      'Are you sure you want to suspend this user? The user will be immediately logged out and blocked from logging in.';
+
+  @override
+  String get pleaseEnterSuspensionReason => 'Please enter a suspension reason.';
+
+  @override
+  String get presetAbusiveComm => 'Abusive communication';
+
+  @override
+  String get presetFraudActivity => 'Fraudulent activity';
+
+  @override
+  String get presetFailedDispute => 'Failed dispute resolution';
+
+  @override
+  String get presetPolicyViolation => 'Policy violation';
+
+  @override
+  String get reasonLabel => 'Reason';
+
+  @override
+  String get suspendedByAdmin => 'Suspended by Administrator';
+
+  @override
+  String get zoomIn => 'Zoom In';
+
+  @override
+  String get zoomOut => 'Zoom Out';
+
+  @override
+  String get recenterMap => 'Recenter Map';
+
+  @override
+  String get superAdminCannotBeSuspended =>
+      'Super Admin accounts are protected and cannot be suspended.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get permissionCameraPermanentlyDisabled =>
+      'Camera access is permanently disabled. Please enable it in Settings to capture photos.';
+
+  @override
+  String get permissionCameraDisabled =>
+      'Camera access is disabled. Please enable it in App Settings.';
+
+  @override
+  String get permissionGalleryPermanentlyDisabled =>
+      'Gallery access is permanently disabled. Please enable it in Settings.';
+
+  @override
+  String get permissionGalleryDisabled =>
+      'Photo access is disabled. Please enable it in App Settings.';
+
+  @override
+  String get permissionNotificationTitle =>
+      'Enable Live Service Notifications?';
+
+  @override
+  String get permissionNotificationDesc =>
+      'Get real-time alerts when technicians accept your jobs, send quotes, or arrive at your location.';
+
+  @override
+  String get permissionNotificationBullet1 =>
+      'Immediate alerts when an artisan accepts your job or submits a quote.';
+
+  @override
+  String get permissionNotificationBullet2 =>
+      'Live tracking updates when your technician is en-route.';
+
+  @override
+  String get permissionNotificationBullet3 =>
+      'Direct chat and urgent service dispatch alerts.';
+
+  @override
+  String get permissionEnableNotifications => 'Enable Notifications';
+
+  @override
+  String get permissionNotNow => 'Not Now';
+
+  @override
+  String get permissionNotificationNeeded => 'Notification Permission Needed';
+
+  @override
+  String get permissionNotificationPermanentlyDisabled =>
+      'Notifications are disabled in device settings. Please enable them to receive job alerts.';
+
+  @override
+  String get noMatchesFound => 'No matches found';
+
+  @override
+  String get selectOption => 'Select Option';
 }

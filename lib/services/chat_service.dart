@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 
-// Message model for chat.
+// chat message model
 class ChatMessageModel {
   final String id;
   final String senderId;
@@ -29,7 +29,7 @@ class ChatMessageModel {
   }
 }
 
-// Preview item shown in the inbox.
+// inbox item
 class ChatRoomSummary {
   final String id;
   final List<String> participants;
@@ -111,14 +111,14 @@ class ChatRoomSummary {
   }
 }
 
-// Handles 1-on-1 chat rooms between users.
+// chat service
 class ChatService {
   ChatService._();
   static final ChatService instance = ChatService._();
 
   final _db = FirebaseFirestore.instance;
 
-  // Gets an existing room or creates a new one.
+  // get or create room
   Future<String> getOrCreateChatRoom({
     required String userId1,
     required String userId2,
@@ -169,7 +169,7 @@ class ChatService {
     return chatId;
   }
 
-  // Listens to chat rooms for a user, newest first.
+  // stream user rooms
   Stream<List<ChatRoomSummary>> streamUserChatRooms(String userId) {
     return _db
         .collection(FirestorePaths.chatRooms)
@@ -189,7 +189,7 @@ class ChatService {
     });
   }
 
-  // Listens to all chat rooms for dispute reviews.
+  // stream all rooms
   Stream<List<ChatRoomSummary>> streamAllChatRooms() {
     return _db
         .collection(FirestorePaths.chatRooms)
@@ -208,7 +208,7 @@ class ChatService {
     });
   }
 
-  // Sends a message and updates the inbox preview.
+  // send message
   Future<void> sendMessage({
     required String chatRoomId,
     required String senderId,
@@ -241,7 +241,7 @@ class ChatService {
     await batch.commit();
   }
 
-  // Listens to messages in this room in order.
+  // stream room messages
   Stream<List<ChatMessageModel>> streamMessages(String chatRoomId) {
     return _db
         .collection(FirestorePaths.chatRooms)

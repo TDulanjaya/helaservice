@@ -26,12 +26,12 @@ class RouteInfo {
       end.latitude,
       end.longitude,
     );
-    // Road distance is roughly 35% longer than straight line.
+    // estimate road distance
     final roadKm = straightKm * 1.35;
-    // Assume 25 km/h average city driving speed.
+    // estimate city driving speed
     final durationMins = ((roadKm / 25.0) * 60).round().clamp(2, 180);
 
-    // Curve the fallback route line slightly.
+    // curve line slightly
     final midLat = (start.latitude + end.latitude) / 2;
     final midLng = (start.longitude + end.longitude) / 2;
     final curvePoint = LatLng(
@@ -58,7 +58,7 @@ class RoutingService {
 
   final Map<String, RouteInfo> _cache = {};
 
-  // Calculates route directions, distance, and ETA between two points.
+  // get route and eta
   Future<RouteInfo> getDrivingRoute({
     required LatLng origin,
     required LatLng destination,
@@ -128,7 +128,7 @@ class RoutingService {
       debugPrint('RoutingService road calculation notice (using fallback): $e');
     }
 
-    // Straight-line fallback when routing service is offline.
+    // offline route fallback
     final fallback = RouteInfo.fallback(origin, destination);
     _cache[cacheKey] = fallback;
     return fallback;

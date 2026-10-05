@@ -34,7 +34,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     try {
       final pos = await LocationUtils.getCurrentPosition();
       if (pos != null && context.mounted) {
-        final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+        final roleProvider =
+            pv.Provider.of<RoleProvider>(context, listen: false);
         final current = roleProvider.currentUser;
         if (current != null) {
           final updated = current.copyWith(
@@ -116,9 +117,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : context.l10n.roleProvider;
-    final email = user?.email.isNotEmpty == true
-        ? user!.email
-        : '';
+    final email = user?.email.isNotEmpty == true ? user!.email : '';
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
     final category = user?.serviceCategory ?? context.l10n.provSpecialist;
     final district = user?.district ?? context.l10n.cdmSriLanka;
@@ -247,9 +246,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         .streamProviderBookings(user?.id ?? ''),
                     builder: (context, snapshot) {
                       final bookings = snapshot.data ?? [];
-                      final completed = bookings
-                          .where((b) => b.status == 'completed')
-                          .length;
+                      final completed =
+                          bookings.where((b) => b.status == 'completed').length;
                       final delayed = bookings
                           .where((b) =>
                               b.delayReason != null &&
@@ -368,7 +366,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         ),
                       ),
                       Text(
-                        nic.isNotEmpty ? _maskNic(nic) : context.l10n.notProvided,
+                        nic.isNotEmpty
+                            ? _maskNic(nic)
+                            : context.l10n.notProvided,
                         style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
@@ -380,8 +380,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 7),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
@@ -617,8 +617,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               child: pv.Consumer<ThemeProvider>(
                 builder: (context, themeProvider, _) {
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -675,11 +675,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.brightness_auto),
                                   title: Text(context.l10n.themeSystem),
-                                  trailing: themeProvider.mode ==
-                                          ThemeMode.system
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
+                                  trailing:
+                                      themeProvider.mode == ThemeMode.system
+                                          ? const Icon(Icons.check,
+                                              color: AppColors.primary)
+                                          : null,
                                   onTap: () {
                                     themeProvider.setSystem();
                                     Navigator.pop(sheetCtx);
@@ -688,11 +688,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.light_mode),
                                   title: Text(context.l10n.themeLight),
-                                  trailing: themeProvider.mode ==
-                                          ThemeMode.light
-                                      ? const Icon(Icons.check,
-                                          color: AppColors.primary)
-                                      : null,
+                                  trailing:
+                                      themeProvider.mode == ThemeMode.light
+                                          ? const Icon(Icons.check,
+                                              color: AppColors.primary)
+                                          : null,
                                   onTap: () {
                                     themeProvider.setLight();
                                     Navigator.pop(sheetCtx);
@@ -701,11 +701,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                 ListTile(
                                   leading: const Icon(Icons.dark_mode),
                                   title: Text(context.l10n.themeDark),
-                                  trailing:
-                                      themeProvider.mode == ThemeMode.dark
-                                          ? const Icon(Icons.check,
-                                              color: AppColors.primary)
-                                          : null,
+                                  trailing: themeProvider.mode == ThemeMode.dark
+                                      ? const Icon(Icons.check,
+                                          color: AppColors.primary)
+                                      : null,
                                   onTap: () {
                                     themeProvider.setDark();
                                     Navigator.pop(sheetCtx);
@@ -731,8 +730,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               child: pv.Consumer<LocaleProvider>(
                 builder: (context, localeProvider, _) {
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -924,4 +923,3 @@ class _StatCard extends StatelessWidget {
     );
   }
 }
-

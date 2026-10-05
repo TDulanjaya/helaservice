@@ -25,7 +25,7 @@ class OtpService {
 
   bool get canResend => remainingCooldownSeconds <= 0;
 
-  /// Calls Vercel Serverless Function: POST /api/send-otp
+  // send verification code to email
   Future<void> sendOtp(String email) async {
     final cleanEmail = email.trim().toLowerCase();
 
@@ -42,7 +42,10 @@ class OtpService {
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'x-helaservice-key': AppConfig.apiSecretKey,
+            },
             body: jsonEncode({'email': cleanEmail}),
           )
           .timeout(const Duration(seconds: 15));
@@ -77,10 +80,10 @@ class OtpService {
     }
   }
 
-  /// Backward-compatible alias
+  // alias for backwards compatibility
   Future<void> sendEmailOtp(String email) => sendOtp(email);
 
-  /// Calls Vercel Serverless Function: POST /api/verify-otp
+  // verify submitted code
   Future<OtpVerificationResult> verifyOtp(
     String email,
     String enteredCode,
@@ -102,7 +105,10 @@ class OtpService {
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'x-helaservice-key': AppConfig.apiSecretKey,
+            },
             body: jsonEncode({'email': cleanEmail, 'otp': code}),
           )
           .timeout(const Duration(seconds: 15));
@@ -150,7 +156,7 @@ class OtpService {
     }
   }
 
-  /// Backward-compatible alias
+  // alias for backwards compatibility
   Future<OtpVerificationResult> verifyEmailOtp(
     String email,
     String enteredCode,

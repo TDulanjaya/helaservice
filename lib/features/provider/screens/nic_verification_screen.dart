@@ -14,16 +14,17 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/permission_utils.dart';
 import 'provider_dashboard_screen.dart';
 
-/// Compresses an ID photo in the background.
+// compress id photo
 Uint8List _compressNicImage(Uint8List rawBytes) {
   final image = img.decodeImage(rawBytes);
   if (image == null) {
     throw Exception('Failed to decode the captured document.');
   }
 
-  // Keep under 1600px to stay below upload limits.
+  // resize under 1600px
   img.Image working = image;
   if (working.width > 1600 || working.height > 1600) {
     if (working.width > working.height) {
@@ -120,6 +121,15 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   }
 
   Future<void> _handleUpload(String docType) async {
+    final allowed = await PermissionUtils.requestCameraWithRationale(
+      context,
+      title: docType == 'selfie' ? 'Take Verification Selfie' : 'Capture National Identity Card',
+      description: docType == 'selfie'
+          ? 'A selfie is required to verify identity against your National Identity Card.'
+          : 'Camera access is required to take a clear, legible photo of your National Identity Card.',
+    );
+    if (!allowed) return;
+
     int? tooLargeKb;
     setState(() {
       if (docType == 'front') _isUploadingFront = true;
@@ -241,7 +251,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
             : '',
       }, SetOptions(merge: true));
 
-      // Save private info in the private subcollection.
+      // save private info
       await FirebaseFirestore.instance
           .collection(FirestorePaths.technicians)
           .doc(uid)

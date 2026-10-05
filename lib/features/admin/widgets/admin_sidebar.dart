@@ -24,6 +24,7 @@ class AdminSidebar extends StatelessWidget {
   static const entries = [
     AdminNavEntry(Icons.grid_view_rounded, 'Dashboard'),
     AdminNavEntry(Icons.badge_outlined, 'Verifications'),
+    AdminNavEntry(Icons.manage_accounts_outlined, 'Users & Bans'),
     AdminNavEntry(Icons.layers_outlined, 'Coverage & Categories'),
     AdminNavEntry(Icons.people_outline, 'Admins & Team'),
     AdminNavEntry(Icons.format_list_bulleted, 'Job Ledger'),
@@ -40,14 +41,16 @@ class AdminSidebar extends StatelessWidget {
         case 1:
           return context.l10n.navVerifications;
         case 2:
-          return context.l10n.navCoverageAndCategories;
+          return context.l10n.navUserManagement;
         case 3:
-          return context.l10n.navAdminsAndTeam;
+          return context.l10n.navCoverageAndCategories;
         case 4:
-          return context.l10n.jobLedgerNav;
+          return context.l10n.navAdminsAndTeam;
         case 5:
-          return context.l10n.navDisputes;
+          return context.l10n.jobLedgerNav;
         case 6:
+          return context.l10n.navDisputes;
+        case 7:
           return context.l10n.navPlatformSettings;
         default:
           return entries[index].label;
@@ -61,10 +64,12 @@ class AdminSidebar extends StatelessWidget {
         case 1:
           return !roleProvider.hasAdminPermission(AdminPermission.verifyNic);
         case 2:
-          return !roleProvider.hasAdminPermission(AdminPermission.manageCategories);
+          return false;
         case 3:
-          return !roleProvider.isSuperAdmin;
+          return !roleProvider.hasAdminPermission(AdminPermission.manageCategories);
         case 4:
+          return !roleProvider.isSuperAdmin;
+        case 5:
           return !roleProvider.hasAdminPermission(AdminPermission.viewFinances);
         default:
           return false;
@@ -128,7 +133,7 @@ class AdminSidebar extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        i == 3
+                        i == 4
                             ? context.l10n.sidebarOnlySuperAdmins
                             : context.l10n.sidebarNoPermission,
                       ),
@@ -204,7 +209,7 @@ class AdminSidebar extends StatelessWidget {
                         );
                       },
                     )
-                  else if (i == 5)
+                  else if (i == 6)
                     StreamBuilder<int>(
                       stream: FirebaseFirestore.instance
                           .collection(FirestorePaths.complaints)

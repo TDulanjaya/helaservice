@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../constants/firestore_paths.dart';
 
-// Shares technician GPS location while en route.
+// live location service
 class LiveLocationService {
   LiveLocationService._();
   static final LiveLocationService instance = LiveLocationService._();
@@ -15,7 +15,7 @@ class LiveLocationService {
 
   bool get isTracking => _isTracking;
 
-  // Start pushing GPS coordinates to Firestore.
+  // start tracking
   Future<void> startTracking(String userId, {List<String>? allowedViewers}) async {
     if (_isTracking) return;
 
@@ -54,7 +54,7 @@ class LiveLocationService {
     );
   }
 
-  // Stop tracking and delete the location doc.
+  // stop tracking
   void stopTracking() {
     _positionSub?.cancel();
     _positionSub = null;
@@ -70,7 +70,7 @@ class LiveLocationService {
     }
   }
 
-  // Listens to the technician's current coordinates.
+  // stream tech location
   Stream<LatLng?> streamUserLocation(String userId) {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)
@@ -86,7 +86,7 @@ class LiveLocationService {
     });
   }
 
-  /// Listens to full location details (lat, lng, heading, speed).
+  // stream location data
   Stream<Map<String, dynamic>?> streamUserLocationData(String userId) {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)

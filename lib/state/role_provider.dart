@@ -20,7 +20,7 @@ class RoleProvider extends ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
   bool get isProfileCompleted => _currentUser?.isProfileComplete ?? false;
 
-  /// Verifies admin access by checking admin collections.
+  // check admin access
   bool get isAuthorizedAdmin =>
       _isSuperAdmin ||
       (_currentAdminUser != null &&
@@ -77,7 +77,7 @@ class RoleProvider extends ChangeNotifier {
 
   Future<AdminUser?> resolveAdminStatus(String uid) async {
     try {
-      // Check if the user is a super admin.
+      // check super admin
       final superDoc = await FirebaseFirestore.instance
           .collection('superAdmins')
           .doc(uid)
@@ -100,14 +100,14 @@ class RoleProvider extends ChangeNotifier {
         return admin;
       }
 
-      // Check if the user is a staff admin.
+      // check staff admin
       final adminDoc = await FirebaseFirestore.instance
           .collection('admins')
           .doc(uid)
           .get();
       if (adminDoc.exists && adminDoc.data() != null) {
         final admin = AdminUser.fromMap(adminDoc.data()!, id: uid);
-        // Admins collection cannot contain super admins.
+        // block super admin in staff list
         if (admin.role == AdminRole.superAdmin) {
           _isSuperAdmin = false;
           _currentAdminUser = null;
@@ -137,7 +137,7 @@ class RoleProvider extends ChangeNotifier {
   }
 
   void setAdminUser(AdminUser? admin) {
-    // Admins collection cannot contain super admins.
+    // block super admin in staff list
     if (admin != null && admin.role == AdminRole.superAdmin) {
       _currentAdminUser = null;
       _isSuperAdmin = false;

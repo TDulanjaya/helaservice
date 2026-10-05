@@ -12,6 +12,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/app_localizations_helpers.dart';
 import '../../../utils/location_utils.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../../../shared/widgets/full_screen_map_page.dart';
@@ -380,10 +381,10 @@ class LiveTrackingScreen extends StatelessWidget {
                               Row(children: [
                                 const Icon(Icons.verified,
                                     size: 12, color: AppColors.primary),
-                                const SizedBox(width: 3),
+                                 const SizedBox(width: 3),
                                 Expanded(
                                   child: Text(
-                                    '${tech.title} • ${tech.jobsCount} ${context.l10n.completedJobs}',
+                                    '${LocalizedData.getCategory(context, tech.title)} • ${tech.jobsCount} ${context.l10n.completedJobs}',
                                     style: TextStyle(
                                         fontSize: 11,
                                         color: context.themeTextSecondary),
@@ -399,7 +400,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     tech.serviceArea.isNotEmpty
-                                        ? tech.serviceArea
+                                        ? LocalizedData.getDistrict(context, tech.serviceArea)
                                         : context.l10n.custFallbackWesternProvince,
                                     style: TextStyle(
                                         fontSize: 11,
@@ -697,13 +698,23 @@ class _CustomerLiveTrackingMapCardState
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            AppMapView(
-              initialCenter: widget.midPoint,
-              initialZoom: 14.2,
-              interactive: true,
-              routePoints: widget.routePoints,
-              markers: _markersNotifier.value,
-              onExpand: _openFullScreen,
+            ValueListenableBuilder<List<AppMapMarker>>(
+              valueListenable: _markersNotifier,
+              builder: (context, markers, _) {
+                return ValueListenableBuilder<List<LatLng>?>(
+                  valueListenable: _routePointsNotifier,
+                  builder: (context, routePoints, _) {
+                    return AppMapView(
+                      initialCenter: widget.midPoint,
+                      initialZoom: 14.2,
+                      interactive: true,
+                      routePoints: routePoints,
+                      markers: markers,
+                      onExpand: _openFullScreen,
+                    );
+                  },
+                );
+              },
             ),
             Positioned(
               top: 12,

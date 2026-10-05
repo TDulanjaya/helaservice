@@ -11,6 +11,7 @@ import '../../../utils/auth_error_l10n.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'home_discovery_screen.dart';
 import '../../auth/screens/email_otp_screen.dart';
+import '../../../shared/widgets/searchable_select_picker.dart';
 
 class CustomerRegisterScreen extends StatefulWidget {
   const CustomerRegisterScreen({super.key});
@@ -174,11 +175,14 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               Text(
                 context.l10n.customerRegisterSubtitle,
                 style: TextStyle(
@@ -276,44 +280,26 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                 isDarkField: context.isDark,
               ),
               const SizedBox(height: 16),
-              Text(
-                context.l10n.districtLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: context.themeTextPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isFieldBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: context.themeBorder,
-                    width: 1.5,
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    dropdownColor: context.themeSurface,
-                    value: _district,
-                    isExpanded: true,
-                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.themeTextSecondary),
-                    items: _districts
-                        .map((d) => DropdownMenuItem(
-                              value: d,
-                              child: Text(
-                                LocalizedData.getDistrict(context, d),
-                                style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (v) =>
-                        setState(() => _district = v ?? _district),
-                  ),
-                ),
+              SearchableSelectPicker<String>(
+                label: context.l10n.districtLabel,
+                selectedValue: _districts.contains(_district) ? _district : _districts.first,
+                prefixIcon: Icons.map_outlined,
+                isDarkField: context.isDark,
+                modalTitle: context.l10n.districtLabel,
+                searchHint: 'Search district...',
+                items: _districts.map((d) {
+                  final localizedName = LocalizedData.getDistrict(context, d);
+                  final sin = LocalizedData.districts[d]?['si'] ?? '';
+                  final tam = LocalizedData.districts[d]?['ta'] ?? '';
+                  return SearchableSelectItem<String>(
+                    value: d,
+                    label: localizedName,
+                    subtitle: localizedName != d ? d : null,
+                    icon: Icons.location_on_outlined,
+                    searchTerms: [d, sin, tam],
+                  );
+                }).toList(),
+                onSelected: (v) => setState(() => _district = v),
               ),
               const SizedBox(height: 20),
               CheckboxListTile(
@@ -368,7 +354,9 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

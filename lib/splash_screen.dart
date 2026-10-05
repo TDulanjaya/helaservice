@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart' as pv;
 import 'theme/app_theme.dart';
 import 'state/role_provider.dart';
@@ -106,9 +107,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0C0E),
-      body: SafeArea(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF0B0C0E),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0B0C0E),
+        body: SafeArea(
         child: Stack(
           children: [
             Center(
@@ -215,6 +223,7 @@ class _SplashScreenState extends State<SplashScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

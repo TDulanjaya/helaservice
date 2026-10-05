@@ -1,5 +1,7 @@
-import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../constants/app_config.dart';
 
 class OtpVerificationResult {
   final bool isValid;
@@ -13,114 +15,153 @@ class OtpService {
   factory OtpService() => _instance;
   OtpService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  DateTime? _lastSentAt;
 
-  // Generates a 6-digit code and queues the email.
-  Future<String> generateAndSendEmailOtp(String email) async {
-    final cleanEmail = email.trim().toLowerCase();
-    final random = Random.secure();
-    final otpCode = (100000 + random.nextInt(900000)).toString();
-
-    final now = DateTime.now();
-    final expiresAt = now.add(const Duration(minutes: 10));
-
-    await _firestore.collection('email_verifications').doc(cleanEmail).set({
-      'email': cleanEmail,
-      'otp': otpCode,
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(expiresAt),
-      'verified': false,
-      'attempts': 0,
-    });
-
-    try {
-      await _firestore.collection('mail').add({
-        'to': [cleanEmail],
-        'message': {
-          'subject': 'Your HelaService Verification Code: $otpCode',
-          'text':
-              'Your HelaService account verification code is: $otpCode. This code will expire in 10 minutes.',
-          'html': '''
-            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px; border: 1px solid #E2E8F0; border-radius: 12px; background: #FFFFFF;">
-              <h2 style="color: #D6900F; margin-bottom: 8px;">HelaService Verification</h2>
-              <p style="color: #475569; font-size: 14px; margin-bottom: 20px;">Use the 6-digit code below to complete your HelaService registration:</p>
-              <div style="background: #F1F5F9; padding: 16px; border-radius: 8px; text-align: center; letter-spacing: 6px; font-size: 28px; font-weight: bold; color: #0F172A; margin-bottom: 20px;">
-                $otpCode
-              </div>
-              <p style="color: #64748B; font-size: 12px; line-height: 1.5;">This code expires in 10 minutes. If you did not request this registration, please disregard this email.</p>
-            </div>
-          ''',
-        },
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (_) {}
-
-    return otpCode;
+  int get remainingCooldownSeconds {
+    if (_lastSentAt == null) return 0;
+    final diff = 60 - DateTime.now().difference(_lastSentAt!).inSeconds;
+    return diff > 0 ? diff : 0;
   }
 
-  // Verifies the code and checks expiration.
-  Future<OtpVerificationResult> verifyEmailOtp(
+  bool get canResend => remainingCooldownSeconds <= 0;
+
+  /// Calls Vercel Serverless Function: POST /api/send-otp
+  Future<void> sendOtp(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+
+    if (_lastSentAt != null && remainingCooldownSeconds > 0) {
+      throw Exception(
+        'Please wait $remainingCooldownSeconds seconds before requesting a new code.',
+      );
+    }
+
+    final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.parse('$baseUrl/send-otp');
+
+    try {
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': cleanEmail}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final data = _parseResponseBody(response.body);
+
+      if (response.statusCode == 200) {
+        _lastSentAt = DateTime.now();
+        return;
+      }
+
+      if (response.statusCode == 429) {
+        _lastSentAt = DateTime.now();
+        final errorMsg = data['error'] as String? ??
+            'Too many requests. Please wait a minute before requesting another code.';
+        throw Exception(errorMsg);
+      }
+
+      if (response.statusCode == 400) {
+        throw Exception(data['error'] as String? ?? 'Invalid email address.');
+      }
+
+      throw Exception(
+        data['error'] as String? ??
+            'Failed to send verification code (Error ${response.statusCode}).',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[OtpService sendOtp Error] $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Backward-compatible alias
+  Future<void> sendEmailOtp(String email) => sendOtp(email);
+
+  /// Calls Vercel Serverless Function: POST /api/verify-otp
+  Future<OtpVerificationResult> verifyOtp(
     String email,
     String enteredCode,
   ) async {
     final cleanEmail = email.trim().toLowerCase();
     final code = enteredCode.trim();
 
+    if (code.length != 6) {
+      return const OtpVerificationResult(
+        isValid: false,
+        errorMessage: 'Please enter the complete 6-digit verification code.',
+      );
+    }
+
+    final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.parse('$baseUrl/verify-otp');
+
     try {
-      final doc = await _firestore
-          .collection('email_verifications')
-          .doc(cleanEmail)
-          .get();
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': cleanEmail, 'otp': code}),
+          )
+          .timeout(const Duration(seconds: 15));
 
-      if (!doc.exists || doc.data() == null) {
-        return const OtpVerificationResult(
+      final data = _parseResponseBody(response.body);
+
+      if (response.statusCode == 200) {
+        return const OtpVerificationResult(isValid: true);
+      }
+
+      if (response.statusCode == 401) {
+        return OtpVerificationResult(
           isValid: false,
-          errorMessage: 'No verification request found for this email. Please request a new code.',
+          errorMessage:
+              data['error'] as String? ?? 'Incorrect verification code.',
         );
       }
 
-      final data = doc.data()!;
-      final expectedOtp = data['otp']?.toString() ?? '';
-      final Timestamp? expiresTimestamp = data['expiresAt'] as Timestamp?;
-      final int attempts = (data['attempts'] as int?) ?? 0;
-
-      if (attempts >= 5) {
-        return const OtpVerificationResult(
+      if (response.statusCode == 403) {
+        return OtpVerificationResult(
           isValid: false,
-          errorMessage: 'Too many incorrect attempts. Please request a new verification code.',
+          errorMessage: data['error'] as String? ??
+              'Maximum attempts exceeded. Please request a new verification code.',
         );
       }
 
-      if (expiresTimestamp != null &&
-          DateTime.now().isAfter(expiresTimestamp.toDate())) {
-        return const OtpVerificationResult(
+      if (response.statusCode == 400) {
+        return OtpVerificationResult(
           isValid: false,
-          errorMessage: 'This verification code has expired. Please request a new one.',
+          errorMessage: data['error'] as String? ??
+              'Verification code has expired. Please request a new one.',
         );
       }
 
-      if (expectedOtp != code) {
-        await _firestore.collection('email_verifications').doc(cleanEmail).update({
-          'attempts': attempts + 1,
-        }).catchError((_) {});
-
-        return const OtpVerificationResult(
-          isValid: false,
-          errorMessage: 'Incorrect verification code. Please check your email and try again.',
-        );
-      }
-
-      await _firestore.collection('email_verifications').doc(cleanEmail).update({
-        'verified': true,
-        'verifiedAt': FieldValue.serverTimestamp(),
-      }).catchError((_) {});
-
-      return const OtpVerificationResult(isValid: true);
+      return OtpVerificationResult(
+        isValid: false,
+        errorMessage: data['error'] as String? ??
+            'Verification failed (Status ${response.statusCode}).',
+      );
     } catch (e) {
       return OtpVerificationResult(
         isValid: false,
-        errorMessage: 'Verification failed: ${e.toString()}',
+        errorMessage: 'Network error connecting to verification service: $e',
       );
+    }
+  }
+
+  /// Backward-compatible alias
+  Future<OtpVerificationResult> verifyEmailOtp(
+    String email,
+    String enteredCode,
+  ) =>
+      verifyOtp(email, enteredCode);
+
+  Map<String, dynamic> _parseResponseBody(String body) {
+    try {
+      return jsonDecode(body) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
     }
   }
 }

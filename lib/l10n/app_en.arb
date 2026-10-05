@@ -1812,5 +1812,28 @@
   "adminSetPlatformGovernance": "Platform Governance",
   "adminSetAssignedPermissions": "Assigned Permissions:",
   "adminSetAuditLogsDesc": "Review administrator actions & access history",
-  "adminSetAuditAccessDenied": "Access Denied: Platform audit logs are restricted to Super Admins."
+  "adminSetAuditAccessDenied": "Access Denied: Platform audit logs are restricted to Super Admins.",
+  "verifyYourEmail": "Verify Your Email",
+  "verifyEmailSubtitle": "We sent a 6-digit verification code to {email}",
+  "@verifyEmailSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "enterVerificationCode": "Enter Verification Code",
+  "resendCode": "Resend Code",
+  "resendCodeIn": "Resend code in {seconds}s",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyAndContinue": "Verify & Continue",
+  "codeExpired": "Verification code expired. Please request a new one.",
+  "codeIncorrect": "Incorrect verification code. Please check and try again.",
+  "emailVerifiedSuccess": "Email verified successfully!"
 }

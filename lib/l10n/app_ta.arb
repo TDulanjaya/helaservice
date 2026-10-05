@@ -1021,5 +1021,14 @@
   "adminSetPlatformGovernance": "தள நிர்வாகம்",
   "adminSetAssignedPermissions": "வழங்கப்பட்ட அனுமதிகள்:",
   "adminSetAuditLogsDesc": "நிர்வாகி செயல்கள் & அணுகல் வரலாற்றைப் பாருங்கள்",
-  "adminSetAuditAccessDenied": "அணுகல் மறுக்கப்பட்டது: தணிக்கைப் பதிவுகள் Super Admin களுக்கு மட்டுமே."
+  "adminSetAuditAccessDenied": "அணுகல் மறுக்கப்பட்டது: தணிக்கைப் பதிவுகள் Super Admin களுக்கு மட்டுமே.",
+  "verifyYourEmail": "உங்கள் மின்னஞ்சலை சரிபார்க்கவும்",
+  "verifyEmailSubtitle": "நாங்கள் {email} க்கு 6 இலக்க சரிபார்ப்புக் குறியீட்டை அனுப்பியுள்ளோம்",
+  "enterVerificationCode": "சரிபார்ப்புக் குறியீட்டை உள்ளிடவும்",
+  "resendCode": "குறியீட்டை மீண்டும் அனுப்பு",
+  "resendCodeIn": "{seconds} வினாடிகளில் குறியீட்டை மீண்டும் அனுப்பு",
+  "verifyAndContinue": "சரிபார்த்து தொடரவும்",
+  "codeExpired": "சரிபார்ப்புக் குறியீடு காலாவதியானது. புதிய குறியீட்டைக் கோரவும்.",
+  "codeIncorrect": "தவறான சரிபார்ப்புக் குறியீடு. சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
+  "emailVerifiedSuccess": "மின்னஞ்சல் வெற்றிகரமாக சரிபார்க்கப்பட்டது!"
 }

@@ -3435,4 +3435,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminSetAuditAccessDenied =>
       'Access Denied: Platform audit logs are restricted to Super Admins.';
+
+  @override
+  String get verifyYourEmail => 'Verify Your Email';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'We sent a 6-digit verification code to $email';
+  }
+
+  @override
+  String get enterVerificationCode => 'Enter Verification Code';
+
+  @override
+  String get resendCode => 'Resend Code';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return 'Resend code in ${seconds}s';
+  }
+
+  @override
+  String get verifyAndContinue => 'Verify & Continue';
+
+  @override
+  String get codeExpired =>
+      'Verification code expired. Please request a new one.';
+
+  @override
+  String get codeIncorrect =>
+      'Incorrect verification code. Please check and try again.';
+
+  @override
+  String get emailVerifiedSuccess => 'Email verified successfully!';
 }

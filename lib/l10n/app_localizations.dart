@@ -6231,6 +6231,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Access Denied: Platform audit logs are restricted to Super Admins.'**
   String get adminSetAuditAccessDenied;
+
+  /// No description provided for @verifyYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Your Email'**
+  String get verifyYourEmail;
+
+  /// No description provided for @verifyEmailSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit verification code to {email}'**
+  String verifyEmailSubtitle(String email);
+
+  /// No description provided for @enterVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Verification Code'**
+  String get enterVerificationCode;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
+
+  /// No description provided for @resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {seconds}s'**
+  String resendCodeIn(int seconds);
+
+  /// No description provided for @verifyAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify & Continue'**
+  String get verifyAndContinue;
+
+  /// No description provided for @codeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code expired. Please request a new one.'**
+  String get codeExpired;
+
+  /// No description provided for @codeIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect verification code. Please check and try again.'**
+  String get codeIncorrect;
+
+  /// No description provided for @emailVerifiedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified successfully!'**
+  String get emailVerifiedSuccess;
 }
 
 class _AppLocalizationsDelegate

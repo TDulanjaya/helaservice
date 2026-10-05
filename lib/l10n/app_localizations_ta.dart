@@ -3502,4 +3502,38 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get adminSetAuditAccessDenied =>
       'அணுகல் மறுக்கப்பட்டது: தணிக்கைப் பதிவுகள் Super Admin களுக்கு மட்டுமே.';
+
+  @override
+  String get verifyYourEmail => 'உங்கள் மின்னஞ்சலை சரிபார்க்கவும்';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'நாங்கள் $email க்கு 6 இலக்க சரிபார்ப்புக் குறியீட்டை அனுப்பியுள்ளோம்';
+  }
+
+  @override
+  String get enterVerificationCode => 'சரிபார்ப்புக் குறியீட்டை உள்ளிடவும்';
+
+  @override
+  String get resendCode => 'குறியீட்டை மீண்டும் அனுப்பு';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return '$seconds வினாடிகளில் குறியீட்டை மீண்டும் அனுப்பு';
+  }
+
+  @override
+  String get verifyAndContinue => 'சரிபார்த்து தொடரவும்';
+
+  @override
+  String get codeExpired =>
+      'சரிபார்ப்புக் குறியீடு காலாவதியானது. புதிய குறியீட்டைக் கோரவும்.';
+
+  @override
+  String get codeIncorrect =>
+      'தவறான சரிபார்ப்புக் குறியீடு. சரிபார்த்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get emailVerifiedSuccess =>
+      'மின்னஞ்சல் வெற்றிகரமாக சரிபார்க்கப்பட்டது!';
 }

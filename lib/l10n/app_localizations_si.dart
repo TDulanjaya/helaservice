@@ -3440,4 +3440,37 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get adminSetAuditAccessDenied =>
       'ප්‍රවේශය නැත: විගණන සටහන් බැලිය හැක්කේ Super Admin ලාට පමණයි.';
+
+  @override
+  String get verifyYourEmail => 'ඔබගේ ඊමේල් ලිපිනය තහවුරු කරන්න';
+
+  @override
+  String verifyEmailSubtitle(String email) {
+    return 'අපි $email වෙත ඉලක්කම් 6ක සත්‍යාපන කේතයක් යැව්වා';
+  }
+
+  @override
+  String get enterVerificationCode => 'සත්‍යාපන කේතය ඇතුළත් කරන්න';
+
+  @override
+  String get resendCode => 'කේතය නැවත යවන්න';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return 'තත්පර $secondsකින් කේතය නැවත යවන්න';
+  }
+
+  @override
+  String get verifyAndContinue => 'තහවුරු කර ඉදිරියට යන්න';
+
+  @override
+  String get codeExpired =>
+      'සත්‍යාපන කේතයේ කාලය ඉකුත් වී ඇත. කරුණාකර අලුත් කේතයක් ඉල්ලන්න.';
+
+  @override
+  String get codeIncorrect =>
+      'සත්‍යාපන කේතය වැරදියි. කරුණාකර පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get emailVerifiedSuccess => 'ඊමේල් ලිපිනය සාර්ථකව තහවුරු විය!';
 }

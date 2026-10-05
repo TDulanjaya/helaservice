@@ -5,9 +5,11 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/otp_service.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
+import 'email_otp_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -72,27 +74,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final profile = await AuthService().signUpWithEmailAndPassword(
-        email: email,
-        password: password,
-        displayName: email.split('@').first,
-      );
+      await OtpService().sendEmailOtp(email);
 
-      if (mounted) {
-        final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-        roleProvider.setUser(profile);
+      if (!mounted) return;
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => CompleteProfileScreen(initialProfile: profile),
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EmailOtpScreen(
+            email: email,
+            onVerified: () async {
+              final profile = await AuthService().signUpWithEmailAndPassword(
+                email: email,
+                password: password,
+                displayName: email.split('@').first,
+              );
+
+              if (mounted) {
+                final roleProvider =
+                    pv.Provider.of<RoleProvider>(context, listen: false);
+                roleProvider.setUser(profile);
+
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        CompleteProfileScreen(initialProfile: profile),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authErrorMessage(context, e)),
+            content: Text(
+              e.toString().contains('Exception:')
+                  ? e.toString().replaceFirst('Exception: ', '')
+                  : authErrorMessage(context, e),
+            ),
             backgroundColor: AppColors.error,
           ),
         );

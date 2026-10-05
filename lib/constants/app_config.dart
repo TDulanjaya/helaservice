@@ -30,4 +30,27 @@ class AppConfig {
       debugPrint('[AppConfig] Firebase Remote Config init warning: $e');
     }
   }
+
+  /// Safely get string from Remote Config with optional fallback
+  static String getString(String key, {String fallback = ''}) {
+    try {
+      final value = FirebaseRemoteConfig.instance.getString(key);
+      return value.trim().isNotEmpty ? value.trim() : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  static String _localOtpApiUrl = '';
+
+  /// Optional override for local testing (e.g. `http://10.0.2.2:3000/api`)
+  static void setOtpApiUrl(String url) {
+    _localOtpApiUrl = url.trim();
+  }
+
+  /// Base URL for Vercel OTP endpoints (Remote Config key: `otp_api_url`)
+  static String get otpApiUrl {
+    if (_localOtpApiUrl.isNotEmpty) return _localOtpApiUrl;
+    return getString('otp_api_url', fallback: 'https://helaservice.vercel.app/api');
+  }
 }

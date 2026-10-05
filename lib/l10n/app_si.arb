@@ -1021,5 +1021,14 @@
   "adminSetPlatformGovernance": "වේදිකා පාලනය",
   "adminSetAssignedPermissions": "ලබා දී ඇති අවසර:",
   "adminSetAuditLogsDesc": "පරිපාලක ක්‍රියා සහ ප්‍රවේශ ඉතිහාසය බලන්න",
-  "adminSetAuditAccessDenied": "ප්‍රවේශය නැත: විගණන සටහන් බැලිය හැක්කේ Super Admin ලාට පමණයි."
+  "adminSetAuditAccessDenied": "ප්‍රවේශය නැත: විගණන සටහන් බැලිය හැක්කේ Super Admin ලාට පමණයි.",
+  "verifyYourEmail": "ඔබගේ ඊමේල් ලිපිනය තහවුරු කරන්න",
+  "verifyEmailSubtitle": "අපි {email} වෙත ඉලක්කම් 6ක සත්‍යාපන කේතයක් යැව්වා",
+  "enterVerificationCode": "සත්‍යාපන කේතය ඇතුළත් කරන්න",
+  "resendCode": "කේතය නැවත යවන්න",
+  "resendCodeIn": "තත්පර {seconds}කින් කේතය නැවත යවන්න",
+  "verifyAndContinue": "තහවුරු කර ඉදිරියට යන්න",
+  "codeExpired": "සත්‍යාපන කේතයේ කාලය ඉකුත් වී ඇත. කරුණාකර අලුත් කේතයක් ඉල්ලන්න.",
+  "codeIncorrect": "සත්‍යාපන කේතය වැරදියි. කරුණාකර පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+  "emailVerifiedSuccess": "ඊමේල් ලිපිනය සාර්ථකව තහවුරු විය!"
 }

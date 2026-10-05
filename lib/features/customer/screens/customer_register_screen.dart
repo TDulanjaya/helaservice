@@ -4,11 +4,13 @@ import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/otp_service.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'home_discovery_screen.dart';
+import '../../auth/screens/email_otp_screen.dart';
 
 class CustomerRegisterScreen extends StatefulWidget {
   const CustomerRegisterScreen({super.key});
@@ -78,34 +80,52 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final phone = _phoneController.text.trim().isNotEmpty
-          ? AuthService.formatSriLankanPhoneNumber(_phoneController.text.trim())
-          : null;
-
-      final profile = await AuthService().signUpWithEmailAndPassword(
-        email: email,
-        password: password,
-        displayName: name,
-        role: AppRole.customer,
-        phone: phone,
-        address: _addressController.text.trim(),
-        district: _district,
-      );
+      await OtpService().sendEmailOtp(email);
 
       if (!mounted) return;
 
-      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-      roleProvider.setUser(profile);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EmailOtpScreen(
+            email: email,
+            onVerified: () async {
+              final phone = _phoneController.text.trim().isNotEmpty
+                  ? AuthService.formatSriLankanPhoneNumber(_phoneController.text.trim())
+                  : null;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-        (route) => false,
+              final profile = await AuthService().signUpWithEmailAndPassword(
+                email: email,
+                password: password,
+                displayName: name,
+                role: AppRole.customer,
+                phone: phone,
+                address: _addressController.text.trim(),
+                district: _district,
+              );
+
+              if (!mounted) return;
+
+              final roleProvider =
+                  pv.Provider.of<RoleProvider>(context, listen: false);
+              roleProvider.setUser(profile);
+
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authErrorMessage(context, e)),
+          content: Text(
+            e.toString().contains('Exception:')
+                ? e.toString().replaceFirst('Exception: ', '')
+                : authErrorMessage(context, e),
+          ),
           backgroundColor: AppColors.error,
         ),
       );

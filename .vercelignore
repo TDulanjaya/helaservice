@@ -1,0 +1,22 @@
+# Ignore Flutter app files so Vercel only deploys the serverless API
+android/
+ios/
+linux/
+macos/
+windows/
+web/
+lib/
+test/
+assets/
+build/
+.dart_tool/
+.gradle/
+*.apk
+*.aab
+*.jks
+node_modules/
+.env*
+!package.json
+!package-lock.json
+!vercel.json
+!api/

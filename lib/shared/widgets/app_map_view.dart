@@ -264,33 +264,22 @@ class AppMapView extends StatefulWidget {
 class _AppMapViewState extends State<AppMapView> {
   late final MapController _mapController;
 
-  static final Map<Brightness, vmt.Style> _styleCache = {};
-  static final Map<Brightness, Future<vmt.Style>> _pendingStyleLoads = {};
+  static vmt.Style? _cachedLightStyle;
+  static Future<vmt.Style>? _pendingLightStyleLoad;
 
   vmt.Style? _vectorStyle;
   bool _hasStyleError = false;
-  Brightness? _activeBrightness;
 
   @override
   void initState() {
     super.initState();
     _mapController = widget.controller ?? MapController();
+    _loadLightStyle();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final brightness = Theme.of(context).brightness;
-    if (_activeBrightness != brightness) {
-      _loadStyleForBrightness(brightness);
-    }
-  }
-
-  void _loadStyleForBrightness(Brightness brightness) {
-    _activeBrightness = brightness;
-    final cached = _styleCache[brightness];
-    if (cached != null) {
-      _vectorStyle = cached;
+  void _loadLightStyle() {
+    if (_cachedLightStyle != null) {
+      _vectorStyle = _cachedLightStyle;
       _hasStyleError = false;
       return;
     }
@@ -298,8 +287,8 @@ class _AppMapViewState extends State<AppMapView> {
     _vectorStyle = null;
     _hasStyleError = false;
 
-    _getOrFetchStyle(brightness).then((style) {
-      if (mounted && _activeBrightness == brightness) {
+    _getOrFetchLightStyle().then((style) {
+      if (mounted) {
         setState(() {
           _vectorStyle = style;
           _hasStyleError = false;
@@ -308,7 +297,7 @@ class _AppMapViewState extends State<AppMapView> {
     }).catchError((error) {
       debugPrint(
           '[AppMapView] OpenFreeMap style loading error: $error. Falling back to OpenStreetMap raster tiles.');
-      if (mounted && _activeBrightness == brightness) {
+      if (mounted) {
         setState(() {
           _vectorStyle = null;
           _hasStyleError = true;
@@ -317,56 +306,47 @@ class _AppMapViewState extends State<AppMapView> {
     });
   }
 
-  static Future<vmt.Style> _getOrFetchStyle(Brightness brightness) {
-    final cached = _styleCache[brightness];
-    if (cached != null) return Future.value(cached);
+  static Future<vmt.Style> _getOrFetchLightStyle() {
+    if (_cachedLightStyle != null) return Future.value(_cachedLightStyle);
+    if (_pendingLightStyleLoad != null) return _pendingLightStyleLoad!;
 
-    final pending = _pendingStyleLoads[brightness];
-    if (pending != null) return pending;
-
-    final future = _fetchStyle(brightness).then((style) {
-      _styleCache[brightness] = style;
-      _pendingStyleLoads.remove(brightness);
+    final future = _fetchLightStyle().then((style) {
+      _cachedLightStyle = style;
+      _pendingLightStyleLoad = null;
       return style;
     }).catchError((error) {
-      _pendingStyleLoads.remove(brightness);
+      _pendingLightStyleLoad = null;
       throw error;
     });
 
-    _pendingStyleLoads[brightness] = future;
+    _pendingLightStyleLoad = future;
     return future;
   }
 
-  static Future<vmt.Style> _fetchStyle(Brightness brightness) async {
-    final isDark = brightness == Brightness.dark;
-    final primaryUri = isDark
-        ? 'https://tiles.openfreemap.org/styles/dark'
-        : 'https://tiles.openfreemap.org/styles/liberty';
+  static Future<vmt.Style> _fetchLightStyle() async {
+    // Keep map bright, clear, and readable with standard light tiles across all modes
+    const primaryUri = 'https://tiles.openfreemap.org/styles/liberty';
 
     try {
       return await vmt.StyleReader(uri: primaryUri)
           .read()
           .timeout(const Duration(seconds: 10));
     } catch (e) {
-      if (isDark) {
-        debugPrint(
-            '[AppMapView] Dark style failed ($e), falling back to positron style.');
-        try {
-          return await vmt.StyleReader(
-            uri: 'https://tiles.openfreemap.org/styles/positron',
-          ).read().timeout(const Duration(seconds: 10));
-        } catch (err) {
-          debugPrint('[AppMapView] Positron style also failed: $err');
-          rethrow;
-        }
+      debugPrint(
+          '[AppMapView] Liberty style failed ($e), falling back to positron style.');
+      try {
+        return await vmt.StyleReader(
+          uri: 'https://tiles.openfreemap.org/styles/positron',
+        ).read().timeout(const Duration(seconds: 10));
+      } catch (err) {
+        debugPrint('[AppMapView] Positron style also failed: $err');
+        rethrow;
       }
-      rethrow;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     final center = widget.initialCenter ??
         (widget.markers.isNotEmpty
             ? widget.markers.first.point
@@ -398,7 +378,7 @@ class _AppMapViewState extends State<AppMapView> {
               children: [
                 if (_vectorStyle != null)
                   vmt.VectorTileLayer(
-                    key: ValueKey('vmt_${isDark ? "dark" : "light"}'),
+                    key: const ValueKey('vmt_light_layer'),
                     theme: _vectorStyle!.theme,
                     sprites: _vectorStyle!.sprites,
                     tileProviders: _vectorStyle!.providers,
@@ -418,7 +398,7 @@ class _AppMapViewState extends State<AppMapView> {
                         strokeWidth: 4.0,
                         color: AppColors.primary,
                         borderStrokeWidth: 2.0,
-                        borderColor: isDark ? Colors.black : Colors.white,
+                        borderColor: Colors.white,
                       ),
                     ],
                   ),

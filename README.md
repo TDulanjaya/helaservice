@@ -10,6 +10,7 @@ An on-demand home services app built with Flutter and Firebase. Customers can bo
 - **Direct Bookings** - Browse nearby providers by trade, check ratings, and book instantly
 - **Live Tracking & Chat** - Track providers en route and message them in-app
 - **Verified Providers** - NIC-based identity verification before providers go live
+- **Email Verification** - 6-digit OTP email verification before account creation
 - **Multilingual** - English, Sinhala (`si`), and Tamil (`ta`)
 
 ---
@@ -19,9 +20,19 @@ An on-demand home services app built with Flutter and Firebase. Customers can bo
 | Layer    | Tools                       |
 | -------- | --------------------------- |
 | Frontend | Flutter                     |
-| Backend  | Firebase                    |
+| Backend  | Firebase + Vercel Functions |
+| Email    | Nodemailer (Gmail SMTP)     |
 | State    | Provider                    |
 | Maps     | flutter_map + OpenStreetMap |
+
+---
+
+## Email Verification
+
+New users must verify their email with a 6-digit code before an account is created:
+- A serverless API on Vercel sends codes via Gmail SMTP
+- OTPs are hashed with SHA-256 and stored in Firestore with a 5-minute expiry
+- Built-in 60-second resend timer and 5-attempt limit to prevent brute force
 
 ---
 

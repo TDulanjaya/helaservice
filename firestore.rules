@@ -360,13 +360,8 @@ service cloud.firestore {
       allow write: if isUser(userId);
     }
 
-    // Internal email verification records. No client access.
-    match /email_verifications/{email} {
-      allow read, write: if false;
-    }
-
-    // Outgoing email queue. No client access.
-    match /mail/{mailId} {
+    // Internal OTP verification records. No client access (Vercel Admin SDK only).
+    match /otp_verifications/{email} {
       allow read, write: if false;
     }
 

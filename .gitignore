@@ -11,9 +11,10 @@ firestore-debug.log
 !assets/**
 .buildlog/
 .history
-backups/
-
-
+# Node.js and Vercel
+node_modules/
+.vercel/
+package-lock.json
 
 # Flutter repo-specific
 /bin/cache/
@@ -129,7 +130,10 @@ secrets.env
 .env
 *.env
 *.local
+.env.local
+.env.*.local
 !secrets.env.example
+!.env.local.example
 
 # Service account keys and GCP credentials
 *service-account*.json
@@ -139,4 +143,4 @@ secrets.env
 
 # Design references
 design_ref/
-
+

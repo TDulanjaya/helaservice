@@ -16,6 +16,7 @@ class Quote {
   final int etaMinutes;
   final String notes;
   final String providerPhone;
+  final String providerLocation;
   final String status;
   final DateTime? createdAt;
 
@@ -35,11 +36,18 @@ class Quote {
     this.etaMinutes = 30,
     this.notes = '',
     this.providerPhone = '',
+    this.providerLocation = '',
     this.status = 'pending',
     this.createdAt,
   });
 
+  bool get isExpired =>
+      status == 'pending' &&
+      createdAt != null &&
+      DateTime.now().difference(createdAt!).inHours >= 48;
+
   Map<String, dynamic> toMap() => {
+
         'requestId': requestId,
         'providerId': providerId,
         'createdBy': createdBy,
@@ -54,6 +62,7 @@ class Quote {
         'etaMinutes': etaMinutes,
         'notes': notes,
         'providerPhone': providerPhone,
+        'providerLocation': providerLocation,
         'status': status,
         'createdAt': FieldValue.serverTimestamp(),
       };
@@ -76,6 +85,10 @@ class Quote {
       etaMinutes: map['etaMinutes'] ?? 30,
       notes: map['notes'] ?? '',
       providerPhone: map['providerPhone'] ?? '',
+      providerLocation: (map['providerLocation'] as String?) ??
+          (map['providerDistrict'] as String?) ??
+          (map['serviceArea'] as String?) ??
+          '',
       status: map['status'] ?? 'pending',
       createdAt: ts is Timestamp ? ts.toDate() : null,
     );

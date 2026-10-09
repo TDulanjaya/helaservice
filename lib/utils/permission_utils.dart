@@ -52,7 +52,7 @@ class PermissionUtils {
     return requested == LocationPermission.always || requested == LocationPermission.whileInUse;
   }
 
-  // camera permission sheet with os check
+  // camera permission sheet
   static Future<bool> requestCameraWithRationale(
     BuildContext context, {
     String? title,
@@ -107,7 +107,7 @@ class PermissionUtils {
     return result.isGranted;
   }
 
-  // gallery permission sheet with os check
+  // gallery permission sheet
   static Future<bool> requestGalleryWithRationale(
     BuildContext context, {
     String? title,
@@ -170,7 +170,7 @@ class PermissionUtils {
     return isAllowed;
   }
 
-  // notification permission sheet with os check
+  // notification permission sheet
   static Future<bool> requestNotificationWithRationale(
     BuildContext context, {
     String? title,

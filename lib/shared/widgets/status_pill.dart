@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
+import '../../constants/job_status.dart';
 
 enum StatusPillType {
   online,
   pending,
+  confirmed,
+  enRoute,
   inProgress,
   completed,
   cancelled,
+  declined,
   offline,
   you,
   custom,
@@ -41,6 +45,18 @@ class StatusPill extends StatelessWidget {
         customBackground = null,
         customForeground = null;
 
+  const StatusPill.confirmed({super.key, this.label})
+      : type = StatusPillType.confirmed,
+        showDot = false,
+        customBackground = null,
+        customForeground = null;
+
+  const StatusPill.enRoute({super.key, this.label})
+      : type = StatusPillType.enRoute,
+        showDot = true,
+        customBackground = null,
+        customForeground = null;
+
   const StatusPill.inProgress({super.key, this.label})
       : type = StatusPillType.inProgress,
         showDot = false,
@@ -59,6 +75,12 @@ class StatusPill extends StatelessWidget {
         customBackground = null,
         customForeground = null;
 
+  const StatusPill.declined({super.key, this.label})
+      : type = StatusPillType.declined,
+        showDot = false,
+        customBackground = null,
+        customForeground = null;
+
   const StatusPill.offline({super.key, this.label})
       : type = StatusPillType.offline,
         showDot = true,
@@ -70,6 +92,29 @@ class StatusPill extends StatelessWidget {
         showDot = false,
         customBackground = null,
         customForeground = null;
+
+  factory StatusPill.fromStatus(String status, {String? customLabel}) {
+    switch (status) {
+      case JobStatus.pending:
+      case JobRequestStatus.pendingProvider:
+        return StatusPill.pending(label: customLabel);
+      case JobStatus.confirmed:
+      case JobRequestStatus.assigned:
+        return StatusPill.confirmed(label: customLabel ?? (status == JobRequestStatus.assigned ? 'Assigned' : 'Confirmed'));
+      case JobStatus.enRoute:
+        return StatusPill.enRoute(label: customLabel ?? 'En Route');
+      case JobStatus.inProgress:
+        return StatusPill.inProgress(label: customLabel);
+      case JobStatus.completed:
+        return StatusPill.completed(label: customLabel);
+      case JobStatus.cancelled:
+        return StatusPill.cancelled(label: customLabel);
+      case JobStatus.declined:
+        return StatusPill.declined(label: customLabel ?? 'Declined');
+      default:
+        return StatusPill.pending(label: customLabel ?? status);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +133,16 @@ class StatusPill extends StatelessWidget {
         fg = context.themeAmberText;
         text = label ?? context.l10n.statusPending;
         break;
+      case StatusPillType.confirmed:
+        bg = AppColors.primary.withValues(alpha: 0.12);
+        fg = AppColors.primary;
+        text = label ?? 'Confirmed';
+        break;
+      case StatusPillType.enRoute:
+        bg = const Color(0xFF3B82F6).withValues(alpha: 0.14);
+        fg = const Color(0xFF2563EB);
+        text = label ?? 'En Route';
+        break;
       case StatusPillType.inProgress:
         bg = context.themeInfoTint;
         fg = context.themeInfo;
@@ -102,6 +157,11 @@ class StatusPill extends StatelessWidget {
         bg = context.themeDangerTint;
         fg = context.themeDanger;
         text = label ?? context.l10n.statusCancelled;
+        break;
+      case StatusPillType.declined:
+        bg = context.themeDangerTint;
+        fg = context.themeDanger;
+        text = label ?? 'Declined';
         break;
       case StatusPillType.offline:
         bg = context.themeSoft;

@@ -7,7 +7,7 @@ class UserProfile {
   final String email;
   final String displayName;
   final String? photoUrl;
-  final String? photoStatus; // 'pending' | 'approved' | 'rejected'
+  final String? photoStatus; // pending or approved or rejected
   final AppRole? role;
   final bool isProfileComplete;
   final String? phone;
@@ -16,16 +16,20 @@ class UserProfile {
   final double? latitude;
   final double? longitude;
   final String? nic;
-  final String? nicFrontUrl;
-  final String? nicBackUrl;
+  final String? nicFrontKey;
+  final String? nicBackKey;
   final List<String> certificationUrls;
-  final String? certificationsStatus; // 'pending' | 'approved' | 'rejected'
+  final String? certificationsStatus; // pending or approved or rejected
   final String? serviceCategory;
   final AdminRole? adminRole;
   final List<AdminPermission>? permissions;
   final String? preferredLanguage;
   final bool isBanned;
   final String? banReason;
+  final bool isVerified;
+
+  String? get nicFrontUrl => nicFrontKey;
+  String? get nicBackUrl => nicBackKey;
 
   const UserProfile({
     required this.id,
@@ -41,8 +45,10 @@ class UserProfile {
     this.latitude,
     this.longitude,
     this.nic,
-    this.nicFrontUrl,
-    this.nicBackUrl,
+    String? nicFrontKey,
+    String? nicBackKey,
+    String? nicFrontUrl,
+    String? nicBackUrl,
     this.certificationUrls = const [],
     this.certificationsStatus,
     this.serviceCategory,
@@ -51,7 +57,9 @@ class UserProfile {
     this.preferredLanguage,
     this.isBanned = false,
     this.banReason,
-  });
+    this.isVerified = false,
+  }) : nicFrontKey = nicFrontKey ?? nicFrontUrl,
+       nicBackKey = nicBackKey ?? nicBackUrl;
 
   bool get isSuperAdmin =>
       adminRole == AdminRole.superAdmin ||
@@ -104,6 +112,8 @@ class UserProfile {
     double? latitude,
     double? longitude,
     String? nic,
+    String? nicFrontKey,
+    String? nicBackKey,
     String? nicFrontUrl,
     String? nicBackUrl,
     List<String>? certificationUrls,
@@ -114,6 +124,7 @@ class UserProfile {
     String? preferredLanguage,
     bool? isBanned,
     String? banReason,
+    bool? isVerified,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -129,8 +140,8 @@ class UserProfile {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       nic: nic ?? this.nic,
-      nicFrontUrl: nicFrontUrl ?? this.nicFrontUrl,
-      nicBackUrl: nicBackUrl ?? this.nicBackUrl,
+      nicFrontKey: nicFrontKey ?? nicFrontUrl ?? this.nicFrontKey,
+      nicBackKey: nicBackKey ?? nicBackUrl ?? this.nicBackKey,
       certificationUrls: certificationUrls ?? this.certificationUrls,
       certificationsStatus: certificationsStatus ?? this.certificationsStatus,
       serviceCategory: serviceCategory ?? this.serviceCategory,
@@ -139,11 +150,12 @@ class UserProfile {
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       isBanned: isBanned ?? this.isBanned,
       banReason: banReason ?? this.banReason,
+      isVerified: isVerified ?? this.isVerified,
     );
   }
 
   Map<String, dynamic> toMap() {
-    // only customer and provider go in users/
+    // customer and provider only
     final safeRole = role == AppRole.admin ? null : role?.name;
 
     return {
@@ -159,9 +171,6 @@ class UserProfile {
       'address': address,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
-      'nic': nic,
-      if (nicFrontUrl != null) 'nicFrontUrl': nicFrontUrl,
-      if (nicBackUrl != null) 'nicBackUrl': nicBackUrl,
       if (certificationUrls.isNotEmpty) 'certificationUrls': certificationUrls,
       if (certificationsStatus != null) 'certificationsStatus': certificationsStatus,
       'serviceCategory': serviceCategory,
@@ -169,6 +178,7 @@ class UserProfile {
       'isBanned': isBanned,
       'banned': isBanned,
       if (banReason != null) 'banReason': banReason,
+      'isVerified': isVerified,
     };
   }
 
@@ -222,8 +232,8 @@ class UserProfile {
           ? (map['longitude'] as num).toDouble()
           : null,
       nic: map['nic'],
-      nicFrontUrl: map['nicFrontUrl'],
-      nicBackUrl: map['nicBackUrl'],
+      nicFrontKey: map['nicFrontKey'] ?? map['nicFrontUrl'],
+      nicBackKey: map['nicBackKey'] ?? map['nicBackUrl'],
       certificationUrls: certList,
       certificationsStatus: map['certificationsStatus'],
       serviceCategory: map['serviceCategory'],
@@ -234,6 +244,7 @@ class UserProfile {
           map['status'] == 'suspended' ||
           map['status'] == 'banned',
       banReason: map['banReason']?.toString(),
+      isVerified: (map['isVerified'] == true) || (map['nicVerified'] == true),
     );
   }
 }

@@ -246,16 +246,16 @@ class _CategoryDistrictManagementScreenState
                     : 'Certified domestic $title services across Sri Lanka.';
 
                 final cat = CategoryRow(
+                  id: title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_'),
                   icon: selectedIcon,
                   name: title,
                   description: desc,
                   registered: '0 Registered',
                   onlineNow: '0 Online Now',
-                  baseFee: 'Dynamic Quote',
-                  hourlyCap: 'Artisan Bid',
                   districts: kAllSriLankanDistricts,
                   surge: 'Market Rate',
                   status: 'Active',
+                  isLive: true,
                   iconKey: selectedIconKey,
                 );
 
@@ -644,13 +644,10 @@ class _CategoryDistrictManagementScreenState
                       else if (isMobile)
                         Column(
                           children: categories.map((c) {
-                            final catNameLower = c.name.toLowerCase().trim();
                             final matchingTechs = technicians.where((t) {
-                              final title = t.title.toLowerCase().trim();
-                              return title == catNameLower ||
-                                  (title.isNotEmpty &&
-                                      (title.contains(catNameLower) ||
-                                          catNameLower.contains(title)));
+                              return t.category == c.id ||
+                                  t.category.toLowerCase() == c.id.toLowerCase() ||
+                                  t.category == c.name;
                             }).toList();
                             final registeredCount = matchingTechs.length;
                             final onlineCount =
@@ -671,14 +668,11 @@ class _CategoryDistrictManagementScreenState
                       else
                         Column(
                           children: categories.map((c) {
-                            final isActive = c.status.toLowerCase() == 'active';
-                            final catNameLower = c.name.toLowerCase().trim();
+                            final isActive = c.isLive;
                             final matchingTechs = technicians.where((t) {
-                              final title = t.title.toLowerCase().trim();
-                              return title == catNameLower ||
-                                  (title.isNotEmpty &&
-                                      (title.contains(catNameLower) ||
-                                          catNameLower.contains(title)));
+                              return t.category == c.id ||
+                                  t.category.toLowerCase() == c.id.toLowerCase() ||
+                                  t.category == c.name;
                             }).toList();
                             final registeredCount = matchingTechs.length;
                             final onlineCount =
@@ -712,7 +706,7 @@ class _CategoryDistrictManagementScreenState
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          LocalizedData.getCategory(context, c.name),
+                                          c.name,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 14,
@@ -1846,7 +1840,7 @@ class _MobileCategoryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      LocalizedData.getCategory(context, c.name),
+                      c.name,
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 15,

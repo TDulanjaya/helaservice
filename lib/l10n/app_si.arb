@@ -551,7 +551,7 @@
   "vettedTechniciansAvailable": "පරීක්ෂා කළ ශිල්පීන් {count}ක් සිටී",
   "publishedTradeCategories": "ප්‍රකාශිත වෘත්තීය කාණ්ඩ",
   "registeredOnlineCount": "{registered}ක් ලියාපදිංචි • {online}ක් සබැඳිව",
-  "statusActive": "සක්‍රීයයි",
+  "statusActive": "සක්‍රියයි",
   "statusPaused": "අත්හිටුවා ඇත",
   "dynamicBiddingBadge": "ගතික ලංසු තැබීම",
   "islandWideBadge": "දිවයින පුරා",
@@ -733,6 +733,7 @@
   "failedToSubmitQuote": "මිල ගණන් ඉදිරිපත් කිරීමට නොහැකි විය: {error}",
   "delayReportedNotice": "ප්‍රමාදය වාර්තා කරන ලදී: {reason} (+විනාඩි 10ක ETA ගැලපීමක් දැනුම් දෙන ලදී)",
   "customerLocation": "පාරිභෝගිකයාගේ ස්ථානය",
+  "customerLocationNotAvailableCall": "පාරිභෝගිකයාගේ ස්ථානය නොමැත. පාරිභෝගිකයා අමතන්න.",
   "customerLocationNamed": "{name}ගේ ස්ථානය",
   "youEnRoute": "ඔබ (පැමිණෙමින්)",
   "inDistance": "{distance}කින්",
@@ -1070,7 +1071,6 @@
   "allRoles": "සියලු භූමිකා",
   "allDistricts": "සියලු දිස්ත්‍රික්ක",
   "filterByStatus": "තත්ත්වය",
-  "statusActive": "සක්‍රියයි",
   "statusSuspended": "අත්හිටුවා ඇත",
   "suspendAccount": "ගිණුම අත්හිටුවන්න",
   "unbanAccount": "අත්හිටුවීම ඉවත් කරන්න",
@@ -1101,7 +1101,7 @@
   "zoomIn": "විශාල කරන්න",
   "zoomOut": "කුඩා කරන්න",
   "recenterMap": "සිතියම නැවත කේන්ද්‍රගත කරන්න",
-  "superAdminCannotBeSuspended": "ප්‍රධාන පරිපාලක ගිණුම් ආරක්ෂිත බැවින් අත්හිටුවිය නොහැක.",
+  "superAdminCannotBeSuspended": "ප්‍රධාන පරිපාලක ගිණුම් අත්හිටුවිය නොහැක.",
   "openSettings": "සැකසීම් විවෘත කරන්න",
   "ok": "හරි",
   "permissionCameraPermanentlyDisabled": "කැමරා ප්‍රවේශය සම්පූර්ණයෙන්ම අක්‍රිය කර ඇත. ඡායාරූප ලබා ගැනීමට කරුණාකර එය සැකසීම් වලින් සක්‍රිය කරන්න.",
@@ -1118,5 +1118,415 @@
   "permissionNotificationNeeded": "දැනුම්දීම් අවසරය අවශ්‍යයි",
   "permissionNotificationPermanentlyDisabled": "උපාංග සැකසීම් තුළ දැනුම්දීම් අක්‍රිය කර ඇත. රැකියා දැනුම්දීම් ලබා ගැනීමට කරුණාකර ඒවා සක්‍රිය කරන්න.",
   "noMatchesFound": "ගැළපීම් කිසිවක් හමු නොවීය",
-  "selectOption": "තෝරන්න"
+  "selectOption": "තෝරන්න",
+  "proApprovalRequiredTitle": "පරිපාලක අනුමැතිය අවශ්‍යයි",
+  "proApprovalRequiredDesc": "ඔබගේ සේවා සැපයුම්කරු ගිණුම පරිපාලක සත්‍යාපනය අපේක්ෂාවෙන් පවතී. ආරක්ෂාව සහ විශ්වාසනීයත්වය තහවුරු කිරීමට, අනුමත වූ පසු රැකියා ඇඟවීම් සහ මිල ගණන් ඉදිරිපත් කිරීමේ අවස්ථාව විවෘත වේ.",
+  "proVerificationStatus": "සත්‍යාපන තත්ත්වය",
+  "proStatusPendingReview": "පරිපාලක සමාලෝචනය යටතේ පවතී",
+  "proStatusActionRequired": "ක්‍රියාමාර්ගයක් අවශ්‍යයි: සත්‍යාපනය ඉදිරිපත් කරන්න",
+  "proStatusRejected": "සත්‍යාපනය ප්‍රතික්ෂේප විය",
+  "proSubmitNicAction": "ජාතික හැඳුනුම්පත් සත්‍යාපනය සම්පූර්ණ කරන්න",
+  "proRefreshStatus": "තත්ත්වය යාවත්කාලීන කරන්න",
+  "proCheckingStatus": "තත්ත්වය පරීක්ෂා කරමින්...",
+  "proApprovalGrantedTitle": "ප්‍රවේශය ලබා දෙන ලදී!",
+  "proApprovalGrantedDesc": "සුභ පැතුම්! ඔබගේ ගිණුම පරිපාලක විසින් සාර්ථකව අනුමත කරන ලදී. ඔබට දැන් රැකියා ලබා ගැනීමට, මිල ගණන් ඉදිරිපත් කිරීමට සහ සේවාවන් හැසිරවීමට පූර්ණ ප්‍රවේශය ඇත.",
+  "proGetStarted": "පුවරුවට පිවිසෙන්න",
+  "proNotificationsTitle": "සේවා දැනුම්දීම්",
+  "proNoNotifications": "දැනට කිසිදු දැනුම්දීමක් නොමැත",
+  "proMarkAllRead": "සියල්ල කියවූ ලෙස ලකුණු කරන්න",
+  "reportToAdmin": "පරිපාලක වෙත වාර්තා කරන්න",
+  "reportIssueTitle": "ගැටලුවක් වාර්තා කිරීම / පැමිණිලි කිරීම",
+  "reportIssueDesc": "මෙම සංවාදය හෝ පරිශීලකයා පිළිබඳව නිල පැමිණිල්ලක් ඉදිරිපත් කරන්න. පරිපාලන කණ්ඩායම මෙය සමාලෝචනය කර සුදුසු පියවර ගනු ඇත.",
+  "reportReasonPrompt": "හේතුවක් තෝරන්න",
+  "reportNotesPrompt": "සිදුවීම හෝ හේතුව විස්තර කරන්න...",
+  "reportSubmitButton": "පැමිණිල්ල පරිපාලක වෙත යොමු කරන්න",
+  "reportSubmitting": "යොමු කරමින්...",
+  "reportSuccessSnack": "පැමිණිල්ල සාර්ථකව පරිපාලක වෙත යොමු කරන ලදී.",
+  "adminSupportChannelTitle": "පරිපාලක සහාය සහ උපකාරක මැදිරිය",
+  "adminSupportChannelSubtitle": "සෘජු සජීවී සහාය, ගැටලු නිරාකරණය සහ මගපෙන්වීම",
+  "fileFormalTicket": "නිල පැමිණිල්ලක් ලියාපදිංචි කරන්න",
+  "cancelBookingOrQuote": "වෙන්කිරීම / මිල ගණන අවලංගු කරන්න",
+  "cancelBookingPrompt": "ඔබට මෙම වෙන්කිරීම/මිල ගණන අවලංගු කිරීමට අවශ්‍ය බව තහවුරුද?",
+  "cancellationReasonPrompt": "කරුණාකර අවලංගු කිරීමට හේතුවක් තෝරන්න",
+  "cancelReasonCustomerRequest": "පාරිභෝගිකයාගේ ඉල්ලීම පරිදි",
+  "cancelReasonProviderUnavailable": "සේවා ශිල්පියා ලබා ගත නොහැක",
+  "cancelReasonScheduleConflict": "වේලාවන් ගැටලු සහගත වීම",
+  "cancelReasonPriceDispute": "මිල හෝ ගාස්තු පිළිබඳ එකඟ නොවීම",
+  "cancelReasonOther": "වෙනත් හේතුවක්",
+  "confirmCancellation": "අවලංගු කිරීම තහවුරු කරන්න",
+  "bookingCancelledSuccess": "වෙන්කිරීම සාර්ථකව අවලංගු කරන ලදී",
+  "repostJob": "නැවත රැකියාව පළ කරන්න",
+  "repostJobConfirm": "ඔබට මෙම රැකියාව නැවත පළ කිරීමට අවශ්‍යද? ආසන්නයේ සිටින සේවා ශිල්පීන්ට නව මිල ගණන් ඉදිරිපත් කිරීමට මෙය නැවත විවෘත වේ.",
+  "repostJobSuccess": "රැකියාව සාර්ථකව නැවත පළ කරන ලදී!",
+  "deleteJob": "රැකියාව මකා දමන්න",
+  "deleteJobConfirm": "මෙම රැකියා ඉල්ලීම ස්ථිරවම මකා දැමීමට ඔබට අවශ්‍යද? මෙය නැවත ප්‍රතිවර්තනය කළ නොහැක.",
+  "deleteJobSuccess": "රැකියා ඉල්ලීම මකා දමන ලදී",
+  "chatWithProvider": "සේවා ශිල්පියා සමග කතාබස් කරන්න",
+  "otpCheckSpamHintTitle": "ඊමේල් පණිවිඩය ලැබුණේ නැද්ද?",
+  "otpCheckSpamHintDesc": "කරුණාකර ඔබගේ Spam හෝ Junk ෆෝල්ඩරය පරීක්ෂා කරන්න. සමහර අවස්ථාවල සත්‍යාපන කේතය එහි ගොස් තිබිය හැක.",
+  "loggingOut": "පිටවෙමින් පවතී...",
+  "navMessages": "සංවාද",
+  "closestFirst": "ආසන්නතම පළමුව",
+  "newestFirst": "නවතම පළමුව",
+  "allDistances": "සියල්ල",
+  "within5Km": "< කි.මී. 5",
+  "within10Km": "< කි.මී. 10",
+  "within25Km": "< කි.මී. 25",
+  "viewOnMap": "සිතියම බලන්න",
+  "nearbyTag": "ඉතා ආසන්නයි",
+  "moderateTag": "මධ්‍යම දුර",
+  "extendedTag": "දුර බැහැර",
+  "estTravelTime": "~විනාඩි {mins}ක ගමනක්",
+  "noJobsInRadius": "තෝරාගත් දුර ප්‍රමාණය තුළ වැඩ හමු නොවීය",
+  "filterRoleAndStatus": "භූමිකාව සහ තත්වය පෙරහන",
+  "allStatuses": "සියලු තත්වයන්",
+  "clearFilters": "පෙරහන් ඉවත් කරන්න",
+  "roleAllAdmins": "සියලු පරිපාලකයින්",
+  "becomeServiceProvider": "සේවා සපයන්නෙකු වන්න",
+  "backToCustomerDashboard": "පාරිභෝගික පුවරුවට ආපසු යන්න",
+  "cancelRegistration": "ලියාපදිංචිය අවලංගු කරන්න",
+  "roleSwitchAdminOnlyDesc": "වේදිකා නඩත්තු සහ දත්ත පරීක්ෂණ මාදිලිය",
+  "adminProviderPreviewNotice": "පරිපාලක පෙරදසුන් මාදිලිය · සේවා සපයන්නාගේ අතුරුමුහුණත නරඹමින්",
+  "resubmitVerification": "නැවත සත්‍යාපනය ඉදිරිපත් කරන්න",
+  "verificationNotApprovedTitle": "සත්‍යාපනය අනුමත නොවීය",
+  "verificationNotApprovedBody": "ඔබගේ සත්‍යාපනය පරිපාලනය විසින් අනුමත නොකරන ලදී. කරුණාකර ඔබගේ ලේඛන පරීක්ෂා කර නැවත ඉදිරිපත් කරන්න.",
+  "proVerificationPendingReview": "සත්‍යාපනය ඉදිරිපත් කර ඇත · සමාලෝචනය වෙමින්",
+  "chooseRoleTitle": "ඔබට HelaService භාවිතා කිරීමට අවශ්‍ය කෙසේද?",
+  "chooseRoleSubtitle": "ඔබගේ ගිණුම් භූමිකාව තෝරා ඉදිරියට යන්න.",
+  "roleCustomerTitle": "මට සේවාවක් අවශ්‍යයි",
+  "roleCustomerDesc": "ශ්‍රී ලංකාවේ ඕනෑම තැනක සිට විශ්වාසදායී කාර්මික ශිල්පීන් සොයාගන්න හෝ හදිසි සේවා ලබාගන්න.",
+  "roleCustomerBadge": "පාරිභෝගික",
+  "roleCustomerPerk1": "පැහැදිලි ගාස්තු",
+  "roleCustomerPerk2": "සජීවී GPS ලුහුබැඳීම",
+  "roleCustomerPerk3": "ක්ෂණික මිල ගණන්",
+  "roleProviderTitle": "මම සේවාවක් සපයන්නෙමි",
+  "roleProviderDesc": "ළඟම ඇති පාරිභෝගික සේවා ඉල්ලීම් ලබාගෙන ඔබේ ව්‍යාපාරය දියුණු කරගන්න.",
+  "roleProviderBadge": "සේවා සපයන්නා",
+  "roleProviderPerk1": "රේඩාර් සේවා",
+  "roleProviderPerk2": "සෘජු අවස්ථා",
+  "roleProviderPerk3": "ආරක්ෂිත සත්‍යාපනය",
+  "selectServiceLocation": "සේවා ස්ථානය තෝරන්න",
+  "useCurrentGpsLocation": "වත්මන් GPS ස්ථානය භාවිතා කරන්න",
+  "savedAddresses": "සුරකින ලද ලිපිනයන්",
+  "serviceAddressLabel": "සේවා ලිපිනය",
+  "serviceAddressHint": "සම්පූර්ණ ලිපිනය හෝ විස්තර ඇතුළත් කරන්න",
+  "landmarkOrNoteOptional": "සලකුණ හෝ උපදෙස් (විකල්ප)",
+  "landmarkHint": "උදා: කහ ගේට්ටුව අසල, වම්පස දෙවන නිවස",
+  "saveAddressForFuture": "මතු භාවිතය සඳහා මෙම ලිපිනය සුරකින්න",
+  "confirmLocation": "ස්ථානය තහවුරු කරන්න",
+  "selectPinOnMap": "තහවුරු කිරීමට සිතියමේ ලක්ෂ්‍යය සලකුණු කරන්න",
+  "genericService": "සේවාව",
+  "enterReasonForSuspension": "අත්හිටුවීමට හේතුව ඇතුළත් කරන්න...",
+  "appLanguageLabel": "App Language / භාෂාව / மொழி",
+  "profilePhotoApproved": "පැතිකඩ ඡායාරූපය අනුමත කරන ලදී!",
+  "errorApprovingPhoto": "පැතිකඩ ඡායාරූපය අනුමත කිරීමේ දෝෂයකි: {error}",
+  "@errorApprovingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApprovingNic": "ජාතික හැඳුනුම්පත අනුමත කිරීමේ දෝෂයකි: {error}",
+  "@errorApprovingNic": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "tradeCertificationsApproved": "වෘත්තීය සහතික අනුමත කරන ලදී!",
+  "errorApprovingCertifications": "සහතික අනුමත කිරීමේ දෝෂයකි: {error}",
+  "@errorApprovingCertifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "approveDp": "ඡායාරූපය අනුමත කරන්න",
+  "dpApproved": "ඡායාරූපය අනුමතයි",
+  "approveNicBoth": "හැඳුනුම්පත අනුමත කරන්න",
+  "approveCerts": "සහතික අනුමත කරන්න",
+  "takeProfilePhoto": "පැතිකඩ ඡායාරූපයක් ගන්න",
+  "selectProfilePhoto": "පැතිකඩ ඡායාරූපයක් තෝරන්න",
+  "failedToCompleteProfile": "පැතිකඩ සම්පූර්ණ කිරීමට නොහැකි විය: {error}",
+  "@failedToCompleteProfile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceCategory": "සේවා ප්‍රවර්ගය",
+  "pleaseEnterFullName": "කරුණාකර ඔබගේ සම්පූර්ණ නම ඇතුළත් කරන්න",
+  "failedToSetRole": "කාර්යභාරය සැකසීමට නොහැකි විය: {error}",
+  "@failedToSetRole": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "savedAddressLabelHint": "නම් කිරීම (උදා. නිවස, කාර්යාලය)",
+  "landmarkNoteOptional": "සලකුණ / සටහන (විකල්ප)",
+  "deleteSavedAddress": "සුරකින ලද ලිපිනය මකන්න",
+  "confirmDeleteSavedAddress": "මෙම ලිපිනය මැකීමට ඔබට විශ්වාසද?",
+  "addNew": "අලුතින් එකතු කරන්න",
+  "setServiceLocation": "සේවා ස්ථානය සකසන්න",
+  "failedToUpdateJobLocation": "සේවා ස්ථානය යාවත්කාලීන කිරීමට නොහැකි විය: {error}",
+  "@failedToUpdateJobLocation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseSelectServiceLocation": "ඉල්ලීම පළ කිරීමට පෙර කරුණාකර සේවා ස්ථානයක් තෝරන්න.",
+  "confirmServiceLocation": "සේවා ස්ථානය තහවුරු කරන්න",
+  "pinAttemptsResetZero": "PIN උත්සාහයන් නැවත 0 බවට පත් කරන ලදී.",
+  "cannotCancelInProgressBooking": "ක්‍රියාත්මක වන වෙන්කිරීමක් අවලංගු කළ නොහැක. කරුණාකර සහය අමතන්න.",
+  "serviceVerification": "සේවා තහවුරු කිරීම",
+  "rateServiceProvider": "සේවා සපයන්නා ශ්‍රේණිගත කරන්න",
+  "jobCompletedSuccessfully": "කාර්යය සාර්ථකව අවසන් කරන ලදී!",
+  "verifyAndFinish": "තහවුරු කර අවසන් කරන්න",
+  "callCustomer": "පාරිභෝගිකයා අමතන්න",
+  "directServiceBooking": "සෘජු සේවා වෙන්කිරීම",
+  "signInCancelledByUser": "පිවිසීම පරිශීලකයා විසින් අවලංගු කරන ලදී.",
+  "couldNotDetectLocation": "ස්ථානය හඳුනාගත නොහැකි විය: {error}",
+  "@couldNotDetectLocation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unauthorizedRoleSwitch": "අනවසර කාර්යභාර මාරුව.",
+  "givePinHint": "සේවාව අවසන් වූ පසු මෙම ඉලක්කම් 6 කේතය සේවා සපයන්නාට ලබා දෙන්න.",
+  "@categorySpecialist": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "directBookingWith": "{providerName} සමඟ සෘජු වෙන්කිරීම",
+  "@directBookingWith": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      }
+    }
+  },
+  "directBookingWithNote": "{providerName} සමඟ සෘජු වෙන්කිරීම. සටහන: {note}",
+  "@directBookingWithNote": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      },
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "nicVerified": "ජාතික හැඳුනුම්පත අනුමතයි",
+  "statusApproved": "අනුමතයි",
+  "useGps": "GPS භාවිත කරන්න",
+  "location": "ස්ථානය",
+  "delete": "මකන්න",
+  "edit": "සංස්කරණය කරන්න",
+  "serviceDate": "සේවා දිනය",
+  "agreedPrice": "එකඟ වූ මිල",
+  "pinVerified": "PIN ස්ථානයේදී තහවුරු කරන ලදී",
+  "providerDetailsTitle": "සේවා සපයන්නාගේ විස්තර",
+  "decline": "ප්‍රතික්ෂේප කරන්න",
+  "didYouPayAmount": "{name} හට {amount} මුදල ගෙවූවාද?",
+  "@didYouPayAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "yesPaid": "ඔව්, ගෙවන ලදී",
+  "reportPaymentProblem": "ගැටලුවක් වාර්තා කරන්න",
+  "cashPaymentConfirmed": "අත්පිට මුදල් ගෙවීම තහවුරු විය",
+  "paymentDisputedWithReason": "ගෙවීම පිළිබඳ ගැටලුවක්: {reason}",
+  "@paymentDisputedWithReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "disputePaymentPrompt": "ගෙවීම් ගැටලුවට හේතුව ඇතුළත් කරන්න:",
+  "disputePaymentReasonHint": "උදා: වැඩිපුර අයකිරීම, වැඩ නිම නොකිරීම",
+  "submitDispute": "වාර්තාව යොමු කරන්න",
+  "payProviderDirectlyTip": "සේවාව නිම වූ පසු සේවා සපයන්නාට අත්පිට මුදලින් සෘජුවම ගෙවන්න.",
+  "cashReceived": "ලැබුණු අත්පිට මුදල",
+  "paymentNoteOptional": "ගෙවීම් සටහන (විකල්ප)",
+  "paymentNoteHint": "උදා: අමතර අමුද්‍රව්‍ය, අමතර වැඩ",
+  "finalAmountExceedsLimit": "එකඟ වූ මුදල මෙන් 5 ගුණයකට වඩා වැඩි විය නොහැක",
+  "paymentWaitingConfirmation": "තහවුරු වනතුරු",
+  "paymentConfirmed": "තහවුරු විය",
+  "paymentDisputed": "ගැටලුවක් ඇත",
+  "earningsToday": "අද",
+  "earningsThisWeek": "මෙම සතිය",
+  "earningsThisMonth": "මෙම මාසය",
+  "totalEarnings": "මුළු ඉපැයීම",
+  "exportCsv": "CSV අපනයනය",
+  "csvExportSuccess": "CSV සාර්ථකව නිර්මාණය විය",
+  "pinCode": "සේවා නිමකිරීමේ PIN අංකය",
+  "didYouReachPerson": "{name} සම්බන්ධ කරගත හැකි වූවාද?",
+  "@didYouReachPerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callOutcomeAnswered": "සම්බන්ධ විය / පිළිතුරු දුනි",
+  "callOutcomeNoAnswer": "පිළිතුරක් නැත / කාර්යබහුලයි",
+  "callOutcomeWrongNumber": "වැරදි අංකයකි",
+  "callRequiresAcceptedQuote": "දුරකථන ඇමතුම් ලබාගත හැක්කේ මිල ගණන් පිළිගත් පසුව පමණි.",
+  "callLogsTitle": "ඇමතුම් සටහන්",
+  "callLogCaller": "අමතන්නා",
+  "callLogCallee": "ලබන්නා",
+  "callLogOutcome": "ඇමතුම් ප්‍රතිඵලය",
+  "bookingTimelineTitle": "කාර්ය කාලසටහන",
+  "noTimelineEvents": "තවමත් සිදුවීම් සටහන් වී නොමැත",
+  "viewTimeline": "කාලසටහන බලන්න",
+  "adminActionLogsTitle": "පරිපාලක ක්‍රියා ලඝු",
+  "adminAuditTrailSubtitle": "පරිපාලක ක්‍රියාවල නොවෙනස්වන විගණන වාර්තාව",
+  "noAdminLogsFound": "තවමත් පරිපාලක ලඝු සටහන් වී නොමැත",
+  "filterAll": "සියල්ල",
+  "filterUsers": "පරිශීලකයින්",
+  "filterProviders": "සේවා සපයන්නන්",
+  "filterBookings": "වෙන්කිරීම්",
+  "filterSystem": "පද්ධතිය",
+  "noEntriesToExport": "අපනයනය කිරීමට දත්ත නොමැත",
+  "deleteAccountTitle": "ගිණුම මකා දමන්න",
+  "deleteAccountConfirmation": "ඔබගේ ගිණුම මකා දැමීමට ඔබට විශ්වාසද? ඔබගේ සියලු පැතිකඩ තොරතුරු සහ දත්ත ස්ථිරවම මකා දැමෙනු ඇත. මෙය නැවත ආපසු හැරවිය නොහැක.",
+  "deleteAccountConfirmAction": "ස්ථිරවම මකා දමන්න",
+  "privacyPolicy": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
+  "termsOfService": "සේවා කොන්දේසි",
+  "photo": "ඡායාරූපය",
+  "sendPhoto": "ඡායාරූපයක් යවන්න",
+  "takePhoto": "ඡායාරූපයක් ගන්න",
+  "chooseFromGallery": "ගැලරියෙන් තෝරන්න",
+  "uploadingImage": "ඡායාරූපය උඩුගත කරමින්...",
+  "failedToUploadImage": "ඡායාරූපය උඩුගත කිරීම අසාර්ථක විය",
+  "viewPhoto": "ඡායාරූපය බලන්න",
+  "bookingTypeAsap": "හැකි ඉක්මනින් / හදිසි",
+  "bookingTypeScheduled": "නියමිත වේලාවක්",
+  "selectScheduledDate": "දිනය තෝරන්න",
+  "selectTimeSlot": "වේලා කාණ්ඩය තෝරන්න",
+  "slotMorning": "උදෑසන (පෙ.ව. 8:00 - දහවල් 12:00)",
+  "slotAfternoon": "පස්වරුව (දහවල් 12:00 - ප.ව. 4:00)",
+  "slotEvening": "සවස (ප.ව. 4:00 - රාත්‍රී 8:00)",
+  "rescheduleBooking": "දිනය/වේලාව වෙනස් කරන්න",
+  "proposeNewTime": "නව වේලාවක් යෝජනා කරන්න",
+  "rescheduleReasonPrompt": "වේලාව වෙනස් කිරීමට හේතුව",
+  "rescheduleReasonHint": "උදා: මාර්ග තදබදය, පාරිභෝගිකයා ඉල්ලූ වේලාව",
+  "submitRescheduleRequest": "වෙනස් කිරීමට ඉල්ලන්න",
+  "rescheduleProposalBanner": "නව වේලාවක් යෝජනා කර ඇත",
+  "acceptReschedule": "වෙනස් කිරීම පිළිගන්න",
+  "declineReschedule": "ප්‍රතික්ෂේප කරන්න",
+  "cancelRescheduleProposal": "යෝජනාව අවලංගු කරන්න",
+  "expiredPill": "කල් ඉකුත් වී ඇත",
+  "workingHoursTitle": "සේවා කාලසටහන සහ වේලාවන්",
+  "serviceRadiusTitle": "සේවා ආවරණ දුර (Radius)",
+  "serviceRadiusSubtitle": "සේවා සඳහා ගමන් කරන උපරිම දුර",
+  "dayMonday": "සඳුදා",
+  "dayTuesday": "අඟහරුවාදා",
+  "dayWednesday": "බදාදා",
+  "dayThursday": "බ්‍රහස්පතින්දා",
+  "dayFriday": "සිකුරාදා",
+  "daySaturday": "සෙනසුරාදා",
+  "daySunday": "ඉරිදා",
+  "openTime": "ආරම්භක වේලාව",
+  "closeTime": "අවසන් වේලාව",
+  "closedDay": "නිවාඩු",
+  "presetWeekdays": "සතියේ දින (පෙ.ව. 8 - ප.ව. 6)",
+  "presetAllDays": "දින 7 ම (පෙ.ව. 8 - ප.ව. 8)",
+  "preset247": "පැය 24 පුරාම විවෘතයි",
+  "unavailableNow": "දැනට සේවාව ලබාගත නොහැක",
+  "availableNow": "දැනට සේවාව ලබාගත හැක",
+  "outsideWorkingHours": "සේවා කාලයෙන් පිටත",
+  "savedScheduleSuccess": "සේවා වේලාවන් සාර්ථකව යාවත්කාලීන විය",
+  "savedRadiusSuccess": "සේවා ආවරණ දුර යාවත්කාලීන විය",
+  "serviceRadiusKm": "කි.මී. {radius} ආවරණයක්",
+  "rescheduleRequestedNotice": "නැවත වේලාවක් වෙන්කිරීමේ යෝජනාව පිළිතුරක් අපේක්ෂාවෙන්",
+  "saveChanges": "වෙනස්කම් සුරකින්න",
+  "jobPhotos": "සේවා ඡායාරූප (Proof of Work)",
+  "jobPhotosSubtitle": "සේවාවට පෙර සහ පසු පරීක්ෂණ ඡායාරූප",
+  "beforePhotos": "සේවාවට පෙර",
+  "afterPhotos": "සේවාවට පසු",
+  "addBeforePhoto": "පෙර ඡායාරූපයක් එක්කරන්න",
+  "addAfterPhoto": "පසු ඡායාරූපයක් එක්කරන්න",
+  "noBeforePhotos": "තවමත් පෙර ඡායාරූප උඩුගත කර නැත",
+  "noAfterPhotos": "තවමත් පසු ඡායාරූප උඩුගත කර නැත",
+  "portfolioTitle": "කළ සේවා සහ ව්‍යාපෘති",
+  "portfolioSubtitle": "ඔබ නිමකළ සේවාවන් පාරිභෝගිකයන්ට පෙන්වන්න",
+  "addPortfolioItem": "නව සේවාවක් එක්කරන්න",
+  "portfolioItemTitle": "ව්‍යාපෘති මාතෘකාව",
+  "portfolioItemTitleHint": "උදා: විදුලි රැහැන් ඇදීම",
+  "portfolioItemDesc": "විස්තරය",
+  "portfolioItemDescHint": "කළ කාර්යය පිළිබඳ කෙටි විස්තරයක්",
+  "uploadPhoto": "ඡායාරූපයක් එක්කරන්න",
+  "photoUploadedSuccess": "ඡායාරූපය සාර්ථකව උඩුගත විය",
+  "portfolioItemAdded": "සේවා විස්තරය සාර්ථකව එක්විය",
+  "deletePortfolioConfirm": "මෙම සේවා විස්තරය මකා දමන්නද?",
+  "noPortfolioItems": "තවමත් සේවා ඡායාරූප එක්කර නැත",
+  "categoryLabel": "ප්‍රවර්ගය",
+  "selectCategoryPrompt": "ප්‍රවර්ගයක් තෝරන්න",
+  "newProviderBadge": "නවක",
+  "blockUserTitle": "පරිශීලකයා අවහිර කරන්න",
+  "blockUserConfirm": "ඔබට මෙම පරිශීලකයා අවහිර කිරීමට අවශ්‍ය බව විශ්වාසද? ඔවුන්ට ඔබට පණිවිඩ හෝ ඉල්ලීම් එවිය නොහැක.",
+  "blockUserAction": "අවහිර කරන්න",
+  "unblockUserAction": "අවහිරය ඉවත් කරන්න",
+  "userBlockedSuccess": "පරිශීලකයා සාර්ථකව අවහිර කරන ලදී",
+  "userUnblockedSuccess": "අවහිරය ඉවත් කරන ලදී",
+  "reportUserTitle": "පැමිණිලි කරන්න",
+  "reportReasonLabel": "පැමිණිල්ලට හේතුව",
+  "reportReasonHarassment": "නුසුදුසු හෝ අපවාදාත්මක හැසිරීම",
+  "reportReasonSpam": "ස්පෑම් හෝ අනවශ්‍ය දැන්වීම්",
+  "reportReasonFraud": "වංචාව හෝ අසාධාරණ ගාස්තු අය කිරීම",
+  "reportReasonNoShow": "සේවාවට නොපැමිණීම හෝ අතරමග හැර යාම",
+  "reportReasonSafety": "ආරක්ෂාව හෝ විශ්වාසය පිළිබඳ ගැටළුවක්",
+  "reportReasonOther": "වෙනත් නීති විරෝධී ක්‍රියාවක්",
+  "reportDetailsHint": "සිදුවූ දේ පිළිබඳ විස්තරයක් මෙහි ලියන්න...",
+  "reportAlsoBlock": "මෙම පරිශීලකයා අවහිර කිරීමද සිදුකරන්න",
+  "reportSubmittedSuccess": "පැමිණිල්ල යොමු විය. අපගේ සහායක කණ්ඩායම මෙය ඉක්මනින් සමාලෝචනය කරනු ඇත.",
+  "offlineBannerText": "ඔබ දැනට අන්තර්ජාලයට සම්බන්ධ වී නැත. කරුණාකර ඔබගේ සබඳතාව පරීක්ෂා කරන්න.",
+  "retryAction": "නැවත උත්සාහ කරන්න",
+  "forceUpdateTitle": "යෙදුම යාවත්කාලීන කිරීම අවශ්‍යයි",
+  "forceUpdateMessage": "යෙදුම අඛණ්ඩව භාවිතා කිරීම සඳහා නවතම ආරක්ෂණ සහ සේවා යාවත්කාලීන ලබාගන්න.",
+  "updateNowAction": "දැන්ම යාවත්කාලීන කරන්න",
+  "emergencyDispatchTitle": "හදිසි සහන සහ කඩිනම් සේවා",
+  "emergencyDispatchSubtitle": "කිලෝමීටර් 15ක් ඇතුළත සිටින ශිල්පීන් දැන්ම සොයාගන්න",
+  "scanningNearbyProviders": "අසල සිටින හදිසි සේවා ශිල්පීන් සොයමින් පවතී...",
+  "dispatchTimerLabel": "කඩිනම් සෙවුම් කාලය",
+  "noEmergencyProvidersFound": "මේ මොහොතේ කිලෝමීටර් 15ක් ඇතුළත හදිසි ශිල්පීන් නොමැත",
+  "noEmergencyProvidersDesc": "වෙනත් සේවා කාණ්ඩයක් තෝරා ගැනීමට හෝ හදිසි රැකියා ඉල්ලීමක් පළ කිරීමට උත්සාහ කරන්න.",
+  "emergencyCalloutRate": "හදිසි සේවා ගාස්තුව",
+  "emergencyEtaApprox": "විනාඩි {mins}කින් පමණ පැමිණේ",
+  "distanceKmAway": "කි.මී. {dist}ක් දුරින්",
+  "requestEmergencyCallout": "දැන්ම අමතන්න",
+  "confirmEmergencyBookingTitle": "හදිසි සේවාව තහවුරු කරන්න",
+  "confirmEmergencyBookingDesc": "{name} වෙත හදිසි පිටත් කිරීමේ ඉල්ලීමක් වහාම යවනු ඇත. ගාස්තුව: රු. {rate}.",
+  "emergencyAddressPrompt": "හදිසි සේවා ස්ථානය",
+  "emergencyNotesPrompt": "හදිසි විස්තර (විකල්ප)",
+  "emergencyNotesHint": "උදා: මුළුතැන්ගෙයි ජල නළය කැඩී ඇත, ප්‍රධාන විදුලි පරිපථ බිඳවැටීමක්",
+  "emergencyHotlinesTitle": "ශ්‍රී ලංකා හදිසි ඇමතුම් අංක",
+  "hotlinePolice": "පොලිස් හදිසි ඇමතුම් (119)",
+  "hotlineAmbulance": "සුවසැරිය ගිලන්රථ (1990)",
+  "hotlineFire": "ගිනි නිවීම් සහ සහන (110)",
+  "urgentHelpBannerTitle": "හදිසි අලුත්වැඩියාවක් හෝ බිඳවැටීමක්ද?",
+  "urgentHelpBannerDesc": "ජල කාන්දුවීම්, විදුලි බිඳවැටීම් සඳහා කි.මී. 15ක් ඇතුළත කඩිනම් ශිල්පී සේවාව.",
+  "urgentHelpBannerAction": "හදිසි සහන ලබාගන්න"
 }
+

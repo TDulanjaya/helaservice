@@ -733,7 +733,7 @@ abstract class AppLocalizations {
   /// No description provided for @jobPhotos.
   ///
   /// In en, this message translates to:
-  /// **'Job Site Photos (Optional)'**
+  /// **'Job Photos & Proof of Work'**
   String get jobPhotos;
 
   /// No description provided for @add.
@@ -1465,7 +1465,7 @@ abstract class AppLocalizations {
   /// No description provided for @availableNow.
   ///
   /// In en, this message translates to:
-  /// **'Available Now'**
+  /// **'Available now'**
   String get availableNow;
 
   /// No description provided for @kmAway.
@@ -4498,6 +4498,12 @@ abstract class AppLocalizations {
   /// **'Customer Location'**
   String get customerLocation;
 
+  /// No description provided for @customerLocationNotAvailableCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer location not available. Call the customer.'**
+  String get customerLocationNotAvailableCall;
+
   /// No description provided for @customerLocationNamed.
   ///
   /// In en, this message translates to:
@@ -6703,7 +6709,7 @@ abstract class AppLocalizations {
   /// No description provided for @superAdminCannotBeSuspended.
   ///
   /// In en, this message translates to:
-  /// **'Super Admin accounts are protected and cannot be suspended.'**
+  /// **'Super Admin accounts cannot be suspended.'**
   String get superAdminCannotBeSuspended;
 
   /// No description provided for @openSettings.
@@ -6807,6 +6813,1842 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Option'**
   String get selectOption;
+
+  /// No description provided for @proApprovalRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Approval Required'**
+  String get proApprovalRequiredTitle;
+
+  /// No description provided for @proApprovalRequiredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your service provider account is awaiting administrative verification. To ensure safety and trust, job alerts and active bidding will be unlocked once approved.'**
+  String get proApprovalRequiredDesc;
+
+  /// No description provided for @proVerificationStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Status'**
+  String get proVerificationStatus;
+
+  /// No description provided for @proStatusPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Under Administrative Review'**
+  String get proStatusPendingReview;
+
+  /// No description provided for @proStatusActionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Required: Submit Verification'**
+  String get proStatusActionRequired;
+
+  /// No description provided for @proStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Rejected'**
+  String get proStatusRejected;
+
+  /// No description provided for @proSubmitNicAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete NIC Verification'**
+  String get proSubmitNicAction;
+
+  /// No description provided for @proRefreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Status'**
+  String get proRefreshStatus;
+
+  /// No description provided for @proCheckingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking status...'**
+  String get proCheckingStatus;
+
+  /// No description provided for @proApprovalGrantedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Granted!'**
+  String get proApprovalGrantedTitle;
+
+  /// No description provided for @proApprovalGrantedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! Your account has been approved by Admin. You now have full access to accept jobs, submit quotes, and manage your services.'**
+  String get proApprovalGrantedDesc;
+
+  /// No description provided for @proGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Dashboard'**
+  String get proGetStarted;
+
+  /// No description provided for @proNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Alerts'**
+  String get proNotificationsTitle;
+
+  /// No description provided for @proNoNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications at this time'**
+  String get proNoNotifications;
+
+  /// No description provided for @proMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get proMarkAllRead;
+
+  /// No description provided for @reportToAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Report to Admin'**
+  String get reportToAdmin;
+
+  /// No description provided for @reportIssueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report / File Dispute'**
+  String get reportIssueTitle;
+
+  /// No description provided for @reportIssueDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit an official complaint about this conversation or user. Our administrative team will review the chat and take appropriate action.'**
+  String get reportIssueDesc;
+
+  /// No description provided for @reportReasonPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a Reason'**
+  String get reportReasonPrompt;
+
+  /// No description provided for @reportNotesPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the incident or reason in detail...'**
+  String get reportNotesPrompt;
+
+  /// No description provided for @reportSubmitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Complaint to Admin'**
+  String get reportSubmitButton;
+
+  /// No description provided for @reportSubmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting...'**
+  String get reportSubmitting;
+
+  /// No description provided for @reportSuccessSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaint successfully submitted to Admin.'**
+  String get reportSuccessSnack;
+
+  /// No description provided for @adminSupportChannelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Support & Help Desk'**
+  String get adminSupportChannelTitle;
+
+  /// No description provided for @adminSupportChannelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct live support, dispute mediation & assistance'**
+  String get adminSupportChannelSubtitle;
+
+  /// No description provided for @fileFormalTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'File Formal Ticket'**
+  String get fileFormalTicket;
+
+  /// No description provided for @cancelBookingOrQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Booking / Quote'**
+  String get cancelBookingOrQuote;
+
+  /// No description provided for @cancelBookingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this booking/quote?'**
+  String get cancelBookingPrompt;
+
+  /// No description provided for @cancellationReasonPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a reason for cancellation'**
+  String get cancellationReasonPrompt;
+
+  /// No description provided for @cancelReasonCustomerRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer requested cancellation'**
+  String get cancelReasonCustomerRequest;
+
+  /// No description provided for @cancelReasonProviderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider is unavailable'**
+  String get cancelReasonProviderUnavailable;
+
+  /// No description provided for @cancelReasonScheduleConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule conflict'**
+  String get cancelReasonScheduleConflict;
+
+  /// No description provided for @cancelReasonPriceDispute.
+  ///
+  /// In en, this message translates to:
+  /// **'Price or rate disagreement'**
+  String get cancelReasonPriceDispute;
+
+  /// No description provided for @cancelReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other reason'**
+  String get cancelReasonOther;
+
+  /// No description provided for @confirmCancellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Cancellation'**
+  String get confirmCancellation;
+
+  /// No description provided for @bookingCancelledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking cancelled successfully'**
+  String get bookingCancelledSuccess;
+
+  /// No description provided for @repostJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost Job'**
+  String get repostJob;
+
+  /// No description provided for @repostJobConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to repost this job? It will be re-opened for new quotes from nearby providers.'**
+  String get repostJobConfirm;
+
+  /// No description provided for @repostJobSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job successfully reposted!'**
+  String get repostJobSuccess;
+
+  /// No description provided for @deleteJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Job'**
+  String get deleteJob;
+
+  /// No description provided for @deleteJobConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete this job request? This cannot be undone.'**
+  String get deleteJobConfirm;
+
+  /// No description provided for @deleteJobSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job request deleted'**
+  String get deleteJobSuccess;
+
+  /// No description provided for @chatWithProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with Provider'**
+  String get chatWithProvider;
+
+  /// No description provided for @otpCheckSpamHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the email?'**
+  String get otpCheckSpamHintTitle;
+
+  /// No description provided for @otpCheckSpamHintDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your Spam or Junk mail folder. Verification emails may occasionally be filtered there by your email service.'**
+  String get otpCheckSpamHintDesc;
+
+  /// No description provided for @loggingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out...'**
+  String get loggingOut;
+
+  /// No description provided for @navMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get navMessages;
+
+  /// No description provided for @closestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Closest First'**
+  String get closestFirst;
+
+  /// No description provided for @newestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest First'**
+  String get newestFirst;
+
+  /// No description provided for @allDistances.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allDistances;
+
+  /// No description provided for @within5Km.
+  ///
+  /// In en, this message translates to:
+  /// **'< 5 km'**
+  String get within5Km;
+
+  /// No description provided for @within10Km.
+  ///
+  /// In en, this message translates to:
+  /// **'< 10 km'**
+  String get within10Km;
+
+  /// No description provided for @within25Km.
+  ///
+  /// In en, this message translates to:
+  /// **'< 25 km'**
+  String get within25Km;
+
+  /// No description provided for @viewOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View Map'**
+  String get viewOnMap;
+
+  /// No description provided for @nearbyTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get nearbyTag;
+
+  /// No description provided for @moderateTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get moderateTag;
+
+  /// No description provided for @extendedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended'**
+  String get extendedTag;
+
+  /// No description provided for @estTravelTime.
+  ///
+  /// In en, this message translates to:
+  /// **'~{mins} mins drive'**
+  String estTravelTime(int mins);
+
+  /// No description provided for @noJobsInRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'No jobs found within selected radius'**
+  String get noJobsInRadius;
+
+  /// No description provided for @filterRoleAndStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Role & Status'**
+  String get filterRoleAndStatus;
+
+  /// No description provided for @allStatuses.
+  ///
+  /// In en, this message translates to:
+  /// **'All Statuses'**
+  String get allStatuses;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @roleAllAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'All Admins'**
+  String get roleAllAdmins;
+
+  /// No description provided for @becomeServiceProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Become a Service Provider'**
+  String get becomeServiceProvider;
+
+  /// No description provided for @backToCustomerDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Customer Dashboard'**
+  String get backToCustomerDashboard;
+
+  /// No description provided for @cancelRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Registration'**
+  String get cancelRegistration;
+
+  /// No description provided for @roleSwitchAdminOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Maintenance & Data Inspection Mode'**
+  String get roleSwitchAdminOnlyDesc;
+
+  /// No description provided for @adminProviderPreviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Preview Mode · Viewing Service Provider Interface'**
+  String get adminProviderPreviewNotice;
+
+  /// No description provided for @resubmitVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Resubmit Verification'**
+  String get resubmitVerification;
+
+  /// No description provided for @verificationNotApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Not Approved'**
+  String get verificationNotApprovedTitle;
+
+  /// No description provided for @verificationNotApprovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your verification was not approved by administration. Please review your documents and resubmit.'**
+  String get verificationNotApprovedBody;
+
+  /// No description provided for @proVerificationPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Submitted · Under Review'**
+  String get proVerificationPendingReview;
+
+  /// No description provided for @chooseRoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to use HelaService?'**
+  String get chooseRoleTitle;
+
+  /// No description provided for @chooseRoleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your account role to continue setting up your profile.'**
+  String get chooseRoleSubtitle;
+
+  /// No description provided for @roleCustomerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I need a service'**
+  String get roleCustomerTitle;
+
+  /// No description provided for @roleCustomerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find trusted local technicians, post job requests, or request emergency assistance anywhere in Sri Lanka.'**
+  String get roleCustomerDesc;
+
+  /// No description provided for @roleCustomerBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get roleCustomerBadge;
+
+  /// No description provided for @roleCustomerPerk1.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparent Rates'**
+  String get roleCustomerPerk1;
+
+  /// No description provided for @roleCustomerPerk2.
+  ///
+  /// In en, this message translates to:
+  /// **'Live GPS Tracking'**
+  String get roleCustomerPerk2;
+
+  /// No description provided for @roleCustomerPerk3.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Quotes'**
+  String get roleCustomerPerk3;
+
+  /// No description provided for @roleProviderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I offer a service'**
+  String get roleProviderTitle;
+
+  /// No description provided for @roleProviderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive nearby customer job requests, submit custom quotes, and expand your service business.'**
+  String get roleProviderDesc;
+
+  /// No description provided for @roleProviderBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Provider'**
+  String get roleProviderBadge;
+
+  /// No description provided for @roleProviderPerk1.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs Radar'**
+  String get roleProviderPerk1;
+
+  /// No description provided for @roleProviderPerk2.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Leads'**
+  String get roleProviderPerk2;
+
+  /// No description provided for @roleProviderPerk3.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure Verification'**
+  String get roleProviderPerk3;
+
+  /// No description provided for @selectServiceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Service Location'**
+  String get selectServiceLocation;
+
+  /// No description provided for @useCurrentGpsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use GPS Location'**
+  String get useCurrentGpsLocation;
+
+  /// No description provided for @savedAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Addresses'**
+  String get savedAddresses;
+
+  /// No description provided for @serviceAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Address'**
+  String get serviceAddressLabel;
+
+  /// No description provided for @serviceAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter full street address or location details'**
+  String get serviceAddressHint;
+
+  /// No description provided for @landmarkOrNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Landmark / Entry Instructions (Optional)'**
+  String get landmarkOrNoteOptional;
+
+  /// No description provided for @landmarkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Near yellow gate, second house on the left'**
+  String get landmarkHint;
+
+  /// No description provided for @saveAddressForFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this address for future requests'**
+  String get saveAddressForFuture;
+
+  /// No description provided for @confirmLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Location'**
+  String get confirmLocation;
+
+  /// No description provided for @selectPinOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Pin on Map to Confirm'**
+  String get selectPinOnMap;
+
+  /// No description provided for @genericService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get genericService;
+
+  /// No description provided for @enterReasonForSuspension.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter reason for suspension...'**
+  String get enterReasonForSuspension;
+
+  /// No description provided for @appLanguageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App Language / භාෂාව / மொழி'**
+  String get appLanguageLabel;
+
+  /// No description provided for @profilePhotoApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo (DP) approved!'**
+  String get profilePhotoApproved;
+
+  /// No description provided for @errorApprovingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Error approving profile photo: {error}'**
+  String errorApprovingPhoto(String error);
+
+  /// No description provided for @errorApprovingNic.
+  ///
+  /// In en, this message translates to:
+  /// **'Error approving NIC: {error}'**
+  String errorApprovingNic(String error);
+
+  /// No description provided for @tradeCertificationsApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade certifications approved!'**
+  String get tradeCertificationsApproved;
+
+  /// No description provided for @errorApprovingCertifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Error approving certifications: {error}'**
+  String errorApprovingCertifications(String error);
+
+  /// No description provided for @approveDp.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve DP'**
+  String get approveDp;
+
+  /// No description provided for @dpApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'DP Approved'**
+  String get dpApproved;
+
+  /// No description provided for @approveNicBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve NIC (Front+Back)'**
+  String get approveNicBoth;
+
+  /// No description provided for @approveCerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve Certs'**
+  String get approveCerts;
+
+  /// No description provided for @takeProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Profile Photo'**
+  String get takeProfilePhoto;
+
+  /// No description provided for @selectProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Profile Photo'**
+  String get selectProfilePhoto;
+
+  /// No description provided for @failedToCompleteProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to complete profile: {error}'**
+  String failedToCompleteProfile(String error);
+
+  /// No description provided for @serviceCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Category'**
+  String get serviceCategory;
+
+  /// No description provided for @pleaseEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name'**
+  String get pleaseEnterFullName;
+
+  /// No description provided for @failedToSetRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to set role: {error}'**
+  String failedToSetRole(String error);
+
+  /// No description provided for @savedAddressLabelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Label (e.g. Home, Work, Villa)'**
+  String get savedAddressLabelHint;
+
+  /// No description provided for @landmarkNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Landmark / Note (Optional)'**
+  String get landmarkNoteOptional;
+
+  /// No description provided for @deleteSavedAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Saved Address'**
+  String get deleteSavedAddress;
+
+  /// No description provided for @confirmDeleteSavedAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this address?'**
+  String get confirmDeleteSavedAddress;
+
+  /// No description provided for @addNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New'**
+  String get addNew;
+
+  /// No description provided for @setServiceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Service Location'**
+  String get setServiceLocation;
+
+  /// No description provided for @failedToUpdateJobLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update job location: {error}'**
+  String failedToUpdateJobLocation(String error);
+
+  /// No description provided for @pleaseSelectServiceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a service location before posting.'**
+  String get pleaseSelectServiceLocation;
+
+  /// No description provided for @confirmServiceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Service Location'**
+  String get confirmServiceLocation;
+
+  /// No description provided for @pinAttemptsResetZero.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN attempts reset to 0.'**
+  String get pinAttemptsResetZero;
+
+  /// No description provided for @cannotCancelInProgressBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot cancel booking in progress. Please contact support.'**
+  String get cannotCancelInProgressBooking;
+
+  /// No description provided for @serviceVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Verification'**
+  String get serviceVerification;
+
+  /// No description provided for @rateServiceProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Service Provider'**
+  String get rateServiceProvider;
+
+  /// No description provided for @jobCompletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Job completed successfully!'**
+  String get jobCompletedSuccessfully;
+
+  /// No description provided for @verifyAndFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify & Finish'**
+  String get verifyAndFinish;
+
+  /// No description provided for @callCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Customer'**
+  String get callCustomer;
+
+  /// No description provided for @directServiceBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Service Booking'**
+  String get directServiceBooking;
+
+  /// No description provided for @signInCancelledByUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in cancelled by user.'**
+  String get signInCancelledByUser;
+
+  /// No description provided for @couldNotDetectLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not detect location: {error}'**
+  String couldNotDetectLocation(String error);
+
+  /// No description provided for @unauthorizedRoleSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Unauthorized role switch.'**
+  String get unauthorizedRoleSwitch;
+
+  /// No description provided for @givePinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this 6-digit PIN to the provider once service is completed.'**
+  String get givePinHint;
+
+  /// No description provided for @directBookingWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct booking with {providerName}'**
+  String directBookingWith(String providerName);
+
+  /// No description provided for @directBookingWithNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct booking with {providerName}. Note: {note}'**
+  String directBookingWithNote(String providerName, String note);
+
+  /// No description provided for @nicVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC Approved'**
+  String get nicVerified;
+
+  /// No description provided for @statusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get statusApproved;
+
+  /// No description provided for @useGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Use GPS'**
+  String get useGps;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @serviceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Date'**
+  String get serviceDate;
+
+  /// No description provided for @agreedPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreed Price'**
+  String get agreedPrice;
+
+  /// No description provided for @pinVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN Verified on Site'**
+  String get pinVerified;
+
+  /// No description provided for @providerDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Provider Details'**
+  String get providerDetailsTitle;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @didYouPayAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you pay {amount} to {name}?'**
+  String didYouPayAmount(String amount, String name);
+
+  /// No description provided for @yesPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, paid'**
+  String get yesPaid;
+
+  /// No description provided for @reportPaymentProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a problem'**
+  String get reportPaymentProblem;
+
+  /// No description provided for @cashPaymentConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash payment confirmed'**
+  String get cashPaymentConfirmed;
+
+  /// No description provided for @paymentDisputedWithReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment disputed: {reason}'**
+  String paymentDisputedWithReason(String reason);
+
+  /// No description provided for @disputePaymentPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the reason for payment dispute:'**
+  String get disputePaymentPrompt;
+
+  /// No description provided for @disputePaymentReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Overcharged, work incomplete, wrong amount'**
+  String get disputePaymentReasonHint;
+
+  /// No description provided for @submitDispute.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit report'**
+  String get submitDispute;
+
+  /// No description provided for @payProviderDirectlyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay the provider directly in cash after the job is completed.'**
+  String get payProviderDirectlyTip;
+
+  /// No description provided for @cashReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash received'**
+  String get cashReceived;
+
+  /// No description provided for @paymentNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment note (optional)'**
+  String get paymentNoteOptional;
+
+  /// No description provided for @paymentNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Materials, extra work'**
+  String get paymentNoteHint;
+
+  /// No description provided for @finalAmountExceedsLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount cannot exceed 5x agreed price'**
+  String get finalAmountExceedsLimit;
+
+  /// No description provided for @paymentWaitingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting confirmation'**
+  String get paymentWaitingConfirmation;
+
+  /// No description provided for @paymentConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get paymentConfirmed;
+
+  /// No description provided for @paymentDisputed.
+  ///
+  /// In en, this message translates to:
+  /// **'Disputed'**
+  String get paymentDisputed;
+
+  /// No description provided for @earningsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get earningsToday;
+
+  /// No description provided for @earningsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get earningsThisWeek;
+
+  /// No description provided for @earningsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get earningsThisMonth;
+
+  /// No description provided for @totalEarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Earnings'**
+  String get totalEarnings;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCsv;
+
+  /// No description provided for @csvExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV exported successfully'**
+  String get csvExportSuccess;
+
+  /// No description provided for @pinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion PIN'**
+  String get pinCode;
+
+  /// No description provided for @didYouReachPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you reach {name}?'**
+  String didYouReachPerson(String name);
+
+  /// No description provided for @callOutcomeAnswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected / Answered'**
+  String get callOutcomeAnswered;
+
+  /// No description provided for @callOutcomeNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'No Answer / Busy'**
+  String get callOutcomeNoAnswer;
+
+  /// No description provided for @callOutcomeWrongNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong Number'**
+  String get callOutcomeWrongNumber;
+
+  /// No description provided for @callRequiresAcceptedQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone calls become available once a quote is accepted.'**
+  String get callRequiresAcceptedQuote;
+
+  /// No description provided for @callLogsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Call Audit Logs'**
+  String get callLogsTitle;
+
+  /// No description provided for @callLogCaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Caller'**
+  String get callLogCaller;
+
+  /// No description provided for @callLogCallee.
+  ///
+  /// In en, this message translates to:
+  /// **'Callee'**
+  String get callLogCallee;
+
+  /// No description provided for @callLogOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Outcome'**
+  String get callLogOutcome;
+
+  /// No description provided for @bookingTimelineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job Timeline'**
+  String get bookingTimelineTitle;
+
+  /// No description provided for @noTimelineEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No events recorded yet'**
+  String get noTimelineEvents;
+
+  /// No description provided for @viewTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'View Timeline'**
+  String get viewTimeline;
+
+  /// No description provided for @adminActionLogsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Action Logs'**
+  String get adminActionLogsTitle;
+
+  /// No description provided for @adminAuditTrailSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Immutable audit trail of administrator actions'**
+  String get adminAuditTrailSubtitle;
+
+  /// No description provided for @noAdminLogsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin audit logs recorded yet'**
+  String get noAdminLogsFound;
+
+  /// No description provided for @filterUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get filterUsers;
+
+  /// No description provided for @filterBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get filterBookings;
+
+  /// No description provided for @filterSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get filterSystem;
+
+  /// No description provided for @noEntriesToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries to export'**
+  String get noEntriesToExport;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your account? All your personal profile data, active requests, and history will be permanently erased. This cannot be undone.'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @deleteAccountConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently Delete'**
+  String get deleteAccountConfirmAction;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get photo;
+
+  /// No description provided for @sendPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Photo'**
+  String get sendPhoto;
+
+  /// No description provided for @uploadingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading image...'**
+  String get uploadingImage;
+
+  /// No description provided for @failedToUploadImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload image'**
+  String get failedToUploadImage;
+
+  /// No description provided for @viewPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'View Photo'**
+  String get viewPhoto;
+
+  /// No description provided for @bookingTypeAsap.
+  ///
+  /// In en, this message translates to:
+  /// **'ASAP / Emergency'**
+  String get bookingTypeAsap;
+
+  /// No description provided for @bookingTypeScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled Slot'**
+  String get bookingTypeScheduled;
+
+  /// No description provided for @selectScheduledDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectScheduledDate;
+
+  /// No description provided for @selectTimeSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time Slot'**
+  String get selectTimeSlot;
+
+  /// No description provided for @slotMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning (8:00 AM - 12:00 PM)'**
+  String get slotMorning;
+
+  /// No description provided for @slotAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon (12:00 PM - 4:00 PM)'**
+  String get slotAfternoon;
+
+  /// No description provided for @slotEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening (4:00 PM - 8:00 PM)'**
+  String get slotEvening;
+
+  /// No description provided for @rescheduleBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Reschedule Booking'**
+  String get rescheduleBooking;
+
+  /// No description provided for @proposeNewTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Propose New Time'**
+  String get proposeNewTime;
+
+  /// No description provided for @rescheduleReasonPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for reschedule'**
+  String get rescheduleReasonPrompt;
+
+  /// No description provided for @rescheduleReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Traffic delay, customer requested later time'**
+  String get rescheduleReasonHint;
+
+  /// No description provided for @submitRescheduleRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Reschedule'**
+  String get submitRescheduleRequest;
+
+  /// No description provided for @rescheduleProposalBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Reschedule Proposed'**
+  String get rescheduleProposalBanner;
+
+  /// No description provided for @acceptReschedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Reschedule'**
+  String get acceptReschedule;
+
+  /// No description provided for @declineReschedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get declineReschedule;
+
+  /// No description provided for @cancelRescheduleProposal.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Proposal'**
+  String get cancelRescheduleProposal;
+
+  /// No description provided for @expiredPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expiredPill;
+
+  /// No description provided for @workingHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Working Hours & Schedule'**
+  String get workingHoursTitle;
+
+  /// No description provided for @serviceRadiusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Coverage Radius'**
+  String get serviceRadiusTitle;
+
+  /// No description provided for @serviceRadiusSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum distance you will travel for jobs'**
+  String get serviceRadiusSubtitle;
+
+  /// No description provided for @dayMonday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get dayMonday;
+
+  /// No description provided for @dayTuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get dayTuesday;
+
+  /// No description provided for @dayWednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get dayWednesday;
+
+  /// No description provided for @dayThursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get dayThursday;
+
+  /// No description provided for @dayFriday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get dayFriday;
+
+  /// No description provided for @daySaturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get daySaturday;
+
+  /// No description provided for @daySunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get daySunday;
+
+  /// No description provided for @openTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get openTime;
+
+  /// No description provided for @closeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get closeTime;
+
+  /// No description provided for @closedDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get closedDay;
+
+  /// No description provided for @presetWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays (8 AM - 6 PM)'**
+  String get presetWeekdays;
+
+  /// No description provided for @presetAllDays.
+  ///
+  /// In en, this message translates to:
+  /// **'All 7 Days (8 AM - 8 PM)'**
+  String get presetAllDays;
+
+  /// No description provided for @preset247.
+  ///
+  /// In en, this message translates to:
+  /// **'Open 24/7'**
+  String get preset247;
+
+  /// No description provided for @unavailableNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable now'**
+  String get unavailableNow;
+
+  /// No description provided for @outsideWorkingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside working hours'**
+  String get outsideWorkingHours;
+
+  /// No description provided for @savedScheduleSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Working hours updated successfully'**
+  String get savedScheduleSuccess;
+
+  /// No description provided for @savedRadiusSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Service radius updated'**
+  String get savedRadiusSuccess;
+
+  /// No description provided for @serviceRadiusKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{radius} km radius'**
+  String serviceRadiusKm(int radius);
+
+  /// No description provided for @rescheduleRequestedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Reschedule proposal pending response'**
+  String get rescheduleRequestedNotice;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @jobPhotosSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before and after service inspection photos'**
+  String get jobPhotosSubtitle;
+
+  /// No description provided for @beforePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Before Service'**
+  String get beforePhotos;
+
+  /// No description provided for @afterPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'After Service'**
+  String get afterPhotos;
+
+  /// No description provided for @addBeforePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Before Photo'**
+  String get addBeforePhoto;
+
+  /// No description provided for @addAfterPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add After Photo'**
+  String get addAfterPhoto;
+
+  /// No description provided for @noBeforePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No before photos uploaded yet'**
+  String get noBeforePhotos;
+
+  /// No description provided for @noAfterPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No after photos uploaded yet'**
+  String get noAfterPhotos;
+
+  /// No description provided for @portfolioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio & Past Work'**
+  String get portfolioTitle;
+
+  /// No description provided for @portfolioSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Showcase your completed projects to customers'**
+  String get portfolioSubtitle;
+
+  /// No description provided for @addPortfolioItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Showcase Item'**
+  String get addPortfolioItem;
+
+  /// No description provided for @portfolioItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Title'**
+  String get portfolioItemTitle;
+
+  /// No description provided for @portfolioItemTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Living room full rewiring'**
+  String get portfolioItemTitleHint;
+
+  /// No description provided for @portfolioItemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get portfolioItemDesc;
+
+  /// No description provided for @portfolioItemDescHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief details about the work done'**
+  String get portfolioItemDescHint;
+
+  /// No description provided for @uploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Photo'**
+  String get uploadPhoto;
+
+  /// No description provided for @photoUploadedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo uploaded successfully'**
+  String get photoUploadedSuccess;
+
+  /// No description provided for @portfolioItemAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Showcase item added successfully'**
+  String get portfolioItemAdded;
+
+  /// No description provided for @deletePortfolioConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this portfolio item?'**
+  String get deletePortfolioConfirm;
+
+  /// No description provided for @noPortfolioItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No portfolio items added yet'**
+  String get noPortfolioItems;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @selectCategoryPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a category'**
+  String get selectCategoryPrompt;
+
+  /// No description provided for @newProviderBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get newProviderBadge;
+
+  /// No description provided for @blockUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block User'**
+  String get blockUserTitle;
+
+  /// No description provided for @blockUserConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to block this user? They will not be able to send you requests or message you.'**
+  String get blockUserConfirm;
+
+  /// No description provided for @blockUserAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Block User'**
+  String get blockUserAction;
+
+  /// No description provided for @unblockUserAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockUserAction;
+
+  /// No description provided for @userBlockedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been blocked'**
+  String get userBlockedSuccess;
+
+  /// No description provided for @userUnblockedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been unblocked'**
+  String get userUnblockedSuccess;
+
+  /// No description provided for @reportUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report User'**
+  String get reportUserTitle;
+
+  /// No description provided for @reportReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for Report'**
+  String get reportReasonLabel;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate or abusive behavior'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam or unwanted advertising'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonFraud.
+  ///
+  /// In en, this message translates to:
+  /// **'Fraud, overcharging, or scam'**
+  String get reportReasonFraud;
+
+  /// No description provided for @reportReasonNoShow.
+  ///
+  /// In en, this message translates to:
+  /// **'No-show or abandoned service'**
+  String get reportReasonNoShow;
+
+  /// No description provided for @reportReasonSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety or trust concern'**
+  String get reportReasonSafety;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other violation'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what happened in detail...'**
+  String get reportDetailsHint;
+
+  /// No description provided for @reportAlsoBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Also block this user'**
+  String get reportAlsoBlock;
+
+  /// No description provided for @reportSubmittedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted. Our support team will review this shortly.'**
+  String get reportSubmittedSuccess;
+
+  /// No description provided for @offlineBannerText.
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently offline. Check your connection.'**
+  String get offlineBannerText;
+
+  /// No description provided for @retryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retryAction;
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version of HelaService with critical improvements is required to continue.'**
+  String get forceUpdateMessage;
+
+  /// No description provided for @updateNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNowAction;
+
+  /// No description provided for @emergencyDispatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent Help & Emergency Dispatch'**
+  String get emergencyDispatchTitle;
+
+  /// No description provided for @emergencyDispatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find and call out verified artisans within 15km right now'**
+  String get emergencyDispatchSubtitle;
+
+  /// No description provided for @scanningNearbyProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning nearby emergency artisans...'**
+  String get scanningNearbyProviders;
+
+  /// No description provided for @dispatchTimerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch search window'**
+  String get dispatchTimerLabel;
+
+  /// No description provided for @noEmergencyProvidersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No emergency artisans found within 15km right now'**
+  String get noEmergencyProvidersFound;
+
+  /// No description provided for @noEmergencyProvidersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Try selecting a different trade category or post an urgent job request.'**
+  String get noEmergencyProvidersDesc;
+
+  /// No description provided for @emergencyCalloutRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Callout'**
+  String get emergencyCalloutRate;
+
+  /// No description provided for @emergencyEtaApprox.
+  ///
+  /// In en, this message translates to:
+  /// **'approx {mins} mins away'**
+  String emergencyEtaApprox(int mins);
+
+  /// No description provided for @distanceKmAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{dist} km away'**
+  String distanceKmAway(String dist);
+
+  /// No description provided for @requestEmergencyCallout.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch Now'**
+  String get requestEmergencyCallout;
+
+  /// No description provided for @confirmEmergencyBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Emergency Callout'**
+  String get confirmEmergencyBookingTitle;
+
+  /// No description provided for @confirmEmergencyBookingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'An emergency dispatch request will be sent to {name} immediately. Rate: LKR {rate}.'**
+  String confirmEmergencyBookingDesc(String name, String rate);
+
+  /// No description provided for @emergencyAddressPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Service Location'**
+  String get emergencyAddressPrompt;
+
+  /// No description provided for @emergencyNotesPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency details (optional)'**
+  String get emergencyNotesPrompt;
+
+  /// No description provided for @emergencyNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Water pipe burst in kitchen, power outage in main circuit'**
+  String get emergencyNotesHint;
+
+  /// No description provided for @emergencyHotlinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sri Lanka Emergency Hotlines'**
+  String get emergencyHotlinesTitle;
+
+  /// No description provided for @hotlinePolice.
+  ///
+  /// In en, this message translates to:
+  /// **'Police Emergency (119)'**
+  String get hotlinePolice;
+
+  /// No description provided for @hotlineAmbulance.
+  ///
+  /// In en, this message translates to:
+  /// **'Suwa Seriya Ambulance (1990)'**
+  String get hotlineAmbulance;
+
+  /// No description provided for @hotlineFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire & Rescue (110)'**
+  String get hotlineFire;
+
+  /// No description provided for @urgentHelpBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent Repair or Breakdown?'**
+  String get urgentHelpBannerTitle;
+
+  /// No description provided for @urgentHelpBannerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant 15km artisan dispatch for water leaks, power failures, or locksmith emergencies.'**
+  String get urgentHelpBannerDesc;
+
+  /// No description provided for @urgentHelpBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Urgent Help'**
+  String get urgentHelpBannerAction;
 }
 
 class _AppLocalizationsDelegate

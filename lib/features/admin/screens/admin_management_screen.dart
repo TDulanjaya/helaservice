@@ -8,6 +8,8 @@ import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
 import '../widgets/add_admin_dialog.dart';
 import '../widgets/edit_admin_permissions_dialog.dart';
+import '../widgets/admin_call_logs_sheet.dart';
+import '../widgets/admin_action_logs_sheet.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
@@ -49,8 +51,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
   void _toggleAdminStatus(AdminUser admin, bool makeActive) async {
     if (admin.isSuperAdmin && !makeActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Super Admin accounts cannot be suspended.'),
+        SnackBar(
+          content: Text(context.l10n.superAdminCannotBeSuspended),
           backgroundColor: AppColors.error,
         ),
       );
@@ -275,6 +277,31 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () => AdminCallLogsSheet.show(context),
+                                icon: const Icon(Icons.phone_in_talk, size: 18),
+                                label: Text(context.l10n.callLogsTitle),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                onPressed: () => AdminActionLogsSheet.show(context),
+                                icon: const Icon(Icons.history_edu_rounded, size: 18),
+                                label: Text(context.l10n.adminActionLogsTitle),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                               ),
                               if (isSuperAdmin) ...[

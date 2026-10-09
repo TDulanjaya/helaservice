@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
 enum IconSquareButtonStyle {
-  outline, // Border with surface background
-  soft,    // Soft grey tile
-  amber,   // Amber background
-  ink,     // Dark card background
+  outline, // border with surface background
+  soft, // soft grey tile
+  amber, // amber background
+  ink, // dark card background
 }
 
 

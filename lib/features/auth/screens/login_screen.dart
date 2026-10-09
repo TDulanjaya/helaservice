@@ -10,6 +10,7 @@ import '../../../repositories/admin_repository.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
+import 'role_choice_screen.dart';
 import 'register_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
@@ -30,6 +31,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.clear();
+    _passwordController.clear();
+  }
 
   @override
   void dispose() {
@@ -79,6 +87,26 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (_) {}
     }
 
+    if (user.role == null) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: user)),
+        (route) => false,
+      );
+      return;
+    }
+
+    if (!user.isProfileComplete) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => CompleteProfileScreen(initialProfile: user),
+        ),
+        (route) => false,
+      );
+      return;
+    }
+
     if (user.role == AppRole.provider) {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -96,13 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
-
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CompleteProfileScreen(initialProfile: user),
-      ),
-    );
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -755,7 +776,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
     final width = MediaQuery.of(context).size.width;
 
-    // wide desktop dual-pane
+    // wide desktop dual pane
     if (width >= 960) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -847,7 +868,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
-    // tablet / medium desktop centered card
+    // tablet or desktop centered card
     if (width >= 600) {
       return Scaffold(
         backgroundColor: context.themeBg,

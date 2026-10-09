@@ -133,7 +133,10 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
+            if (!roleProvider.isAuthorizedAdmin)
+              _buildAdminSupportCard(context),
 
             // chat list
             Expanded(
@@ -269,6 +272,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                 final otherPartyPhone =
                                     room.getOtherPartyPhone(effectiveUid);
                                 final lastMessage = room.lastMessage.trim();
+                                final unreadCount = room.getUnreadCount(effectiveUid);
+                                final hasUnread = unreadCount > 0;
                                 final isJustNow = room.lastMessageAt != null &&
                                     DateTime.now().difference(room.lastMessageAt!).inMinutes < 1;
                                 final timeAgo = _formatTimeAgo(context, room.lastMessageAt);
@@ -312,7 +317,9 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                                     child: Text(
                                                       otherPartyName,
                                                       style: TextStyle(
-                                                        fontWeight: FontWeight.w700,
+                                                        fontWeight: hasUnread
+                                                            ? FontWeight.w800
+                                                            : FontWeight.w700,
                                                         fontSize: 15,
                                                         color: context.themeInk,
                                                       ),
@@ -327,33 +334,67 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                                       timeAgo,
                                                       style: TextStyle(
                                                         fontSize: 12,
-                                                        fontWeight: isJustNow
+                                                        fontWeight: (isJustNow || hasUnread)
                                                             ? FontWeight.w700
                                                             : FontWeight.w500,
-                                                        color: isJustNow
-                                                            ? context.themeAmberText
-                                                            : context.themeMuted,
+                                                        color: hasUnread
+                                                            ? AppColors.primary
+                                                            : (isJustNow
+                                                                ? context.themeAmberText
+                                                                : context.themeMuted),
                                                       ),
                                                     ),
                                                   ],
                                                 ],
                                               ),
                                               const SizedBox(height: 3),
-                                              Text(
-                                                lastMessage.isNotEmpty
-                                                    ? lastMessage
-                                                    : context.l10n.tapToStartConversation,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: lastMessage.isNotEmpty
-                                                      ? context.themeTextSecondary
-                                                      : context.themeMuted,
-                                                  fontStyle: lastMessage.isEmpty
-                                                      ? FontStyle.italic
-                                                      : FontStyle.normal,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      lastMessage.isNotEmpty
+                                                          ? lastMessage
+                                                          : context.l10n.tapToStartConversation,
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: hasUnread
+                                                            ? FontWeight.w700
+                                                            : FontWeight.normal,
+                                                        color: hasUnread
+                                                            ? context.themeInk
+                                                            : (lastMessage.isNotEmpty
+                                                                ? context.themeTextSecondary
+                                                                : context.themeMuted),
+                                                        fontStyle: lastMessage.isEmpty
+                                                            ? FontStyle.italic
+                                                            : FontStyle.normal,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  if (hasUnread) ...[
+                                                    const SizedBox(width: 8),
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 7,
+                                                        vertical: 2,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.primary,
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      child: Text(
+                                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                             ],
                                           ),
@@ -375,6 +416,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                   ),
                                 );
                               },
+
                             ),
                           ),
                         );
@@ -386,5 +428,121 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
       ),
     );
   }
+
+  Widget _buildAdminSupportCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DirectChatScreen(
+                  otherPartyId: 'admin_support',
+                  otherPartyName: 'HelaService Admin Support',
+                  otherPartyRole: 'admin',
+                  otherPartyPhone: '1919',
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.support_agent_rounded,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              context.l10n.adminSupportChannelTitle,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: context.themeInk,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'OFFICIAL',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        context.l10n.adminSupportChannelSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
 

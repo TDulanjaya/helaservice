@@ -335,7 +335,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosOfIssue => 'Photos of the Issue';
 
   @override
-  String get jobPhotos => 'Job Site Photos (Optional)';
+  String get jobPhotos => 'Job Photos & Proof of Work';
 
   @override
   String get add => 'Add';
@@ -716,7 +716,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activeFleet => 'Active Fleet';
 
   @override
-  String get availableNow => 'Available Now';
+  String get availableNow => 'Available now';
 
   @override
   String get kmAway => 'km away';
@@ -2360,6 +2360,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerLocation => 'Customer Location';
 
   @override
+  String get customerLocationNotAvailableCall =>
+      'Customer location not available. Call the customer.';
+
+  @override
   String customerLocationNamed(String name) {
     return '$name\'s Location';
   }
@@ -3703,7 +3707,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get superAdminCannotBeSuspended =>
-      'Super Admin accounts are protected and cannot be suspended.';
+      'Super Admin accounts cannot be suspended.';
 
   @override
   String get openSettings => 'Open Settings';
@@ -3765,4 +3769,997 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectOption => 'Select Option';
+
+  @override
+  String get proApprovalRequiredTitle => 'Admin Approval Required';
+
+  @override
+  String get proApprovalRequiredDesc =>
+      'Your service provider account is awaiting administrative verification. To ensure safety and trust, job alerts and active bidding will be unlocked once approved.';
+
+  @override
+  String get proVerificationStatus => 'Verification Status';
+
+  @override
+  String get proStatusPendingReview => 'Under Administrative Review';
+
+  @override
+  String get proStatusActionRequired => 'Action Required: Submit Verification';
+
+  @override
+  String get proStatusRejected => 'Verification Rejected';
+
+  @override
+  String get proSubmitNicAction => 'Complete NIC Verification';
+
+  @override
+  String get proRefreshStatus => 'Refresh Status';
+
+  @override
+  String get proCheckingStatus => 'Checking status...';
+
+  @override
+  String get proApprovalGrantedTitle => 'Access Granted!';
+
+  @override
+  String get proApprovalGrantedDesc =>
+      'Congratulations! Your account has been approved by Admin. You now have full access to accept jobs, submit quotes, and manage your services.';
+
+  @override
+  String get proGetStarted => 'Enter Dashboard';
+
+  @override
+  String get proNotificationsTitle => 'Provider Alerts';
+
+  @override
+  String get proNoNotifications => 'No notifications at this time';
+
+  @override
+  String get proMarkAllRead => 'Mark all as read';
+
+  @override
+  String get reportToAdmin => 'Report to Admin';
+
+  @override
+  String get reportIssueTitle => 'Report / File Dispute';
+
+  @override
+  String get reportIssueDesc =>
+      'Submit an official complaint about this conversation or user. Our administrative team will review the chat and take appropriate action.';
+
+  @override
+  String get reportReasonPrompt => 'Select a Reason';
+
+  @override
+  String get reportNotesPrompt =>
+      'Describe the incident or reason in detail...';
+
+  @override
+  String get reportSubmitButton => 'Submit Complaint to Admin';
+
+  @override
+  String get reportSubmitting => 'Submitting...';
+
+  @override
+  String get reportSuccessSnack => 'Complaint successfully submitted to Admin.';
+
+  @override
+  String get adminSupportChannelTitle => 'Admin Support & Help Desk';
+
+  @override
+  String get adminSupportChannelSubtitle =>
+      'Direct live support, dispute mediation & assistance';
+
+  @override
+  String get fileFormalTicket => 'File Formal Ticket';
+
+  @override
+  String get cancelBookingOrQuote => 'Cancel Booking / Quote';
+
+  @override
+  String get cancelBookingPrompt =>
+      'Are you sure you want to cancel this booking/quote?';
+
+  @override
+  String get cancellationReasonPrompt =>
+      'Please select a reason for cancellation';
+
+  @override
+  String get cancelReasonCustomerRequest => 'Customer requested cancellation';
+
+  @override
+  String get cancelReasonProviderUnavailable => 'Provider is unavailable';
+
+  @override
+  String get cancelReasonScheduleConflict => 'Schedule conflict';
+
+  @override
+  String get cancelReasonPriceDispute => 'Price or rate disagreement';
+
+  @override
+  String get cancelReasonOther => 'Other reason';
+
+  @override
+  String get confirmCancellation => 'Confirm Cancellation';
+
+  @override
+  String get bookingCancelledSuccess => 'Booking cancelled successfully';
+
+  @override
+  String get repostJob => 'Repost Job';
+
+  @override
+  String get repostJobConfirm =>
+      'Are you sure you want to repost this job? It will be re-opened for new quotes from nearby providers.';
+
+  @override
+  String get repostJobSuccess => 'Job successfully reposted!';
+
+  @override
+  String get deleteJob => 'Delete Job';
+
+  @override
+  String get deleteJobConfirm =>
+      'Are you sure you want to permanently delete this job request? This cannot be undone.';
+
+  @override
+  String get deleteJobSuccess => 'Job request deleted';
+
+  @override
+  String get chatWithProvider => 'Chat with Provider';
+
+  @override
+  String get otpCheckSpamHintTitle => 'Didn\'t receive the email?';
+
+  @override
+  String get otpCheckSpamHintDesc =>
+      'Please check your Spam or Junk mail folder. Verification emails may occasionally be filtered there by your email service.';
+
+  @override
+  String get loggingOut => 'Signing out...';
+
+  @override
+  String get navMessages => 'Chat';
+
+  @override
+  String get closestFirst => 'Closest First';
+
+  @override
+  String get newestFirst => 'Newest First';
+
+  @override
+  String get allDistances => 'All';
+
+  @override
+  String get within5Km => '< 5 km';
+
+  @override
+  String get within10Km => '< 10 km';
+
+  @override
+  String get within25Km => '< 25 km';
+
+  @override
+  String get viewOnMap => 'View Map';
+
+  @override
+  String get nearbyTag => 'Nearby';
+
+  @override
+  String get moderateTag => 'Moderate';
+
+  @override
+  String get extendedTag => 'Extended';
+
+  @override
+  String estTravelTime(int mins) {
+    return '~$mins mins drive';
+  }
+
+  @override
+  String get noJobsInRadius => 'No jobs found within selected radius';
+
+  @override
+  String get filterRoleAndStatus => 'Filter by Role & Status';
+
+  @override
+  String get allStatuses => 'All Statuses';
+
+  @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String get roleAllAdmins => 'All Admins';
+
+  @override
+  String get becomeServiceProvider => 'Become a Service Provider';
+
+  @override
+  String get backToCustomerDashboard => 'Back to Customer Dashboard';
+
+  @override
+  String get cancelRegistration => 'Cancel Registration';
+
+  @override
+  String get roleSwitchAdminOnlyDesc =>
+      'Platform Maintenance & Data Inspection Mode';
+
+  @override
+  String get adminProviderPreviewNotice =>
+      'Admin Preview Mode · Viewing Service Provider Interface';
+
+  @override
+  String get resubmitVerification => 'Resubmit Verification';
+
+  @override
+  String get verificationNotApprovedTitle => 'Verification Not Approved';
+
+  @override
+  String get verificationNotApprovedBody =>
+      'Your verification was not approved by administration. Please review your documents and resubmit.';
+
+  @override
+  String get proVerificationPendingReview =>
+      'Verification Submitted · Under Review';
+
+  @override
+  String get chooseRoleTitle => 'How do you want to use HelaService?';
+
+  @override
+  String get chooseRoleSubtitle =>
+      'Select your account role to continue setting up your profile.';
+
+  @override
+  String get roleCustomerTitle => 'I need a service';
+
+  @override
+  String get roleCustomerDesc =>
+      'Find trusted local technicians, post job requests, or request emergency assistance anywhere in Sri Lanka.';
+
+  @override
+  String get roleCustomerBadge => 'Customer';
+
+  @override
+  String get roleCustomerPerk1 => 'Transparent Rates';
+
+  @override
+  String get roleCustomerPerk2 => 'Live GPS Tracking';
+
+  @override
+  String get roleCustomerPerk3 => 'Direct Quotes';
+
+  @override
+  String get roleProviderTitle => 'I offer a service';
+
+  @override
+  String get roleProviderDesc =>
+      'Receive nearby customer job requests, submit custom quotes, and expand your service business.';
+
+  @override
+  String get roleProviderBadge => 'Service Provider';
+
+  @override
+  String get roleProviderPerk1 => 'Jobs Radar';
+
+  @override
+  String get roleProviderPerk2 => 'Direct Leads';
+
+  @override
+  String get roleProviderPerk3 => 'Secure Verification';
+
+  @override
+  String get selectServiceLocation => 'Select Service Location';
+
+  @override
+  String get useCurrentGpsLocation => 'Use GPS Location';
+
+  @override
+  String get savedAddresses => 'Saved Addresses';
+
+  @override
+  String get serviceAddressLabel => 'Service Address';
+
+  @override
+  String get serviceAddressHint =>
+      'Enter full street address or location details';
+
+  @override
+  String get landmarkOrNoteOptional =>
+      'Landmark / Entry Instructions (Optional)';
+
+  @override
+  String get landmarkHint => 'e.g. Near yellow gate, second house on the left';
+
+  @override
+  String get saveAddressForFuture => 'Save this address for future requests';
+
+  @override
+  String get confirmLocation => 'Confirm Location';
+
+  @override
+  String get selectPinOnMap => 'Set Pin on Map to Confirm';
+
+  @override
+  String get genericService => 'Service';
+
+  @override
+  String get enterReasonForSuspension => 'Enter reason for suspension...';
+
+  @override
+  String get appLanguageLabel => 'App Language / භාෂාව / மொழி';
+
+  @override
+  String get profilePhotoApproved => 'Profile photo (DP) approved!';
+
+  @override
+  String errorApprovingPhoto(String error) {
+    return 'Error approving profile photo: $error';
+  }
+
+  @override
+  String errorApprovingNic(String error) {
+    return 'Error approving NIC: $error';
+  }
+
+  @override
+  String get tradeCertificationsApproved => 'Trade certifications approved!';
+
+  @override
+  String errorApprovingCertifications(String error) {
+    return 'Error approving certifications: $error';
+  }
+
+  @override
+  String get approveDp => 'Approve DP';
+
+  @override
+  String get dpApproved => 'DP Approved';
+
+  @override
+  String get approveNicBoth => 'Approve NIC (Front+Back)';
+
+  @override
+  String get approveCerts => 'Approve Certs';
+
+  @override
+  String get takeProfilePhoto => 'Take Profile Photo';
+
+  @override
+  String get selectProfilePhoto => 'Select Profile Photo';
+
+  @override
+  String failedToCompleteProfile(String error) {
+    return 'Failed to complete profile: $error';
+  }
+
+  @override
+  String get serviceCategory => 'Service Category';
+
+  @override
+  String get pleaseEnterFullName => 'Please enter your full name';
+
+  @override
+  String failedToSetRole(String error) {
+    return 'Failed to set role: $error';
+  }
+
+  @override
+  String get savedAddressLabelHint => 'Label (e.g. Home, Work, Villa)';
+
+  @override
+  String get landmarkNoteOptional => 'Landmark / Note (Optional)';
+
+  @override
+  String get deleteSavedAddress => 'Delete Saved Address';
+
+  @override
+  String get confirmDeleteSavedAddress =>
+      'Are you sure you want to delete this address?';
+
+  @override
+  String get addNew => 'Add New';
+
+  @override
+  String get setServiceLocation => 'Set Service Location';
+
+  @override
+  String failedToUpdateJobLocation(String error) {
+    return 'Failed to update job location: $error';
+  }
+
+  @override
+  String get pleaseSelectServiceLocation =>
+      'Please select a service location before posting.';
+
+  @override
+  String get confirmServiceLocation => 'Confirm Service Location';
+
+  @override
+  String get pinAttemptsResetZero => 'PIN attempts reset to 0.';
+
+  @override
+  String get cannotCancelInProgressBooking =>
+      'Cannot cancel booking in progress. Please contact support.';
+
+  @override
+  String get serviceVerification => 'Service Verification';
+
+  @override
+  String get rateServiceProvider => 'Rate Service Provider';
+
+  @override
+  String get jobCompletedSuccessfully => 'Job completed successfully!';
+
+  @override
+  String get verifyAndFinish => 'Verify & Finish';
+
+  @override
+  String get callCustomer => 'Call Customer';
+
+  @override
+  String get directServiceBooking => 'Direct Service Booking';
+
+  @override
+  String get signInCancelledByUser => 'Sign-in cancelled by user.';
+
+  @override
+  String couldNotDetectLocation(String error) {
+    return 'Could not detect location: $error';
+  }
+
+  @override
+  String get unauthorizedRoleSwitch => 'Unauthorized role switch.';
+
+  @override
+  String get givePinHint =>
+      'Give this 6-digit PIN to the provider once service is completed.';
+
+  @override
+  String directBookingWith(String providerName) {
+    return 'Direct booking with $providerName';
+  }
+
+  @override
+  String directBookingWithNote(String providerName, String note) {
+    return 'Direct booking with $providerName. Note: $note';
+  }
+
+  @override
+  String get nicVerified => 'NIC Approved';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get useGps => 'Use GPS';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get serviceDate => 'Service Date';
+
+  @override
+  String get agreedPrice => 'Agreed Price';
+
+  @override
+  String get pinVerified => 'PIN Verified on Site';
+
+  @override
+  String get providerDetailsTitle => 'Service Provider Details';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String didYouPayAmount(String amount, String name) {
+    return 'Did you pay $amount to $name?';
+  }
+
+  @override
+  String get yesPaid => 'Yes, paid';
+
+  @override
+  String get reportPaymentProblem => 'Report a problem';
+
+  @override
+  String get cashPaymentConfirmed => 'Cash payment confirmed';
+
+  @override
+  String paymentDisputedWithReason(String reason) {
+    return 'Payment disputed: $reason';
+  }
+
+  @override
+  String get disputePaymentPrompt => 'Enter the reason for payment dispute:';
+
+  @override
+  String get disputePaymentReasonHint =>
+      'e.g. Overcharged, work incomplete, wrong amount';
+
+  @override
+  String get submitDispute => 'Submit report';
+
+  @override
+  String get payProviderDirectlyTip =>
+      'Pay the provider directly in cash after the job is completed.';
+
+  @override
+  String get cashReceived => 'Cash received';
+
+  @override
+  String get paymentNoteOptional => 'Payment note (optional)';
+
+  @override
+  String get paymentNoteHint => 'e.g. Materials, extra work';
+
+  @override
+  String get finalAmountExceedsLimit => 'Amount cannot exceed 5x agreed price';
+
+  @override
+  String get paymentWaitingConfirmation => 'Waiting confirmation';
+
+  @override
+  String get paymentConfirmed => 'Confirmed';
+
+  @override
+  String get paymentDisputed => 'Disputed';
+
+  @override
+  String get earningsToday => 'Today';
+
+  @override
+  String get earningsThisWeek => 'This Week';
+
+  @override
+  String get earningsThisMonth => 'This Month';
+
+  @override
+  String get totalEarnings => 'Total Earnings';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get csvExportSuccess => 'CSV exported successfully';
+
+  @override
+  String get pinCode => 'Completion PIN';
+
+  @override
+  String didYouReachPerson(String name) {
+    return 'Did you reach $name?';
+  }
+
+  @override
+  String get callOutcomeAnswered => 'Connected / Answered';
+
+  @override
+  String get callOutcomeNoAnswer => 'No Answer / Busy';
+
+  @override
+  String get callOutcomeWrongNumber => 'Wrong Number';
+
+  @override
+  String get callRequiresAcceptedQuote =>
+      'Phone calls become available once a quote is accepted.';
+
+  @override
+  String get callLogsTitle => 'Phone Call Audit Logs';
+
+  @override
+  String get callLogCaller => 'Caller';
+
+  @override
+  String get callLogCallee => 'Callee';
+
+  @override
+  String get callLogOutcome => 'Call Outcome';
+
+  @override
+  String get bookingTimelineTitle => 'Job Timeline';
+
+  @override
+  String get noTimelineEvents => 'No events recorded yet';
+
+  @override
+  String get viewTimeline => 'View Timeline';
+
+  @override
+  String get adminActionLogsTitle => 'Admin Action Logs';
+
+  @override
+  String get adminAuditTrailSubtitle =>
+      'Immutable audit trail of administrator actions';
+
+  @override
+  String get noAdminLogsFound => 'No admin audit logs recorded yet';
+
+  @override
+  String get filterUsers => 'Users';
+
+  @override
+  String get filterBookings => 'Bookings';
+
+  @override
+  String get filterSystem => 'System';
+
+  @override
+  String get noEntriesToExport => 'No entries to export';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Are you sure you want to delete your account? All your personal profile data, active requests, and history will be permanently erased. This cannot be undone.';
+
+  @override
+  String get deleteAccountConfirmAction => 'Permanently Delete';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get sendPhoto => 'Send Photo';
+
+  @override
+  String get uploadingImage => 'Uploading image...';
+
+  @override
+  String get failedToUploadImage => 'Failed to upload image';
+
+  @override
+  String get viewPhoto => 'View Photo';
+
+  @override
+  String get bookingTypeAsap => 'ASAP / Emergency';
+
+  @override
+  String get bookingTypeScheduled => 'Scheduled Slot';
+
+  @override
+  String get selectScheduledDate => 'Select Date';
+
+  @override
+  String get selectTimeSlot => 'Select Time Slot';
+
+  @override
+  String get slotMorning => 'Morning (8:00 AM - 12:00 PM)';
+
+  @override
+  String get slotAfternoon => 'Afternoon (12:00 PM - 4:00 PM)';
+
+  @override
+  String get slotEvening => 'Evening (4:00 PM - 8:00 PM)';
+
+  @override
+  String get rescheduleBooking => 'Reschedule Booking';
+
+  @override
+  String get proposeNewTime => 'Propose New Time';
+
+  @override
+  String get rescheduleReasonPrompt => 'Reason for reschedule';
+
+  @override
+  String get rescheduleReasonHint =>
+      'e.g. Traffic delay, customer requested later time';
+
+  @override
+  String get submitRescheduleRequest => 'Request Reschedule';
+
+  @override
+  String get rescheduleProposalBanner => 'Reschedule Proposed';
+
+  @override
+  String get acceptReschedule => 'Accept Reschedule';
+
+  @override
+  String get declineReschedule => 'Decline';
+
+  @override
+  String get cancelRescheduleProposal => 'Cancel Proposal';
+
+  @override
+  String get expiredPill => 'Expired';
+
+  @override
+  String get workingHoursTitle => 'Working Hours & Schedule';
+
+  @override
+  String get serviceRadiusTitle => 'Service Coverage Radius';
+
+  @override
+  String get serviceRadiusSubtitle =>
+      'Maximum distance you will travel for jobs';
+
+  @override
+  String get dayMonday => 'Monday';
+
+  @override
+  String get dayTuesday => 'Tuesday';
+
+  @override
+  String get dayWednesday => 'Wednesday';
+
+  @override
+  String get dayThursday => 'Thursday';
+
+  @override
+  String get dayFriday => 'Friday';
+
+  @override
+  String get daySaturday => 'Saturday';
+
+  @override
+  String get daySunday => 'Sunday';
+
+  @override
+  String get openTime => 'Start Time';
+
+  @override
+  String get closeTime => 'End Time';
+
+  @override
+  String get closedDay => 'Closed';
+
+  @override
+  String get presetWeekdays => 'Weekdays (8 AM - 6 PM)';
+
+  @override
+  String get presetAllDays => 'All 7 Days (8 AM - 8 PM)';
+
+  @override
+  String get preset247 => 'Open 24/7';
+
+  @override
+  String get unavailableNow => 'Unavailable now';
+
+  @override
+  String get outsideWorkingHours => 'Outside working hours';
+
+  @override
+  String get savedScheduleSuccess => 'Working hours updated successfully';
+
+  @override
+  String get savedRadiusSuccess => 'Service radius updated';
+
+  @override
+  String serviceRadiusKm(int radius) {
+    return '$radius km radius';
+  }
+
+  @override
+  String get rescheduleRequestedNotice =>
+      'Reschedule proposal pending response';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get jobPhotosSubtitle => 'Before and after service inspection photos';
+
+  @override
+  String get beforePhotos => 'Before Service';
+
+  @override
+  String get afterPhotos => 'After Service';
+
+  @override
+  String get addBeforePhoto => 'Add Before Photo';
+
+  @override
+  String get addAfterPhoto => 'Add After Photo';
+
+  @override
+  String get noBeforePhotos => 'No before photos uploaded yet';
+
+  @override
+  String get noAfterPhotos => 'No after photos uploaded yet';
+
+  @override
+  String get portfolioTitle => 'Portfolio & Past Work';
+
+  @override
+  String get portfolioSubtitle =>
+      'Showcase your completed projects to customers';
+
+  @override
+  String get addPortfolioItem => 'Add Showcase Item';
+
+  @override
+  String get portfolioItemTitle => 'Project Title';
+
+  @override
+  String get portfolioItemTitleHint => 'e.g. Living room full rewiring';
+
+  @override
+  String get portfolioItemDesc => 'Description';
+
+  @override
+  String get portfolioItemDescHint => 'Brief details about the work done';
+
+  @override
+  String get uploadPhoto => 'Upload Photo';
+
+  @override
+  String get photoUploadedSuccess => 'Photo uploaded successfully';
+
+  @override
+  String get portfolioItemAdded => 'Showcase item added successfully';
+
+  @override
+  String get deletePortfolioConfirm => 'Delete this portfolio item?';
+
+  @override
+  String get noPortfolioItems => 'No portfolio items added yet';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get selectCategoryPrompt => 'Select a category';
+
+  @override
+  String get newProviderBadge => 'NEW';
+
+  @override
+  String get blockUserTitle => 'Block User';
+
+  @override
+  String get blockUserConfirm =>
+      'Are you sure you want to block this user? They will not be able to send you requests or message you.';
+
+  @override
+  String get blockUserAction => 'Block User';
+
+  @override
+  String get unblockUserAction => 'Unblock';
+
+  @override
+  String get userBlockedSuccess => 'User has been blocked';
+
+  @override
+  String get userUnblockedSuccess => 'User has been unblocked';
+
+  @override
+  String get reportUserTitle => 'Report User';
+
+  @override
+  String get reportReasonLabel => 'Reason for Report';
+
+  @override
+  String get reportReasonHarassment => 'Inappropriate or abusive behavior';
+
+  @override
+  String get reportReasonSpam => 'Spam or unwanted advertising';
+
+  @override
+  String get reportReasonFraud => 'Fraud, overcharging, or scam';
+
+  @override
+  String get reportReasonNoShow => 'No-show or abandoned service';
+
+  @override
+  String get reportReasonSafety => 'Safety or trust concern';
+
+  @override
+  String get reportReasonOther => 'Other violation';
+
+  @override
+  String get reportDetailsHint => 'Describe what happened in detail...';
+
+  @override
+  String get reportAlsoBlock => 'Also block this user';
+
+  @override
+  String get reportSubmittedSuccess =>
+      'Report submitted. Our support team will review this shortly.';
+
+  @override
+  String get offlineBannerText =>
+      'You are currently offline. Check your connection.';
+
+  @override
+  String get retryAction => 'Retry';
+
+  @override
+  String get forceUpdateTitle => 'Update Required';
+
+  @override
+  String get forceUpdateMessage =>
+      'A newer version of HelaService with critical improvements is required to continue.';
+
+  @override
+  String get updateNowAction => 'Update Now';
+
+  @override
+  String get emergencyDispatchTitle => 'Urgent Help & Emergency Dispatch';
+
+  @override
+  String get emergencyDispatchSubtitle =>
+      'Find and call out verified artisans within 15km right now';
+
+  @override
+  String get scanningNearbyProviders => 'Scanning nearby emergency artisans...';
+
+  @override
+  String get dispatchTimerLabel => 'Dispatch search window';
+
+  @override
+  String get noEmergencyProvidersFound =>
+      'No emergency artisans found within 15km right now';
+
+  @override
+  String get noEmergencyProvidersDesc =>
+      'Try selecting a different trade category or post an urgent job request.';
+
+  @override
+  String get emergencyCalloutRate => 'Emergency Callout';
+
+  @override
+  String emergencyEtaApprox(int mins) {
+    return 'approx $mins mins away';
+  }
+
+  @override
+  String distanceKmAway(String dist) {
+    return '$dist km away';
+  }
+
+  @override
+  String get requestEmergencyCallout => 'Dispatch Now';
+
+  @override
+  String get confirmEmergencyBookingTitle => 'Confirm Emergency Callout';
+
+  @override
+  String confirmEmergencyBookingDesc(String name, String rate) {
+    return 'An emergency dispatch request will be sent to $name immediately. Rate: LKR $rate.';
+  }
+
+  @override
+  String get emergencyAddressPrompt => 'Emergency Service Location';
+
+  @override
+  String get emergencyNotesPrompt => 'Emergency details (optional)';
+
+  @override
+  String get emergencyNotesHint =>
+      'e.g. Water pipe burst in kitchen, power outage in main circuit';
+
+  @override
+  String get emergencyHotlinesTitle => 'Sri Lanka Emergency Hotlines';
+
+  @override
+  String get hotlinePolice => 'Police Emergency (119)';
+
+  @override
+  String get hotlineAmbulance => 'Suwa Seriya Ambulance (1990)';
+
+  @override
+  String get hotlineFire => 'Fire & Rescue (110)';
+
+  @override
+  String get urgentHelpBannerTitle => 'Urgent Repair or Breakdown?';
+
+  @override
+  String get urgentHelpBannerDesc =>
+      'Instant 15km artisan dispatch for water leaks, power failures, or locksmith emergencies.';
+
+  @override
+  String get urgentHelpBannerAction => 'Get Urgent Help';
 }

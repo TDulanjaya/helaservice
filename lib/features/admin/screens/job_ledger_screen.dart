@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../models/booking.dart';
 import '../../../models/job_request.dart';
 import '../../../models/technician.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../widgets/booking_timeline_sheet.dart';
 
 enum LedgerStatusFilter { all, completed, inProgress, cancelled }
 
@@ -20,7 +23,7 @@ class JobLedgerScreen extends StatefulWidget {
 }
 
 class _JobLedgerScreenState extends State<JobLedgerScreen> {
-  int _activeLedgerTab = 0; // 0 = Confirmed Bookings, 1 = Customer Job Requests
+  int _activeLedgerTab = 0; // zero for bookings or one for requests
   String _customerRequestStatus = 'all';
   LedgerStatusFilter _selectedFilter = LedgerStatusFilter.all;
 
@@ -89,6 +92,46 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
     }
   }
 
+  void _exportBookingsToCsv(
+    BuildContext context,
+    List<Booking> bookings,
+    Map<String, String> techMap,
+  ) {
+    final buffer = StringBuffer();
+    buffer.writeln('Booking ID,Date,Title,Provider,Customer,Status,Agreed Price,Final Amount,Payment Method,Payment Status,Payment Note');
+    for (final b in bookings) {
+      final id = b.id;
+      final date = b.createdAt != null ? b.createdAt!.toIso8601String() : b.time;
+      final title = '"${b.title.replaceAll('"', '""')}"';
+      final provider = '"${(b.providerName.isNotEmpty ? b.providerName : techMap[b.providerId] ?? b.providerId).replaceAll('"', '""')}"';
+      final customer = '"${b.customerName.replaceAll('"', '""')}"';
+      final status = b.status;
+      final agreed = (b.agreedPrice ?? 0).toStringAsFixed(0);
+      final finalAmt = (b.finalAmount ?? b.agreedPrice ?? 0).toStringAsFixed(0);
+      final method = b.paymentMethod ?? 'cash';
+      String paymentStatus = 'Pending';
+      if (b.status == 'completed') {
+        if (b.customerConfirmedPaidAt != null) {
+          paymentStatus = 'Confirmed';
+        } else if (b.paymentDisputed == true) {
+          paymentStatus = 'Disputed';
+        } else {
+          paymentStatus = 'Waiting Confirmation';
+        }
+      }
+      final note = '"${(b.paymentNote ?? '').replaceAll('"', '""')}"';
+      buffer.writeln('$id,$date,$title,$provider,$customer,$status,$agreed,$finalAmt,$method,$paymentStatus,$note');
+    }
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.csvExportSuccess),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 768;
@@ -128,6 +171,29 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                     .toStringAsFixed(1)
                 : '—';
 
+            final now = DateTime.now();
+            final startOfToday = DateTime(now.year, now.month, now.day);
+            final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+            final startOfMonth = DateTime(now.year, now.month, 1);
+
+            double totalEarnings = 0;
+            double todayEarnings = 0;
+            double weekEarnings = 0;
+            double monthEarnings = 0;
+
+            for (final b in allBookings) {
+              if (b.status.toLowerCase() == 'completed' && b.paymentDisputed != true) {
+                final amount = b.finalAmount ?? b.agreedPrice ?? 0.0;
+                totalEarnings += amount;
+                final date = b.completedAt ?? b.createdAt;
+                if (date != null) {
+                  if (date.isAfter(startOfToday)) todayEarnings += amount;
+                  if (date.isAfter(startOfWeek)) weekEarnings += amount;
+                  if (date.isAfter(startOfMonth)) monthEarnings += amount;
+                }
+              }
+            }
+
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 isMobile ? 16 : 24,
@@ -138,22 +204,54 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.l10n.jobLedger,
-                    style: TextStyle(
-                      fontSize: isMobile ? 24 : 28,
-                      fontWeight: FontWeight.w800,
-                      color: context.themeTextPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    context.l10n.jobLedgerSubtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.themeTextSecondary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.jobLedger,
+                              style: TextStyle(
+                                fontSize: isMobile ? 24 : 28,
+                                fontWeight: FontWeight.w800,
+                                color: context.themeTextPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              context.l10n.jobLedgerSubtitle,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => _exportBookingsToCsv(
+                          context,
+                          filteredBookings,
+                          techMap,
+                        ),
+                        icon: const Icon(Icons.file_download_outlined, size: 16),
+                        label: Text(context.l10n.exportCsv),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Container(
@@ -229,6 +327,10 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                       inProgressCount: inProgressCount,
                       avgRating: avgRating,
                       ratedCount: ratedBookings.length,
+                      totalEarnings: totalEarnings,
+                      todayEarnings: todayEarnings,
+                      weekEarnings: weekEarnings,
+                      monthEarnings: monthEarnings,
                     ),
                     SizedBox(height: isMobile ? 18 : 22),
                     _buildFilterChips(context, isMobile),
@@ -298,6 +400,10 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
     required int inProgressCount,
     required String avgRating,
     required int ratedCount,
+    required double totalEarnings,
+    required double todayEarnings,
+    required double weekEarnings,
+    required double monthEarnings,
   }) {
     return Column(
       children: [
@@ -313,7 +419,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.l10n.totalCompletedJobs.toUpperCase(),
+                context.l10n.totalEarnings.toUpperCase(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -323,21 +429,23 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '$completedCount',
+                'LKR ${totalEarnings.toStringAsFixed(0)}',
                 style: const TextStyle(
-                  fontSize: 38,
+                  fontSize: 34,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                   height: 1.1,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                context.l10n.ledgerJobsResolvedIsland('$completedCount'),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.white70,
-                ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildEarningPill(context.l10n.earningsToday, 'LKR ${todayEarnings.toStringAsFixed(0)}'),
+                  const SizedBox(width: 8),
+                  _buildEarningPill(context.l10n.earningsThisWeek, 'LKR ${weekEarnings.toStringAsFixed(0)}'),
+                  const SizedBox(width: 8),
+                  _buildEarningPill(context.l10n.earningsThisMonth, 'LKR ${monthEarnings.toStringAsFixed(0)}'),
+                ],
               ),
             ],
           ),
@@ -356,60 +464,24 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            context.l10n.totalInProgressJobs,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: context.themeTextPrimary,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (inProgressCount > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.themeInfoTint,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              context.l10n.statusActive,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.info,
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      context.l10n.totalCompletedJobs,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$inProgressCount',
+                      '$completedCount',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: context.themeTextPrimary,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.ledgerDispatchesActive('$inProgressCount'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.themeTextSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -434,6 +506,8 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                         fontWeight: FontWeight.w700,
                         color: context.themeTextPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -441,7 +515,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                         Text(
                           avgRating,
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 26,
                             fontWeight: FontWeight.w800,
                             color: context.themeTextPrimary,
                           ),
@@ -450,23 +524,11 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                           const SizedBox(width: 4),
                           const Icon(
                             Icons.star_rounded,
-                            size: 24,
+                            size: 22,
                             color: AppColors.primary,
                           ),
                         ],
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      ratedCount > 0
-                          ? context.l10n.ledgerBasedOnReviews('$ratedCount')
-                          : context.l10n.ledgerAwaitingFeedback,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.themeTextSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -475,6 +537,36 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  static Widget _buildEarningPill(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 11.5, color: Colors.white, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -765,6 +857,104 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
             ],
           ),
+          if (booking.status.toLowerCase() == 'completed') ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.themeSurfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.payments_outlined, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${context.l10n.cashReceived}: LKR ${(booking.finalAmount ?? booking.agreedPrice ?? 0).toStringAsFixed(0)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (booking.customerConfirmedPaidAt != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.paymentConfirmed,
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.success),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (booking.paymentDisputed == true)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 12, color: AppColors.error),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.paymentDisputed,
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.error),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.hourglass_empty_rounded, size: 12, color: AppColors.warning),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.paymentWaitingConfirmation,
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: AppColors.warning),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (booking.paymentNote != null && booking.paymentNote!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${context.l10n.paymentNoteOptional}: ${booking.paymentNote}',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontStyle: FontStyle.italic,
+                color: context.themeTextSecondary,
+              ),
+            ),
+          ],
           if (booking.rating != null && booking.rating! > 0) ...[
             const SizedBox(height: 12),
             Row(
@@ -822,6 +1012,26 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => BookingTimelineSheet.show(
+                context,
+                bookingId: booking.id,
+                bookingTitle: booking.title,
+              ),
+              icon: const Icon(Icons.timeline_rounded, size: 16),
+              label: Text(
+                context.l10n.viewTimeline,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -965,7 +1175,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  req.category.toUpperCase(),
+                  CategoryService.instance.nameOf(req.category, context: context).toUpperCase(),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -992,7 +1202,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            req.title.isNotEmpty ? req.title : 'Service Request',
+            req.title.isNotEmpty ? req.title : context.l10n.serviceRequest,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           if (req.description.isNotEmpty) ...[

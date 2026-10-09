@@ -39,13 +39,25 @@ class AdminProfileScreen extends StatelessWidget {
             child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              pv.Provider.of<RoleProvider>(context, listen: false).logout();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.login,
-                (route) => false,
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
               );
+              try {
+                await pv.Provider.of<RoleProvider>(context, listen: false).logout();
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
@@ -683,7 +695,7 @@ class AdminProfileScreen extends StatelessWidget {
                   builder: (context, localeProvider, _) {
                     return _SettingsTile(
                       icon: Icons.language,
-                      title: 'App Language / භාෂාව / மொழி',
+                      title: context.l10n.appLanguageLabel,
                       subtitle: localeProvider.languageDisplayName,
                       onTap: () => LanguageSelectSheet.show(context),
                     );

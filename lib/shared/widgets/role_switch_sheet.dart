@@ -4,13 +4,13 @@ import '../../theme/app_theme.dart';
 import '../../state/role_provider.dart';
 import '../../features/customer/screens/home_discovery_screen.dart';
 import '../../features/provider/screens/provider_dashboard_screen.dart';
-import '../../features/auth/screens/complete_profile_screen.dart';
 import '../../features/admin/admin_shell.dart';
 import '../../utils/l10n_extension.dart';
 
 void showRoleSwitchSheet(BuildContext context) {
   final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
   final isAuthorizedAdmin = roleProvider.isAuthorizedAdmin;
+  final isApprovedProvider = roleProvider.isApprovedProvider;
   final isDesktop = MediaQuery.of(context).size.width >= 600;
 
   Widget buildContent(BuildContext popContext) {
@@ -38,7 +38,9 @@ void showRoleSwitchSheet(BuildContext context) {
         ),
         const SizedBox(height: 4),
         Text(
-          context.l10n.roleSwitchDesc,
+          isAuthorizedAdmin
+              ? context.l10n.roleSwitchAdminOnlyDesc
+              : context.l10n.roleSwitchDesc,
           style: TextStyle(
             fontSize: 13,
             color: context.themeTextSecondary,
@@ -57,25 +59,27 @@ void showRoleSwitchSheet(BuildContext context) {
             AppRole.customer,
           ),
         ),
-        const SizedBox(height: 10),
-        _RoleTile(
-          icon: Icons.build_outlined,
-          title: context.l10n.roleProvider,
-          subtitle: context.l10n.roleProviderSubtitle,
-          selected: roleProvider.role == AppRole.provider,
-          onTap: () => _switchTo(
-            popContext,
-            context,
-            roleProvider,
-            AppRole.provider,
+        if (isAuthorizedAdmin || isApprovedProvider) ...[
+          const SizedBox(height: 10),
+          _RoleTile(
+            icon: Icons.build_outlined,
+            title: context.l10n.roleProvider,
+            subtitle: context.l10n.roleProviderSubtitle,
+            selected: roleProvider.role == AppRole.provider,
+            onTap: () => _switchTo(
+              popContext,
+              context,
+              roleProvider,
+              AppRole.provider,
+            ),
           ),
-        ),
+        ],
         if (isAuthorizedAdmin) ...[
           const SizedBox(height: 10),
           _RoleTile(
             icon: Icons.admin_panel_settings_outlined,
             title: context.l10n.roleAdmin,
-            subtitle: context.l10n.roleAdminSubtitle,
+            subtitle: context.l10n.roleSwitchAdminOnlyDesc,
             selected: roleProvider.role == AppRole.admin,
             onTap: () => _switchTo(
               popContext,
@@ -142,6 +146,20 @@ void _switchTo(
     );
     return;
   }
+
+  if (role == AppRole.provider &&
+      !roleProvider.isAuthorizedAdmin &&
+      !roleProvider.isApprovedProvider) {
+    Navigator.of(sheetContext).pop();
+    ScaffoldMessenger.of(rootContext).showSnackBar(
+      SnackBar(
+        content: Text(rootContext.l10n.unauthorizedRoleSwitch),
+        backgroundColor: AppColors.error,
+      ),
+    );
+    return;
+  }
+
   roleProvider.setRole(role);
   Navigator.of(sheetContext).pop();
 
@@ -151,16 +169,7 @@ void _switchTo(
       destination = const HomeDiscoveryScreen();
       break;
     case AppRole.provider:
-      final user = roleProvider.currentUser;
-      final hasProviderDetails = (user?.serviceCategory != null && user!.serviceCategory!.isNotEmpty) ||
-          (user?.nic != null && user!.nic!.isNotEmpty);
-      if (!hasProviderDetails) {
-        destination = CompleteProfileScreen(
-          initialProfile: user?.copyWith(role: AppRole.provider),
-        );
-      } else {
-        destination = const ProviderDashboardScreen();
-      }
+      destination = const ProviderDashboardScreen();
       break;
     case AppRole.admin:
       destination = const AdminShell();

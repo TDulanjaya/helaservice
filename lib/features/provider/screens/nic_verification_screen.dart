@@ -12,19 +12,20 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
-import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
-import 'provider_dashboard_screen.dart';
+import '../../../services/storage_service.dart';
+import '../../../services/category_service.dart';
+import '../../customer/screens/home_discovery_screen.dart';
 
-// compress id photo
+// compress identity photo
 Uint8List _compressNicImage(Uint8List rawBytes) {
   final image = img.decodeImage(rawBytes);
   if (image == null) {
     throw Exception('Failed to decode the captured document.');
   }
 
-  // resize under 1600px
+  // resize under 1600 pixels
   img.Image working = image;
   if (working.width > 1600 || working.height > 1600) {
     if (working.width > working.height) {
@@ -34,7 +35,7 @@ Uint8List _compressNicImage(Uint8List rawBytes) {
     }
   }
 
-  const targetMaxBytes = 600 * 1024; // 600 KB
+  const targetMaxBytes = 600 * 1024;
   final qualitySteps = [85, 75, 65, 55, 45, 35];
 
   Uint8List? result;
@@ -71,6 +72,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   bool _front = false;
   bool _back = false;
   bool _selfie = false;
+  String? _frontKey;
+  String? _backKey;
+  String? _selfieKey;
 
   bool _isUploadingFront = false;
   bool _isUploadingBack = false;
@@ -170,28 +174,23 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) throw Exception('User not authenticated');
 
-      const contentType = 'image/jpeg';
-      await FirebaseFirestore.instance
-          .collection('nicImages')
-          .doc(uid)
-          .collection('files')
-          .doc(docType)
-          .set({
-        'data': Blob(imageBytes),
-        'contentType': contentType,
-        'docType': docType,
-        'uid': uid,
-        'uploadedAt': FieldValue.serverTimestamp(),
-      });
+      final key = await StorageService.instance.uploadBytes(
+        imageBytes,
+        filename: '$docType.jpg',
+        purpose: 'nic',
+      );
 
       if (mounted) {
         setState(() {
           if (docType == 'front') {
             _front = true;
+            _frontKey = key;
           } else if (docType == 'back') {
             _back = true;
+            _backKey = key;
           } else if (docType == 'selfie') {
             _selfie = true;
+            _selfieKey = key;
           }
         });
       }
@@ -232,11 +231,13 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         'providerId': uid,
         'status': 'pending',
         'submittedAt': FieldValue.serverTimestamp(),
+        if (_frontKey != null) 'nicFrontKey': _frontKey,
+        if (_backKey != null) 'nicBackKey': _backKey,
         'name': profile?.displayName.isNotEmpty == true
             ? profile!.displayName
             : (authUser?.displayName ?? 'Service Provider'),
         'trade': profile?.serviceCategory?.isNotEmpty == true
-            ? '${profile!.serviceCategory} Specialist'
+            ? '${CategoryService.instance.nameOf(profile!.serviceCategory!, context: context)} Specialist'
             : 'Certified Specialist',
         'location': profile?.district?.isNotEmpty == true
             ? profile!.district!
@@ -251,7 +252,21 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
             : '',
       }, SetOptions(merge: true));
 
-      // save private info
+      // save private kyc details
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(uid)
+          .collection('private')
+          .doc('kyc')
+          .set({
+        'nic': profile?.nic ?? '',
+        if (_frontKey != null) 'nicFrontKey': _frontKey,
+        if (_backKey != null) 'nicBackKey': _backKey,
+        if (_selfieKey != null) 'selfieKey': _selfieKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // save private contact info
       await FirebaseFirestore.instance
           .collection(FirestorePaths.technicians)
           .doc(uid)
@@ -291,14 +306,17 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
             color: context.themeInk,
           ),
         ),
-        leading: Navigator.canPop(context)
-            ? Center(
-                child: IconSquareButton.small(
-                  icon: Icons.chevron_left_rounded,
-                  onTap: () => Navigator.maybePop(context),
-                ),
-              )
-            : null,
+        leading: Center(
+          child: IconSquareButton.small(
+            icon: Icons.chevron_left_rounded,
+            onTap: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -406,9 +424,10 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               PrimaryButton(
                 label: context.l10n.returnToDashboard,
                 trailingIcon: Icons.arrow_forward,
-                onPressed: () => Navigator.of(context).pushReplacement(
+                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
-                      builder: (_) => const ProviderDashboardScreen()),
+                      builder: (_) => const HomeDiscoveryScreen()),
+                  (route) => false,
                 ),
               ),
             ],
@@ -437,56 +456,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: context.isDark ? const Color(0xFF1E1A14) : const Color(0xFFFFF9E6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: context.isDark ? 0.4 : 0.3),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.verifiedArtisanNetworkSriLanka,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13.5,
-                        color: context.themeInk,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.nicSecureStorageDesc,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: context.themeTextSecondary,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
         _UploadStep(
           index: 1,
           title: context.l10n.nicFrontSide,
@@ -525,48 +494,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           tip: context.l10n.selfieTip,
           onTap: () => _handleUpload('selfie'),
         ),
-        const SizedBox(height: 18),
-        AppCard(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.verified_rounded, color: AppColors.primary, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    context.l10n.fastTrackVerificationChecklist,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13.5,
-                      color: context.themeInk,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _ChecklistRow(
-                icon: Icons.timer_outlined,
-                title: context.l10n.fastTurnaroundTitle,
-                body: context.l10n.fastTurnaroundBody,
-              ),
-              const SizedBox(height: 10),
-              _ChecklistRow(
-                icon: Icons.chat_bubble_outline_rounded,
-                title: context.l10n.smsAlertTitle,
-                body: context.l10n.smsAlertBody,
-              ),
-              const SizedBox(height: 10),
-              _ChecklistRow(
-                icon: Icons.wb_sunny_outlined,
-                title: context.l10n.qualityStandardTitle,
-                body: context.l10n.qualityStandardBody,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         PrimaryButton(
           label: _isSubmitting
               ? context.l10n.uploadingToVault
@@ -576,17 +504,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               ? _handleSubmit
               : null,
         ),
-        const SizedBox(height: 10),
-        Center(
-          child: TextButton.icon(
-            onPressed: () => MapLauncher.openPhoneCall('1340'),
-            icon: const Icon(Icons.headset_mic_rounded, size: 16),
-            label: Text(
-              context.l10n.callPartnerSupport,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
+        const SizedBox(height: 12),
         const SizedBox(height: 4),
         Center(
           child: Row(
@@ -606,35 +524,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   }
 }
 
-class PillBadgeChip extends StatelessWidget {
-  final String label;
-  const PillBadgeChip({super.key, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: context.themeSurfaceContainer,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.verified_user_rounded, size: 13, color: AppColors.primary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _UploadStep extends StatelessWidget {
   final int index;
@@ -830,45 +719,6 @@ class _UploadStep extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _ChecklistRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String body;
-  const _ChecklistRow({
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: AppColors.primary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
-              children: [
-                TextSpan(
-                  text: '$title ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
-                TextSpan(text: body),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

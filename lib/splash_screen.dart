@@ -6,8 +6,11 @@ import 'state/role_provider.dart';
 import 'models/user_profile.dart';
 import 'models/admin_user.dart';
 import 'services/auth_service.dart';
+import 'services/app_version_service.dart';
+import 'services/notification_service.dart';
 import 'repositories/admin_repository.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/role_choice_screen.dart';
 import 'features/auth/screens/complete_profile_screen.dart';
 import 'features/customer/screens/home_discovery_screen.dart';
 import 'features/provider/screens/provider_dashboard_screen.dart';
@@ -31,6 +34,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _resolveDestination() async {
     final minDelay = Future.delayed(const Duration(milliseconds: 900));
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+
+    // check minimum app version requirement asynchronously
+    AppVersionService.instance.checkMinimumVersion(context).catchError((_) {});
 
     final fbUser = AuthService().currentFirebaseUser;
     if (fbUser == null) {
@@ -80,6 +86,9 @@ class _SplashScreenState extends State<SplashScreen> {
       } catch (_) {}
     }
 
+    // start notification listeners and token sync
+    NotificationService.instance.initialize();
+
     if (user != null && user.isBanned) {
       await roleProvider.logout();
       await minDelay;
@@ -102,7 +111,9 @@ class _SplashScreenState extends State<SplashScreen> {
     Widget destination = const LoginScreen();
     if (user == null) {
       destination = const LoginScreen();
-    } else if (!roleProvider.isProfileCompleted || user.role == null) {
+    } else if (user.role == null) {
+      destination = RoleChoiceScreen(user: user);
+    } else if (!roleProvider.isProfileCompleted) {
       destination = CompleteProfileScreen(initialProfile: user);
     } else {
       switch (user.role!) {

@@ -20,16 +20,16 @@ class UserAvatar extends StatefulWidget {
   final ValueChanged<Uint8List?>? onImageChanged;
 
   static const List<Color> avatarPalette = [
-    Color(0xFF245851), // Teal green
-    Color(0xFF6E3F27), // Warm brown
-    Color(0xFF395CA6), // Slate blue
-    Color(0xFF6A346C), // Plum purple
-    Color(0xFF8B590E), // Amber brown
-    Color(0xFF2B5B75), // Ocean blue
-    Color(0xFF8A3B2C), // Crimson brick
-    Color(0xFF3F613B), // Forest olive
-    Color(0xFF4B4668), // Deep indigo
-    Color(0xFF7A4A28), // Bronze
+    Color(0xFF245851), // teal green
+    Color(0xFF6E3F27), // warm brown
+    Color(0xFF395CA6), // slate blue
+    Color(0xFF6A346C), // plum purple
+    Color(0xFF8B590E), // amber brown
+    Color(0xFF2B5B75), // ocean blue
+    Color(0xFF8A3B2C), // crimson brick
+    Color(0xFF3F613B), // forest olive
+    Color(0xFF4B4668), // deep indigo
+    Color(0xFF7A4A28), // bronze
   ];
 
   // avatar color

@@ -9,7 +9,10 @@ import '../../../services/otp_service.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
+import 'role_choice_screen.dart';
 import 'email_otp_screen.dart';
+import '../../customer/screens/home_discovery_screen.dart';
+import '../../provider/screens/provider_dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -46,8 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (fullName.isEmpty || fullName.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your full name'),
+        SnackBar(
+          content: Text(context.l10n.pleaseEnterFullName),
           backgroundColor: AppColors.error,
         ),
       );
@@ -109,8 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        CompleteProfileScreen(initialProfile: profile),
+                    builder: (_) => RoleChoiceScreen(user: profile),
                   ),
                   (route) => false,
                 );
@@ -150,11 +152,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
             pv.Provider.of<RoleProvider>(context, listen: false);
         roleProvider.setUser(profile);
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => CompleteProfileScreen(initialProfile: profile),
-          ),
-        );
+        if (profile.role == null) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => RoleChoiceScreen(user: profile),
+            ),
+            (route) => false,
+          );
+        } else if (!profile.isProfileComplete) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => CompleteProfileScreen(initialProfile: profile),
+            ),
+            (route) => false,
+          );
+        } else if (profile.role == AppRole.provider) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const ProviderDashboardScreen(),
+            ),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const HomeDiscoveryScreen(),
+            ),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -536,7 +562,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
     final width = MediaQuery.of(context).size.width;
 
-    // wide desktop dual-pane
+    // wide desktop dual pane
     if (width >= 960) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -628,7 +654,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // tablet / medium desktop centered card
+    // tablet or desktop centered card
     if (width >= 600) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -659,7 +685,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // mobile default
+    // mobile layout
     return Scaffold(
       backgroundColor: context.themeBg,
       body: SafeArea(

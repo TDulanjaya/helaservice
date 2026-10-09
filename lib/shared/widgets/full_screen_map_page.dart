@@ -5,7 +5,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
 import 'app_map_view.dart';
 
-// full screen live map view
+// full screen live map
 class FullScreenMapPage extends StatefulWidget {
   final ValueNotifier<List<AppMapMarker>> markersNotifier;
   final ValueNotifier<List<LatLng>?>? routePointsNotifier;
@@ -44,7 +44,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
       widget.routePointsNotifier?.addListener(_onRouteChanged);
       _isListening = true;
     } catch (_) {
-      // keep last data if notifier failed
+      // keep last data on error
     }
   }
 
@@ -93,7 +93,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
                 interactive: true,
               ),
             ),
-            // close button on top left
+            // close button
             Positioned(
               top: 16,
               left: 16,
@@ -123,7 +123,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
                 ),
               ),
             ),
-            // extra top right button like district switch
+            // header action button
             if (widget.headerAction != null)
               Positioned(
                 top: 16,

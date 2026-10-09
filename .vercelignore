@@ -20,3 +20,5 @@ node_modules/
 !package-lock.json
 !vercel.json
 !api/
+scripts/
+backups/

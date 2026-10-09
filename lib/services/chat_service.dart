@@ -1,12 +1,18 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
+import 'notification_service.dart';
+import 'storage_service.dart';
 
-// chat message model
+// chat message model with optional photo support
 class ChatMessageModel {
   final String id;
   final String senderId;
   final String senderName;
   final String text;
+  final String? imageUrl;
+  final String type;
   final DateTime? createdAt;
 
   const ChatMessageModel({
@@ -14,6 +20,8 @@ class ChatMessageModel {
     required this.senderId,
     required this.senderName,
     required this.text,
+    this.imageUrl,
+    this.type = 'text',
     this.createdAt,
   });
 
@@ -24,12 +32,25 @@ class ChatMessageModel {
       senderId: map['senderId'] ?? '',
       senderName: map['senderName'] ?? '',
       text: map['text'] ?? '',
+      imageUrl: map['imageUrl']?.toString(),
+      type: map['type']?.toString() ?? (map['imageUrl'] != null ? 'image' : 'text'),
       createdAt: ts is Timestamp ? ts.toDate() : null,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'senderId': senderId,
+        'senderName': senderName,
+        'text': text,
+        if (imageUrl != null && imageUrl!.isNotEmpty) 'imageUrl': imageUrl,
+        'type': type,
+        'createdAt': createdAt != null
+            ? Timestamp.fromDate(createdAt!)
+            : FieldValue.serverTimestamp(),
+      };
 }
 
-// inbox item
+// chat room summary with unread badge tracking
 class ChatRoomSummary {
   final String id;
   final List<String> participants;
@@ -38,7 +59,10 @@ class ChatRoomSummary {
   final Map<String, String> participantPhones;
   final String lastMessage;
   final DateTime? lastMessageAt;
+  final String? lastSenderId;
   final String? jobRequestId;
+  final Map<String, int> unreadCounts;
+  final Map<String, DateTime> lastReadAt;
 
   const ChatRoomSummary({
     required this.id,
@@ -48,7 +72,10 @@ class ChatRoomSummary {
     this.participantPhones = const {},
     required this.lastMessage,
     this.lastMessageAt,
+    this.lastSenderId,
     this.jobRequestId,
+    this.unreadCounts = const {},
+    this.lastReadAt = const {},
   });
 
   factory ChatRoomSummary.fromMap(String id, Map<String, dynamic> map) {
@@ -75,6 +102,28 @@ class ChatRoomSummary {
       phonesRaw.forEach((k, v) => phones[k.toString()] = v.toString());
     }
 
+    // parse unread counts map
+    final unreadRaw = map['unreadCounts'];
+    final unreads = <String, int>{};
+    if (unreadRaw is Map) {
+      unreadRaw.forEach((k, v) {
+        if (v is num) {
+          unreads[k.toString()] = v.toInt();
+        }
+      });
+    }
+
+    // parse last read timestamps
+    final lastReadRaw = map['lastReadAt'];
+    final reads = <String, DateTime>{};
+    if (lastReadRaw is Map) {
+      lastReadRaw.forEach((k, v) {
+        if (v is Timestamp) {
+          reads[k.toString()] = v.toDate();
+        }
+      });
+    }
+
     final ts = map['lastMessageAt'];
     final lastMessageAt = ts is Timestamp ? ts.toDate() : null;
 
@@ -86,39 +135,51 @@ class ChatRoomSummary {
       participantPhones: phones,
       lastMessage: map['lastMessage']?.toString() ?? '',
       lastMessageAt: lastMessageAt,
+      lastSenderId: map['lastSenderId']?.toString(),
       jobRequestId: map['jobRequestId']?.toString(),
+      unreadCounts: unreads,
+      lastReadAt: reads,
     );
   }
 
+  // get other participant id
   String getOtherPartyId(String currentUserId) {
     return participants.firstWhere((p) => p != currentUserId, orElse: () => '');
   }
 
+  // get other participant name
   String getOtherPartyName(String currentUserId) {
     final otherId = getOtherPartyId(currentUserId);
     final name = participantNames[otherId];
     return (name != null && name.isNotEmpty) ? name : 'User';
   }
 
+  // get other participant role
   String? getOtherPartyRole(String currentUserId) {
     final otherId = getOtherPartyId(currentUserId);
     return participantRoles[otherId];
   }
 
+  // get other participant phone
   String? getOtherPartyPhone(String currentUserId) {
     final otherId = getOtherPartyId(currentUserId);
     return participantPhones[otherId];
   }
+
+  // get unread count for current user
+  int getUnreadCount(String currentUserId) {
+    return unreadCounts[currentUserId] ?? 0;
+  }
 }
 
-// chat service
+// chat service for messaging and rooms
 class ChatService {
   ChatService._();
   static final ChatService instance = ChatService._();
 
   final _db = FirebaseFirestore.instance;
 
-  // get or create room
+  // get or create chat room with deterministic id
   Future<String> getOrCreateChatRoom({
     required String userId1,
     required String userId2,
@@ -152,6 +213,11 @@ class ChatService {
         'createdAt': FieldValue.serverTimestamp(),
         'lastMessage': '',
         'lastMessageAt': FieldValue.serverTimestamp(),
+        'unreadCounts': {userId1: 0, userId2: 0},
+        'lastReadAt': {
+          userId1: FieldValue.serverTimestamp(),
+          userId2: FieldValue.serverTimestamp(),
+        },
       });
     } else {
       final updates = <String, dynamic>{};
@@ -169,11 +235,12 @@ class ChatService {
     return chatId;
   }
 
-  // stream user rooms
-  Stream<List<ChatRoomSummary>> streamUserChatRooms(String userId) {
+  // stream chat rooms for user
+  Stream<List<ChatRoomSummary>> streamUserChatRooms(String userId, {int limit = 50}) {
     return _db
         .collection(FirestorePaths.chatRooms)
         .where('participants', arrayContains: userId)
+        .limit(limit)
         .snapshots()
         .map((snap) {
       final list = snap.docs
@@ -189,10 +256,11 @@ class ChatService {
     });
   }
 
-  // stream all rooms
-  Stream<List<ChatRoomSummary>> streamAllChatRooms() {
+  // stream all chat rooms for admin
+  Stream<List<ChatRoomSummary>> streamAllChatRooms({int limit = 100}) {
     return _db
         .collection(FirestorePaths.chatRooms)
+        .limit(limit)
         .snapshots()
         .map((snap) {
       final list = snap.docs
@@ -208,12 +276,25 @@ class ChatService {
     });
   }
 
-  // send message
+  // mark room as read for user
+  Future<void> markRoomAsRead(String chatRoomId, String userId) async {
+    if (chatRoomId.isEmpty || userId.isEmpty) return;
+    try {
+      await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).update({
+        'unreadCounts.$userId': 0,
+        'lastReadAt.$userId': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {}
+  }
+
+  // send chat message with optional photo
   Future<void> sendMessage({
     required String chatRoomId,
     required String senderId,
     required String senderName,
     required String text,
+    String? imageUrl,
+    String type = 'text',
   }) async {
     final batch = _db.batch();
 
@@ -223,34 +304,97 @@ class ChatService {
         .collection(FirestorePaths.messages)
         .doc();
 
+    final previewText = text.trim().isNotEmpty
+        ? text.trim()
+        : (imageUrl != null ? '📷 Photo' : '');
+
     batch.set(msgRef, {
       'senderId': senderId,
       'senderName': senderName,
-      'text': text,
+      'text': text.trim(),
+      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+      'type': type,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
+    final docSnap = await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).get();
+    final participants = (docSnap.data()?['participants'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final recipientUid = participants.firstWhere((p) => p != senderId, orElse: () => '');
+
+    final roomUpdates = <String, dynamic>{
+      'lastMessage': previewText,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'lastSenderId': senderId,
+      'unreadCounts.$senderId': 0,
+      'lastReadAt.$senderId': FieldValue.serverTimestamp(),
+    };
+
+    if (recipientUid.isNotEmpty) {
+      roomUpdates['unreadCounts.$recipientUid'] = FieldValue.increment(1);
+    }
+
     batch.update(
       _db.collection(FirestorePaths.chatRooms).doc(chatRoomId),
-      {
-        'lastMessage': text,
-        'lastMessageAt': FieldValue.serverTimestamp(),
-      },
+      roomUpdates,
     );
 
     await batch.commit();
+
+    // send push alert to recipient
+    if (recipientUid.isNotEmpty) {
+      NotificationService.instance.sendNotification(
+        event: 'chat_message',
+        docId: chatRoomId,
+      );
+    }
+  }
+
+  // send image message
+  Future<void> sendImageMessage({
+    required String chatRoomId,
+    required String senderId,
+    required String senderName,
+    required dynamic imageInput,
+    String text = '',
+  }) async {
+    String? uploadedUrl;
+    if (imageInput is File) {
+      uploadedUrl = await StorageService.instance.uploadFile(imageInput);
+    } else if (imageInput is Uint8List) {
+      uploadedUrl = await StorageService.instance.uploadBytes(
+        imageInput,
+        filename: 'chat_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+    } else if (imageInput is String && imageInput.startsWith('http')) {
+      uploadedUrl = imageInput;
+    }
+
+    if (uploadedUrl == null || uploadedUrl.isEmpty) {
+      throw Exception('Failed to obtain image URL');
+    }
+
+    await sendMessage(
+      chatRoomId: chatRoomId,
+      senderId: senderId,
+      senderName: senderName,
+      text: text,
+      imageUrl: uploadedUrl,
+      type: 'image',
+    );
   }
 
   // stream room messages
-  Stream<List<ChatMessageModel>> streamMessages(String chatRoomId) {
+  Stream<List<ChatMessageModel>> streamMessages(String chatRoomId, {int limit = 100}) {
     return _db
         .collection(FirestorePaths.chatRooms)
         .doc(chatRoomId)
         .collection(FirestorePaths.messages)
         .orderBy('createdAt', descending: false)
+        .limitToLast(limit)
         .snapshots()
         .map((snap) => snap.docs
             .map((d) => ChatMessageModel.fromMap(d.id, d.data()))
             .toList());
   }
 }
+

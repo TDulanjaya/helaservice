@@ -13,7 +13,7 @@ class AppColors {
   static const secondaryContainer = Color(0xFFD6900F);
   static const onSecondaryContainer = Color(0xFF17140F);
 
-  // light mode
+  // light theme
   static const amberDark = Color(0xFF9A6206);
   static const amberTint = Color(0xFFFBF0DA);
   static const ink = Color(0xFF17140F);
@@ -32,6 +32,8 @@ class AppColors {
   static const dangerTint = Color(0xFFFCE4E1);
   static const info = Color(0xFF1F5FBF);
   static const infoTint = Color(0xFFE3ECFA);
+  static const warning = Color(0xFFD6900F);
+  static const warningTint = Color(0xFFFBF0DA);
 
   // legacy aliases
   static const surfaceLow = Color(0xFFF4F2EB);

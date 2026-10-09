@@ -28,22 +28,11 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nicController = TextEditingController();
-  String _category = 'Electrical';
+  String _category = '';
   String _district = 'Colombo';
   bool _agreed = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
-
-  final _categories = const [
-    'Electrical',
-    'Plumbing',
-    'AC Repair',
-    'Carpentry',
-    'Masonry',
-    'Appliance Repair',
-    'House Painting',
-    'Roofing & Waterproofing',
-  ];
 
   List<String> get _districts => LocationUtils.districtCoordinates.keys.toList();
 
@@ -307,34 +296,53 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
               ),
               const SizedBox(height: 16),
               StreamBuilder<List<CategoryRow>>(
-                stream: CategoryRepository().streamCategoryRows(),
+                stream: CategoryRepository().streamLiveCategories(),
                 builder: (context, snapshot) {
-                  final liveCats = (snapshot.data ?? [])
-                      .where((c) => c.status.toLowerCase() == 'active')
-                      .map((c) => c.name)
-                      .toList();
-                  final allCats = liveCats.isNotEmpty ? liveCats : _categories;
-                  final effectiveVal = allCats.contains(_category)
+                  final liveCats = snapshot.data ?? [];
+                  if (liveCats.isEmpty &&
+                      snapshot.connectionState != ConnectionState.waiting) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: context.themeSurfaceLow,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: context.themeBorder),
+                      ),
+                      child: Text(
+                        'No services available yet',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final effectiveVal = liveCats.any((c) => c.id == _category)
                       ? _category
-                      : (allCats.isNotEmpty ? allCats.first : 'Electrical');
+                      : (liveCats.isNotEmpty ? liveCats.first.id : '');
+                  if (_category.isEmpty && liveCats.isNotEmpty) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && _category.isEmpty) {
+                        setState(() => _category = effectiveVal);
+                      }
+                    });
+                  }
 
                   return SearchableSelectPicker<String>(
                     label: context.l10n.primaryCategory,
-                    selectedValue: effectiveVal,
+                    selectedValue: effectiveVal.isNotEmpty ? effectiveVal : null,
                     prefixIcon: Icons.bolt_outlined,
                     isDarkField: context.isDark,
                     modalTitle: context.l10n.category,
                     searchHint: 'Search category...',
-                    items: allCats.map((c) {
-                      final localized = LocalizedData.getCategory(context, c);
-                      final sin = LocalizedData.categories[c]?['si'] ?? '';
-                      final tam = LocalizedData.categories[c]?['ta'] ?? '';
+                    items: liveCats.map((c) {
                       return SearchableSelectItem<String>(
-                        value: c,
-                        label: localized,
-                        subtitle: localized != c ? c : null,
-                        icon: Icons.handyman_outlined,
-                        searchTerms: [c, sin, tam],
+                        value: c.id,
+                        label: c.name,
+                        icon: c.icon,
+                        searchTerms: [c.name, c.id],
                       );
                     }).toList(),
                     onSelected: (v) => setState(() => _category = v),

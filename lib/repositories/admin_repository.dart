@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../constants/firestore_paths.dart';
 import '../models/admin_user.dart';
+import '../services/admin_log_service.dart';
 
 class AdminRepository {
   static final AdminRepository _instance = AdminRepository._internal();
@@ -38,6 +39,12 @@ class AdminRepository {
       'role': role.key,
       'permissions': permissions.map((p) => p.key).toList(),
     });
+    await AdminLogService.instance.logAction(
+      action: 'update_admin_permissions',
+      targetType: 'admin',
+      targetId: adminId,
+      details: 'Updated role to ${role.key} with ${permissions.length} permissions',
+    );
   }
 
   Future<void> toggleAdminStatus(String adminId, bool isActive) async {
@@ -50,10 +57,22 @@ class AdminRepository {
     await _col.doc(adminId).update({
       'status': isActive ? 'active' : 'suspended',
     });
+    await AdminLogService.instance.logAction(
+      action: isActive ? 'activate_admin' : 'suspend_admin',
+      targetType: 'admin',
+      targetId: adminId,
+      details: 'Changed admin status to ${isActive ? "active" : "suspended"}',
+    );
   }
 
   Future<void> deleteAdmin(String adminId) async {
     await _col.doc(adminId).delete();
+    await AdminLogService.instance.logAction(
+      action: 'delete_admin',
+      targetType: 'admin',
+      targetId: adminId,
+      details: 'Removed admin user document',
+    );
   }
 
   Future<AdminUser?> getAdminByEmailOrUid(String identifier) async {

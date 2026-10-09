@@ -3,8 +3,8 @@ import 'package:provider/provider.dart' as pv;
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../theme/app_theme.dart';
+import '../../../constants/job_status.dart';
 import '../../../models/booking.dart';
-import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../../../shared/widgets/full_screen_map_page.dart';
@@ -15,7 +15,9 @@ import '../../../repositories/booking_repository.dart';
 import '../../customer/screens/direct_chat_screen.dart';
 import '../../../shared/widgets/slide_to_confirm.dart';
 import '../../../shared/widgets/outline_button.dart';
+import '../../../shared/widgets/job_photos_sheet.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../services/call_service.dart';
 
 class EnRouteNavigationScreen extends StatefulWidget {
   final Booking? booking;
@@ -34,6 +36,12 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    _isArrived = widget.booking?.status == JobStatus.inProgress;
+    if (widget.booking != null &&
+        widget.booking!.id.isNotEmpty &&
+        widget.booking!.status == JobStatus.confirmed) {
+      BookingRepository().startNavigation(widget.booking!.id);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLiveTracking();
     });
@@ -208,27 +216,237 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
   }
 
+  Future<void> _promptCompletionPin(BuildContext context) async {
+    final b = widget.booking;
+    if (b == null || b.id.isEmpty) return;
+
+    final initialAmount = b.agreedPrice != null && b.agreedPrice! > 0
+        ? b.agreedPrice!.toStringAsFixed(0)
+        : '';
+    final pinController = TextEditingController();
+    final amountController = TextEditingController(text: initialAmount);
+    final noteController = TextEditingController();
+    bool isSubmitting = false;
+    String? errorMessage;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.verified_outlined, color: AppColors.primary, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.verifyAndFinish,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.payProviderDirectlyTip,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: ctx.themeTextSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.pinCode,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: pinController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 8,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: '••••••',
+                    filled: true,
+                    fillColor: ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.cashReceived,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    prefixText: 'LKR ',
+                    filled: true,
+                    fillColor: ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.paymentNoteOptional,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: noteController,
+                  decoration: InputDecoration(
+                    hintText: context.l10n.paymentNoteHint,
+                    filled: true,
+                    fillColor: ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final pin = pinController.text.trim();
+                      if (pin.length != 6 && pin.length != 4) {
+                        setDialogState(() {
+                          errorMessage = 'Please enter 6 digits';
+                        });
+                        return;
+                      }
+
+                      final enteredAmount = double.tryParse(
+                            amountController.text.replaceAll(RegExp(r'[^0-9.]'), ''),
+                          ) ??
+                          (b.agreedPrice ?? 0);
+
+                      if (b.agreedPrice != null &&
+                          b.agreedPrice! > 0 &&
+                          enteredAmount > b.agreedPrice! * 5) {
+                        setDialogState(() {
+                          errorMessage = context.l10n.finalAmountExceedsLimit;
+                        });
+                        return;
+                      }
+
+                      setDialogState(() {
+                        isSubmitting = true;
+                        errorMessage = null;
+                      });
+
+                      final result = await BookingRepository()
+                          .verifyAndCompleteJob(
+                        bookingId: b.id,
+                        enteredPin: pin,
+                        jobRequestId: b.jobRequestId,
+                        finalAmount: enteredAmount > 0 ? enteredAmount : null,
+                        paymentNote: noteController.text.trim(),
+                      );
+
+                      if (result.success) {
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.l10n.jobCompletedSuccessfully),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                          Navigator.pop(context);
+                        }
+                      } else {
+                        setDialogState(() {
+                          isSubmitting = false;
+                          errorMessage = result.errorMessage ??
+                              'Incorrect PIN. Please re-check with customer.';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(context.l10n.verifyAndFinish),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
+    final hasCustomerLocation = booking?.customerLatitude != null &&
+        booking?.customerLongitude != null;
 
-    final LatLng customerPoint;
-    if (booking?.customerLatitude != null &&
-        booking?.customerLongitude != null) {
-      customerPoint =
-          LatLng(booking!.customerLatitude!, booking.customerLongitude!);
-    } else {
-      final destLocation = LocationUtils.getDistrictCoordinates(
-          booking?.location.isNotEmpty == true ? booking!.location : 'Colombo');
-      customerPoint = LatLng(destLocation.lat, destLocation.lng);
-    }
+    final LatLng customerPoint = hasCustomerLocation
+        ? LatLng(booking!.customerLatitude!, booking.customerLongitude!)
+        : (_currentGpsPosition ?? const LatLng(6.9271, 79.8612));
 
     final techPoint = _currentGpsPosition ??
-        LatLng(customerPoint.latitude - 0.009, customerPoint.longitude - 0.013);
-    final midPoint = LatLng(
-      (customerPoint.latitude + techPoint.latitude) / 2,
-      (customerPoint.longitude + techPoint.longitude) / 2,
-    );
+        (hasCustomerLocation
+            ? LatLng(customerPoint.latitude - 0.009,
+                customerPoint.longitude - 0.013)
+            : const LatLng(6.9271, 79.8612));
+
+    final midPoint = hasCustomerLocation
+        ? LatLng(
+            (customerPoint.latitude + techPoint.latitude) / 2,
+            (customerPoint.longitude + techPoint.longitude) / 2,
+          )
+        : techPoint;
 
     return Scaffold(
       appBar: AppBar(
@@ -285,11 +503,109 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            FutureBuilder<RouteInfo>(
-              future: RoutingService().getDrivingRoute(
-                origin: techPoint,
-                destination: customerPoint,
+            if (!hasCustomerLocation)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.4),
+                      width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.location_off_rounded,
+                            color: AppColors.warning, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Customer location not available',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14.5,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Exact GPS coordinates were not provided for this job. Contact the customer below to coordinate arrival.',
+                      style: TextStyle(
+                          fontSize: 12.5, color: context.themeTextSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        if (booking != null && booking.customerPhone.isNotEmpty)
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                final b = booking;
+                                CallService.instance.startCall(
+                                  context: context,
+                                  calleePhone: b.customerPhone,
+                                  calleeName: b.customerName,
+                                  bookingId: b.id,
+                                  calleeUid: b.customerId,
+                                  calleeRole: 'customer',
+                                );
+                              },
+                              icon: const Icon(Icons.call, size: 16),
+                              label: Text(context.l10n.callCustomer),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                        if (booking?.customerPhone.isNotEmpty == true)
+                          const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => DirectChatScreen(
+                                    otherPartyId: booking?.customerId ?? '',
+                                    otherPartyName:
+                                        booking?.customerName ?? 'Customer',
+                                    otherPartyRole: 'customer',
+                                    otherPartyPhone: booking?.customerPhone,
+                                    jobRequestId: booking?.jobRequestId,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.chat_bubble_outline,
+                                size: 16),
+                            label: Text(context.l10n.chat),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
+            FutureBuilder<RouteInfo>(
+              future: hasCustomerLocation
+                  ? RoutingService().getDrivingRoute(
+                      origin: techPoint,
+                      destination: customerPoint,
+                    )
+                  : Future.value(RouteInfo.empty()),
               builder: (context, snapshot) {
                 final route = snapshot.data ??
                     RouteInfo.fallback(techPoint, customerPoint);
@@ -304,6 +620,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                           : context.l10n.roleCustomer,
                   route: route,
                   booking: booking,
+                  hasCustomerLocation: hasCustomerLocation,
                 );
               },
             ),
@@ -428,7 +745,14 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         onPressed: () {
                           final phone = booking?.customerPhone ?? '';
                           if (phone.isNotEmpty) {
-                            MapLauncher.openPhoneCall(phone);
+                            CallService.instance.startCall(
+                              context: context,
+                              calleePhone: phone,
+                              calleeName: booking?.customerName ?? 'Customer',
+                              bookingId: booking?.id,
+                              calleeUid: booking?.customerId,
+                              calleeRole: 'customer',
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -564,8 +888,10 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 setState(() => _isArrived = true);
                 LiveLocationService.instance.stopTracking();
                 if (booking != null && booking.id.isNotEmpty) {
-                  await BookingRepository()
-                      .updateStatus(booking.id, 'in_progress');
+                  await BookingRepository().confirmArrival(
+                    bookingId: booking.id,
+                    jobRequestId: booking.jobRequestId,
+                  );
                 }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -589,6 +915,46 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 ),
               ),
             ),
+            if (_isArrived) ...[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  foregroundColor: AppColors.primary,
+                  minimumSize: const Size.fromHeight(46),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.photo_library_outlined, size: 20),
+                label: Text(
+                  context.l10n.jobPhotos,
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                ),
+                onPressed: () {
+                  if (booking != null) {
+                    JobPhotosSheet.show(context, booking: booking, isProvider: true);
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.check_circle_outline, size: 20),
+                label: const Text(
+                  'Complete Job (Enter Customer PIN)',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
+                onPressed: () => _promptCompletionPin(context),
+              ),
+            ],
             const SizedBox(height: 16),
             AppOutlineButton(
               label: context.l10n.reportTrafficDelay,
@@ -688,6 +1054,7 @@ class _ProviderEnRouteMapCard extends StatefulWidget {
   final String customerLabel;
   final RouteInfo route;
   final Booking? booking;
+  final bool hasCustomerLocation;
 
   const _ProviderEnRouteMapCard({
     required this.techPoint,
@@ -696,6 +1063,7 @@ class _ProviderEnRouteMapCard extends StatefulWidget {
     required this.customerLabel,
     required this.route,
     required this.booking,
+    this.hasCustomerLocation = true,
   });
 
   @override
@@ -712,7 +1080,8 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
   void initState() {
     super.initState();
     _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
-    _routePointsNotifier = ValueNotifier<List<LatLng>?>(widget.route.points);
+    _routePointsNotifier = ValueNotifier<List<LatLng>?>(
+        widget.hasCustomerLocation ? widget.route.points : null);
   }
 
   @override
@@ -720,11 +1089,14 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.techPoint != widget.techPoint ||
         oldWidget.customerPoint != widget.customerPoint ||
-        oldWidget.customerLabel != widget.customerLabel) {
+        oldWidget.customerLabel != widget.customerLabel ||
+        oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _markersNotifier.value = _buildMarkers();
     }
-    if (oldWidget.route.points != widget.route.points) {
-      _routePointsNotifier.value = widget.route.points;
+    if (oldWidget.route.points != widget.route.points ||
+        oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
+      _routePointsNotifier.value =
+          widget.hasCustomerLocation ? widget.route.points : null;
     }
   }
 
@@ -735,17 +1107,20 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
         label: mounted ? context.l10n.youEnRoute : 'You (En Route)',
         enRoute: true,
       ),
-      AppMapMarker.customer(
-        point: widget.customerPoint,
-        label: widget.customerLabel,
-      ),
+      if (widget.hasCustomerLocation)
+        AppMapMarker.customer(
+          point: widget.customerPoint,
+          label: widget.customerLabel,
+        ),
     ];
   }
 
   void _openFullScreen() {
     final route = MaterialPageRoute<void>(
       builder: (ctx) => FullScreenMapPage(
-        initialCenter: widget.midPoint,
+        initialCenter: widget.hasCustomerLocation
+            ? widget.midPoint
+            : widget.techPoint,
         initialZoom: 14.0,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
@@ -784,10 +1159,13 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
               valueListenable: _markersNotifier,
               builder: (context, markers, _) {
                 return AppMapView(
-                  initialCenter: widget.midPoint,
+                  initialCenter: widget.hasCustomerLocation
+                      ? widget.midPoint
+                      : widget.techPoint,
                   initialZoom: 14.0,
                   interactive: true,
-                  routePoints: route.points,
+                  routePoints:
+                      widget.hasCustomerLocation ? route.points : null,
                   markers: markers,
                   onExpand: _openFullScreen,
                 );

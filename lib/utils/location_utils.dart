@@ -131,6 +131,22 @@ class LocationUtils {
     return context.l10n.custKmAwayValue(km.toStringAsFixed(1));
   }
 
+  static String formatEstimatedDriveTime(BuildContext context, double km) {
+    int mins = ((km / 28.0) * 60).round();
+    if (mins < 3) mins = 3;
+    return context.l10n.estTravelTime(mins);
+  }
+
+  static String getProximityLabel(BuildContext context, double km) {
+    if (km < 5.0) {
+      return context.l10n.nearbyTag;
+    } else if (km <= 15.0) {
+      return context.l10n.moderateTag;
+    } else {
+      return context.l10n.extendedTag;
+    }
+  }
+
   static Future<Position?> getCurrentPosition() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

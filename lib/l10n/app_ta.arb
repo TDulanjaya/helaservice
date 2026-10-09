@@ -733,6 +733,7 @@
   "failedToSubmitQuote": "விலைப்புள்ளியை சமர்ப்பிக்க முடியவில்லை: {error}",
   "delayReportedNotice": "தாமதம் அறிவிக்கப்பட்டது: {reason} (+10 நிமிடம் ETA சரிசெய்தல் அறிவிக்கப்பட்டது)",
   "customerLocation": "வாடிக்கையாளர் இருப்பிடம்",
+  "customerLocationNotAvailableCall": "வாடிக்கையாளர் இருப்பிடம் கிடைக்கவில்லை. வாடிக்கையாளரை அழைக்கவும்.",
   "customerLocationNamed": "{name} இன் இருப்பிடம்",
   "youEnRoute": "நீங்கள் (வழியில்)",
   "inDistance": "{distance} இல்",
@@ -1070,9 +1071,8 @@
   "allRoles": "அனைத்து பங்குகள்",
   "allDistricts": "அனைத்து மாவட்டங்கள்",
   "filterByStatus": "நிலை",
-  "statusActive": "செயலில்",
   "statusSuspended": "இடைநிறுத்தப்பட்டது",
-  "suspendAccount": "கணக்கை இடைநிறுத்துக",
+  "suspendAccount": "கணக்கை இடைநிறுத்து",
   "unbanAccount": "இடைநிறுத்தத்தை நீக்குக",
   "enterBanReason": "இடைநிறுத்தத்திற்கான காரணத்தை உள்ளிடவும்",
   "banReasonHint": "எ.கா: கொள்கை மீறல், முறைகேடு அல்லது புகார்கள்",
@@ -1101,7 +1101,7 @@
   "zoomIn": "பெரிதாக்கு",
   "zoomOut": "சிறிதாக்கு",
   "recenterMap": "வரைபடத்தை மையப்படுத்து",
-  "superAdminCannotBeSuspended": "முதன்மை நிர்வாகி கணக்குகள் பாதுகாக்கப்பட்டுள்ளன, அவற்றை இடைநிறுத்த முடியாது.",
+  "superAdminCannotBeSuspended": "முதன்மை நிர்வாகி கணக்குகளை இடைநிறுத்த முடியாது.",
   "openSettings": "அமைப்புகளைத் திறக்கவும்",
   "ok": "சரி",
   "permissionCameraPermanentlyDisabled": "கேமரா அணுகல் நிரந்தரமாக முடக்கப்பட்டுள்ளது. புகைப்படங்களை எடுக்க அமைப்புகளில் அதை இயக்கவும்.",
@@ -1118,5 +1118,415 @@
   "permissionNotificationNeeded": "அறிவிப்பு அனுமதி தேவை",
   "permissionNotificationPermanentlyDisabled": "சாதன அமைப்புகளில் அறிவிப்புகள் முடக்கப்பட்டுள்ளன. பணி விழிப்பூட்டல்களைப் பெற அவற்றை இயக்கவும்.",
   "noMatchesFound": "பொருத்தங்கள் எதுவும் காணப்படவில்லை",
-  "selectOption": "தெரிவுசெய்க"
+  "selectOption": "தெரிவுசெய்க",
+  "proApprovalRequiredTitle": "நிர்வாகி ஒப்புதல் தேவை",
+  "proApprovalRequiredDesc": "உங்கள் சேவை வழங்குநர் கணக்கு நிர்வாக சரிபார்ப்பிற்காக காத்திருக்கிறது. பாதுகாப்பு மற்றும் நம்பகத்தன்மையை உறுதிப்படுத்த, ஒப்புதல் பெற்றவுடன் பணி எச்சரிக்கைகள் மற்றும் மதிப்பீடுகள் திறக்கப்படும்.",
+  "proVerificationStatus": "சரிபார்ப்பு நிலை",
+  "proStatusPendingReview": "நிர்வாக மதிப்பாய்வில் உள்ளது",
+  "proStatusActionRequired": "நடவடிக்கை தேவை: சரிபார்ப்பைச் சமர்ப்பிக்கவும்",
+  "proStatusRejected": "சரிபார்ப்பு நிராகரிக்கப்பட்டது",
+  "proSubmitNicAction": "தேசிய அடையாள அட்டை சரிபார்ப்பை முடிக்கவும்",
+  "proRefreshStatus": "நிலையைப் புதுப்பிக்கவும்",
+  "proCheckingStatus": "நிலை சரிபார்க்கப்படுகிறது...",
+  "proApprovalGrantedTitle": "அணுகல் வழங்கப்பட்டது!",
+  "proApprovalGrantedDesc": "வாழ்த்துகள்! உங்கள் கணக்கு நிர்வாகியால் அங்கீகரிக்கப்பட்டுள்ளது. பணிகளை ஏற்க, மதிப்பீடுகளை அனுப்ப மற்றும் உங்கள் சேவைகளை நிர்வகிக்க உங்களுக்கு முழு அணுகல் உள்ளது.",
+  "proGetStarted": "முகப்புப் பலகையில் நுழையவும்",
+  "proNotificationsTitle": "சேவை வழங்குநர் விழிப்பூட்டல்கள்",
+  "proNoNotifications": "தற்போது அறிவிப்புகள் எதுவும் இல்லை",
+  "proMarkAllRead": "அனைத்தையும் படித்ததாகக் குறிக்கவும்",
+  "reportToAdmin": "நிர்வாகியிடம் புகாரளிக்கவும்",
+  "reportIssueTitle": "சிக்கலைப் புகாரளி / தகராறைப் பதிவு செய்",
+  "reportIssueDesc": "இந்த உரையாடல் அல்லது பயனர் பற்றி அதிகாரப்பூர்வ புகாரைச் சமர்ப்பிக்கவும். நிர்வாகக் குழு இதை மதிப்பாய்வு செய்து தகுந்த நடவடிக்கை எடுக்கும்.",
+  "reportReasonPrompt": "ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும்",
+  "reportNotesPrompt": "சம்பவம் அல்லது காரணத்தை விரிவாக விவரிக்கவும்...",
+  "reportSubmitButton": "புகாரை நிர்வாகியிடம் சமர்ப்பிக்கவும்",
+  "reportSubmitting": "சமர்ப்பிக்கப்படுகிறது...",
+  "reportSuccessSnack": "புகார் வெற்றிகரமாக நிர்வாகியிடம் சமர்ப்பிக்கப்பட்டது.",
+  "adminSupportChannelTitle": "நிர்வாக ஆதரவு & உதவி மையம்",
+  "adminSupportChannelSubtitle": "நேரடி உதவி, தகராறு மத்தியஸ்தம் மற்றும் வழிகாட்டுதல்",
+  "fileFormalTicket": "அதிகாரப்பூர்வ டிக்கெட்டைப் பதிவு செய்",
+  "cancelBookingOrQuote": "பதிவு / மதிப்பீட்டை ரத்துசெய்",
+  "cancelBookingPrompt": "இந்த பதிவை/மதிப்பீட்டை நிச்சயமாக ரத்து செய்ய விரும்புகிறீர்களா?",
+  "cancellationReasonPrompt": "ரத்து செய்வதற்கான காரணத்தைத் தேர்ந்தெடுக்கவும்",
+  "cancelReasonCustomerRequest": "வாடிக்கையாளர் ரத்து செய்யக் கோரினார்",
+  "cancelReasonProviderUnavailable": "தொழில்நுட்ப வல்லுநர் கிடைக்கவில்லை",
+  "cancelReasonScheduleConflict": "நேர முரண்பாடு",
+  "cancelReasonPriceDispute": "விலை அல்லது கட்டண கருத்து வேறுபாடு",
+  "cancelReasonOther": "வேறு காரணம்",
+  "confirmCancellation": "ரத்து செய்வதை உறுதிப்படுத்து",
+  "bookingCancelledSuccess": "பதிவு வெற்றிகரமாக ரத்து செய்யப்பட்டது",
+  "repostJob": "பணியை மீண்டும் இடுகையிடவும்",
+  "repostJobConfirm": "இந்த பணியை மீண்டும் இடுகையிட விரும்புகிறீர்களா? அருகிலுள்ள தொழில்நுட்ப வல்லுநர்களிடமிருந்து புதிய மதிப்பீடுகளைப் பெற இது மீண்டும் திறக்கப்படும்.",
+  "repostJobSuccess": "பணி வெற்றிகரமாக மீண்டும் இடுகையிடப்பட்டது!",
+  "deleteJob": "பணியை நீக்கு",
+  "deleteJobConfirm": "இந்த பணி கோரிக்கையை நிரந்தரமாக நீக்க விரும்புகிறீர்களா? இதை மீட்டெடுக்க முடியாது.",
+  "deleteJobSuccess": "பணி கோரிக்கை நீக்கப்பட்டது",
+  "chatWithProvider": "தொழில்நுட்ப வல்லுநருடன் அரட்டையடிக்கவும்",
+  "otpCheckSpamHintTitle": "மின்னஞ்சல் கிடைக்கவில்லையா?",
+  "otpCheckSpamHintDesc": "தயவுசெய்து உங்கள் Spam அல்லது Junk கோப்புறையைச் சரிபார்க்கவும். சரிபார்ப்புக் குறியீடு சில நேரங்களில் அங்கு சென்றிருக்கலாம்.",
+  "loggingOut": "வெளியேறுகிறது...",
+  "navMessages": "உரையாடல்",
+  "closestFirst": "அருகிலுள்ளவை முதலில்",
+  "newestFirst": "புதியவை முதலில்",
+  "allDistances": "அனைத்தும்",
+  "within5Km": "< 5 கி.மீ",
+  "within10Km": "< 10 கி.மீ",
+  "within25Km": "< 25 கி.மீ",
+  "viewOnMap": "வரைபடத்தைக் காட்டு",
+  "nearbyTag": "அருகில்",
+  "moderateTag": "நடுத்தர தூரம்",
+  "extendedTag": "நீட்டிக்கப்பட்ட",
+  "estTravelTime": "~{mins} நிமிட பயணம்",
+  "noJobsInRadius": "தேர்ந்தெடுக்கப்பட்ட தூரத்திற்குள் பணிகள் இல்லை",
+  "filterRoleAndStatus": "பங்கு மற்றும் நிலை வடிகட்டி",
+  "allStatuses": "அனைத்து நிலைகளும்",
+  "clearFilters": "வடிகட்டிகளை அழிக்கவும்",
+  "roleAllAdmins": "அனைத்து நிர்வாகிகளும்",
+  "becomeServiceProvider": "சேவை வழங்குநராக மாறுங்கள்",
+  "backToCustomerDashboard": "வாடிக்கையாளர் முகப்புக்குத் திரும்பு",
+  "cancelRegistration": "பதிவை ரத்து செய்",
+  "roleSwitchAdminOnlyDesc": "தள பராமரிப்பு மற்றும் தரவு ஆய்வு பயன்முறை",
+  "adminProviderPreviewNotice": "நிர்வாகி மாதிரிக்காட்சி முறை · சேவை வழங்குநர் இடைமுகத்தைப் பார்க்கிறது",
+  "resubmitVerification": "சரிபார்ப்பை மீண்டும் சமர்ப்பிக்கவும்",
+  "verificationNotApprovedTitle": "சரிபார்ப்பு அங்கீகரிக்கப்படவில்லை",
+  "verificationNotApprovedBody": "உங்கள் சரிபார்ப்பு நிர்வாகத்தால் அங்கீகரிக்கப்படவில்லை. தயவுசெய்து உங்கள் ஆவணங்களை மதிப்பாய்வு செய்து மீண்டும் சமர்ப்பிக்கவும்.",
+  "proVerificationPendingReview": "சரிபார்ப்பு சமர்ப்பிக்கப்பட்டது · பரிசீலனையில் உள்ளது",
+  "chooseRoleTitle": "நீங்கள் HelaService-ஐ எவ்வாறு பயன்படுத்த விரும்புகிறீர்கள்?",
+  "chooseRoleSubtitle": "உங்கள் கணக்கு பங்கைத் தேர்ந்தெடுத்து உங்கள் சுயவிவரத்தை அமைக்கவும்.",
+  "roleCustomerTitle": "எனக்கு ஒரு சேவை தேவை",
+  "roleCustomerDesc": "நம்பகமான உள்ளூர் நிபுணர்களைக் கண்டறியுங்கள் அல்லது அவசர சேவைகளைப் பெறுங்கள்.",
+  "roleCustomerBadge": "வாடிக்கையாளர்",
+  "roleCustomerPerk1": "தெளிவான கட்டணங்கள்",
+  "roleCustomerPerk2": "நேரலை GPS கண்காணிப்பு",
+  "roleCustomerPerk3": "நேரடி மேற்கோள்கள்",
+  "roleProviderTitle": "நான் சேவை வழங்குகிறேன்",
+  "roleProviderDesc": "அருகிலுள்ள வாடிக்கையாளர் கோரிக்கைகளைப் பெற்று உங்கள் வணிகத்தை வளர்த்துக் கொள்ளுங்கள்.",
+  "roleProviderBadge": "சேவை வழங்குநர்",
+  "roleProviderPerk1": "பணி ரேடார்",
+  "roleProviderPerk2": "நேரடி வாய்ப்புகள்",
+  "roleProviderPerk3": "பாதுகாப்பான சரிபார்ப்பு",
+  "selectServiceLocation": "சேவை இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்",
+  "useCurrentGpsLocation": "தற்போதைய GPS இருப்பிடத்தைப் பயன்படுத்தவும்",
+  "savedAddresses": "சேமிக்கப்பட்ட முகவரிகள்",
+  "serviceAddressLabel": "சேவை முகவரி",
+  "serviceAddressHint": "முழு முகவரி அல்லது விவரங்களை உள்ளிடவும்",
+  "landmarkOrNoteOptional": "அடையாளம் அல்லது குறிப்புகள் (விருப்பத்தேர்வு)",
+  "landmarkHint": "எ.கா: மஞ்சள் வாயில் அருகில், இடதுபுறம் இரண்டாவது வீடு",
+  "saveAddressForFuture": "எதிர்கால கோரிக்கைகளுக்காக இந்த முகவரியைச் சேமிக்கவும்",
+  "confirmLocation": "இருப்பிடத்தை உறுதிப்படுத்தவும்",
+  "selectPinOnMap": "உறுதிப்படுத்த வரைபடத்தில் குறியிடவும்",
+  "genericService": "சேவை",
+  "enterReasonForSuspension": "இடைநிறுத்தத்திற்கான காரணத்தை உள்ளிடவும்...",
+  "appLanguageLabel": "App Language / භාෂාව / மொழி",
+  "profilePhotoApproved": "சுயவிவரப் படம் அங்கீகரிக்கப்பட்டது!",
+  "errorApprovingPhoto": "சுயவிவரப் படத்தை அங்கீகரிப்பதில் பிழை: {error}",
+  "@errorApprovingPhoto": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorApprovingNic": "தேசிய அடையாள அட்டையை அங்கீகரிப்பதில் பிழை: {error}",
+  "@errorApprovingNic": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "tradeCertificationsApproved": "தொழில்முறை சான்றிதழ்கள் அங்கீகரிக்கப்பட்டன!",
+  "errorApprovingCertifications": "சான்றிதழ்களை அங்கீகரிப்பதில் பிழை: {error}",
+  "@errorApprovingCertifications": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "approveDp": "படத்தை அங்கீகரிக்கவும்",
+  "dpApproved": "படம் அங்கீகரிக்கப்பட்டது",
+  "approveNicBoth": "அடையாள அட்டையை அங்கீகரிக்கவும்",
+  "approveCerts": "சான்றிதழ்களை அங்கீகரிக்கவும்",
+  "takeProfilePhoto": "சுயவிவரப் படம் எடுக்கவும்",
+  "selectProfilePhoto": "சுயவிவரப் படத்தைத் தேர்ந்தெடுக்கவும்",
+  "failedToCompleteProfile": "சுயவிவரத்தை நிறைவு செய்ய முடியவில்லை: {error}",
+  "@failedToCompleteProfile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceCategory": "சேவை வகை",
+  "pleaseEnterFullName": "தயவுசெய்து உங்கள் முழுப் பெயரை உள்ளிடவும்",
+  "failedToSetRole": "பங்கை அமைக்க முடியவில்லை: {error}",
+  "@failedToSetRole": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "savedAddressLabelHint": "பெயர் (எ.கா. வீடு, அலுவலகம்)",
+  "landmarkNoteOptional": "அடையாளம் / குறிப்பு (விருப்பமானது)",
+  "deleteSavedAddress": "சேமிக்கப்பட்ட முகவரியை நீக்கு",
+  "confirmDeleteSavedAddress": "இந்த முகவரியை நிச்சயமாக நீக்க வேண்டுமா?",
+  "addNew": "புதியதைச் சேர்",
+  "setServiceLocation": "சேவை இருப்பிடத்தை அமைக்கவும்",
+  "failedToUpdateJobLocation": "சேவை இருப்பிடத்தைப் புதுப்பிக்க முடியவில்லை: {error}",
+  "@failedToUpdateJobLocation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseSelectServiceLocation": "பதிவிடுவதற்க்கு முன் சேவை இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்.",
+  "confirmServiceLocation": "சேவை இருப்பிடத்தை உறுதிப்படுத்தவும்",
+  "pinAttemptsResetZero": "PIN முயற்சிகள் மீட்டமைக்கப்பட்டன.",
+  "cannotCancelInProgressBooking": "செயலில் உள்ள முன்பதிவை ரத்து செய்ய முடியாது. தயவுசெய்து ஆதரவைத் தொடர்பு கொள்ளவும்.",
+  "serviceVerification": "சேவை சரிபார்ப்பு",
+  "rateServiceProvider": "சேவை வழங்குநரை மதிப்பிடவும்",
+  "jobCompletedSuccessfully": "வேலை வெற்றிகரமாக முடிந்தது!",
+  "verifyAndFinish": "சரிபார்த்து முடிக்கவும்",
+  "callCustomer": "வாடிக்கையாளரை அழைக்கவும்",
+  "directServiceBooking": "நேரடி சேவை முன்பதிவு",
+  "signInCancelledByUser": "உள்நுழைவு பயனரால் ரத்து செய்யப்பட்டது.",
+  "couldNotDetectLocation": "இருப்பிடத்தைக் கண்டறிய முடியவில்லை: {error}",
+  "@couldNotDetectLocation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unauthorizedRoleSwitch": "அங்கீகரிக்கப்படாத பங்கு மாற்றம்.",
+  "givePinHint": "சேவை முடிந்ததும் இந்த 6 இலக்க PIN குறியீட்டை வழங்குநரிடம் கொடுக்கவும்.",
+  "@categorySpecialist": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "directBookingWith": "{providerName} உடன் நேரடி முன்பதிவு",
+  "@directBookingWith": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      }
+    }
+  },
+  "directBookingWithNote": "{providerName} உடன் நேரடி முன்பதிவு. குறிப்பு: {note}",
+  "@directBookingWithNote": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      },
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "nicVerified": "அடையாள அட்டை அங்கீகரிக்கப்பட்டது",
+  "statusApproved": "அங்கீகரிக்கப்பட்டது",
+  "useGps": "GPS ஐப் பயன்படுத்தவும்",
+  "location": "இருப்பிடம்",
+  "delete": "நீக்கு",
+  "edit": "திருத்து",
+  "serviceDate": "சேவை தேதி",
+  "agreedPrice": "ஒப்புக்கொள்ளப்பட்ட விலை",
+  "pinVerified": "PIN தளத்தில் சரிபார்க்கப்பட்டது",
+  "providerDetailsTitle": "சேவை வழங்குநர் விவரங்கள்",
+  "decline": "நිරாகரி",
+  "didYouPayAmount": "{name} க்கு {amount} தொகையை செலுத்தினீர்களா?",
+  "@didYouPayAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "yesPaid": "ஆம், செலுத்தப்பட்டது",
+  "reportPaymentProblem": "சிக்கலைப் புகாரளிக்கவும்",
+  "cashPaymentConfirmed": "பணக் கொடுப்பனவு உறுதிப்படுத்தப்பட்டது",
+  "paymentDisputedWithReason": "கொடுப்பனவு சர்ச்சை: {reason}",
+  "@paymentDisputedWithReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "disputePaymentPrompt": "கொடுப்பனவு சர்ச்சைக்கான காரணத்தை உள்ளிடவும்:",
+  "disputePaymentReasonHint": "எ.கா. அதிக கட்டணம், வேலை முழுமையடையவில்லை",
+  "submitDispute": "அறிக்கையைச் சமர்ப்பிக்கவும்",
+  "payProviderDirectlyTip": "வேலை முடிந்ததும் சேவை வழங்குநரிடம் நேரடியாக பணமாக செலுத்துங்கள்.",
+  "cashReceived": "பெறப்பட்ட பணம்",
+  "paymentNoteOptional": "கொடுப்பனவுக் குறிப்பு (விருப்பமானது)",
+  "paymentNoteHint": "எ.கா. கூடுதல் பொருட்கள், கூடுதல் வேலை",
+  "finalAmountExceedsLimit": "தொகை ஒப்புக்கொண்ட தொகையை விட 5 மடங்கு அதிகமாக இருக்க முடியாது",
+  "paymentWaitingConfirmation": "உறுதிப்படுத்தலுக்கு காத்திருக்கிறது",
+  "paymentConfirmed": "உறுதிப்படுத்தப்பட்டது",
+  "paymentDisputed": "சர்ச்சை",
+  "earningsToday": "இன்று",
+  "earningsThisWeek": "இந்த வாரம்",
+  "earningsThisMonth": "இந்த மாதம்",
+  "totalEarnings": "மொத்த வருமானம்",
+  "exportCsv": "CSV ஏற்றுமதி",
+  "csvExportSuccess": "CSV வெற்றிகரமாக ஏற்றுமதி செய்யப்பட்டது",
+  "pinCode": "சேவை முடித்தல் PIN",
+  "didYouReachPerson": "{name} உடன் தொடர்பு கொள்ள முடிந்ததா?",
+  "@didYouReachPerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callOutcomeAnswered": "இணைக்கப்பட்டது / பதிலளிக்கப்பட்டது",
+  "callOutcomeNoAnswer": "பதில் இல்லை / பிஸியாக உள்ளது",
+  "callOutcomeWrongNumber": "தவறான எண்",
+  "callRequiresAcceptedQuote": "விலைப்புள்ளி ஏற்றுக்கொள்ளப்பட்ட பின்னரே தொலைபேசி அழைப்புகள் கிடைக்கும்.",
+  "callLogsTitle": "அழைப்புப் பதிவுகள்",
+  "callLogCaller": "அழைப்பாளர்",
+  "callLogCallee": "பெறுநர்",
+  "callLogOutcome": "அழைப்பு முடிவு",
+  "bookingTimelineTitle": "பணி காலவரிசை",
+  "noTimelineEvents": "இன்னும் நிகழ்வுகள் எதுவும் பதிவு செய்யப்படவில்லை",
+  "viewTimeline": "காலவரிசையைப் பார்க்கவும்",
+  "adminActionLogsTitle": "நிர்வாகி நடவடிக்கை பதிவுகள்",
+  "adminAuditTrailSubtitle": "நிர்வாகி நடவடிக்கைகளின் மாற்ற முடியாத தணிக்கைப் பதிவு",
+  "noAdminLogsFound": "இன்னும் நிர்வாகி பதிவுகள் எதுவும் இல்லை",
+  "filterAll": "அனைத்தும்",
+  "filterUsers": "பயனர்கள்",
+  "filterProviders": "வழங்குநர்கள்",
+  "filterBookings": "முன்பதிவுகள்",
+  "filterSystem": "அமைப்பு",
+  "noEntriesToExport": "ஏற்றுமதி செய்ய பதிவுகள் இல்லை",
+  "deleteAccountTitle": "கணக்கை நீக்கு",
+  "deleteAccountConfirmation": "உங்கள் கணக்கை நிச்சயமாக நீக்க விரும்புகிறீர்களா? உங்களின் அனைத்து தனிப்பட்ட சுயவிவரத் தரவுகளும் நிரந்தரமாக அழிக்கப்படும். இதை செயல்தவிர்க்க முடியாது.",
+  "deleteAccountConfirmAction": "நிரந்தரமாக நீக்கு",
+  "privacyPolicy": "தனியுரிமைக் கொள்கை",
+  "termsOfService": "சேவை விதிமுறைகள்",
+  "photo": "புகைப்படம்",
+  "sendPhoto": "புகைப்படம் அனுப்பவும்",
+  "takePhoto": "புகைப்படம் எடுக்கவும்",
+  "chooseFromGallery": "கேலரியிலிருந்து தேர்வு செய்க",
+  "uploadingImage": "படம் பதிவேற்றப்படுகிறது...",
+  "failedToUploadImage": "படத்தை பதிவேற்றுவதில் தோல்வி",
+  "viewPhoto": "புகைப்படத்தைப் பார்க்கவும்",
+  "bookingTypeAsap": "விரைவில் / அவசரம்",
+  "bookingTypeScheduled": "திட்டமிடப்பட்ட நேரம்",
+  "selectScheduledDate": "தேதியைத் தேர்ந்தெடுக்கவும்",
+  "selectTimeSlot": "நேர இடைவெளியைத் தேர்வுசெய்க",
+  "slotMorning": "காலை (காலை 8:00 - மதியம் 12:00)",
+  "slotAfternoon": "மதியம் (மதியம் 12:00 - மாலை 4:00)",
+  "slotEvening": "மாலை (மாலை 4:00 - இரவு 8:00)",
+  "rescheduleBooking": "முன்பதிவை மறுதிட்டமிடுங்கள்",
+  "proposeNewTime": "புதிய நேரத்தை முன்மொழியவும்",
+  "rescheduleReasonPrompt": "மறுதிட்டமிடலுக்கான காரணம்",
+  "rescheduleReasonHint": "எ.கா. போக்குவரத்து நெரிசல், வாடிக்கையாளர் கோரிய நேரம்",
+  "submitRescheduleRequest": "மறுதிட்டமிடல் கோரிக்கை",
+  "rescheduleProposalBanner": "மறுதிட்டமிடல் முன்மொழியப்பட்டது",
+  "acceptReschedule": "மறுதிட்டமிடலை ஏற்கவும்",
+  "declineReschedule": "நிராகரி",
+  "cancelRescheduleProposal": "முன்மொழிவை ரத்துசெய்",
+  "expiredPill": "காலாவதியானது",
+  "workingHoursTitle": "வேலை நேர அட்டவணை",
+  "serviceRadiusTitle": "சேவை எல்லை தூரம்",
+  "serviceRadiusSubtitle": "பணிகளுக்காக நீங்கள் பயணிக்கும் அதிகபட்ச தூரம்",
+  "dayMonday": "திங்கட்கிழமை",
+  "dayTuesday": "செவ்வாய்க்கிழமை",
+  "dayWednesday": "புதன்கிழமை",
+  "dayThursday": "வியாழக்கிழமை",
+  "dayFriday": "வெள்ளிக்கிழமை",
+  "daySaturday": "சனிக்கிழமை",
+  "daySunday": "ஞாயிற்றுக்கிழமை",
+  "openTime": "தொடக்க நேரம்",
+  "closeTime": "முடிவு நேரம்",
+  "closedDay": "விடுமுறை",
+  "presetWeekdays": "வார நாட்கள் (காலை 8 - மாலை 6)",
+  "presetAllDays": "அனைத்து 7 நாட்கள் (காலை 8 - இரவு 8)",
+  "preset247": "24 மணி நேரமும் திறந்திருக்கும்",
+  "unavailableNow": "இப்போது கிடைக்கவில்லை",
+  "availableNow": "இப்போது கிடைக்கிறது",
+  "outsideWorkingHours": "வேலை நேரத்திற்கு அப்பால்",
+  "savedScheduleSuccess": "வேலை நேரம் வெற்றிகரமாக புதுப்பிக்கப்பட்டது",
+  "savedRadiusSuccess": "சேவை எல்லை தூரம் புதுப்பிக்கப்பட்டது",
+  "serviceRadiusKm": "{radius} கி.மீ எல்லை",
+  "rescheduleRequestedNotice": "மறுஅட்டவணை முன்மொழிவு பதிலுக்காக நிலுவையில் உள்ளது",
+  "saveChanges": "மாற்றங்களைச் சேமிக்கவும்",
+  "jobPhotos": "வேலை புகைப்படங்கள் & சான்றுகள்",
+  "jobPhotosSubtitle": "சேவைக்கு முந்தைய மற்றும் பிந்தைய ஆய்வுப் படங்கள்",
+  "beforePhotos": "சேவைக்கு முன்",
+  "afterPhotos": "சேவைக்கு பின்",
+  "addBeforePhoto": "முந்தைய புகைப்படத்தைச் சேர்",
+  "addAfterPhoto": "பிந்தைய புகைப்படத்தைச் சேர்",
+  "noBeforePhotos": "இன்னும் முந்தைய புகைப்படங்கள் பதிவேற்றப்படவில்லை",
+  "noAfterPhotos": "இன்னும் பிந்தைய புகைப்படங்கள் பதிவேற்றப்படவில்லை",
+  "portfolioTitle": "முந்தைய பணிகள் மற்றும் திட்டங்கள்",
+  "portfolioSubtitle": "நீங்கள் முடித்த பணிகளை வாடிக்கையாளர்களுக்குக் காட்டுங்கள்",
+  "addPortfolioItem": "புதிய பணியைச் சேர்",
+  "portfolioItemTitle": "திட்டத்தின் தலைப்பு",
+  "portfolioItemTitleHint": "எ.கா. மின் வயரிங் பணி",
+  "portfolioItemDesc": "விளக்கம்",
+  "portfolioItemDescHint": "செய்த பணி பற்றிய சுருக்கமான விவரங்கள்",
+  "uploadPhoto": "புகைப்படத்தைப் பதிவேற்றுங்கள்",
+  "photoUploadedSuccess": "புகைப்படம் வெற்றிகரமாகப் பதிவேற்றப்பட்டது",
+  "portfolioItemAdded": "பணி வெற்றிகரமாகச் சேர்க்கப்பட்டது",
+  "deletePortfolioConfirm": "இந்தப் பணியை நீக்கவா?",
+  "noPortfolioItems": "இன்னும் புகைப்படங்கள் சேர்க்கப்படவில்லை",
+  "categoryLabel": "வகை",
+  "selectCategoryPrompt": "ஒரு வகையைத் தேர்ந்தெடுக்கவும்",
+  "newProviderBadge": "புதிய",
+  "blockUserTitle": "பயனரைத் தடு",
+  "blockUserConfirm": "இந்தப் பயனரைத் தடுக்க விரும்புகிறீர்களா? அவர்களால் உங்களுக்கு கோரிக்கைகளையோ செய்திகளையோ அனுப்ப முடியாது.",
+  "blockUserAction": "பயனரைத் தடு",
+  "unblockUserAction": "தடையை நீக்கு",
+  "userBlockedSuccess": "பயனர் வெற்றிகரமாகத் தடுக்கப்பட்டார்",
+  "userUnblockedSuccess": "தடை நீக்கப்பட்டது",
+  "reportUserTitle": "புகார் அளிக்கவும்",
+  "reportReasonLabel": "புகாருக்கான காரணம்",
+  "reportReasonHarassment": "பொருத்தமற்ற அல்லது தவறான நடத்தை",
+  "reportReasonSpam": "ஸ்பேம் அல்லது தேவையற்ற விளம்பரம்",
+  "reportReasonFraud": "மோசடி அல்லது அதிக கட்டணம் வசூலித்தல்",
+  "reportReasonNoShow": "சேவைக்கு வராமல் இருத்தல் அல்லது பாதியில் விடுதல்",
+  "reportReasonSafety": "பாதுகாப்பு அல்லது நம்பிக்கை சார்ந்த பிரச்சினை",
+  "reportReasonOther": "பிற விதிமீறல்",
+  "reportDetailsHint": "நடந்ததை விரிவாக விவரிக்கவும்...",
+  "reportAlsoBlock": "இப்பயனரைத் தடுக்கவும்",
+  "reportSubmittedSuccess": "புகார் சமர்ப்பிக்கப்பட்டது. எங்கள் ஆதரவு குழு இதை விரைவில் மதிப்பாய்வு செய்யும்.",
+  "offlineBannerText": "நீங்கள் தற்போது இணைய இணைப்பில் இல்லை. உங்கள் இணைப்பைச் சரிபார்க்கவும்.",
+  "retryAction": "மீண்டும் முயற்சி",
+  "forceUpdateTitle": "புதுப்பித்தல் தேவை",
+  "forceUpdateMessage": "தொடர்ந்து பயன்படுத்த புதிய பாதுகாப்பு மற்றும் சேவை புதுப்பிப்பைப் பெறவும்.",
+  "updateNowAction": "இப்போதே புதுப்பிக்கவும்",
+  "emergencyDispatchTitle": "அவசர உதவி மற்றும் நேரடி சேவை",
+  "emergencyDispatchSubtitle": "15 கி.மீ. சுற்றளவில் உள்ள கைவினைஞர்களை இப்போதே கண்டறியவும்",
+  "scanningNearbyProviders": "அருகிலுள்ள அவசர சேவை கைவினைஞர்களைத் தேடுகிறது...",
+  "dispatchTimerLabel": "அவசரத் தேடல் நேரம்",
+  "noEmergencyProvidersFound": "தற்போது 15 கி.மீ. சுற்றளவில் அவசர சேவை பணியாளர்கள் எவரும் இல்லை",
+  "noEmergencyProvidersDesc": "வேறு சேவைப் பிரிவைத் தேர்ந்தெடுக்கவும் அல்லது அவசர வேலைக் கோரிக்கையைப் பதிவு செய்யவும்.",
+  "emergencyCalloutRate": "அவசர சேவை கட்டணம்",
+  "emergencyEtaApprox": "சுமார் {mins} நிமிடங்களில்",
+  "distanceKmAway": "{dist} கி.மீ. தூரத்தில்",
+  "requestEmergencyCallout": "உடனடியாக அழைக்கவும்",
+  "confirmEmergencyBookingTitle": "அவசர முன்பதிவை உறுதிப்படுத்தவும்",
+  "confirmEmergencyBookingDesc": "{name} அவர்களுக்கு உடனடியாக அவசர கோரிக்கை அனுப்பப்படும். கட்டணம்: ரூ. {rate}.",
+  "emergencyAddressPrompt": "அவசர சேவை இருப்பிடம்",
+  "emergencyNotesPrompt": "அவசர விபரம் (விருப்பத்தேர்வு)",
+  "emergencyNotesHint": "எ.கா. சமையலறை குழாய் வெடிப்பு, பிரதான மின் தடை",
+  "emergencyHotlinesTitle": "இலங்கை அவசர உதவி எண்கள்",
+  "hotlinePolice": "காவல்துறை அவசர உதவி (119)",
+  "hotlineAmbulance": "1990 சுவசரிய ஆம்புலன்ஸ் (1990)",
+  "hotlineFire": "தீயணைப்பு மற்றும் மீட்பு (110)",
+  "urgentHelpBannerTitle": "அவசர பழுது அல்லது முறிவா?",
+  "urgentHelpBannerDesc": "நீர் கசிவு, மின்தடை போன்றவற்றிற்கு 15 கி.மீ.க்குள் உடனடி கைவினைஞர் சேவை.",
+  "urgentHelpBannerAction": "அவசர உதவி பெறவும்"
 }
+

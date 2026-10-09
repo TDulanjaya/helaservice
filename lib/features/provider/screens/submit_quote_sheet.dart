@@ -8,13 +8,13 @@ import '../../../constants/firestore_paths.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/job_request.dart';
 import '../../../models/quote.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../shared/widgets/photo_placeholder.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
-import '../../../utils/app_localizations_helpers.dart';
 
 class SubmitQuoteSheet extends StatefulWidget {
   final JobRequest jobRequest;
@@ -75,6 +75,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
 
       double providerRating = 5.0;
       int providerReviews = 0;
+      String providerLocation = profile?.district?.trim() ?? '';
+      String providerPhone = profile?.phone?.trim() ?? '';
+
       try {
         final techDoc = await FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
@@ -83,11 +86,30 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         if (techDoc.exists) {
           final tData = techDoc.data();
           if (tData != null) {
+            final isApproved = tData['nicVerified'] == true ||
+                tData['isVerified'] == true;
+            if (!isApproved) {
+              throw Exception('Your provider profile is pending admin approval.');
+            }
             providerRating = (tData['rating'] as num?)?.toDouble() ?? 5.0;
             providerReviews = (tData['reviewCount'] as num?)?.toInt() ?? 0;
+            if (providerLocation.isEmpty) {
+              providerLocation = (tData['serviceArea'] as String?) ??
+                  (tData['district'] as String?) ??
+                  '';
+            }
+            if (providerPhone.isEmpty) {
+              providerPhone = (tData['phone'] as String?) ?? '';
+            }
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        if (e.toString().contains('pending admin approval')) rethrow;
+      }
+
+      if (providerPhone.isEmpty && user.phoneNumber?.isNotEmpty == true) {
+        providerPhone = user.phoneNumber!;
+      }
 
       final quote = Quote(
         requestId: widget.jobRequest.id,
@@ -98,7 +120,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         providerReviewCount: providerReviews,
         providerNicVerified: profile?.nic?.isNotEmpty == true,
         providerTrade: profile?.serviceCategory ?? '',
-        providerPhone: profile?.phone ?? '',
+        providerPhone: providerPhone,
+        providerLocation: providerLocation,
         providerLatitude: profile?.latitude,
         providerLongitude: profile?.longitude,
         quotedPrice: price,
@@ -237,7 +260,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                                   size: 13, color: AppColors.primary),
                               const SizedBox(width: 4),
                               Text(
-                                LocalizedData.getCategory(context, req.category),
+                                CategoryService.instance.nameOf(req.category, context: context),
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,

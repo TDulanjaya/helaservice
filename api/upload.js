@@ -1,19 +1,27 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const busboy = require('busboy');
-const { admin } = require('./_firebase');
+const { verifyFirebaseToken } = require('./_auth');
 
-// init s3 client from env
-function getS3Client() {
-  const keyId = (process.env.B2_APPLICATION_KEY_ID || process.env.AWS_ACCESS_KEY_ID || '').trim();
-  const appKey = (process.env.B2_APPLICATION_KEY || process.env.AWS_SECRET_ACCESS_KEY || '').trim();
+// initialize storage client
+function getS3Client(isPrivate = false) {
+  const keyId = (isPrivate
+    ? (process.env.B2_PRIVATE_KEY_ID || '')
+    : (process.env.B2_APPLICATION_KEY_ID || process.env.AWS_ACCESS_KEY_ID || '')).trim();
+  const appKey = (isPrivate
+    ? (process.env.B2_PRIVATE_KEY || '')
+    : (process.env.B2_APPLICATION_KEY || process.env.AWS_SECRET_ACCESS_KEY || '')).trim();
   if (!keyId || !appKey) return null;
 
-  let rawEndpoint = (process.env.B2_ENDPOINT || 'https://s3.us-west-004.backblazeb2.com').trim();
+  let rawEndpoint = (isPrivate
+    ? (process.env.B2_PRIVATE_ENDPOINT || process.env.B2_ENDPOINT || 'https://s3.us-west-004.backblazeb2.com')
+    : (process.env.B2_ENDPOINT || 'https://s3.us-west-004.backblazeb2.com')).trim();
   if (!rawEndpoint.startsWith('http://') && !rawEndpoint.startsWith('https://')) {
     rawEndpoint = `https://${rawEndpoint}`;
   }
 
-  let region = (process.env.B2_REGION || '').trim();
+  let region = (isPrivate
+    ? (process.env.B2_PRIVATE_REGION || process.env.B2_REGION || '')
+    : (process.env.B2_REGION || '')).trim();
   if (!region) {
     const match = rawEndpoint.match(/s3\.([a-z0-9-]+)\.backblazeb2\.com/i);
     region = match ? match[1] : 'us-west-004';
@@ -29,11 +37,19 @@ function getS3Client() {
   });
 }
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const MIME_TO_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+};
+
 module.exports = async (req, res) => {
-  // cors
+  // allow cross origin
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-helaservice-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -43,35 +59,36 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // verify api key or firebase auth
-  const expectedKey = (process.env.HELASERVICE_API_KEY || 'hela_app_sec_k9827x_prod').trim();
-  const clientKey = (req.headers['x-helaservice-key'] || '').trim();
+  // require valid firebase token
+  const decodedToken = await verifyFirebaseToken(req, res);
+  if (!decodedToken) {
+    return;
+  }
+  const authUid = decodedToken.uid;
 
-  let authUid = null;
-  const authHeader = req.headers.authorization || '';
-  if (authHeader.startsWith('Bearer ')) {
-    const idToken = authHeader.split('Bearer ')[1].trim();
-    try {
-      const decoded = await admin.auth().verifyIdToken(idToken);
-      authUid = decoded.uid;
-    } catch (_) {
-      // invalid firebase token
-      return res.status(401).json({ error: 'Unauthorized: Invalid Firebase session token.' });
+  const purpose = (req.query && req.query.purpose ? req.query.purpose : '').toLowerCase();
+  const isNicPurpose = purpose === 'nic';
+
+  if (isNicPurpose) {
+    if (!process.env.B2_PRIVATE_BUCKET || !process.env.B2_PRIVATE_KEY_ID || !process.env.B2_PRIVATE_KEY) {
+      return res.status(500).json({ error: 'private_storage_not_configured' });
     }
   }
 
-  if (!authUid && clientKey !== expectedKey) {
-    return res.status(401).json({ error: 'Unauthorized: Valid API key or Firebase token required.' });
-  }
-
-  const s3 = getS3Client();
+  const s3 = getS3Client(isNicPurpose);
   if (!s3) {
+    if (isNicPurpose) {
+      return res.status(500).json({ error: 'private_storage_not_configured' });
+    }
     return res.status(500).json({
-      error: 'B2 storage credentials (B2_APPLICATION_KEY_ID / B2_APPLICATION_KEY) are not configured in Vercel environment variables.',
+      error: 'B2 storage credentials are not configured in environment variables.',
     });
   }
 
-  const bucketName = (process.env.B2_BUCKET_NAME || 'helaservice-storage').trim();
+  const bucketName = (isNicPurpose
+    ? process.env.B2_PRIVATE_BUCKET
+    : (process.env.B2_BUCKET_NAME || 'helaservice-storage')).trim();
+
   let publicPrefix = (process.env.B2_PUBLIC_URL_PREFIX || '').trim();
   if (!publicPrefix) {
     const rawEndpoint = (process.env.B2_ENDPOINT || 's3.us-west-004.backblazeb2.com').trim();
@@ -83,15 +100,35 @@ module.exports = async (req, res) => {
   try {
     const bb = busboy({ headers: req.headers, limits: { fileSize: 10 * 1024 * 1024 } });
     let uploadPromise = null;
+    let unsupportedMedia = false;
 
     // parse file stream
     bb.on('file', (name, file, info) => {
+      const { filename, mimeType } = info;
+
+      if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType.toLowerCase())) {
+        file.resume(); // drain file stream
+        unsupportedMedia = true;
+        return;
+      }
+
+      const normalizedMime = mimeType.toLowerCase();
       const rawExt = (filename && filename.includes('.'))
-          ? filename.split('.').pop().toLowerCase()
-          : 'jpg';
-      const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-      const cleanExt = allowedExts.includes(rawExt) ? rawExt : 'jpg';
-      const key = `uploads/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${cleanExt}`;
+        ? filename.split('.').pop().toLowerCase()
+        : MIME_TO_EXT[normalizedMime];
+
+      const cleanExt = (rawExt === 'jpeg' || rawExt === 'jpg')
+        ? 'jpg'
+        : (rawExt === 'png'
+          ? 'png'
+          : (rawExt === 'webp'
+            ? 'webp'
+            : (rawExt === 'pdf' ? 'pdf' : MIME_TO_EXT[normalizedMime])));
+
+      const randomStr = Math.random().toString(36).substring(2, 9);
+      const key = isNicPurpose
+        ? `nic/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`
+        : `uploads/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`;
 
       const chunks = [];
       file.on('data', (data) => chunks.push(data));
@@ -103,10 +140,13 @@ module.exports = async (req, res) => {
               Bucket: bucketName,
               Key: key,
               Body: buffer,
-              ContentType: mimeType || 'image/jpeg',
+              ContentType: normalizedMime,
             })
           )
           .then(() => {
+            if (isNicPurpose) {
+              return { key };
+            }
             const cleanPrefix = publicPrefix.replace(/\/+$/, '');
             const publicUrl = `${cleanPrefix}/${key}`;
             return { url: publicUrl, key };
@@ -119,9 +159,16 @@ module.exports = async (req, res) => {
     });
 
     bb.on('finish', async () => {
+      if (unsupportedMedia) {
+        return res.status(415).json({
+          error: 'Unsupported Media Type: Allowed types are image/jpeg, image/png, image/webp, application/pdf.',
+        });
+      }
+
       if (!uploadPromise) {
         return res.status(400).json({ error: 'No file found in request' });
       }
+
       try {
         const result = await uploadPromise;
         return res.status(200).json(result);

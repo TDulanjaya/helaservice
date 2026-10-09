@@ -5,10 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../services/review_service.dart';
 import '../../../theme/app_theme.dart';
+import '../../../constants/job_status.dart';
 import '../../../models/booking.dart';
 import '../../../models/job_request.dart';
 import '../../../models/quote.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../state/role_provider.dart';
@@ -20,6 +22,7 @@ import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../utils/permission_utils.dart';
+import '../../../services/call_service.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../../customer/screens/direct_chat_screen.dart';
 import '../../../services/chat_service.dart';
@@ -29,7 +32,11 @@ import '../../../shared/widgets/user_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'en_route_navigation_screen.dart';
 import 'provider_profile_screen.dart';
+import 'package:geolocator/geolocator.dart';
 import 'submit_quote_sheet.dart';
+import '../widgets/provider_approval_gate.dart';
+import '../../../shared/widgets/notification_bell_icon.dart';
+import '../../../shared/widgets/reschedule_sheet.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -42,10 +49,14 @@ class ProviderDashboardScreen extends StatefulWidget {
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   bool _online = true;
   int _navIndex = 0;
+  bool _sortByClosest = true;
+  double? _selectedRadiusKm;
+  Position? _liveGpsPosition;
 
   @override
   void initState() {
     super.initState();
+    _fetchLiveLocation();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         PermissionUtils.checkAndPromptInitialPermissions(context);
@@ -53,34 +64,47 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     });
   }
 
+  Future<void> _fetchLiveLocation() async {
+    try {
+      final pos = await LocationUtils.getCurrentPosition();
+      if (mounted && pos != null) {
+        setState(() => _liveGpsPosition = pos);
+      }
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final navItems = [
       NavItem(Icons.radar, context.l10n.navJobsRadar),
       NavItem(Icons.assignment, context.l10n.navMyQuotes),
+      NavItem(Icons.chat_bubble_outline_rounded, context.l10n.navMessages),
       NavItem(Icons.manage_accounts, context.l10n.navProfile),
     ];
 
-    return PopScope(
-      canPop: _navIndex == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _navIndex != 0) {
-          setState(() => _navIndex = 0);
-        }
-      },
-      child: Scaffold(
-        body: IndexedStack(
-          index: _navIndex,
-          children: [
-            _buildJobsRadarView(context),
-            _buildMyQuotesView(context),
-            const ProviderProfileScreen(),
-          ],
-        ),
-        bottomNavigationBar: AppBottomNav(
-          items: navItems,
-          currentIndex: _navIndex,
-          onTap: (i) => setState(() => _navIndex = i),
+    return ProviderApprovalGate(
+      child: PopScope(
+        canPop: _navIndex == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && _navIndex != 0) {
+            setState(() => _navIndex = 0);
+          }
+        },
+        child: Scaffold(
+          body: IndexedStack(
+            index: _navIndex,
+            children: [
+              _buildJobsRadarView(context),
+              _buildMyQuotesView(context),
+              const ConversationsInboxScreen(),
+              const ProviderProfileScreen(),
+            ],
+          ),
+          bottomNavigationBar: AppBottomNav(
+            items: navItems,
+            currentIndex: _navIndex,
+            onTap: (i) => setState(() => _navIndex = i),
+          ),
         ),
       ),
     );
@@ -93,7 +117,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ? user!.displayName
         : context.l10n.roleProvider;
     final tradeLabel = user?.serviceCategory?.isNotEmpty == true
-        ? context.l10n.categorySpecialist(user!.serviceCategory!)
+        ? context.l10n.categorySpecialist(
+            CategoryService.instance.nameOf(user!.serviceCategory!, context: context))
         : context.l10n.certifiedArtisan;
     final providerCategory = user?.serviceCategory ?? '';
 
@@ -106,7 +131,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             Row(
               children: [
                 GestureDetector(
-                  onTap: () => setState(() => _navIndex = 2),
+                  onTap: () => setState(() => _navIndex = 3),
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
@@ -155,27 +180,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ConversationsInboxScreen(),
-                      ),
-                    );
-                  },
-                  style: IconButton.styleFrom(
-                    backgroundColor: context.themeSurfaceLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: context.themeBorder),
-                    ),
-                  ),
-                  icon: Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    size: 18,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
+                const NotificationBellIcon(size: 40),
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: () => showRoleSwitchSheet(context),
@@ -195,6 +200,52 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            if (roleProvider.isAuthorizedAdmin) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: context.themeAmberTint,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.admin_panel_settings_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Admin Inspection Mode',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: context.themeInk,
+                            ),
+                          ),
+                          Text(
+                            'Viewing provider workspace with administrative bypass.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             if (_online)
               Container(
                 padding: const EdgeInsets.all(18),
@@ -455,7 +506,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         _StatCard(
                           icon: Icons.star_rounded,
                           value: (reviews.isNotEmpty || completed > 0)
-                              ? '$ratingStr ★'
+                              ? ratingStr
                               : context.l10n.newLabel,
                           sub: context.l10n.rating,
                         ),
@@ -496,7 +547,65 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 stream: JobRequestRepository()
                     .streamOpenRequestsForCategory(providerCategory),
                 builder: (context, snapshot) {
-                  final requests = snapshot.data ?? [];
+                  final rawRequests = snapshot.data ?? [];
+                  final providerLat =
+                      _liveGpsPosition?.latitude ?? user?.latitude;
+                  final providerLng =
+                      _liveGpsPosition?.longitude ?? user?.longitude;
+
+                  var requests = List<JobRequest>.from(rawRequests);
+
+                  // radius filter
+                  if (_selectedRadiusKm != null &&
+                      providerLat != null &&
+                      providerLng != null) {
+                    requests = requests.where((req) {
+                      if (req.latitude == null || req.longitude == null) {
+                        return false;
+                      }
+                      final km = LocationUtils.calculateDistanceKm(
+                        providerLat,
+                        providerLng,
+                        req.latitude!,
+                        req.longitude!,
+                      );
+                      return km <= _selectedRadiusKm!;
+                    }).toList();
+                  }
+
+                  // sort by distance or date
+                  if (_sortByClosest &&
+                      providerLat != null &&
+                      providerLng != null) {
+                    requests.sort((a, b) {
+                      final hasA = a.latitude != null && a.longitude != null;
+                      final hasB = b.latitude != null && b.longitude != null;
+                      if (!hasA && !hasB) return 0;
+                      if (!hasA) return 1;
+                      if (!hasB) return -1;
+                      final distA = LocationUtils.calculateDistanceKm(
+                        providerLat,
+                        providerLng,
+                        a.latitude!,
+                        a.longitude!,
+                      );
+                      final distB = LocationUtils.calculateDistanceKm(
+                        providerLat,
+                        providerLng,
+                        b.latitude!,
+                        b.longitude!,
+                      );
+                      return distA.compareTo(distB);
+                    });
+                  } else {
+                    requests.sort((a, b) {
+                      final dtA =
+                          a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      final dtB =
+                          b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                      return dtB.compareTo(dtA);
+                    });
+                  }
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,6 +641,85 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 10),
+                      // filter and sort
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            // sort toggle
+                            InkWell(
+                              onTap: () => setState(
+                                  () => _sortByClosest = !_sortByClosest),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _sortByClosest
+                                      ? AppColors.primary
+                                          .withValues(alpha: 0.12)
+                                      : context.themeSurfaceLow,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _sortByClosest
+                                        ? AppColors.primary
+                                        : context.themeBorder,
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _sortByClosest
+                                          ? Icons.near_me_rounded
+                                          : Icons.schedule_rounded,
+                                      size: 13,
+                                      color: _sortByClosest
+                                          ? AppColors.primary
+                                          : context.themeTextSecondary,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      _sortByClosest
+                                          ? context.l10n.closestFirst
+                                          : context.l10n.newestFirst,
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: _sortByClosest
+                                            ? AppColors.primary
+                                            : context.themeTextSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildRadiusFilterChip(
+                              label: context.l10n.allDistances,
+                              radius: null,
+                            ),
+                            const SizedBox(width: 6),
+                            _buildRadiusFilterChip(
+                              label: context.l10n.within5Km,
+                              radius: 5.0,
+                            ),
+                            const SizedBox(width: 6),
+                            _buildRadiusFilterChip(
+                              label: context.l10n.within10Km,
+                              radius: 10.0,
+                            ),
+                            const SizedBox(width: 6),
+                            _buildRadiusFilterChip(
+                              label: context.l10n.within25Km,
+                              radius: 25.0,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       if (requests.isEmpty)
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -546,10 +734,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                   size: 36, color: context.themeTextSecondary),
                               const SizedBox(height: 8),
                               Text(
-                                context.l10n.noOpenRequests,
+                                rawRequests.isNotEmpty &&
+                                        _selectedRadiusKm != null
+                                    ? context.l10n.noJobsInRadius
+                                    : context.l10n.noOpenRequests,
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: context.themeTextSecondary,
                                   fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -569,8 +762,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           children: requests
                               .map((req) => _JobRequestCard(
                                     request: req,
-                                    providerLat: user?.latitude,
-                                    providerLng: user?.longitude,
+                                    providerLat: providerLat,
+                                    providerLng: providerLng,
                                     onSendQuote: () =>
                                         _openSubmitQuoteSheet(req),
                                   ))
@@ -644,6 +837,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    RescheduleProposalBanner(
+                                      booking: b,
+                                      currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                      actorRole: 'provider',
+                                    ),
                                     Row(
                                       children: [
                                         Container(
@@ -694,8 +892,16 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                         IconButton(
                                           onPressed: () {
                                             if (b.customerPhone.isNotEmpty) {
-                                              MapLauncher.openPhoneCall(
-                                                  b.customerPhone);
+                                              CallService.instance.startCall(
+                                                context: context,
+                                                calleePhone: b.customerPhone,
+                                                calleeName: b.customerName.isNotEmpty
+                                                    ? b.customerName
+                                                    : 'Customer',
+                                                bookingId: b.id,
+                                                calleeUid: b.customerId,
+                                                calleeRole: 'customer',
+                                              );
                                             } else {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
@@ -736,19 +942,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                             .customerLocation,
                                               );
                                             } else {
-                                              final coords = LocationUtils
-                                                  .getDistrictCoordinates(
-                                                      b.location.isNotEmpty
-                                                          ? b.location
-                                                          : 'Colombo');
-                                              MapLauncher.openDirections(
-                                                latitude: coords.lat,
-                                                longitude: coords.lng,
-                                                destinationTitle:
-                                                    b.location.isNotEmpty
-                                                        ? b.location
-                                                        : context.l10n
-                                                            .customerLocation,
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(context.l10n
+                                                      .customerLocationNotAvailableCall),
+                                                  backgroundColor:
+                                                      AppColors.warning,
+                                                ),
                                               );
                                             }
                                           },
@@ -768,22 +969,71 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               size: 16,
                                               color: AppColors.primary),
                                         ),
+                                        if (b.status == JobStatus.pending || b.status == JobStatus.confirmed) ...[
+                                          const SizedBox(width: 6),
+                                          IconButton(
+                                            tooltip: context.l10n.rescheduleBooking,
+                                            onPressed: () => RescheduleSheet.show(
+                                              context: context,
+                                              booking: b,
+                                              currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                              actorRole: 'provider',
+                                            ),
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: context.themeSurfaceLow,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10),
+                                                side: BorderSide(color: context.themeBorder),
+                                              ),
+                                              padding: const EdgeInsets.all(8),
+                                            ),
+                                            icon: const Icon(Icons.calendar_month_outlined,
+                                                size: 16, color: AppColors.primary),
+                                          ),
+                                        ],
                                       ],
                                     ),
-                                    if (b.providerAcceptedAt == null &&
-                                        b.status == 'pending') ...[
+                                    if (b.status == JobStatus.pending) ...[
                                       const SizedBox(height: 12),
-                                      PrimaryButton(
-                                        label: context.l10n.acceptDirectBooking,
-                                        leadingIcon:
-                                            Icons.check_circle_outline_rounded,
-                                        onPressed: () async {
-                                          await BookingRepository()
-                                              .acceptBookingByProvider(
-                                            bookingId: b.id,
-                                            jobRequestId: b.jobRequestId,
-                                          );
-                                        },
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: PrimaryButton(
+                                              label: context.l10n.acceptDirectBooking,
+                                              leadingIcon:
+                                                  Icons.check_circle_outline_rounded,
+                                              onPressed: () async {
+                                                await BookingRepository()
+                                                    .acceptBookingByProvider(
+                                                  bookingId: b.id,
+                                                  jobRequestId: b.jobRequestId,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            tooltip: context.l10n.decline,
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: AppColors.error
+                                                  .withValues(alpha: 0.12),
+                                              foregroundColor: AppColors.error,
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12)),
+                                              padding: const EdgeInsets.all(12),
+                                            ),
+                                            icon: const Icon(Icons.close_rounded,
+                                                size: 20),
+                                            onPressed: () async {
+                                              await BookingRepository()
+                                                  .declineBookingByProvider(
+                                                bookingId: b.id,
+                                                jobRequestId: b.jobRequestId,
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ],
@@ -940,6 +1190,44 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ),
     );
   }
+
+  Widget _buildRadiusFilterChip({
+    required String label,
+    required double? radius,
+  }) {
+    final isSelected = _selectedRadiusKm == radius;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedRadiusKm = radius;
+        });
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : context.themeSurfaceLow,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : context.themeBorder,
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? AppColors.primary
+                : context.themeTextSecondary,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _StatCard extends StatelessWidget {
@@ -995,18 +1283,31 @@ class _JobRequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String? distanceText;
+    double? rawKm;
     if (providerLat != null &&
         providerLng != null &&
         request.latitude != null &&
         request.longitude != null) {
-      final km = LocationUtils.calculateDistanceKm(
+      rawKm = LocationUtils.calculateDistanceKm(
         providerLat!,
         providerLng!,
         request.latitude!,
         request.longitude!,
       );
-      distanceText = LocationUtils.formatDistanceL10n(context, km);
+      distanceText = LocationUtils.formatDistanceL10n(context, rawKm);
     }
+
+    final proximityColor = (rawKm == null)
+        ? AppColors.primary
+        : (rawKm < 5.0)
+            ? const Color(0xFF22C55E)
+            : (rawKm <= 15.0)
+                ? const Color(0xFF3B82F6)
+                : const Color(0xFFF59E0B);
+
+    final proximityLabel = (rawKm != null)
+        ? LocationUtils.getProximityLabel(context, rawKm)
+        : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1045,7 +1346,8 @@ class _JobRequestCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 3),
                     Text(
-                      LocalizedData.getCategory(context, request.category)
+                      CategoryService.instance
+                          .nameOf(request.category, context: context)
                           .toUpperCase(),
                       style: const TextStyle(
                         fontSize: 10,
@@ -1058,29 +1360,33 @@ class _JobRequestCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              if (distanceText != null)
+              if (distanceText != null && proximityLabel != null)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                    color: proximityColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: proximityColor.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.near_me_rounded,
                         size: 11,
-                        color: Color(0xFF22C55E),
+                        color: proximityColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        distanceText,
-                        style: const TextStyle(
+                        '$distanceText • $proximityLabel',
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF22C55E),
+                          color: proximityColor,
                         ),
                       ),
                     ],
@@ -1142,6 +1448,7 @@ class _JobRequestCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
+          // customer info and quotes
           Row(
             children: [
               Icon(
@@ -1150,36 +1457,147 @@ class _JobRequestCard extends StatelessWidget {
                 color: context.themeTextSecondary,
               ),
               const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  request.customerName,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.themeTextSecondary,
-                  ),
-                ),
-              ),
-              if (request.address.isNotEmpty) ...[
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
+              Text(
+                request.customerName,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
                   color: context.themeTextSecondary,
                 ),
-                const SizedBox(width: 2),
-                Flexible(
+              ),
+              if (distanceText != null && request.quoteCount > 0) ...[
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: context.themeBorder),
+                  ),
                   child: Text(
-                    request.address,
+                    '${request.quoteCount} ${context.l10n.quotesTitle}',
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
                       color: context.themeTextSecondary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ],
+          ),
+          const SizedBox(height: 10),
+          // location and route details
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.themeSurfaceLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.themeBorder),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.location_on_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.address.isNotEmpty
+                            ? request.address
+                            : (LocationUtils.resolveDistrict(
+                                    latitude: request.latitude,
+                                    longitude: request.longitude) ??
+                                context.l10n.locationNotSpecified),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (rawKm != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.directions_car_rounded,
+                              size: 13,
+                              color: context.themeTextSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              LocationUtils.formatEstimatedDriveTime(
+                                  context, rawKm),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (request.latitude != null && request.longitude != null) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      MapLauncher.openDirections(
+                        latitude: request.latitude!,
+                        longitude: request.longitude!,
+                        destinationTitle: request.title.isNotEmpty
+                            ? request.title
+                            : request.address,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.map_outlined,
+                            size: 12,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.viewOnMap,
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           PrimaryButton(
@@ -1260,6 +1678,101 @@ class _QuoteHistoryTile extends StatelessWidget {
           builder: (_) => const ConversationsInboxScreen(),
         ),
       );
+    }
+  }
+
+  Future<void> _cancelQuote(BuildContext context) async {
+    final reasons = [
+      context.l10n.cancelReasonProviderUnavailable,
+      context.l10n.cancelReasonScheduleConflict,
+      context.l10n.cancelReasonPriceDispute,
+      context.l10n.cancelReasonOther,
+    ];
+    String selectedReason = reasons.first;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            context.l10n.cancelBookingOrQuote,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.cancellationReasonPrompt,
+                style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.l10n.cancellationReasonPrompt,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: reasons
+                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setDialogState(() => selectedReason = val);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(context.l10n.confirmCancellation),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        await JobRequestRepository().cancelAssignedJob(
+          requestId: quote.requestId,
+          reason: selectedReason,
+          quoteId: quote.id,
+          cancelledBy: currentUid,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.bookingCancelledSuccess),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -1358,10 +1871,30 @@ class _QuoteHistoryTile extends StatelessWidget {
           ),
           if (isAccepted) ...[
             const SizedBox(height: 12),
-            PrimaryButton(
-              label: context.l10n.chatWithCustomer,
-              leadingIcon: Icons.chat_bubble_outline_rounded,
-              onPressed: () => _openCustomerChat(context),
+            Row(
+              children: [
+                Expanded(
+                  child: PrimaryButton(
+                    label: context.l10n.chatWithCustomer,
+                    leadingIcon: Icons.chat_bubble_outline_rounded,
+                    onPressed: () => _openCustomerChat(context),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: context.l10n.cancelBookingOrQuote,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.error.withValues(alpha: 0.12),
+                    foregroundColor: AppColors.error,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined, size: 20),
+                  onPressed: () => _cancelQuote(context),
+                ),
+              ],
             ),
           ],
         ],

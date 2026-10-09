@@ -13,6 +13,8 @@ class Complaint {
   final String description;
   final String status;
   final String? adminNotes;
+  final String? reporterRole;
+  final String? accusedRole;
   final DateTime? createdAt;
 
   const Complaint({
@@ -28,6 +30,8 @@ class Complaint {
     required this.description,
     this.status = 'pending',
     this.adminNotes,
+    this.reporterRole,
+    this.accusedRole,
     this.createdAt,
   });
 
@@ -43,6 +47,8 @@ class Complaint {
         'description': description,
         'status': status,
         if (adminNotes != null) 'adminNotes': adminNotes,
+        if (reporterRole != null) 'reporterRole': reporterRole,
+        if (accusedRole != null) 'accusedRole': accusedRole,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
@@ -63,6 +69,8 @@ class Complaint {
       description: map['description'] ?? '',
       status: map['status'] ?? 'pending',
       adminNotes: map['adminNotes'],
+      reporterRole: map['reporterRole'],
+      accusedRole: map['accusedRole'],
       createdAt: ts is Timestamp ? ts.toDate() : null,
     );
   }

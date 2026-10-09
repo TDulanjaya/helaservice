@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { db } = require('./_firebase');
+const { verifyApiKey } = require('./_auth');
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -13,12 +14,12 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async function handler(req, res) {
-  // cors
+  // allow cross origin
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-helaservice-key');
 
-  // cors preflight
+  // handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -28,10 +29,8 @@ module.exports = async function handler(req, res) {
   }
 
   // verify api key
-  const expectedKey = (process.env.HELASERVICE_API_KEY || 'hela_app_sec_k9827x_prod').trim();
-  const clientKey = (req.headers['x-helaservice-key'] || '').trim();
-  if (clientKey !== expectedKey) {
-    return res.status(401).json({ error: 'Unauthorized: Valid API key required.' });
+  if (!verifyApiKey(req, res)) {
+    return;
   }
 
   try {
@@ -47,13 +46,46 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid email address format.' });
     }
 
+    const now = Date.now();
+
+    // check ip rate limit
+    const forwardedHeader = req.headers['x-forwarded-for'];
+    const clientIp = (typeof forwardedHeader === 'string' && forwardedHeader.trim().length > 0)
+      ? forwardedHeader.split(',')[0].trim()
+      : (req.socket?.remoteAddress || '127.0.0.1');
+
+    const ipHash = crypto.createHash('sha256').update(clientIp).digest('hex');
+    const rateLimitRef = db.collection('otp_rate_limits').doc(ipHash);
+    const rateLimitDoc = await rateLimitRef.get();
+
+    const oneHourMs = 60 * 60 * 1000;
+    let ipRequestCount = 0;
+    let windowStart = now;
+
+    if (rateLimitDoc.exists) {
+      const data = rateLimitDoc.data() || {};
+      const docWindowStart = data.windowStart || 0;
+      if (now - docWindowStart < oneHourMs) {
+        ipRequestCount = data.count || 0;
+        windowStart = docWindowStart;
+      }
+    }
+
+    if (ipRequestCount >= 5) {
+      const remainingSeconds = Math.ceil((windowStart + oneHourMs - now) / 1000);
+      return res.status(429).json({
+        error: 'Too many OTP requests from this IP address. Please try again later.',
+        retryAfter: remainingSeconds,
+      });
+    }
+
+    // check email cooldown
     const docRef = db.collection('otp_verifications').doc(cleanEmail);
     const existingDoc = await docRef.get();
 
-    // 60s cooldown check
     if (existingDoc.exists) {
-      const data = existingDoc.data();
-      const timeSinceLast = Date.now() - (data.createdAt || 0);
+      const data = existingDoc.data() || {};
+      const timeSinceLast = now - (data.createdAt || 0);
       if (timeSinceLast < 60000) {
         const remainingSeconds = Math.ceil((60000 - timeSinceLast) / 1000);
         return res.status(429).json({
@@ -63,13 +95,12 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // generate 6 digit code
+    // generate otp code
     const otp = crypto.randomInt(100000, 1000000).toString();
     const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
-    const now = Date.now();
-    const expiresAt = now + 5 * 60 * 1000; // 5 min expiry
+    const expiresAt = now + 5 * 60 * 1000; 
 
-    // save to db
+    // save verification session
     await docRef.set({
       hashedOtp,
       createdAt: now,
@@ -77,7 +108,14 @@ module.exports = async function handler(req, res) {
       attempts: 0,
     });
 
-    // send email
+    // update rate limit count
+    await rateLimitRef.set({
+      count: ipRequestCount + 1,
+      windowStart,
+      updatedAt: now,
+    });
+
+    // send email message
     const htmlContent = `
       <!DOCTYPE html>
       <html>

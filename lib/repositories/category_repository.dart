@@ -17,6 +17,10 @@ class CategoryRepository {
     });
   }
 
+  Stream<List<CategoryRow>> streamLiveCategories() {
+    return streamCategoryRows().map((list) => list.where((c) => c.isLive).toList());
+  }
+
   Future<void> addCategory(CategoryRow category) async {
     final docId = category.id.isNotEmpty
         ? category.id
@@ -25,9 +29,20 @@ class CategoryRepository {
   }
 
   Future<void> toggleCategoryStatus(String id, String currentStatus) async {
-    final newStatus =
-        (currentStatus.toLowerCase() == 'active') ? 'Paused' : 'Active';
-    await _col.doc(id).update({'status': newStatus}).catchError((_) {});
+    final newActive = currentStatus.toLowerCase() != 'active';
+    final newStatus = newActive ? 'Active' : 'Paused';
+    await _col.doc(id).update({
+      'status': newStatus,
+      'isLive': newActive,
+    }).catchError((_) {});
+  }
+
+  Future<void> toggleCategoryLive(String id, bool currentIsLive) async {
+    final newLive = !currentIsLive;
+    await _col.doc(id).update({
+      'isLive': newLive,
+      'status': newLive ? 'Active' : 'Paused',
+    }).catchError((_) {});
   }
 
   Future<void> toggleCategoryDistrict(

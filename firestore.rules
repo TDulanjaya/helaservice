@@ -26,7 +26,7 @@ service cloud.firestore {
       return isSuperAdmin() || isStaffAdmin();
     }
 
-    // check if current user is active (not banned and not currently suspended)
+    // check if user is active
     function isUserActive() {
       return isAuthenticated() && (
         isAdmin() ||
@@ -42,121 +42,544 @@ service cloud.firestore {
       );
     }
 
-    // super admins collection: client cannot write
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function lockedFieldsUnchanged() {
+      return !changed().hasAny(['customerId','providerId','agreedPrice','jobRequestId',
+        'customerLatitude','customerLongitude','createdAt','type']);
+    }
+
+    // super admin collection
     match /superAdmins/{adminId} {
       allow read: if isAuthenticated();
       allow write: if false;
     }
 
-    // staff admins collection: only super admin can manage
+    // staff admin collection
     match /admins/{adminId} {
       allow read: if isAuthenticated();
       allow write: if isSuperAdmin();
     }
 
-    // service categories: readable by all, managed by admins
+    // service categories
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // user profiles: protected against self-unbanning & privilege escalation
+    // user profiles
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isOwner(userId) || isAdmin();
+      allow create: if isAdmin() || (
+        isOwner(userId) &&
+        request.resource.data.get('isVerified', false) == false &&
+        request.resource.data.get('nicVerified', false) == false &&
+        request.resource.data.get('phoneVerified', false) == false &&
+        request.resource.data.get('isBanned', false) == false
+      );
       allow update: if isAdmin() || (
         isOwner(userId) && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'isBanned', 'bannedAt', 'banReason', 'suspendedUntil', 'nicVerified', 'isVerified'
-          ])
-        )
-      );
-      allow delete: if isSuperAdmin();
-    }
-
-    // technicians public catalog: protected against self-verification
-    match /technicians/{techId} {
-      allow read: if isAuthenticated();
-      allow create: if isOwner(techId) || isAdmin();
-      allow update: if isAdmin() || (
-        isOwner(techId) && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified'
-          ])
+            'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil', 'nicVerified', 'isVerified', 'certificationsStatus'
+          ]) &&
+          (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['phoneVerified']) ||
+            request.resource.data.phoneVerified == false
+          ) &&
+          (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['phone']) ||
+            request.resource.data.get('phoneVerified', false) == false
+          )
         )
       );
       allow delete: if isSuperAdmin();
 
-      // private kyc & nic details
+      // saved addresses
+      match /savedAddresses/{addrId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // blocked users subcollection
+      match /blocked/{blockedUid} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // private user subcollections
       match /private/{document=**} {
-        allow read, write: if isOwner(techId) || isAdmin();
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // fcm tokens subcollection
+      match /fcmTokens/{tokenId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // notifications subcollection
+      match /notifications/{notifId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) || isAdmin();
+        allow update: if (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])) || isAdmin();
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
-    // job requests & quotes
+    // technicians catalog
+    match /technicians/{techId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() || (
+        isOwner(techId) &&
+        request.resource.data.get('isVerified', false) == false &&
+        request.resource.data.get('nicVerified', false) == false &&
+        request.resource.data.get('isBanned', false) == false &&
+        request.resource.data.get('banned', false) == false &&
+        (!('rating' in request.resource.data) || request.resource.data.rating == null) &&
+        request.resource.data.get('reviewCount', 0) == 0 &&
+        request.resource.data.get('jobsCount', 0) == 0 &&
+        (!('status' in request.resource.data) || request.resource.data.status == 'pending')
+      );
+      allow update: if isAdmin() || (
+        isOwner(techId) && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount'
+          ]) &&
+          (
+            !('category' in resource.data) ||
+            resource.data.category == '' ||
+            request.resource.data.category == resource.data.category
+          )
+        )
+      );
+      allow delete: if isSuperAdmin();
+
+      // private verification details
+      match /private/{document=**} {
+        allow read, write: if isOwner(techId) || isAdmin();
+      }
+
+      // portfolio showcase subcollection
+      match /portfolio/{itemId} {
+        allow read: if true;
+        allow create: if isUserActive() && (request.auth.uid == techId || isAdmin()) &&
+          request.resource.data.providerId == techId &&
+          request.resource.data.title is string &&
+          request.resource.data.photoUrl is string;
+        allow update: if isUserActive() && (request.auth.uid == techId || isAdmin()) &&
+          (!changed().hasAny(['providerId']));
+        allow delete: if isUserActive() && (request.auth.uid == techId || isAdmin());
+      }
+    }
+
+    // job requests and quotes
     match /jobRequests/{jobId} {
       allow read: if isAuthenticated();
-      allow create: if isUserActive();
-      allow update: if isUserActive() && (
-        resource.data.customerId == request.auth.uid ||
-        request.resource.data.customerId == request.auth.uid ||
-        isAdmin()
-      );
+      allow create: if isUserActive() &&
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.latitude is number &&
+        request.resource.data.longitude is number &&
+        !('customerPhone' in request.resource.data) &&
+        !('address' in request.resource.data) &&
+        !('landmark' in request.resource.data);
+      allow update: if isAdmin() ||
+        (
+          isUserActive() && resource.data.customerId == request.auth.uid &&
+          !changed().hasAny(['customerId']) &&
+          !('customerPhone' in request.resource.data) &&
+          !('address' in request.resource.data) &&
+          !('landmark' in request.resource.data)
+        ) ||
+        (
+          isUserActive() && resource.data.selectedProviderId == request.auth.uid &&
+          changed().hasOnly(['status', 'updatedAt', 'completedAt', 'arrivedAt', 'inProgressAt', 'assignedAt', 'cancelledAt', 'cancellationReason']) &&
+          !('customerPhone' in request.resource.data) &&
+          !('address' in request.resource.data) &&
+          !('landmark' in request.resource.data) &&
+          (
+            (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled']) ||
+            (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
+            (resource.data.status == 'in_progress' && request.resource.data.status == 'completed')
+          )
+        );
       allow delete: if isAdmin() || (
         isUserActive() && resource.data.customerId == request.auth.uid
       );
 
-      // quotes subcollection: provider creates, customer who owns request can accept/decline
+      // private details like customer contact
+      match /private/{document=**} {
+        allow read: if isAdmin() || (
+          isAuthenticated() &&
+          exists(/databases/$(database)/documents/jobRequests/$(jobId)) &&
+          (
+            get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid ||
+            (
+              'selectedProviderId' in get(/databases/$(database)/documents/jobRequests/$(jobId)).data &&
+              get(/databases/$(database)/documents/jobRequests/$(jobId)).data.selectedProviderId == request.auth.uid
+            )
+          )
+        );
+        allow write: if isAdmin() || (
+          isUserActive() &&
+          (
+            (exists(/databases/$(database)/documents/jobRequests/$(jobId)) && get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid) ||
+            (existsAfter(/databases/$(database)/documents/jobRequests/$(jobId)) && getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid)
+          )
+        );
+      }
+
+      // quotes subcollection
       match /quotes/{quoteId} {
         allow read: if isAuthenticated();
-        allow create: if isUserActive() && (
-          quoteId == request.auth.uid ||
-          request.resource.data.providerId == request.auth.uid ||
-          isAdmin()
-        );
-        allow update: if isAuthenticated() && (
-          quoteId == request.auth.uid ||
-          resource.data.providerId == request.auth.uid ||
-          get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid ||
-          isAdmin()
-        );
-        allow delete: if isAuthenticated() && (
-          resource.data.providerId == request.auth.uid ||
-          isAdmin()
+        allow create: if isUserActive() &&
+          quoteId == request.auth.uid &&
+          exists(/databases/$(database)/documents/technicians/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.nicVerified == true &&
+          get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.get('isBanned', false) != true &&
+          get(/databases/$(database)/documents/jobRequests/$(jobId)).data.category == get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.category &&
+          get(/databases/$(database)/documents/jobRequests/$(jobId)).data.status in ['open', 'pending'] &&
+          (!('expiresAt' in get(/databases/$(database)/documents/jobRequests/$(jobId)).data) || get(/databases/$(database)/documents/jobRequests/$(jobId)).data.expiresAt > request.time) &&
+          !exists(/databases/$(database)/documents/users/$(get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId)/blocked/$(request.auth.uid)) &&
+          !exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked/$(get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId));
+        allow update: if isAdmin() ||
+          (
+            get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'customerRespondedAt']) &&
+            request.resource.data.status in ['accepted', 'declined']
+          ) ||
+          (
+            resource.data.providerId == request.auth.uid &&
+            resource.data.status == 'pending' &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['providerId', 'jobRequestId'])
+          );
+        allow delete: if isAdmin() || (
+          resource.data.providerId == request.auth.uid &&
+          resource.data.status == 'pending'
         );
       }
     }
 
-    // bookings: customer or provider or admin
+    // bookings collection
     match /bookings/{bookingId} {
       allow read: if isAuthenticated() && (
         resource.data.customerId == request.auth.uid ||
         resource.data.providerId == request.auth.uid ||
         isAdmin()
       );
-      allow create: if isUserActive() && (
-        request.resource.data.customerId == request.auth.uid ||
-        request.resource.data.providerId == request.auth.uid ||
-        isAdmin()
+      allow create: if isAdmin() || (
+        isUserActive() &&
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.providerId != request.auth.uid &&
+        request.resource.data.status in ['pending','confirmed'] &&
+        request.resource.data.customerLatitude is number &&
+        request.resource.data.customerLongitude is number &&
+        !('completionPin' in request.resource.data) &&
+        !('enteredPin' in request.resource.data) &&
+        (
+          request.resource.data.get('type', 'standard') != 'urgent' ||
+          (
+            request.resource.data.status == 'pending' &&
+            request.resource.data.expiresAt is timestamp &&
+            request.resource.data.expiresAt <= request.time + duration.value(3, 'm') + duration.value(10, 's')
+          )
+        )
       );
-      allow update: if isUserActive() && (
-        resource.data.customerId == request.auth.uid ||
-        resource.data.providerId == request.auth.uid ||
-        isAdmin()
+      allow update: if isAdmin() || (
+        isUserActive() &&
+        lockedFieldsUnchanged() &&
+        (
+          // customer rules
+          (
+            resource.data.customerId == request.auth.uid && (
+              // cancel booking
+              (
+                resource.data.status in ['pending','confirmed','en_route'] &&
+                request.resource.data.status == 'cancelled' &&
+                changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+                request.resource.data.cancellationReason is string &&
+                request.resource.data.cancellationReason.size() > 0
+              ) ||
+              // urgent expire
+              (
+                resource.data.get('type', 'standard') == 'urgent' &&
+                resource.data.status == 'pending' &&
+                request.resource.data.status == 'expired' &&
+                changed().hasOnly(['status','expiredAt','updatedAt'])
+              ) ||
+              // rate booking
+              (
+                resource.data.status == 'completed' &&
+                changed().hasOnly(['rating','reviewedAt']) &&
+                request.resource.data.rating is int &&
+                request.resource.data.rating >= 1 &&
+                request.resource.data.rating <= 5
+              ) ||
+              // customer payment confirmation or dispute
+              (
+                resource.data.status == 'completed' &&
+                !('customerConfirmedPaidAt' in resource.data) &&
+                !('paymentDisputed' in resource.data) &&
+                (
+                  (
+                    changed().hasOnly(['customerConfirmedPaidAt']) &&
+                    request.resource.data.customerConfirmedPaidAt != null
+                  ) ||
+                  (
+                    changed().hasOnly(['paymentDisputed','paymentDisputeReason','paymentDisputedAt']) &&
+                    request.resource.data.paymentDisputed == true &&
+                    request.resource.data.paymentDisputeReason is string &&
+                    request.resource.data.paymentDisputeReason.size() > 0
+                  )
+                )
+              ) ||
+              // remove legacy pin
+              (
+                changed().hasOnly(['completionPin']) &&
+                !('completionPin' in request.resource.data)
+              ) ||
+              // reset pin attempts
+              (
+                changed().hasOnly(['pinAttempts']) &&
+                request.resource.data.pinAttempts == 0
+              ) ||
+              // customer reschedule actions propose accept decline
+              (
+                resource.data.status in ['pending','confirmed'] && (
+                  // propose reschedule
+                  (
+                    changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    request.resource.data.rescheduleRequestedBy == request.auth.uid &&
+                    request.resource.data.rescheduleReason is string &&
+                    request.resource.data.rescheduleReason.size() > 0
+                  ) ||
+                  // accept reschedule
+                  (
+                    changed().hasOnly(['rescheduledAt','scheduledDate','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    !('rescheduleRequestedBy' in request.resource.data)
+                  ) ||
+                  // decline reschedule
+                  (
+                    changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
+                    !('rescheduleRequestedBy' in request.resource.data)
+                  )
+                )
+              )
+            )
+          ) ||
+          // provider rules
+          (
+            resource.data.providerId == request.auth.uid && (
+              // accept booking
+              (
+                resource.data.status == 'pending' &&
+                request.resource.data.status == 'confirmed' &&
+                changed().hasOnly(['status','providerAcceptedAt']) &&
+                (
+                  resource.data.get('type', 'standard') != 'urgent' ||
+                  request.time < resource.data.expiresAt
+                )
+              ) ||
+              // decline booking
+              (
+                resource.data.status == 'pending' &&
+                request.resource.data.status == 'declined' &&
+                changed().hasOnly(['status','declinedAt','declineReason'])
+              ) ||
+              // start travel
+              (
+                resource.data.status == 'confirmed' &&
+                request.resource.data.status == 'en_route' &&
+                changed().hasOnly(['status','enRouteStartedAt'])
+              ) ||
+              // mark arrived
+              (
+                resource.data.status == 'en_route' &&
+                request.resource.data.status == 'in_progress' &&
+                changed().hasOnly(['status','arrivedAt'])
+              ) ||
+              // cancel booking
+              (
+                resource.data.status in ['confirmed','en_route'] &&
+                request.resource.data.status == 'cancelled' &&
+                changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+                request.resource.data.cancellationReason is string &&
+                request.resource.data.cancellationReason.size() > 0
+              ) ||
+              // record delay
+              (
+                resource.data.status in ['confirmed','en_route'] &&
+                changed().hasOnly(['delayReason','delayMinutes','delayedAt'])
+              ) ||
+              // provider reschedule actions propose accept decline
+              (
+                resource.data.status in ['pending','confirmed'] && (
+                  // propose reschedule
+                  (
+                    changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    request.resource.data.rescheduleRequestedBy == request.auth.uid &&
+                    request.resource.data.rescheduleReason is string &&
+                    request.resource.data.rescheduleReason.size() > 0
+                  ) ||
+                  // accept reschedule
+                  (
+                    changed().hasOnly(['rescheduledAt','scheduledDate','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    !('rescheduleRequestedBy' in request.resource.data)
+                  ) ||
+                  // decline reschedule
+                  (
+                    changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                    request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
+                    !('rescheduleRequestedBy' in request.resource.data)
+                  )
+                )
+              ) ||
+              // upload before and after job photos
+              (
+                resource.data.status in ['in_progress','completed'] &&
+                changed().hasOnly(['beforePhotos','afterPhotos','updatedAt'])
+              ) ||
+              // record pin attempt
+              (
+                resource.data.status == 'in_progress' &&
+                changed().hasOnly(['pinAttempts']) &&
+                request.resource.data.pinAttempts == resource.data.get('pinAttempts', 0) + 1 &&
+                request.resource.data.pinAttempts <= 5
+              ) ||
+              // complete booking with pin and cash payment
+              (
+                resource.data.status == 'in_progress' &&
+                request.resource.data.status == 'completed' &&
+                changed().hasOnly(['status','enteredPin','completedAt','finalAmount','paymentMethod','paymentNote','providerMarkedPaidAt']) &&
+                resource.data.get('pinAttempts', 0) >= 1 &&
+                resource.data.get('pinAttempts', 0) <= 5 &&
+                exists(/databases/$(database)/documents/bookings/$(bookingId)/private/pin) &&
+                request.resource.data.enteredPin ==
+                  get(/databases/$(database)/documents/bookings/$(bookingId)/private/pin).data.pin &&
+                (!('finalAmount' in request.resource.data) || (
+                  request.resource.data.finalAmount is number &&
+                  request.resource.data.finalAmount > 0 &&
+                  (resource.data.agreedPrice == null || request.resource.data.finalAmount <= resource.data.agreedPrice * 5)
+                )) &&
+                (!('paymentMethod' in request.resource.data) || request.resource.data.paymentMethod == 'cash')
+              )
+            )
+          )
+        )
       );
       allow delete: if isAdmin();
+
+      // private pin subcollection
+      match /private/{docId} {
+        allow read: if isAdmin() || (
+          isAuthenticated() &&
+          exists(/databases/$(database)/documents/bookings/$(bookingId)) &&
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid
+        );
+        allow create: if isAdmin() || (
+          isUserActive() &&
+          existsAfter(/databases/$(database)/documents/bookings/$(bookingId)) &&
+          getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid &&
+          request.resource.data.pin is string && (
+            request.resource.data.pin.size() == 6 ||
+            (
+              request.resource.data.pin.size() == 4 && (
+                (exists(/databases/$(database)/documents/bookings/$(bookingId)) && 'completionPin' in get(/databases/$(database)/documents/bookings/$(bookingId)).data) ||
+                ('completionPin' in getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data)
+              )
+            )
+          )
+        );
+        allow update, delete: if isAdmin();
+      }
+
+      // booking timeline events subcollection
+      match /timeline/{eventId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          (
+            exists(/databases/$(database)/documents/bookings/$(bookingId)) && (
+              get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid ||
+              get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid
+            )
+          )
+        );
+        allow create: if isUserActive() && (
+          isAdmin() ||
+          (
+            (
+              (exists(/databases/$(database)/documents/bookings/$(bookingId)) && (
+                get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid ||
+                get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid
+              )) ||
+              (existsAfter(/databases/$(database)/documents/bookings/$(bookingId)) && (
+                getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid ||
+                getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid
+              ))
+            ) &&
+            request.resource.data.actorUid == request.auth.uid &&
+            ('type' in request.resource.data || 'action' in request.resource.data) &&
+            ('at' in request.resource.data || 'timestamp' in request.resource.data) &&
+            (
+              // customer role validation
+              (
+                (
+                  (exists(/databases/$(database)/documents/bookings/$(bookingId)) && get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid) ||
+                  (existsAfter(/databases/$(database)/documents/bookings/$(bookingId)) && getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid)
+                ) &&
+                request.resource.data.get('type', request.resource.data.get('action', '')) in [
+                  'created', 'booking_created', 'cancelled', 'reschedule_proposed', 'reschedule_requested',
+                  'reschedule_accepted', 'reschedule_declined', 'payment_confirmed', 'payment_disputed',
+                  'rated', 'reviewed', 'pin_reset', 'note'
+                ] &&
+                (
+                  request.resource.data.get('type', request.resource.data.get('action', '')) != 'cancelled' ||
+                  getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled'
+                )
+              ) ||
+              // provider role validation
+              (
+                (
+                  (exists(/databases/$(database)/documents/bookings/$(bookingId)) && get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid) ||
+                  (existsAfter(/databases/$(database)/documents/bookings/$(bookingId)) && getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid)
+                ) &&
+                request.resource.data.get('type', request.resource.data.get('action', '')) in [
+                  'accepted', 'declined', 'en_route', 'arrived', 'completed', 'cancelled',
+                  'delayed', 'reschedule_proposed', 'reschedule_requested', 'reschedule_accepted',
+                  'reschedule_declined', 'photos_uploaded', 'pin_attempt', 'note'
+                ] &&
+                (
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'accepted' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status in ['confirmed', 'accepted']) &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'declined' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'declined') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'en_route' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'en_route') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'arrived' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'completed' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'completed') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'cancelled' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled')
+                )
+              )
+            )
+          )
+        );
+        allow update, delete: if isAdmin();
+      }
     }
 
-    // chat rooms & messages: strictly restricted to room participants and admin
+    // chat rooms and messages
     match /chatRooms/{roomId} {
       allow read: if isAuthenticated() && (
         request.auth.uid in resource.data.participants ||
         isAdmin()
       );
-      allow create: if isUserActive();
-      allow update: if isUserActive() && (
-        request.auth.uid in resource.data.participants ||
-        isAdmin()
+      allow create: if isUserActive() &&
+        request.resource.data.participants is list &&
+        request.resource.data.participants.size() == 2 &&
+        request.auth.uid in request.resource.data.participants;
+      allow update: if isAdmin() || (
+        isUserActive() &&
+        request.auth.uid in resource.data.participants &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['participants', 'createdAt', 'roomId']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'unread', 'unreadCounts', 'lastReadAt', 'lastMessage', 'lastMessageAt', 'lastSenderId', 'updatedAt', 'participantNames', 'participantRoles', 'participantPhones'
+        ])
       );
       allow delete: if isAdmin();
 
@@ -166,14 +589,18 @@ service cloud.firestore {
           isAdmin()
         );
         allow create: if isUserActive() && (
-          request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants ||
-          isAdmin()
+          isAdmin() || (
+            request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants &&
+            request.resource.data.senderId == request.auth.uid &&
+            request.resource.data.text is string &&
+            request.resource.data.text.size() <= 2000
+          )
         );
         allow update, delete: if isAdmin();
       }
     }
 
-    // live location tracking: provider streams, active booking customer reads
+    // live location tracking
     match /liveLocations/{techId} {
       allow read: if isAuthenticated() && (
         techId == request.auth.uid ||
@@ -184,27 +611,38 @@ service cloud.firestore {
       allow delete: if isOwner(techId) || isAdmin();
     }
 
-    // reviews
+    // reviews collection
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if isUserActive();
+      allow create: if isUserActive() &&
+        exists(/databases/$(database)/documents/bookings/$(reviewId)) &&
+        get(/databases/$(database)/documents/bookings/$(reviewId)).data.customerId == request.auth.uid &&
+        get(/databases/$(database)/documents/bookings/$(reviewId)).data.status == 'completed' &&
+        request.resource.data.providerId == get(/databases/$(database)/documents/bookings/$(reviewId)).data.providerId &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
       allow update, delete: if isAdmin();
     }
 
-    // complaints
+    // complaints collection
     match /complaints/{complaintId} {
       allow read: if isAuthenticated() && (
         resource.data.customerId == request.auth.uid ||
+        resource.data.providerId == request.auth.uid ||
+        (resource.data.reporterUid != null && resource.data.reporterUid == request.auth.uid) ||
         isAdmin()
       );
       allow create: if isUserActive() && (
         request.resource.data.customerId == request.auth.uid ||
+        request.resource.data.providerId == request.auth.uid ||
+        (request.resource.data.reporterUid != null && request.resource.data.reporterUid == request.auth.uid) ||
         isAdmin()
       );
       allow update, delete: if isAdmin();
     }
 
-    // verification queue: technicians submit KYC, admins review
+    // verification queue
     match /verificationQueue/{item} {
       allow read: if isAdmin() || (
         isAuthenticated() && (
@@ -212,10 +650,30 @@ service cloud.firestore {
           (resource != null && resource.data.providerId == request.auth.uid)
         )
       );
-      allow create, update: if isAdmin() || (
+      allow create: if isAdmin() || (
         isAuthenticated() && (
           item == request.auth.uid ||
           request.resource.data.providerId == request.auth.uid
+        ) &&
+        request.resource.data.status == 'pending' &&
+        !('reviewedBy' in request.resource.data) &&
+        !('reviewedAt' in request.resource.data)
+      );
+      allow update: if isAdmin() || (
+        isAuthenticated() && (
+          item == request.auth.uid ||
+          resource.data.providerId == request.auth.uid
+        ) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedBy', 'reviewedAt']) &&
+        (
+          (
+            resource.data.status == 'rejected' &&
+            request.resource.data.status == 'pending'
+          ) ||
+          (
+            request.resource.data.status == resource.data.status &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+          )
         )
       );
       allow delete: if isAdmin();
@@ -230,8 +688,40 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // otp verifications: managed only by serverless api admin sdk
+    // call logs collection
+    match /callLogs/{logId} {
+      allow read: if isAuthenticated() && (
+        resource.data.callerUid == request.auth.uid ||
+        resource.data.calleeUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isUserActive() && (
+        request.resource.data.callerUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isUserActive() && (
+        isAdmin() || (
+          resource.data.callerUid == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['outcome', 'postCallStatus', 'resolvedAt'])
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // admin audit logs collection
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && request.resource.data.adminUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // otp verifications
     match /otp_verifications/{email} {
+      allow read, write: if false;
+    }
+
+    // otp rate limits
+    match /otp_rate_limits/{id} {
       allow read, write: if false;
     }
   }

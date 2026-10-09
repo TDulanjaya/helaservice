@@ -2,21 +2,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../models/job_request.dart';
+import '../../../models/job_location.dart';
 import '../../../models/admin_models.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/category_repository.dart';
-import '../../../state/role_provider.dart';
-import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
-import '../../../utils/app_localizations_helpers.dart';
 import 'job_quotes_screen.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/job_location_picker.dart';
 import '../../../services/storage_service.dart';
 import '../../../utils/permission_utils.dart';
 
@@ -30,60 +27,49 @@ class PostJobRequestScreen extends StatefulWidget {
 class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _addressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
   String? _selectedCategory;
-  String _selectedDistrict = 'Colombo';
+  JobLocation? _selectedLocation;
   final List<XFile> _photos = [];
-  double? _latitude;
-  double? _longitude;
-  bool _detectingLocation = false;
   bool _submitting = false;
+  String _bookingType = 'asap';
+  DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
+  String _scheduledSlot = 'morning';
 
   static const int _maxPhotos = 4;
 
-  static const List<String> _categories = [
-    'Electrical Services',
-    'Plumbing & Sanitary',
-    'AC & Refrigeration',
-    'Carpentry & Woodwork',
-    'Masonry & Construction',
-    'Appliance Repair',
-    'House Painting',
-    'Roofing & Waterproofing',
-  ];
+  String _getSlotLabel(BuildContext context, String slotKey) {
+    switch (slotKey) {
+      case 'morning':
+        return context.l10n.slotMorning;
+      case 'afternoon':
+        return context.l10n.slotAfternoon;
+      case 'evening':
+        return context.l10n.slotEvening;
+      default:
+        return slotKey;
+    }
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-      final user = roleProvider.currentUser;
-      if (user != null) {
-        if (user.address != null && user.address!.isNotEmpty) {
-          _addressController.text = user.address!;
-        }
-        if (user.district != null &&
-            LocationUtils.districtCoordinates.containsKey(user.district)) {
-          setState(() {
-            _selectedDistrict = user.district!;
-            final coords =
-                LocationUtils.getDistrictCoordinates(_selectedDistrict);
-            _latitude = user.latitude ?? coords.lat;
-            _longitude = user.longitude ?? coords.lng;
-          });
-        }
-      }
-    });
+  Future<void> _pickScheduledDate(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _scheduledDate.isBefore(now) ? now : _scheduledDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 30)),
+    );
+    if (picked != null) {
+      setState(() => _scheduledDate = picked);
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -106,9 +92,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     try {
       final picked = await _picker.pickImage(
         source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 60,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
       );
       if (picked != null) {
         setState(() => _photos.add(picked));
@@ -166,48 +152,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     );
   }
 
-  Future<void> _detectLocation() async {
-    setState(() => _detectingLocation = true);
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.enableLocationServices)),
-          );
-        }
-        setState(() => _detectingLocation = false);
-        return;
-      }
+  Future<void> _pickLocation() async {
+    final result = await JobLocationPicker.pickLocation(
+      context,
+      initialLocation: _selectedLocation,
+    );
 
-      if (!mounted) return;
-      final granted = await PermissionUtils.requestLocationWithRationale(context);
-      if (!granted) {
-        setState(() => _detectingLocation = false);
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 15),
-        ),
-      );
-      setState(() {
-        _latitude = position.latitude;
-        _longitude = position.longitude;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${context.l10n.failedToDetectLocation}: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _detectingLocation = false);
+    if (result != null) {
+      setState(() => _selectedLocation = result);
     }
   }
 
@@ -220,6 +172,19 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       return;
     }
 
+    if (_selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.pleaseSelectServiceLocation),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final scheduledSlotLabel =
+        _bookingType == 'scheduled' ? _getSlotLabel(context, _scheduledSlot) : null;
+
     setState(() => _submitting = true);
 
     try {
@@ -230,17 +195,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final List<String> photoUrls = [];
       for (final photo in _photos) {
-        final uploaded = await StorageService.instance.uploadFile(File(photo.path));
+        final uploaded =
+            await StorageService.instance.uploadFile(File(photo.path));
         photoUrls.add(uploaded);
       }
-
-      final districtCoords =
-          LocationUtils.getDistrictCoordinates(_selectedDistrict);
-      final resolvedLat = _latitude ?? districtCoords.lat;
-      final resolvedLng = _longitude ?? districtCoords.lng;
-      final resolvedAddress = _addressController.text.trim().isNotEmpty
-          ? _addressController.text.trim()
-          : '$_selectedDistrict, Sri Lanka';
 
       final request = JobRequest(
         customerId: user.uid,
@@ -251,9 +209,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         description: _descriptionController.text.trim(),
         category: _selectedCategory!,
         photoUrls: photoUrls,
-        latitude: resolvedLat,
-        longitude: resolvedLng,
-        address: resolvedAddress,
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
+        district: _selectedLocation!.label,
+        address: _selectedLocation!.address,
+        landmark: _selectedLocation!.landmark,
+        bookingType: _bookingType,
+        scheduledDate: _bookingType == 'scheduled' ? _scheduledDate : null,
+        scheduledSlot: scheduledSlotLabel,
       );
 
       final requestId = await JobRequestRepository().createJobRequest(request);
@@ -358,6 +321,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+
+              // category picker
               Text(
                 context.l10n.category,
                 style: TextStyle(
@@ -368,17 +333,32 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
               const SizedBox(height: 8),
               StreamBuilder<List<CategoryRow>>(
-                stream: CategoryRepository().streamCategoryRows(),
+                stream: CategoryRepository().streamLiveCategories(),
                 builder: (context, snapshot) {
-                  final dbCategories = (snapshot.data ?? [])
-                      .where((c) => c.status.toLowerCase() == 'active')
-                      .map((c) => c.name)
-                      .toList();
-                  final categoryList =
-                      dbCategories.isNotEmpty ? dbCategories : _categories;
+                  final dbCategories = snapshot.data ?? [];
+                  if (dbCategories.isEmpty &&
+                      snapshot.connectionState != ConnectionState.waiting) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: context.themeSurfaceLow,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: context.themeBorder),
+                      ),
+                      child: Text(
+                        'No services available yet',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    );
+                  }
 
                   return DropdownButtonFormField<String>(
-                    initialValue: categoryList.contains(_selectedCategory)
+                    initialValue: dbCategories.any((c) => c.id == _selectedCategory)
                         ? _selectedCategory
                         : null,
                     decoration: InputDecoration(
@@ -403,11 +383,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
                     ),
-                    items: categoryList
+                    items: dbCategories
                         .map((c) => DropdownMenuItem(
-                              value: c,
+                              value: c.id,
                               child: Text(
-                                LocalizedData.getCategory(context, c),
+                                c.name,
                                 style: const TextStyle(fontSize: 13),
                               ),
                             ))
@@ -420,6 +400,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // job title
               Text(context.l10n.jobTitle,
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w800)),
@@ -437,6 +419,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     : null,
               ),
               const SizedBox(height: 16),
+
+              // job description
               Text(context.l10n.jobDescription,
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w800)),
@@ -455,6 +439,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     : null,
               ),
               const SizedBox(height: 18),
+
+              // photos
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -540,9 +526,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
+
+              // timing selection
               Text(
-                context.l10n.serviceLocation,
+                context.l10n.selectTimeSlot,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -550,118 +538,289 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              AppCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.districtLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedDistrict,
-                      dropdownColor: context.themeSurface,
-                      style: TextStyle(color: context.themeInk, fontSize: 13.5),
-                      decoration: _inputDecoration(
-                        context,
-                        hint: context.l10n.selectDistrict,
-                        icon: Icons.map_outlined,
-                      ),
-                      items: LocationUtils.districtCoordinates.keys.map((d) {
-                        return DropdownMenuItem(
-                          value: d,
-                          child: Text(LocalizedData.getDistrict(context, d)),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedDistrict = val;
-                            final coords =
-                                LocationUtils.getDistrictCoordinates(val);
-                            _latitude = coords.lat;
-                            _longitude = coords.lng;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      context.l10n.addressOrAreaOptional,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _addressController,
-                      style: TextStyle(fontSize: 13.5, color: context.themeInk),
-                      decoration: _inputDecoration(
-                        context,
-                        hint: context.l10n.addressOrAreaHint,
-                        icon: Icons.home_outlined,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    InkWell(
-                      onTap: _detectingLocation ? null : _detectLocation,
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _bookingType = 'asap'),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                         decoration: BoxDecoration(
-                          color: context.themeSoft,
+                          color: _bookingType == 'asap'
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : context.themeSurfaceLow,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: context.themeBorder),
+                          border: Border.all(
+                            color: _bookingType == 'asap'
+                                ? AppColors.primary
+                                : context.themeBorder,
+                            width: _bookingType == 'asap' ? 1.5 : 1,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (_detectingLocation)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary,
+                            Icon(
+                              Icons.bolt_rounded,
+                              size: 18,
+                              color: _bookingType == 'asap' ? AppColors.primary : context.themeTextSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.l10n.bookingTypeAsap,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: _bookingType == 'asap' ? FontWeight.w800 : FontWeight.w600,
+                                  color: _bookingType == 'asap' ? AppColors.primary : context.themeInk,
                                 ),
-                              )
-                            else
-                              Icon(
-                                _latitude != null && _detectingLocation == false
-                                    ? Icons.my_location_rounded
-                                    : Icons.location_searching_rounded,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _detectingLocation
-                                  ? context.l10n.detectingGps
-                                  : (_latitude != null
-                                      ? context.l10n.gpsLocationSet
-                                      : context.l10n.useExactLiveGps),
-                              style: const TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _bookingType = 'scheduled'),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: _bookingType == 'scheduled'
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : context.themeSurfaceLow,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _bookingType == 'scheduled'
+                                ? AppColors.primary
+                                : context.themeBorder,
+                            width: _bookingType == 'scheduled' ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.calendar_month_rounded,
+                              size: 18,
+                              color: _bookingType == 'scheduled' ? AppColors.primary : context.themeTextSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.l10n.bookingTypeScheduled,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: _bookingType == 'scheduled' ? FontWeight.w800 : FontWeight.w600,
+                                  color: _bookingType == 'scheduled' ? AppColors.primary : context.themeInk,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_bookingType == 'scheduled') ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => _pickScheduledDate(context),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.event_note_rounded, size: 20, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${_scheduledDate.year}/${_scheduledDate.month.toString().padLeft(2, '0')}/${_scheduledDate.day.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.5,
+                            color: context.themeInk,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  children: ['morning', 'afternoon', 'evening'].map((slot) {
+                    final isSel = _scheduledSlot == slot;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: InkWell(
+                        onTap: () => setState(() => _scheduledSlot = slot),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: isSel
+                                ? AppColors.primary.withValues(alpha: 0.08)
+                                : context.themeSurfaceLow,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSel ? AppColors.primary : context.themeBorder,
+                              width: isSel ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSel ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                color: isSel ? AppColors.primary : context.themeTextSecondary,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _getSlotLabel(context, slot),
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                    color: isSel ? AppColors.primary : context.themeInk,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 20),
+
+              // service location selection
+              Text(
+                '${context.l10n.serviceLocation} *',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeInk,
                 ),
               ),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: _pickLocation,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.themeSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _selectedLocation != null
+                          ? AppColors.primary
+                          : context.themeBorder,
+                      width: _selectedLocation != null ? 1.5 : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _selectedLocation != null
+                            ? AppColors.primary.withValues(alpha: 0.08)
+                            : Colors.black.withValues(
+                                alpha: context.isDark ? 0.2 : 0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _selectedLocation != null
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : context.themeSurfaceLow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _selectedLocation != null
+                              ? Icons.location_on_rounded
+                              : Icons.add_location_alt_rounded,
+                          color: _selectedLocation != null
+                              ? AppColors.primary
+                              : context.themeTextSecondary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedLocation != null
+                                  ? (_selectedLocation!.label ?? 'Job Location')
+                                  : 'Select Job Location',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: context.themeInk,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _selectedLocation != null
+                                  ? _selectedLocation!.address
+                                  : 'Tap to pick via GPS, map pin, or saved addresses',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                            if (_selectedLocation?.landmark != null &&
+                                _selectedLocation!.landmark!.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'Note: ${_selectedLocation!.landmark}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _selectedLocation != null ? 'Change' : 'Set Pin',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right,
+                          color: AppColors.primary, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 28),
               SizedBox(
                 height: 54,
@@ -698,7 +857,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     );
   }
 }

@@ -144,3 +144,6 @@ secrets.env
 # Design references
 design_ref/
 
+# Data reset backups
+backups/
+

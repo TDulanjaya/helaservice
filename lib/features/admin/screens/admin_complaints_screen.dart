@@ -315,7 +315,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   fontSize: 13,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Enter reason for suspension...',
+                  hintText: context.l10n.enterReasonForSuspension,
                   filled: true,
                   fillColor: AppColors.getSurfaceLow(ctx),
                   border: OutlineInputBorder(
@@ -1064,7 +1064,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   child: SizedBox(
                     height: 44,
                     child: PopupMenuButton<String>(
-                      tooltip: 'Suspend Account',
+                      tooltip: context.l10n.suspendAccount,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),

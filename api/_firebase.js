@@ -5,7 +5,7 @@ if (!admin.apps.length) {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY || '';
 
-  // fix newlines in private key
+  // format private key
   const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
 
   if (projectId && clientEmail && privateKey) {
@@ -17,7 +17,7 @@ if (!admin.apps.length) {
       }),
     });
   } else {
-    // default credentials fallback
+    // fallback to default credentials
     admin.initializeApp();
   }
 }

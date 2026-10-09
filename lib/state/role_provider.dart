@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../models/admin_user.dart';
+import '../repositories/user_repository.dart';
 import '../services/auth_service.dart';
 
 enum AppRole { customer, provider, admin }
@@ -10,10 +12,13 @@ class RoleProvider extends ChangeNotifier {
   AppRole _role = AppRole.customer;
   UserProfile? _currentUser;
   AdminUser? _currentAdminUser;
+  AppRole? _primaryRole;
   bool _isSuperAdmin = false;
   bool _isLoading = false;
+  StreamSubscription<UserProfile?>? _userProfileSub;
 
   AppRole get role => _role;
+  AppRole? get primaryRole => _primaryRole;
   UserProfile? get currentUser => _currentUser;
   AdminUser? get currentAdminUser => _currentAdminUser;
   bool get isLoading => _isLoading;
@@ -56,6 +61,7 @@ class RoleProvider extends ChangeNotifier {
   }
 
   bool get isRegisteredProvider {
+    if (_primaryRole == AppRole.provider) return true;
     if (_currentUser?.role == AppRole.provider) return true;
     if (_currentUser?.serviceCategory != null &&
         _currentUser!.serviceCategory!.isNotEmpty) {
@@ -65,6 +71,17 @@ class RoleProvider extends ChangeNotifier {
       return true;
     }
     return false;
+  }
+
+  bool get isApprovedProvider {
+    if (isAuthorizedAdmin) return true;
+    if (_currentUser == null) return false;
+    final isProviderAccount = _primaryRole == AppRole.provider ||
+        _currentUser!.role == AppRole.provider ||
+        _currentUser!.isVerified;
+    return isProviderAccount &&
+        (_currentUser!.isVerified ||
+            _currentUser!.certificationsStatus == 'approved');
   }
 
   Future<void> refreshAdminStatus() async {
@@ -129,6 +146,13 @@ class RoleProvider extends ChangeNotifier {
   }
 
   void setRole(AppRole role) {
+    // block unpermitted role switch
+    if (role == AppRole.provider && !isAuthorizedAdmin && !isApprovedProvider) {
+      return;
+    }
+    if (role == AppRole.admin && !isAuthorizedAdmin) {
+      return;
+    }
     _role = role;
     if (_currentUser != null) {
       _currentUser = _currentUser!.copyWith(role: role);
@@ -156,8 +180,26 @@ class RoleProvider extends ChangeNotifier {
     _currentUser = user;
     if (user.role != null && user.role != AppRole.admin) {
       _role = user.role!;
+      _primaryRole ??= user.role;
     }
+    _listenToUser(user.id);
     notifyListeners();
+  }
+
+  void _listenToUser(String uid) {
+    if (uid.isEmpty) return;
+    _userProfileSub?.cancel();
+    _userProfileSub = UserRepository().streamUserById(uid).listen((updatedUser) {
+      if (updatedUser != null) {
+        _currentUser = updatedUser;
+        if (updatedUser.role != null && updatedUser.role != AppRole.admin) {
+          if (updatedUser.role == AppRole.provider && updatedUser.isVerified) {
+            _primaryRole = AppRole.provider;
+          }
+        }
+        notifyListeners();
+      }
+    });
   }
 
   Future<UserProfile> completeUserProfile(UserProfile updatedProfile) async {
@@ -168,6 +210,7 @@ class RoleProvider extends ChangeNotifier {
       _currentUser = saved;
       if (saved.role != null && saved.role != AppRole.admin) {
         _role = saved.role!;
+        _primaryRole = saved.role;
       }
       return saved;
     } finally {
@@ -177,12 +220,40 @@ class RoleProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await _userProfileSub?.cancel();
+    _userProfileSub = null;
     await AuthService().signOut();
     _currentUser = null;
     _currentAdminUser = null;
+    _primaryRole = null;
     _isSuperAdmin = false;
     _role = AppRole.customer;
     notifyListeners();
+  }
+
+  // delete current user account
+  Future<void> deleteAccount() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _userProfileSub?.cancel();
+      _userProfileSub = null;
+      await AuthService().deleteAccount();
+      _currentUser = null;
+      _currentAdminUser = null;
+      _primaryRole = null;
+      _isSuperAdmin = false;
+      _role = AppRole.customer;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _userProfileSub?.cancel();
+    super.dispose();
   }
 
   String get roleLabel {

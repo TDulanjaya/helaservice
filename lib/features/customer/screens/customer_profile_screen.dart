@@ -10,13 +10,15 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/job_location_picker.dart';
 import '../../../app_router.dart';
-import '../../../models/user_profile.dart';
-import '../../../utils/location_utils.dart';
+import '../../../models/saved_address.dart';
+import '../../../repositories/saved_address_repository.dart';
 import '../../../utils/l10n_extension.dart';
-import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/legal_content_sheet.dart';
+import '../../auth/screens/complete_profile_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
@@ -27,7 +29,6 @@ class CustomerProfileScreen extends StatelessWidget {
 
     final nameController = TextEditingController(text: user?.displayName ?? '');
     final phoneController = TextEditingController(text: user?.phone ?? '');
-    final addressController = TextEditingController(text: user?.address ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -101,14 +102,6 @@ class CustomerProfileScreen extends StatelessWidget {
                   prefixText: '+94 ',
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: context.l10n.address,
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                ),
-              ),
               const SizedBox(height: 20),
               PrimaryButton(
                 label: context.l10n.save,
@@ -117,7 +110,6 @@ class CustomerProfileScreen extends StatelessWidget {
                     final updated = user.copyWith(
                       displayName: nameController.text.trim(),
                       phone: phoneController.text.trim(),
-                      address: addressController.text.trim(),
                     );
                     roleProvider.completeUserProfile(updated);
                   }
@@ -133,6 +125,119 @@ class CustomerProfileScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showEditAddressDialog(BuildContext context, String uid, SavedAddress addr) {
+    final labelController = TextEditingController(text: addr.label);
+    final addressController = TextEditingController(text: addr.address);
+    final landmarkController = TextEditingController(text: addr.landmark ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Edit Saved Address',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: labelController,
+              decoration: InputDecoration(
+                labelText: context.l10n.savedAddressLabelHint,
+                prefixIcon: const Icon(Icons.label_outline),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: addressController,
+              decoration: InputDecoration(
+                labelText: context.l10n.location,
+                prefixIcon: const Icon(Icons.location_on_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: landmarkController,
+              decoration: InputDecoration(
+                labelText: context.l10n.landmarkNoteOptional,
+                prefixIcon: const Icon(Icons.notes_rounded),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newLabel = labelController.text.trim();
+              final newAddr = addressController.text.trim();
+              final newLandmark = landmarkController.text.trim();
+
+              if (newLabel.isNotEmpty && newAddr.isNotEmpty) {
+                await SavedAddressRepository().updateSavedAddress(
+                  userId: uid,
+                  addressId: addr.id,
+                  label: newLabel,
+                  address: newAddr,
+                  landmark: newLandmark,
+                );
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(context.l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAddress(BuildContext context, String uid, SavedAddress addr) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.deleteSavedAddress),
+        content: Text('${context.l10n.confirmDeleteSavedAddress} ("${addr.label}")'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await SavedAddressRepository().deleteSavedAddress(
+                userId: uid,
+                addressId: addr.id,
+              );
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(context.l10n.delete),
+          ),
+        ],
       ),
     );
   }
@@ -153,13 +258,26 @@ class CustomerProfileScreen extends StatelessWidget {
             child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              pv.Provider.of<RoleProvider>(context, listen: false).logout();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.login,
-                (route) => false,
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
               );
+              try {
+                await pv.Provider.of<RoleProvider>(context, listen: false)
+                    .logout();
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
@@ -174,18 +292,63 @@ class CustomerProfileScreen extends StatelessWidget {
     );
   }
 
+  // delete account dialog and execution
+  void _deleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.deleteAccountTitle),
+        content: Text(context.l10n.deleteAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+              try {
+                await pv.Provider.of<RoleProvider>(context, listen: false).deleteAccount();
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.deleteAccountConfirmAction),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
     final user = roleProvider.currentUser;
+    final uid = user?.id ?? '';
 
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
         : context.l10n.customerLabel;
     final email = user?.email.isNotEmpty == true ? user!.email : '';
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
-    final address = user?.address?.isNotEmpty == true ? user!.address! : '';
-    final district = user?.district ?? context.l10n.custFallbackColombo;
 
     return Scaffold(
       appBar: AppBar(
@@ -211,6 +374,7 @@ class CustomerProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(
               16, 8, 16, AppBottomNav.contentBottomPadding),
           children: [
+            // customer header card
             AppCard(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -242,8 +406,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   ],
                   const SizedBox(height: 10),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
@@ -269,6 +433,8 @@ class CustomerProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
+
+            // contact info
             AppCard(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -304,7 +470,7 @@ class CustomerProfileScreen extends StatelessWidget {
                           size: 18, color: context.themeTextSecondary),
                       const SizedBox(width: 10),
                       Text(
-                        '+94 $phone',
+                        phone.isNotEmpty ? '+94 $phone' : 'Phone not set',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13.5,
@@ -312,27 +478,183 @@ class CustomerProfileScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // saved addresses section
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.location_on_outlined,
-                          size: 18, color: context.themeTextSecondary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '$address (${LocalizedData.getDistrict(context, district)})',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5,
+                      Row(
+                        children: [
+                          const Icon(Icons.bookmark_border_rounded,
+                              size: 18, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            context.l10n.savedAddresses,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final picked =
+                              await JobLocationPicker.pickLocation(context);
+                          if (picked != null && uid.isNotEmpty) {
+                            await SavedAddressRepository().addSavedAddress(
+                              userId: uid,
+                              label: picked.label ?? 'Other',
+                              latitude: picked.latitude,
+                              longitude: picked.longitude,
+                              address: picked.address,
+                              landmark: picked.landmark,
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: Text(context.l10n.addNew),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  if (uid.isEmpty)
+                    Text(
+                      'Sign in to manage saved addresses.',
+                      style: TextStyle(
+                          color: context.themeTextSecondary, fontSize: 12),
+                    )
+                  else
+                    StreamBuilder<List<SavedAddress>>(
+                      stream: SavedAddressRepository()
+                          .streamSavedAddresses(uid),
+                      builder: (context, snapshot) {
+                        final addresses = snapshot.data ?? [];
+                        if (addresses.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: Text(
+                                'No saved addresses yet. Add home or work addresses for one-tap booking.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.themeTextSecondary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: addresses.length,
+                          separatorBuilder: (_, __) => Divider(
+                            height: 16,
+                            color: context.themeBorder.withValues(alpha: 0.6),
+                          ),
+                          itemBuilder: (context, index) {
+                            final item = addresses[index];
+                            return Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    item.label == 'Home'
+                                        ? Icons.home_rounded
+                                        : (item.label == 'Work'
+                                            ? Icons.work_rounded
+                                            : Icons.location_on_rounded),
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.label,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        item.address,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: context.themeTextSecondary,
+                                        ),
+                                      ),
+                                      if (item.landmark != null &&
+                                          item.landmark!.isNotEmpty) ...[
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          'Note: ${item.landmark!}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontStyle: FontStyle.italic,
+                                            color: context.themeTextSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined,
+                                      size: 16),
+                                  tooltip: context.l10n.edit,
+                                  onPressed: () => _showEditAddressDialog(
+                                      context, uid, item),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline,
+                                      size: 16, color: AppColors.error),
+                                  tooltip: context.l10n.delete,
+                                  onPressed: () => _confirmDeleteAddress(
+                                      context, uid, item),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
+
+            // settings section
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
@@ -344,49 +666,6 @@ class CustomerProfileScreen extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-            ),
-            _SettingsTile(
-              icon: Icons.my_location,
-              title: context.l10n.homeServiceGpsLocation,
-              subtitle: user?.latitude != null
-                  ? context.l10n.custGpsTapToUpdate(
-                      user!.latitude!.toStringAsFixed(4),
-                      user.longitude!.toStringAsFixed(4))
-                  : context.l10n.tapToAutoDetectGps,
-              onTap: () async {
-                final pos = await LocationUtils.getCurrentPosition();
-                if (pos != null && context.mounted) {
-                  final updated = (user ??
-                          UserProfile(
-                            id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-                            email: '',
-                          ))
-                      .copyWith(
-                    latitude: pos.latitude,
-                    longitude: pos.longitude,
-                  );
-                  await roleProvider.completeUserProfile(updated);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          context.l10n.gpsLocationUpdated(
-                              pos.latitude.toStringAsFixed(4),
-                              pos.longitude.toStringAsFixed(4)),
-                        ),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
-                  }
-                } else if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.l10n.couldNotObtainGps),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              },
             ),
             pv.Consumer<ThemeProvider>(
               builder: (context, themeProvider, _) {
@@ -410,16 +689,13 @@ class CustomerProfileScreen extends StatelessWidget {
                           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Center(
-                                child: Container(
-                                  width: 36,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: context.themeBorder,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
+                              Container(
+                                width: 36,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: context.themeBorder,
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -477,7 +753,7 @@ class CustomerProfileScreen extends StatelessWidget {
               builder: (context, localeProvider, _) {
                 return _SettingsTile(
                   icon: Icons.language,
-                  title: 'App Language / භාෂාව / மொழி',
+                  title: context.l10n.appLanguageLabel,
                   subtitle: context.l10n
                       .currentMode(localeProvider.languageDisplayName),
                   onTap: () => LanguageSelectSheet.show(context),
@@ -485,58 +761,198 @@ class CustomerProfileScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 12),
-            AppCard(
-              onTap: () => showRoleSwitchSheet(context),
-              color: context.themeSurfaceLow,
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+
+            // become provider card
+            if (!roleProvider.isRegisteredProvider)
+              AppCard(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CompleteProfileScreen(
+                        initialProfile: user,
+                        targetRole: AppRole.provider,
+                      ),
                     ),
-                    child: const Icon(Icons.handyman,
-                        color: AppColors.primary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          roleProvider.isAuthorizedAdmin
-                              ? context.l10n.switchOperationalView
-                              : context.l10n.roleProvider,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          roleProvider.isAuthorizedAdmin
-                              ? context.l10n.switchOperationalViewDesc
-                              : context.l10n.providerRoleDesc,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: context.themeTextSecondary,
-                          ),
-                        ),
-                      ],
+                  );
+                },
+                color: const Color(0xFFD6900F).withValues(alpha: 0.1),
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD6900F).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.engineering_rounded,
+                        color: Color(0xFFD6900F),
+                        size: 22,
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios,
-                      size: 14, color: AppColors.outline),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Become a Service Provider',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            'Offer your trade skills, receive jobs, and earn more',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: AppColors.outline),
+                  ],
+                ),
               ),
+
+            if (roleProvider.isAuthorizedAdmin) ...[
+              const SizedBox(height: 12),
+              AppCard(
+                onTap: () => showRoleSwitchSheet(context),
+                color: context.themeSurfaceLow,
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.admin_panel_settings_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.switchOperationalView,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            context.l10n.switchOperationalViewDesc,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: AppColors.outline),
+                  ],
+                ),
+              ),
+            ] else if (roleProvider.isApprovedProvider) ...[
+              const SizedBox(height: 12),
+              AppCard(
+                onTap: () => showRoleSwitchSheet(context),
+                color: context.themeSurfaceLow,
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.swap_vert_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Switch to Provider Mode',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            'Switch back to your Service Provider workspace',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: AppColors.outline),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 0),
+                  child: Text(
+                    context.l10n.privacyPolicy,
+                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                  ),
+                ),
+                Text('•', style: TextStyle(color: context.themeBorder)),
+                TextButton(
+                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 1),
+                  child: Text(
+                    context.l10n.termsOfService,
+                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             AppOutlineButton(
               label: context.l10n.logout,
               icon: Icons.logout,
               color: AppColors.error,
               onPressed: () => _logout(context),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => _deleteAccount(context),
+              child: Text(
+                context.l10n.deleteAccountTitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.themeTextSecondary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import '../../../models/technician.dart';
 import '../../../models/job_request.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../repositories/job_request_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../theme/app_theme.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -238,7 +239,7 @@ class DashboardLiveMapScreen extends StatelessWidget {
   }
 }
 
-// button label for dispatch action
+// dispatch button label
 String _actionLabelText(BuildContext context, String action) {
   return action == 'Dispatch'
       ? context.l10n.liveMapActionDispatch
@@ -279,9 +280,9 @@ ArtisanRosterRow _technicianToRosterRow(BuildContext context, Technician t) {
         : l10n.liveMapZoneColomboMetro,
     status: statusStr,
     statusColor: statusCol,
-    // today suffix is added in the ui
-    payoutToday: 'LKR ${(t.jobsCount * t.baseRateLkr * 0.4).round()}',
-    rating: t.rating,
+    // base rate in ui
+    payoutToday: 'LKR ${t.baseRateLkr}',
+    rating: t.rating ?? 0.0,
     reviews: t.reviewCount,
     actionLabel: t.online ? 'Dispatch' : 'Re-assign',
   );
@@ -350,7 +351,7 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                             style: const TextStyle(
                                 fontSize: 13, fontWeight: FontWeight.w600)),
                         subtitle: Text(
-                            '${req.address.isNotEmpty ? req.address : req.category} • ${context.l10n.liveMapQuotesReceived(req.quoteCount)}',
+                            '${req.address.isNotEmpty ? req.address : CategoryService.instance.nameOf(req.category, context: context)} • ${context.l10n.liveMapQuotesReceived(req.quoteCount)}',
                             style: const TextStyle(fontSize: 11)),
                         trailing: ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -366,7 +367,7 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                                 .add({
                               'title': 'Manual Dispatch Assigned',
                               'detail':
-                                  '${r.name} dispatched to "${req.title}" (${req.address.isNotEmpty ? req.address : req.category})',
+                                  '${r.name} dispatched to "${req.title}" (${req.address.isNotEmpty ? req.address : CategoryService.instance.nameOf(req.category, context: context)})',
                               'tagLabel': 'DISPATCHED',
                               'timeAgo': 'Just now',
                               'iconKey': 'bolt',

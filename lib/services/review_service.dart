@@ -1,14 +1,18 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 
-// review service
 class ReviewService {
   ReviewService._();
   static final ReviewService instance = ReviewService._();
 
   final _db = FirebaseFirestore.instance;
 
-  // submit review
+  // submit customer review
   Future<void> submitReview({
     required String customerId,
     required String customerName,
@@ -22,7 +26,6 @@ class ReviewService {
   }) async {
     final batch = _db.batch();
 
-    // prevent duplicates
     final reviewRef = _db.collection(FirestorePaths.reviews).doc(bookingId);
     batch.set(reviewRef, {
       'customerId': customerId,
@@ -41,18 +44,41 @@ class ReviewService {
       final bookingRef =
           _db.collection(FirestorePaths.bookings).doc(bookingId);
       batch.update(bookingRef, {
-        'status': 'completed',
         'rating': rating.clamp(1, 5),
+        'reviewedAt': FieldValue.serverTimestamp(),
       });
     }
 
-    if (jobRequestId.isNotEmpty) {
-      final jobRef =
-          _db.collection(FirestorePaths.jobRequests).doc(jobRequestId);
-      batch.update(jobRef, {'status': 'completed'});
-    }
-
     await batch.commit();
+
+    // trigger server side rating and jobs count recalculation
+    notifyReviewSubmitted(bookingId).catchError((_) {});
+  }
+
+  // call server endpoint to recompute provider rating and jobs count
+  Future<void> notifyReviewSubmitted(String bookingId) async {
+    if (bookingId.isEmpty) return;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final token = await user.getIdToken();
+      if (token == null || token.isEmpty) return;
+
+      final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+      final uri = Uri.parse('$baseUrl/review-submitted');
+
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'bookingId': bookingId}),
+      ).timeout(const Duration(seconds: 10));
+    } catch (e) {
+      debugPrint('review submitted notify error $e');
+    }
   }
 
   // stream tech reviews

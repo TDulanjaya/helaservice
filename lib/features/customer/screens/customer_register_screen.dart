@@ -5,13 +5,10 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/otp_service.dart';
-import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
-import '../../../utils/app_localizations_helpers.dart';
 import 'home_discovery_screen.dart';
 import '../../auth/screens/email_otp_screen.dart';
-import '../../../shared/widgets/searchable_select_picker.dart';
 
 class CustomerRegisterScreen extends StatefulWidget {
   const CustomerRegisterScreen({super.key});
@@ -25,13 +22,9 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  String _district = 'Colombo';
   bool _agreed = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
-
-  List<String> get _districts => LocationUtils.districtCoordinates.keys.toList();
 
   @override
   void dispose() {
@@ -39,7 +32,6 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -100,8 +92,6 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                 displayName: name,
                 role: AppRole.customer,
                 phone: phone,
-                address: _addressController.text.trim(),
-                district: _district,
               );
 
               if (!mounted) return;
@@ -270,36 +260,6 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
                 prefixText: '+94 ',
                 prefixIcon: Icons.phone_outlined,
                 isDarkField: context.isDark,
-              ),
-              const SizedBox(height: 16),
-              _Field(
-                label: context.l10n.homeAddressLabel,
-                controller: _addressController,
-                hint: context.l10n.addressHint,
-                prefixIcon: Icons.location_on_outlined,
-                isDarkField: context.isDark,
-              ),
-              const SizedBox(height: 16),
-              SearchableSelectPicker<String>(
-                label: context.l10n.districtLabel,
-                selectedValue: _districts.contains(_district) ? _district : _districts.first,
-                prefixIcon: Icons.map_outlined,
-                isDarkField: context.isDark,
-                modalTitle: context.l10n.districtLabel,
-                searchHint: 'Search district...',
-                items: _districts.map((d) {
-                  final localizedName = LocalizedData.getDistrict(context, d);
-                  final sin = LocalizedData.districts[d]?['si'] ?? '';
-                  final tam = LocalizedData.districts[d]?['ta'] ?? '';
-                  return SearchableSelectItem<String>(
-                    value: d,
-                    label: localizedName,
-                    subtitle: localizedName != d ? d : null,
-                    icon: Icons.location_on_outlined,
-                    searchTerms: [d, sin, tam],
-                  );
-                }).toList(),
-                onSelected: (v) => setState(() => _district = v),
               ),
               const SizedBox(height: 20),
               CheckboxListTile(

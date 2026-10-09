@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
+import '../../../constants/job_status.dart';
+import '../../../shared/widgets/status_pill.dart';
 import '../../../models/technician.dart';
 import '../../../models/booking.dart';
 import '../../../models/job_request.dart';
 import '../../../models/quote.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
+import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
@@ -20,6 +25,13 @@ import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../screens/live_tracking_screen.dart';
 import '../screens/job_quotes_screen.dart';
 import '../screens/post_job_request_screen.dart';
+import '../screens/direct_chat_screen.dart';
+import '../screens/rating_completion_screen.dart';
+import 'customer_payment_card.dart';
+import '../../admin/widgets/booking_timeline_sheet.dart';
+import '../../../services/call_service.dart';
+import '../../../shared/widgets/reschedule_sheet.dart';
+import '../../../shared/widgets/job_photos_sheet.dart';
 
 class CustomerBookingsView extends StatefulWidget {
   final VoidCallback? onTrackPressed;
@@ -31,11 +43,14 @@ class CustomerBookingsView extends StatefulWidget {
 }
 
 class _CustomerBookingsViewState extends State<CustomerBookingsView> {
-  int _activeTab = 0; // 0 = Confirmed Bookings, 1 = My Job Posts
+  int _activeTab = 0; // zero for bookings or one for jobs or two for history
 
   @override
   Widget build(BuildContext context) {
-    final customerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final roleProvider = pv.Provider.of<RoleProvider>(context);
+    final customerId = roleProvider.currentUser?.id.isNotEmpty == true
+        ? roleProvider.currentUser!.id
+        : (FirebaseAuth.instance.currentUser?.uid ?? '');
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +68,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const ConversationsInboxScreen()),
+                      builder: (_) => const ConversationsInboxScreen(),
+                    ),
                   );
                 },
               ),
@@ -75,66 +91,15 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                 padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _activeTab = 0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 9),
-                          decoration: BoxDecoration(
-                            color: _activeTab == 0
-                                ? AppColors.primary
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text(
-                              context.l10n.myBookings,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: _activeTab == 0
-                                    ? Colors.white
-                                    : context.themeTextSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _activeTab = 1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 9),
-                          decoration: BoxDecoration(
-                            color: _activeTab == 1
-                                ? AppColors.primary
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text(
-                              context.l10n.myJobPosts,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: _activeTab == 1
-                                    ? Colors.white
-                                    : context.themeTextSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildTabButton(0, context.l10n.myBookings),
+                    _buildTabButton(1, context.l10n.myJobPosts),
+                    _buildTabButton(2, 'History'),
                   ],
                 ),
               ),
             ),
             Expanded(
-              child: _activeTab == 0
-                  ? _buildBookingsStream(context, customerId)
-                  : _buildJobRequestsStream(context, customerId),
+              child: _buildCurrentTabContent(context, customerId),
             ),
           ],
         ),
@@ -142,275 +107,78 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
     );
   }
 
+  Widget _buildTabButton(int index, String label) {
+    final isSelected = _activeTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _activeTab = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : context.themeTextSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentTabContent(BuildContext context, String customerId) {
+    if (customerId.isEmpty) {
+      return Center(
+        child: Text(
+          'Please sign in to view your bookings',
+          style: TextStyle(color: context.themeTextSecondary),
+        ),
+      );
+    }
+
+    switch (_activeTab) {
+      case 0:
+        return _buildBookingsStream(context, customerId);
+      case 1:
+        return _buildJobRequestsStream(context, customerId);
+      case 2:
+      default:
+        return _buildHistoryStream(context, customerId);
+    }
+  }
+
   Widget _buildBookingsStream(BuildContext context, String customerId) {
     return StreamBuilder<List<Booking>>(
       stream: BookingRepository().streamBookingsForCustomer(customerId),
       builder: (context, snapshot) {
-            final bookings = snapshot.data ?? [];
-            final activeBookings = bookings
-                .where(
-                    (b) => b.status != 'completed' && b.status != 'cancelled')
-                .toList();
-            final pastBookings = bookings
-                .where(
-                    (b) => b.status == 'completed' || b.status == 'cancelled')
-                .toList();
-
-            if (bookings.isEmpty) {
-              return Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.calendar_month_outlined,
-                            size: 44, color: AppColors.primary),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(context.l10n.noBookingsRecorded,
-                          style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 6),
-                      Text(context.l10n.browseArtisansExplore,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 13, color: context.themeTextSecondary)),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                  16, 8, 16, AppBottomNav.contentBottomPadding),
-              children: [
-                if (activeBookings.isNotEmpty) ...[
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        context.l10n.activeServiceVisit,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 0.8,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  ...activeBookings.map((b) => AppCard(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(16),
-                        borderColor: AppColors.primary,
-                        borderWidth: 1.5,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: b.status == 'in_progress' ||
-                                            b.status == 'dispatched'
-                                        ? AppColors.primary
-                                            .withValues(alpha: 0.15)
-                                        : (context.isDark
-                                            ? const Color(0xFF1B382B)
-                                            : const Color(0xFFE8F5E9)),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    LocalizedData.getStatus(context, b.status),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: b.status == 'in_progress' ||
-                                              b.status == 'dispatched'
-                                          ? AppColors.primary
-                                          : (context.isDark
-                                              ? const Color(0xFF81C784)
-                                              : const Color(0xFF2E7D32)),
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  b.relativeTime.isNotEmpty
-                                      ? b.relativeTime
-                                      : context.l10n.today,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              b.title.isNotEmpty
-                                  ? b.title
-                                  : context.l10n.serviceDiagnostic,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                UserAvatar(
-                                  uid: b.providerId,
-                                  displayName: b.providerName,
-                                  radius: 18,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        b.providerName.isNotEmpty
-                                            ? b.providerName
-                                            : (b.providerId.isNotEmpty
-                                                ? b.providerId
-                                                : context.l10n.technician),
-                                        style: const TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        context.l10n.roleProvider,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: context.themeTextSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (b.estRate.isNotEmpty)
-                                  Text(
-                                    b.estRate,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            if (b.location.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on_outlined,
-                                      size: 16,
-                                      color: context.themeTextSecondary),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      b.location,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: context.themeTextSecondary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                            const SizedBox(height: 16),
-                            PrimaryButton(
-                              label: context.l10n.openLiveGpsTracking,
-                              leadingIcon: Icons.navigation_outlined,
-                              onPressed: widget.onTrackPressed ??
-                                  () async {
-                                    final Technician? tech =
-                                        await TechnicianRepository()
-                                            .getById(b.providerId);
-                                    if (!context.mounted) return;
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => LiveTrackingScreen(
-                                          technician: tech,
-                                          booking: b,
-                                          showBottomNav: false,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
-                if (pastBookings.isNotEmpty) ...[
-                  const SizedBox(height: 20),
-                  Text(
-                    context.l10n.pastCompletedServices,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 12),
-                  ...pastBookings.map((b) => _PastBookingCard(
-                        title: b.title.isNotEmpty
-                            ? b.title
-                            : context.l10n.serviceDiagnostic,
-                        technician: b.providerName.isNotEmpty
-                            ? b.providerName
-                            : context.l10n.technician,
-                        date: b.time.isNotEmpty
-                            ? b.time
-                            : LocalizedData.getStatus(context, 'completed'),
-                        amount: b.estRate.isNotEmpty ? b.estRate : 'LKR 2,500',
-                        status: LocalizedData.getStatus(context, b.status),
-                        rating: b.status.toLowerCase() == 'completed'
-                            ? (b.rating ?? 5)
-                            : 0,
-                      )),
-                ],
-              ],
-            );
-          },
-        );
-  }
-
-  Widget _buildJobRequestsStream(BuildContext context, String customerId) {
-    return StreamBuilder<List<JobRequest>>(
-      stream: JobRequestRepository().streamCustomerRequests(customerId),
-      builder: (context, snapshot) {
-        final requests = snapshot.data ?? [];
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (requests.isEmpty) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error loading bookings: ${snapshot.error}',
+              style: TextStyle(color: context.themeTextSecondary),
+            ),
+          );
+        }
+
+        final bookings = snapshot.data ?? [];
+        final activeBookings = bookings
+            .where((b) => !JobStatus.isTerminal(b.status))
+            .toList();
+
+        if (activeBookings.isEmpty) {
           return Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -423,19 +191,486 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                       color: AppColors.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.assignment_outlined,
-                        size: 44, color: AppColors.primary),
+                    child: const Icon(
+                      Icons.calendar_month_outlined,
+                      size: 44,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text(context.l10n.noJobPostsYet,
+                  Text(
+                    context.l10n.noBookingsRecorded,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    context.l10n.browseArtisansExplore,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(
+              16, 8, 16, AppBottomNav.contentBottomPadding),
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.activeServiceVisit,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...activeBookings.map((b) => _buildActiveBookingCard(context, b)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildActiveBookingCard(BuildContext context, Booking b) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.primary,
+      borderWidth: 1.5,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RescheduleProposalBanner(
+            booking: b,
+            currentUid: currentUid,
+            actorRole: 'customer',
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              StatusPill.fromStatus(b.status),
+              Text(
+                b.relativeTime.isNotEmpty ? b.relativeTime : context.l10n.today,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            b.title.isNotEmpty ? b.title : context.l10n.serviceDiagnostic,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          if (b.entryInstructions != null &&
+              b.entryInstructions!.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              b.entryInstructions!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.themeTextSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              UserAvatar(
+                uid: b.providerId,
+                displayName: b.providerName,
+                radius: 18,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      b.providerName.isNotEmpty
+                          ? b.providerName
+                          : (b.providerId.isNotEmpty
+                              ? b.providerId
+                              : context.l10n.technician),
                       style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w800)),
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      context.l10n.roleProvider,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (b.estRate.isNotEmpty)
+                Text(
+                  b.estRate,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primary,
+                  ),
+                ),
+            ],
+          ),
+          if (b.location.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    size: 16, color: context.themeTextSecondary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    b.location,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.themeTextSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          StreamBuilder<String?>(
+            stream: BookingRepository().streamBookingPin(b.id),
+            builder: (context, pinSnap) {
+              final pin = pinSnap.data;
+              if (pin == null || pin.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                margin: const EdgeInsets.only(top: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.key_rounded,
+                        color: AppColors.primary, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Text(
+                                'Completion PIN: ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                pin,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Share this PIN with provider once service is completed at your premises.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                          if ((b.pinAttempts ?? 0) >= 5) ...[
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  await BookingRepository().resetPinAttempts(b.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(context.l10n.pinAttemptsResetZero),
+                                        backgroundColor: AppColors.success,
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.refresh_rounded, size: 16),
+                                label: const Text(
+                                  'Reset PIN attempts',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.error,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          if (b.status == JobStatus.inProgress ||
+              b.beforePhotos.isNotEmpty ||
+              b.afterPhotos.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => JobPhotosSheet.show(
+                context,
+                booking: b,
+                isProvider: false,
+              ),
+              icon: const Icon(Icons.photo_library_outlined, size: 16),
+              label: Text(
+                '${context.l10n.jobPhotos} (${b.beforePhotos.length + b.afterPhotos.length})',
+                style: const TextStyle(
+                    fontSize: 12.5, fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(42),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          PrimaryButton(
+            label: context.l10n.openLiveGpsTracking,
+            leadingIcon: Icons.navigation_outlined,
+            onPressed: widget.onTrackPressed ??
+                () async {
+                  final Technician? tech =
+                      await TechnicianRepository().getById(b.providerId);
+                  if (!context.mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LiveTrackingScreen(
+                        technician: tech,
+                        booking: b,
+                        showBottomNav: false,
+                      ),
+                    ),
+                  );
+                },
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              if (b.providerPhone.isNotEmpty) ...[
+                IconSquareButton(
+                  icon: Icons.call,
+                  size: 42,
+                  iconSize: 18,
+                  radius: 12,
+                  tooltip: context.l10n.call,
+                  onTap: () => CallService.instance.startCall(
+                    context: context,
+                    calleePhone: b.providerPhone,
+                    calleeName: b.providerName,
+                    bookingId: b.id,
+                    calleeUid: b.providerId,
+                    calleeRole: 'provider',
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DirectChatScreen(
+                          otherPartyId: b.providerId,
+                          otherPartyName: b.providerName.isNotEmpty
+                              ? b.providerName
+                              : context.l10n.roleProvider,
+                          otherPartyRole: 'provider',
+                          bookingId: b.id,
+                          jobRequestId: b.jobRequestId,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                  label: Text(
+                    context.l10n.chat,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 12.5),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              if (b.status == JobStatus.pending || b.status == JobStatus.confirmed) ...[
+                const SizedBox(width: 8),
+                IconSquareButton(
+                  icon: Icons.calendar_month_outlined,
+                  size: 42,
+                  iconSize: 18,
+                  radius: 12,
+                  tooltip: context.l10n.rescheduleBooking,
+                  onTap: () => RescheduleSheet.show(
+                    context: context,
+                    booking: b,
+                    currentUid: currentUid,
+                    actorRole: 'customer',
+                  ),
+                ),
+              ],
+              if (JobStatus.canCancel(b.status)) ...[
+                const SizedBox(width: 8),
+                IconSquareButton(
+                  icon: Icons.close_rounded,
+                  size: 42,
+                  iconSize: 18,
+                  radius: 12,
+                  color: AppColors.error,
+                  tooltip: context.l10n.cancel,
+                  onTap: () => _cancelBooking(context, b),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobRequestsStream(BuildContext context, String customerId) {
+    return StreamBuilder<List<JobRequest>>(
+      stream: JobRequestRepository().streamCustomerRequests(customerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 40, color: AppColors.error),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Could not load job posts: ${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final allRequests = snapshot.data ?? [];
+        // show open and bidding jobs
+        final openRequests =
+            allRequests.where((r) => r.status == 'open').toList();
+
+        if (openRequests.isEmpty) {
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.assignment_outlined,
+                      size: 44,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.l10n.noJobPostsYet,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     context.l10n.noJobPostsDesc,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 13, color: context.themeTextSecondary),
+                      fontSize: 13,
+                      color: context.themeTextSecondary,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
@@ -445,7 +680,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const PostJobRequestScreen()),
+                          builder: (_) => const PostJobRequestScreen(),
+                        ),
                       );
                     },
                   ),
@@ -463,30 +699,639 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  context.l10n.yourPostedJobs(requests.length),
+                  context.l10n.yourPostedJobs(openRequests.length),
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w800),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => const PostJobRequestScreen()),
+                        builder: (_) => const PostJobRequestScreen(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.add_circle_outline, size: 16),
-                  label: Text(context.l10n.postNewJob,
-                      style: const TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  label: Text(
+                    context.l10n.postNewJob,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            ...requests.map((r) => _CustomerJobRequestCard(request: r)),
+            ...openRequests.map((r) => _CustomerJobRequestCard(request: r)),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildHistoryStream(BuildContext context, String customerId) {
+    return StreamBuilder<List<Booking>>(
+      stream: BookingRepository().streamBookingsForCustomer(customerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error loading history: ${snapshot.error}',
+              style: TextStyle(color: context.themeTextSecondary),
+            ),
+          );
+        }
+
+        final bookings = snapshot.data ?? [];
+        final historyBookings = bookings
+            .where((b) => JobStatus.isTerminal(b.status))
+            .toList();
+
+        if (historyBookings.isEmpty) {
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.history_rounded,
+                      size: 44,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No Service History Yet',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Completed and past bookings will appear here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(
+              16, 8, 16, AppBottomNav.contentBottomPadding),
+          children: [
+            Text(
+              context.l10n.pastCompletedServices,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            ...historyBookings.map((b) => _HistoryBookingCard(
+                  booking: b,
+                  onTap: () => _showJobHistoryDetailModal(context, b),
+                )),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showJobHistoryDetailModal(BuildContext context, Booking booking) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _JobHistoryDetailModal(booking: booking),
+    );
+  }
+
+  Future<void> _cancelBooking(BuildContext context, Booking booking) async {
+    if (!JobStatus.canCancel(booking.status)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.cannotCancelInProgressBooking),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final reasons = [
+      context.l10n.cancelReasonCustomerRequest,
+      context.l10n.cancelReasonScheduleConflict,
+      context.l10n.cancelReasonPriceDispute,
+      context.l10n.cancelReasonOther,
+    ];
+    String selectedReason = reasons.first;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            context.l10n.cancelBookingOrQuote,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.cancelBookingPrompt,
+                style: TextStyle(fontSize: 13, color: ctx.themeTextSecondary),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.l10n.cancellationReasonPrompt,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: reasons
+                    .map((r) => DropdownMenuItem(
+                          value: r,
+                          child: Text(r, style: const TextStyle(fontSize: 13)),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setDialogState(() => selectedReason = val);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(context.l10n.confirmCancellation),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await BookingRepository().cancelBooking(
+          bookingId: booking.id,
+          reason: selectedReason,
+          cancelledBy: 'customer',
+          jobRequestId: booking.jobRequestId,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.bookingCancelledSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+}
+
+class _HistoryBookingCard extends StatelessWidget {
+  final Booking booking;
+  final VoidCallback onTap;
+
+  const _HistoryBookingCard({
+    required this.booking,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  booking.relativeTime.isNotEmpty
+                      ? booking.relativeTime
+                      : (booking.time.isNotEmpty ? booking.time : 'Past service'),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                StatusPill.fromStatus(booking.status),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              booking.title.isNotEmpty
+                  ? booking.title
+                  : context.l10n.serviceDiagnostic,
+              style:
+                  const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          booking.providerName.isNotEmpty
+                              ? context.l10n.byTechnician(booking.providerName)
+                              : context.l10n.technician,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (booking.rating != null && booking.rating! > 0) ...[
+                        const SizedBox(width: 6),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(
+                            booking.rating!,
+                            (index) => const Icon(Icons.star,
+                                size: 13, color: AppColors.secondaryContainer),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  booking.estRate.isNotEmpty ? booking.estRate : 'LKR --',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: context.themeMuted,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _JobHistoryDetailModal extends StatelessWidget {
+  final Booking booking;
+
+  const _JobHistoryDetailModal({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    final isCompleted = booking.status == JobStatus.completed;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      booking.title.isNotEmpty
+                          ? booking.title
+                          : context.l10n.serviceDiagnostic,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  StatusPill.fromStatus(booking.status),
+                ],
+              ),
+              const SizedBox(height: 14),
+              AppCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.calendar_today_outlined,
+                      label: context.l10n.serviceDate,
+                      value: booking.relativeTime.isNotEmpty
+                          ? booking.relativeTime
+                          : (booking.time.isNotEmpty ? booking.time : 'Completed'),
+                    ),
+                    const Divider(height: 16),
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.location_on_outlined,
+                      label: context.l10n.location,
+                      value: booking.location.isNotEmpty
+                          ? booking.location
+                          : 'Not specified',
+                    ),
+                    const Divider(height: 16),
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.payments_outlined,
+                      label: context.l10n.agreedPrice,
+                      value: booking.estRate.isNotEmpty
+                          ? booking.estRate
+                          : 'Completed',
+                    ),
+                    if (isCompleted) ...[
+                      const Divider(height: 16),
+                      _buildDetailRow(
+                        context,
+                        icon: Icons.verified_user_outlined,
+                        label: context.l10n.serviceVerification,
+                        value: context.l10n.pinVerified,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => BookingTimelineSheet.show(
+                  context,
+                  bookingId: booking.id,
+                  bookingTitle: booking.title,
+                ),
+                icon: const Icon(Icons.timeline_rounded, size: 16),
+                label: Text(context.l10n.viewTimeline),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              if (isCompleted) ...[
+                CustomerPaymentCard(
+                  booking: booking,
+                  onUpdated: () => Navigator.pop(context),
+                ),
+              ],
+              if (booking.beforePhotos.isNotEmpty ||
+                  booking.afterPhotos.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: () => JobPhotosSheet.show(
+                    context,
+                    booking: booking,
+                    isProvider: false,
+                  ),
+                  icon: const Icon(Icons.photo_library_rounded, size: 16),
+                  label: Text(
+                    '${context.l10n.jobPhotos} (${booking.beforePhotos.length + booking.afterPhotos.length})',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.providerDetailsTitle,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 10),
+              AppCard(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    UserAvatar(
+                      uid: booking.providerId,
+                      displayName: booking.providerName,
+                      radius: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booking.providerName.isNotEmpty
+                                ? booking.providerName
+                                : context.l10n.technician,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            context.l10n.roleProvider,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (booking.providerPhone.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: IconSquareButton.small(
+                          icon: Icons.call,
+                          tooltip: context.l10n.call,
+                          onTap: () => CallService.instance.startCall(
+                            context: context,
+                            calleePhone: booking.providerPhone,
+                            calleeName: booking.providerName,
+                            bookingId: booking.id,
+                            calleeUid: booking.providerId,
+                            calleeRole: 'provider',
+                          ),
+                        ),
+                      ),
+                    IconSquareButton.small(
+                      icon: Icons.chat_bubble_outline,
+                      tooltip: context.l10n.chat,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DirectChatScreen(
+                              otherPartyId: booking.providerId,
+                              otherPartyName: booking.providerName,
+                              otherPartyRole: 'provider',
+                              bookingId: booking.id,
+                              jobRequestId: booking.jobRequestId,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (isCompleted) ...[
+                if (booking.rating != null && booking.rating! > 0) ...[
+                  const Text(
+                    'Your Rating & Review',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        ...List.generate(
+                          booking.rating!,
+                          (i) => const Icon(Icons.star_rounded,
+                              size: 18, color: AppColors.secondaryContainer),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${booking.rating}.0 / 5.0',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  PrimaryButton(
+                    label: context.l10n.rateServiceProvider,
+                    leadingIcon: Icons.star_rounded,
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final tech = await TechnicianRepository()
+                              .getById(booking.providerId) ??
+                          Technician.placeholder(
+                            id: booking.providerId,
+                            name: booking.providerName,
+                          );
+                      if (context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RatingCompletionScreen(
+                              technician: tech,
+                              bookingId: booking.id,
+                              jobRequestId: booking.jobRequestId ?? '',
+                              jobTitle: booking.title,
+                              totalPrice: booking.agreedPrice,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: context.themeTextSecondary),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: context.themeTextSecondary,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -575,35 +1420,65 @@ class _CustomerJobRequestCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (request.isExpired ? AppColors.error : statusColor).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      _getStatusLabel(context, request.status),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: request.isExpired ? AppColors.error : statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          request.isExpired ? context.l10n.expiredPill : _getStatusLabel(context, request.status),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: request.isExpired ? AppColors.error : statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (request.bookingType == 'scheduled') ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_month_outlined, size: 12, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            request.scheduledSlot ?? 'Scheduled',
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
               Container(
                 padding:
@@ -613,7 +1488,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  LocalizedData.getCategory(context, request.category),
+                  CategoryService.instance.nameOf(request.category, context: context),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -703,158 +1578,207 @@ class _CustomerJobRequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          StreamBuilder<List<Quote>>(
-            stream:
-                JobRequestRepository().streamQuotesForRequest(request.id),
-            builder: (ctx, quoteSnap) {
-              final quotes = quoteSnap.data ?? [];
-              final quotesCount = quotes.length;
-
-              return SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => JobQuotesScreen(
-                          requestId: request.id,
-                          jobTitle: request.title,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                  ),
-                  icon: Icon(
-                    quotesCount > 0
-                        ? Icons.mark_chat_unread_outlined
-                        : Icons.remove_red_eye_outlined,
-                    size: 17,
-                  ),
-                  label: Text(
-                    quotesCount > 0
-                        ? context.l10n.reviewQuotesCount(quotesCount)
-                        : context.l10n.waitingForQuotes,
-                    style: const TextStyle(
-                        fontSize: 12.5, fontWeight: FontWeight.w700),
+          if (request.status == 'cancelled') ...[
+            if (request.cancellationReason != null &&
+                request.cancellationReason!.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '${context.l10n.cancellationReasonPrompt}: ${request.cancellationReason}',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.error.withValues(alpha: 0.9),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            ],
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _repostJob(context),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: Text(context.l10n.repostJob),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _deleteJob(context),
+                  icon: const Icon(Icons.delete_outline,
+                      size: 16, color: AppColors.error),
+                  label: Text(context.l10n.deleteJob,
+                      style: const TextStyle(color: AppColors.error)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else
+            StreamBuilder<List<Quote>>(
+              stream: JobRequestRepository().streamQuotesForRequest(request.id),
+              builder: (ctx, quoteSnap) {
+                final quotes = quoteSnap.data ?? [];
+                final quotesCount = quotes.length;
+
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => JobQuotesScreen(
+                            requestId: request.id,
+                            jobTitle: request.title,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                    ),
+                    icon: Icon(
+                      quotesCount > 0
+                          ? Icons.mark_chat_unread_outlined
+                          : Icons.remove_red_eye_outlined,
+                      size: 17,
+                    ),
+                    label: Text(
+                      quotesCount > 0
+                          ? context.l10n.reviewQuotesCount(quotesCount)
+                          : context.l10n.waitingForQuotes,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
   }
-}
 
-class _PastBookingCard extends StatelessWidget {
-  final String title;
-  final String technician;
-  final String date;
-  final String amount;
-  final String status;
-  final int rating;
-
-  const _PastBookingCard({
-    required this.title,
-    required this.technician,
-    required this.date,
-    required this.amount,
-    required this.status,
-    required this.rating,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(14),
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                date,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: context.themeTextSecondary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: context.themeSurfaceContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  status,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        context.l10n.byTechnician(technician),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.themeTextSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (rating > 0) ...[
-                      const SizedBox(width: 6),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(
-                          rating,
-                          (index) => const Icon(Icons.star,
-                              size: 13, color: AppColors.secondaryContainer),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                amount,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+  Future<void> _repostJob(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.repostJob,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.repostJobConfirm,
+            style: TextStyle(color: ctx.themeTextSecondary)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.repostJob),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().repostJobRequest(request.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.repostJobSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteJob(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.deleteJob,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.deleteJobConfirm,
+            style: TextStyle(color: ctx.themeTextSecondary)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.deleteJob),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().deleteJobRequest(request.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.deleteJobSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
   }
 }

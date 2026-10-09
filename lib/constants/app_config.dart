@@ -56,6 +56,10 @@ class AppConfig {
 
   // api secret key
   static String get apiSecretKey {
-    return getString('api_secret_key', fallback: 'hela_app_sec_k9827x_prod');
+    final key = getString('api_secret_key', fallback: '');
+    if (key.isEmpty) {
+      debugPrint('[AppConfig] Warning: Firebase Remote Config is missing api_secret_key.');
+    }
+    return key;
   }
 }

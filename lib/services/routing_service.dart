@@ -19,6 +19,14 @@ class RouteInfo {
     required this.formattedDuration,
   });
 
+  factory RouteInfo.empty() => const RouteInfo(
+        points: [],
+        distanceKm: 0,
+        durationMinutes: 0,
+        formattedDistance: '',
+        formattedDuration: '',
+      );
+
   factory RouteInfo.fallback(LatLng start, LatLng end) {
     final straightKm = LocationUtils.calculateDistanceKm(
       start.latitude,

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
 enum PrimaryButtonVariant {
-  amber, // Amber button
-  dark, // Dark button that flips in dark mode
-  secondary, // Bordered card button
+  amber, // amber button
+  dark, // dark button
+  secondary, // bordered card button
 }
 
 

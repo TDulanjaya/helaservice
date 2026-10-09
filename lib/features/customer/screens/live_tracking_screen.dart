@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/app_theme.dart';
+import '../../../constants/job_status.dart';
 import '../../../models/technician.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/outline_button.dart';
@@ -17,7 +19,6 @@ import '../../../utils/location_utils.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../../../shared/widgets/full_screen_map_page.dart';
 import '../../../services/routing_service.dart';
-import '../../../utils/map_launcher.dart';
 import '../../../models/booking.dart';
 import '../../../services/live_location_service.dart';
 import 'direct_chat_screen.dart';
@@ -25,6 +26,10 @@ import 'rating_completion_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home_discovery_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../widgets/customer_payment_card.dart';
+import '../../../services/call_service.dart';
+import '../../../shared/widgets/reschedule_sheet.dart';
+import '../../../shared/widgets/job_photos_sheet.dart';
 
 class LiveTrackingScreen extends StatelessWidget {
   final Technician? technician;
@@ -35,7 +40,7 @@ class LiveTrackingScreen extends StatelessWidget {
     super.key,
     this.technician,
     this.booking,
-    this.showBottomNav = true,
+    this.showBottomNav = false,
   });
 
   @override
@@ -74,7 +79,7 @@ class LiveTrackingScreen extends StatelessWidget {
         }
         final bookings = bSnapshot.data ?? [];
         final activeBooking = bookings
-            .where((b) => b.status != 'completed' && b.status != 'cancelled')
+            .where((b) => !JobStatus.isTerminal(b.status))
             .firstOrNull;
 
         if (activeBooking == null) {
@@ -153,7 +158,7 @@ class LiveTrackingScreen extends StatelessWidget {
       ),
       bottomNavigationBar: showBottomNav
           ? AppBottomNav(
-              currentIndex: 2,
+              currentIndex: 1,
               onTap: (i) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
@@ -165,7 +170,6 @@ class LiveTrackingScreen extends StatelessWidget {
               items: [
                 NavItem(Icons.explore, context.l10n.navExplore),
                 NavItem(Icons.calendar_month, context.l10n.navBookings),
-                NavItem(Icons.near_me, context.l10n.navTracking),
                 NavItem(Icons.person, context.l10n.navProfile),
               ],
             )
@@ -219,46 +223,175 @@ class LiveTrackingScreen extends StatelessWidget {
                       final liveTechPoint = locSnapshot.data;
                       final isLive = liveTechPoint != null;
 
-                      final LatLng customerPoint;
-                      if (currentBooking?.customerLatitude != null &&
-                          currentBooking?.customerLongitude != null) {
-                        customerPoint = LatLng(
-                            currentBooking!.customerLatitude!,
-                            currentBooking.customerLongitude!);
-                      } else {
-                        final baseCoord = LocationUtils.getDistrictCoordinates(
-                            tech.serviceArea.isNotEmpty
-                                ? tech.serviceArea
-                                : 'Colombo');
-                        customerPoint = LatLng(baseCoord.lat, baseCoord.lng);
-                      }
+                      final hasCustomerLocation =
+                          currentBooking?.customerLatitude != null &&
+                              currentBooking?.customerLongitude != null;
 
-                      final techPoint = liveTechPoint ??
-                          LatLng(customerPoint.latitude - 0.008,
-                              customerPoint.longitude - 0.012);
-                      final midPoint = LatLng(
-                        (customerPoint.latitude + techPoint.latitude) / 2,
-                        (customerPoint.longitude + techPoint.longitude) / 2,
-                      );
+                      final techBaseCoords = tech.serviceArea.isNotEmpty
+                          ? LocationUtils.getDistrictCoordinates(tech.serviceArea)
+                          : const (lat: 6.9271, lng: 79.8612);
+                      final techBaseLatLng =
+                          LatLng(techBaseCoords.lat, techBaseCoords.lng);
+
+                      final LatLng customerPoint = hasCustomerLocation
+                          ? LatLng(currentBooking!.customerLatitude!,
+                              currentBooking.customerLongitude!)
+                          : (liveTechPoint ?? techBaseLatLng);
+
+                      final LatLng techPoint = liveTechPoint ??
+                          (tech.serviceArea.isNotEmpty
+                              ? techBaseLatLng
+                              : LatLng(customerPoint.latitude - 0.008,
+                                  customerPoint.longitude - 0.012));
+
+                      final midPoint = hasCustomerLocation
+                          ? LatLng(
+                              (customerPoint.latitude + techPoint.latitude) / 2,
+                              (customerPoint.longitude + techPoint.longitude) /
+                                  2,
+                            )
+                          : techPoint;
 
                       return FutureBuilder<RouteInfo>(
-                        future: RoutingService().getDrivingRoute(
-                          origin: techPoint,
-                          destination: customerPoint,
-                        ),
+                        future: hasCustomerLocation
+                            ? RoutingService().getDrivingRoute(
+                                origin: techPoint,
+                                destination: customerPoint,
+                              )
+                            : Future.value(RouteInfo.empty()),
                         builder: (context, snapshot) {
                           final route = snapshot.data ??
                               RouteInfo.fallback(techPoint, customerPoint);
 
                           return Column(
                             children: [
+                              if (!hasCustomerLocation)
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  margin: const EdgeInsets.only(bottom: 14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: AppColors.warning
+                                          .withValues(alpha: 0.4),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                              Icons.location_off_rounded,
+                                              color: AppColors.warning,
+                                              size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Customer location not available',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 14,
+                                                color: context.themeTextPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Coordinates were not attached to this booking. Contact the service provider below.',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: context.themeTextSecondary),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          if (tech.phone.isNotEmpty)
+                                            Expanded(
+                                              child: ElevatedButton.icon(
+                                                onPressed: () =>
+                                                    CallService.instance.startCall(
+                                                      context: context,
+                                                      calleePhone: tech.phone,
+                                                      calleeName: tech.name,
+                                                      bookingId: currentBooking?.id,
+                                                      calleeUid: tech.id,
+                                                      calleeRole: 'provider',
+                                                    ),
+                                                icon: const Icon(Icons.call,
+                                                    size: 15),
+                                                label: Text(context.l10n.callTech),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      AppColors.primary,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                          vertical: 8),
+                                                ),
+                                              ),
+                                            ),
+                                          if (tech.phone.isNotEmpty)
+                                            const SizedBox(width: 8),
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        DirectChatScreen(
+                                                      otherPartyId: tech.id,
+                                                      otherPartyName: tech.name,
+                                                      otherPartyRole:
+                                                          tech.title,
+                                                      otherPartyPhone:
+                                                          tech.phone,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              icon: const Icon(
+                                                  Icons.chat_bubble_outline,
+                                                  size: 15),
+                                              label: Text(context.l10n.chat),
+                                              style: OutlinedButton.styleFrom(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               _CustomerLiveTrackingMapCard(
                                 techPoint: techPoint,
                                 customerPoint: customerPoint,
                                 midPoint: midPoint,
                                 techName: tech.name,
-                                routePoints: route.points,
+                                routePoints: hasCustomerLocation
+                                    ? route.points
+                                    : null,
                                 isLive: isLive,
+                                hasCustomerLocation: hasCustomerLocation,
                               ),
                               const SizedBox(height: 16),
                               AppCard(
@@ -347,6 +480,125 @@ class LiveTrackingScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (currentBooking != null && currentBooking.id.isNotEmpty) ...[
+                  StreamBuilder<String?>(
+                    stream: BookingRepository().streamBookingPin(currentBooking.id),
+                    builder: (context, pinSnap) {
+                      final pin = pinSnap.data;
+                      if (pin == null || pin.isEmpty) return const SizedBox.shrink();
+                      return Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.key_rounded, color: AppColors.primary, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Completion PIN: ',
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      Text(
+                                        pin,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900,
+                                          color: AppColors.primary,
+                                          letterSpacing: 3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    context.l10n.givePinHint,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: context.themeTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                if (currentBooking != null) ...[
+                  RescheduleProposalBanner(
+                    booking: currentBooking,
+                    currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                    actorRole: 'customer',
+                  ),
+                ],
+                if (currentBooking != null && currentBooking.status == JobStatus.completed) ...[
+                  CustomerPaymentCard(booking: currentBooking),
+                ],
+                if (currentBooking != null &&
+                    (currentBooking.status == JobStatus.inProgress ||
+                        currentBooking.status == JobStatus.completed ||
+                        currentBooking.beforePhotos.isNotEmpty ||
+                        currentBooking.afterPhotos.isNotEmpty)) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.photo_library_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        context.l10n.jobPhotos,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${currentBooking.beforePhotos.length} before · ${currentBooking.afterPhotos.length} after',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => JobPhotosSheet.show(
+                        context,
+                        booking: currentBooking,
+                        isProvider: false,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 AppCard(
                   padding: const EdgeInsets.all(16),
@@ -368,7 +620,10 @@ class LiveTrackingScreen extends StatelessWidget {
                                 const Icon(Icons.star,
                                     size: 14,
                                     color: AppColors.secondaryContainer),
-                                Text(' ${tech.rating}  ',
+                                Text(
+                                    tech.rating == null || tech.reviewCount == 0
+                                        ? ' New  '
+                                        : ' ${tech.rating!.toStringAsFixed(1)}  ',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 12)),
@@ -383,13 +638,13 @@ class LiveTrackingScreen extends StatelessWidget {
                                     size: 12, color: AppColors.primary),
                                  const SizedBox(width: 3),
                                 Expanded(
-                                  child: Text(
-                                    '${LocalizedData.getCategory(context, tech.title)} • ${tech.jobsCount} ${context.l10n.completedJobs}',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: context.themeTextSecondary),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                    child: Text(
+                                      '${CategoryService.instance.nameOf(tech.category.isNotEmpty ? tech.category : tech.title, context: context)} • ${tech.jobsCount} ${context.l10n.completedJobs}',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: context.themeTextSecondary),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                 ),
                               ]),
                               Row(children: [
@@ -422,7 +677,14 @@ class LiveTrackingScreen extends StatelessWidget {
                                 onPressed: () {
                                   final phone = tech.phone;
                                   if (phone.isNotEmpty) {
-                                    MapLauncher.openPhoneCall(phone);
+                                    CallService.instance.startCall(
+                                      context: context,
+                                      calleePhone: phone,
+                                      calleeName: tech.name,
+                                      bookingId: currentBooking?.id,
+                                      calleeUid: tech.id,
+                                      calleeRole: 'provider',
+                                    );
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
@@ -431,7 +693,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                     );
                                   }
                                 })),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Expanded(
                             child: AppOutlineButton(
                                 label: context.l10n.chat,
@@ -449,6 +711,24 @@ class LiveTrackingScreen extends StatelessWidget {
                                     ),
                                   );
                                 })),
+                        if (currentBooking != null &&
+                            (currentBooking.status == JobStatus.pending ||
+                             currentBooking.status == JobStatus.confirmed)) ...[
+                          const SizedBox(width: 8),
+                          IconSquareButton(
+                            icon: Icons.calendar_month_outlined,
+                            size: 44,
+                            iconSize: 18,
+                            radius: 12,
+                            tooltip: context.l10n.rescheduleBooking,
+                            onTap: () => RescheduleSheet.show(
+                              context: context,
+                              booking: currentBooking,
+                              currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                              actorRole: 'customer',
+                            ),
+                          ),
+                        ],
                       ]),
                     ],
                   ),
@@ -479,59 +759,65 @@ class LiveTrackingScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Row(children: [
-                  Expanded(
-                      child: AppOutlineButton(
-                          label: context.l10n.cancelRequest,
-                          icon: Icons.cancel,
-                          color: AppColors.error,
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: context.themeSurface,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20)),
-                                title: Text(context.l10n.cancelRequest,
-                                    style:
-                                        const TextStyle(fontWeight: FontWeight.w800)),
-                                content: Text(
-                                    context.l10n.cancelBookingConfirm,
-                                    style: TextStyle(
-                                        color: context.themeTextSecondary)),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, false),
-                                      child: Text(context.l10n.cancel)),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.error,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12))),
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(context.l10n.yesCancel),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirmed == true && context.mounted) {
-                              if (currentBooking != null &&
-                                  currentBooking.id.isNotEmpty) {
-                                await BookingRepository().updateStatus(
-                                    currentBooking.id, 'cancelled');
-                              }
-                              if (!context.mounted) return;
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content:
-                                        Text(context.l10n.serviceRequestCancelled)),
+                  if (currentBooking == null || JobStatus.canCancel(currentBooking.status)) ...[
+                    Expanded(
+                        child: AppOutlineButton(
+                            label: context.l10n.cancelRequest,
+                            icon: Icons.cancel,
+                            color: AppColors.error,
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: context.themeSurface,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20)),
+                                  title: Text(context.l10n.cancelRequest,
+                                      style:
+                                          const TextStyle(fontWeight: FontWeight.w800)),
+                                  content: Text(
+                                      context.l10n.cancelBookingConfirm,
+                                      style: TextStyle(
+                                          color: context.themeTextSecondary)),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
+                                        child: Text(context.l10n.cancel)),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.error,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12))),
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: Text(context.l10n.yesCancel),
+                                    ),
+                                  ],
+                                ),
                               );
-                            }
-                          })),
-                  const SizedBox(width: 10),
+                              if (confirmed == true && context.mounted) {
+                                if (currentBooking != null &&
+                                    currentBooking.id.isNotEmpty) {
+                                  await BookingRepository().cancelBooking(
+                                    bookingId: currentBooking.id,
+                                    reason: 'Customer cancelled during tracking',
+                                    cancelledBy: 'customer',
+                                    jobRequestId: currentBooking.jobRequestId,
+                                  );
+                                }
+                                if (!context.mounted) return;
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text(context.l10n.serviceRequestCancelled)),
+                                );
+                              }
+                            })),
+                    const SizedBox(width: 10),
+                  ],
                   Expanded(
                       child: AppOutlineButton(
                           label: context.l10n.shareTrip,
@@ -552,30 +838,31 @@ class LiveTrackingScreen extends StatelessWidget {
                           })),
                 ]),
                 const SizedBox(height: 14),
-                PrimaryButton(
-                  label: context.l10n.jobFinishedRatePay,
-                  leadingIcon: Icons.check_circle,
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => RatingCompletionScreen(
-                        technician: tech,
-                        bookingId: currentBooking?.id ?? '',
-                        jobRequestId: currentBooking?.jobRequestId ?? '',
-                        jobTitle: currentBooking?.title.isNotEmpty == true
-                            ? currentBooking!.title
-                            : tech.title,
-                        totalPrice: currentBooking?.agreedPrice ??
-                            tech.baseRateLkr.toDouble(),
+                if (currentBooking != null && currentBooking.status == JobStatus.completed)
+                  PrimaryButton(
+                    label: context.l10n.jobFinishedRatePay,
+                    leadingIcon: Icons.check_circle,
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => RatingCompletionScreen(
+                          technician: tech,
+                          bookingId: currentBooking.id,
+                          jobRequestId: currentBooking.jobRequestId ?? '',
+                          jobTitle: currentBooking.title.isNotEmpty == true
+                              ? currentBooking.title
+                              : tech.title,
+                          totalPrice: currentBooking.agreedPrice ??
+                              tech.baseRateLkr.toDouble(),
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
           bottomNavigationBar: showBottomNav
               ? AppBottomNav(
-                  currentIndex: 2,
+                  currentIndex: 1,
                   onTap: (i) {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -587,7 +874,6 @@ class LiveTrackingScreen extends StatelessWidget {
                   items: [
                     NavItem(Icons.explore, context.l10n.navExplore),
                     NavItem(Icons.calendar_month, context.l10n.navBookings),
-                    NavItem(Icons.near_me, context.l10n.navTracking),
                     NavItem(Icons.person, context.l10n.navProfile),
                   ],
                 )
@@ -605,6 +891,7 @@ class _CustomerLiveTrackingMapCard extends StatefulWidget {
   final String techName;
   final List<LatLng>? routePoints;
   final bool isLive;
+  final bool hasCustomerLocation;
 
   const _CustomerLiveTrackingMapCard({
     required this.techPoint,
@@ -613,6 +900,7 @@ class _CustomerLiveTrackingMapCard extends StatefulWidget {
     required this.techName,
     required this.routePoints,
     required this.isLive,
+    this.hasCustomerLocation = true,
   });
 
   @override
@@ -625,12 +913,23 @@ class _CustomerLiveTrackingMapCardState
   late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
   late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
   ModalRoute? _fullScreenRoute;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
-    _routePointsNotifier = ValueNotifier<List<LatLng>?>(widget.routePoints);
+    _markersNotifier = ValueNotifier<List<AppMapMarker>>([]);
+    _routePointsNotifier = ValueNotifier<List<LatLng>?>(
+        widget.hasCustomerLocation ? widget.routePoints : null);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _markersNotifier.value = _buildMarkers();
+    }
   }
 
   @override
@@ -638,11 +937,14 @@ class _CustomerLiveTrackingMapCardState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.techPoint != widget.techPoint ||
         oldWidget.customerPoint != widget.customerPoint ||
-        oldWidget.techName != widget.techName) {
+        oldWidget.techName != widget.techName ||
+        oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _markersNotifier.value = _buildMarkers();
     }
-    if (oldWidget.routePoints != widget.routePoints) {
-      _routePointsNotifier.value = widget.routePoints;
+    if (oldWidget.routePoints != widget.routePoints ||
+        oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
+      _routePointsNotifier.value =
+          widget.hasCustomerLocation ? widget.routePoints : null;
     }
   }
 
@@ -653,17 +955,20 @@ class _CustomerLiveTrackingMapCardState
         label: widget.techName.isNotEmpty ? widget.techName : null,
         enRoute: true,
       ),
-      AppMapMarker.customer(
-        point: widget.customerPoint,
-        label: context.l10n.destination,
-      ),
+      if (widget.hasCustomerLocation)
+        AppMapMarker.customer(
+          point: widget.customerPoint,
+          label: context.l10n.destination,
+        ),
     ];
   }
 
   void _openFullScreen() {
     final route = MaterialPageRoute<void>(
       builder: (ctx) => FullScreenMapPage(
-        initialCenter: widget.midPoint,
+        initialCenter: widget.hasCustomerLocation
+            ? widget.midPoint
+            : widget.techPoint,
         initialZoom: 14.2,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
@@ -705,7 +1010,9 @@ class _CustomerLiveTrackingMapCardState
                   valueListenable: _routePointsNotifier,
                   builder: (context, routePoints, _) {
                     return AppMapView(
-                      initialCenter: widget.midPoint,
+                      initialCenter: widget.hasCustomerLocation
+                          ? widget.midPoint
+                          : widget.techPoint,
                       initialZoom: 14.2,
                       interactive: true,
                       routePoints: routePoints,

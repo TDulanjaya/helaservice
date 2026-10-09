@@ -5,23 +5,24 @@ import '../../../models/admin_models.dart';
 import '../../../models/technician.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
-import '../../../utils/app_localizations_helpers.dart';
 import '../../../utils/permission_utils.dart';
 import '../widgets/customer_bookings_view.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import 'customer_profile_screen.dart';
-import 'live_tracking_screen.dart';
 import 'post_job_request_screen.dart';
 import 'provider_detail_screen.dart';
+import 'emergency_dispatch_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/hero_card.dart';
 import '../../../shared/widgets/status_pill.dart';
+import '../../../shared/widgets/notification_bell_icon.dart';
 
 class HomeDiscoveryScreen extends StatefulWidget {
   final int initialIndex;
@@ -37,6 +38,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   int _selectedCategoryIndex = -1;
+  String _selectedCategoryId = '';
   String _selectedCategoryName = '';
   late int _navIndex;
   String _searchQuery = '';
@@ -51,7 +53,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   @override
   void initState() {
     super.initState();
-    _navIndex = widget.initialIndex;
+    _navIndex = widget.initialIndex > 2 ? 2 : widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         PermissionUtils.checkAndPromptInitialPermissions(context);
@@ -67,7 +69,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
 
   Stream<List<CategoryRow>> get _categoryStream {
     try {
-      return _categoryRepo.streamCategoryRows();
+      return _categoryRepo.streamLiveCategories();
     } catch (_) {
       return const Stream.empty();
     }
@@ -75,9 +77,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
 
   Stream<List<Technician>> get _technicianStream {
     try {
-      return _techRepo
-          .streamTechnicians()
-          .map((list) => list.where((t) => !t.isBanned).toList());
+      return _techRepo.streamApprovedTechnicians();
     } catch (_) {
       return const Stream.empty();
     }
@@ -322,7 +322,6 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
     final navItems = [
       NavItem(Icons.explore, context.l10n.navExplore),
       NavItem(Icons.calendar_month, context.l10n.navBookings),
-      NavItem(Icons.near_me, context.l10n.navTracking),
       NavItem(Icons.person, context.l10n.navProfile),
     ];
 
@@ -338,12 +337,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
           index: _navIndex,
           children: [
             _buildExploreView(context),
-            CustomerBookingsView(
-              onTrackPressed: () => setState(() => _navIndex = 2),
-            ),
-            const LiveTrackingScreen(
-              showBottomNav: false,
-            ),
+            const CustomerBookingsView(),
             const CustomerProfileScreen(),
           ],
         ),
@@ -357,6 +351,10 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   }
 
   Widget _buildExploreView(BuildContext context) {
+    final roleProvider = pv.Provider.of<RoleProvider>(context);
+    final canSwitchRole =
+        roleProvider.isAuthorizedAdmin || roleProvider.isApprovedProvider;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -403,6 +401,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
           ],
         ),
         actions: [
+          const NotificationBellIcon(size: 40),
+          const SizedBox(width: 8),
           IconSquareButton(
             icon: Icons.chat_bubble_outline_rounded,
             size: 40,
@@ -417,15 +417,17 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               );
             },
           ),
-          const SizedBox(width: 8),
-          IconSquareButton(
-            icon: Icons.swap_vert_rounded,
-            size: 40,
-            iconSize: 22,
-            radius: 12,
-            tooltip: context.l10n.switchRole,
-            onTap: () => showRoleSwitchSheet(context),
-          ),
+          if (canSwitchRole) ...[
+            const SizedBox(width: 8),
+            IconSquareButton(
+              icon: Icons.swap_vert_rounded,
+              size: 40,
+              iconSize: 22,
+              radius: 12,
+              tooltip: context.l10n.switchRole,
+              onTap: () => showRoleSwitchSheet(context),
+            ),
+          ],
           const SizedBox(width: 16),
         ],
       ),
@@ -608,6 +610,94 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7F1D1D), Color(0xFF991B1B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.bolt_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.urgentHelpBannerTitle,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          context.l10n.urgentHelpBannerDesc,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 11.5,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const EmergencyDispatchScreen(),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF991B1B),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: Text(
+                      context.l10n.urgentHelpBannerAction,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 22),
             StreamBuilder<List<CategoryRow>>(
               stream: _categoryStream,
@@ -664,10 +754,15 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                       setState(() {
                                         if (_selectedCategoryIndex == i) {
                                           _selectedCategoryIndex = -1;
+                                          _selectedCategoryId = '';
                                           _selectedCategoryName = '';
                                         } else {
                                           _selectedCategoryIndex = i;
-                                          _selectedCategoryName = cat.name;
+                                          _selectedCategoryId = cat.id;
+                                          _selectedCategoryName =
+                                              CategoryService.instance
+                                                  .nameOf(cat.id,
+                                                      context: context);
                                         }
                                       });
                                     },
@@ -691,8 +786,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          LocalizedData.getCategory(
-                                              context, cat.name),
+                                          CategoryService.instance
+                                              .nameOf(cat.id, context: context),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           textAlign: TextAlign.center,
@@ -745,13 +840,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
 
                 var technicians = snapshot.data ?? [];
 
-                if (_selectedCategoryName.isNotEmpty) {
-                  final catLower = _selectedCategoryName.toLowerCase();
+                if (_selectedCategoryId.isNotEmpty) {
                   technicians = technicians.where((t) {
-                    final titleLower = t.title.toLowerCase();
-                    final aboutLower = t.about.toLowerCase();
-                    return titleLower.contains(catLower) ||
-                        aboutLower.contains(catLower);
+                    return t.category == _selectedCategoryId;
                   }).toList();
                 }
 
@@ -780,9 +871,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 }
                 if (_minRating > 0.0) {
                   technicians =
-                      technicians.where((t) => t.rating >= _minRating).toList();
+                      technicians.where((t) => (t.rating ?? 0.0) >= _minRating).toList();
                 }
-                technicians.sort((a, b) => b.rating.compareTo(a.rating));
+                technicians.sort((a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
 
                 if (technicians.isEmpty) {
                   return Container(
@@ -915,20 +1006,39 @@ class _ArtisanCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 15,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${tech.rating.toStringAsFixed(1)} (${tech.reviewCount})',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeInk,
+                    if (tech.isNewProvider) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          context.l10n.newProviderBadge,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 15,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${tech.rating!.toStringAsFixed(1)} (${tech.reviewCount})',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeInk,
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 10),
                     Icon(
                       Icons.location_on_outlined,
@@ -953,38 +1063,22 @@ class _ArtisanCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 StatusPill(
-                  type: tech.online
+                  type: tech.isAvailableNow
                       ? StatusPillType.online
-                      : StatusPillType.offline,
-                  label: tech.online
-                      ? context.l10n.statusOnline
-                      : context.l10n.statusOffline,
+                      : (tech.online ? StatusPillType.pending : StatusPillType.offline),
+                  label: tech.isAvailableNow
+                      ? context.l10n.availableNow
+                      : (tech.online ? context.l10n.outsideWorkingHours : context.l10n.statusOffline),
                   showDot: true,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'LKR ${tech.baseRateLkr}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                  color: context.themeInk,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                context.l10n.custInspectionSuffix,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.themeMuted,
-                ),
-              ),
-            ],
+          const SizedBox(width: 8),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: context.themeMuted,
+            size: 22,
           ),
         ],
       ),

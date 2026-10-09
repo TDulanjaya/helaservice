@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as pv;
+import '../../../constants/app_config.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../models/admin_models.dart';
 import '../../../models/admin_user.dart';
@@ -30,31 +32,34 @@ class _NicVerificationWorkspaceScreenState
     try {
       final batch = FirebaseFirestore.instance.batch();
       if (item.id.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
           {'photoApproved': true},
+          SetOptions(merge: true),
         );
       }
       if (item.providerId.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
           {'photoStatus': 'approved'},
+          SetOptions(merge: true),
         );
-        batch.update(
-          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+        batch.set(
+          FirebaseFirestore.instance.collection(FirestorePaths.users).doc(item.providerId),
           {'photoStatus': 'approved'},
+          SetOptions(merge: true),
         );
       }
       await batch.commit();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo (DP) approved!'), backgroundColor: AppColors.primary),
+          SnackBar(content: Text(context.l10n.profilePhotoApproved), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving DP: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.l10n.errorApprovingPhoto(e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -67,31 +72,34 @@ class _NicVerificationWorkspaceScreenState
     try {
       final batch = FirebaseFirestore.instance.batch();
       if (item.id.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
           {'nicApproved': true},
+          SetOptions(merge: true),
         );
       }
       if (item.providerId.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
           {'nicVerified': true},
+          SetOptions(merge: true),
         );
-        batch.update(
-          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+        batch.set(
+          FirebaseFirestore.instance.collection(FirestorePaths.users).doc(item.providerId),
           {'nicVerified': true},
+          SetOptions(merge: true),
         );
       }
       await batch.commit();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('NIC identity approved!'), backgroundColor: AppColors.primary),
+          SnackBar(content: Text(context.l10n.nicVerified), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving NIC: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.l10n.errorApprovingNic(e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -104,31 +112,34 @@ class _NicVerificationWorkspaceScreenState
     try {
       final batch = FirebaseFirestore.instance.batch();
       if (item.id.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.verificationQueue).doc(item.id),
           {'certsApproved': true},
+          SetOptions(merge: true),
         );
       }
       if (item.providerId.isNotEmpty) {
-        batch.update(
+        batch.set(
           FirebaseFirestore.instance.collection(FirestorePaths.technicians).doc(item.providerId),
           {'certificationsStatus': 'approved', 'isVerified': true},
+          SetOptions(merge: true),
         );
-        batch.update(
-          FirebaseFirestore.instance.collection('users').doc(item.providerId),
+        batch.set(
+          FirebaseFirestore.instance.collection(FirestorePaths.users).doc(item.providerId),
           {'certificationsStatus': 'approved'},
+          SetOptions(merge: true),
         );
       }
       await batch.commit();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Trade certifications approved!'), backgroundColor: AppColors.primary),
+          SnackBar(content: Text(context.l10n.tradeCertificationsApproved), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error approving certifications: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.l10n.errorApprovingCertifications(e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -157,9 +168,21 @@ class _NicVerificationWorkspaceScreenState
         final tDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
             .doc(item.providerId);
-        batch.update(tDoc, {
+        batch.set(tDoc, {
           'nicVerified': true,
-        });
+          'isVerified': true,
+          'status': 'Active',
+        }, SetOptions(merge: true));
+
+        final uDoc = FirebaseFirestore.instance
+            .collection(FirestorePaths.users)
+            .doc(item.providerId);
+        batch.set(uDoc, {
+          'role': 'provider',
+          'isVerified': true,
+          'certificationsStatus': 'approved',
+          'photoStatus': 'approved',
+        }, SetOptions(merge: true));
       }
 
       await batch.commit();
@@ -187,6 +210,8 @@ class _NicVerificationWorkspaceScreenState
   }
 
   Future<void> _handleReject(VerificationQueueItem item) async {
+    final notApprovedTitle = context.l10n.verificationNotApprovedTitle;
+    final notApprovedBody = context.l10n.verificationNotApprovedBody;
     setState(() => _isProcessing = true);
     try {
       final currentUid = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
@@ -199,6 +224,22 @@ class _NicVerificationWorkspaceScreenState
           'reviewedAt': FieldValue.serverTimestamp(),
           'reviewedBy': currentUid,
         });
+      }
+
+      if (item.providerId.isNotEmpty) {
+        try {
+          await FirebaseFirestore.instance
+              .collection(FirestorePaths.users)
+              .doc(item.providerId)
+              .collection('notifications')
+              .add({
+            'title': notApprovedTitle,
+            'body': notApprovedBody,
+            'type': 'verification_rejected',
+            'isRead': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        } catch (_) {}
       }
 
       if (mounted) {
@@ -1124,7 +1165,7 @@ class _NicVerificationWorkspaceScreenState
               providerId: selectedItem.providerId,
               directUrl: selectedItem.photoUrl,
               docType: 'photo',
-              label: 'Profile Photo',
+              label: context.l10n.profilePhoto,
               fallbackIcon: Icons.account_circle,
             ),
             const SizedBox(width: 8),
@@ -1156,8 +1197,8 @@ class _NicVerificationWorkspaceScreenState
                           color: context.themeSuccessTint,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('DP Approved',
-                            style: TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
+                        child: Text(context.l10n.dpApproved,
+                            style: const TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
                       )
                     : OutlinedButton(
                         onPressed: canVerifyNic ? () => _handleApproveDp(selectedItem) : null,
@@ -1166,7 +1207,7 @@ class _NicVerificationWorkspaceScreenState
                           minimumSize: const Size(0, 30),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Approve DP', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                        child: Text(context.l10n.approveDp, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                       ),
               ),
               const SizedBox(width: 8),
@@ -1180,8 +1221,8 @@ class _NicVerificationWorkspaceScreenState
                           color: context.themeSuccessTint,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('NIC Approved',
-                            style: TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
+                        child: Text(context.l10n.nicVerified,
+                            style: const TextStyle(fontSize: 10.5, color: AppColors.success, fontWeight: FontWeight.bold)),
                       )
                     : OutlinedButton(
                         onPressed: canVerifyNic ? () => _handleApproveNic(selectedItem) : null,
@@ -1190,7 +1231,7 @@ class _NicVerificationWorkspaceScreenState
                           minimumSize: const Size(0, 30),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Approve NIC (Front+Back)', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                        child: Text(context.l10n.approveNicBoth, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
                       ),
               ),
             ],
@@ -1231,13 +1272,13 @@ class _NicVerificationWorkspaceScreenState
                             color: context.themeSuccessTint,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text('Approved',
-                              style: TextStyle(fontSize: 10, color: AppColors.success, fontWeight: FontWeight.bold)),
+                          child: Text(context.l10n.statusApproved,
+                              style: const TextStyle(fontSize: 10, color: AppColors.success, fontWeight: FontWeight.bold)),
                         )
                       else if (canVerifyNic)
                         TextButton(
                           onPressed: () => _handleApproveCerts(selectedItem),
-                          child: const Text('Approve Certs', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          child: Text(context.l10n.approveCerts, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                     ],
                   ),
@@ -1677,22 +1718,74 @@ class _NicDocImagePreview extends StatelessWidget {
     this.directUrl,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  // fetch secure presigned url or direct image
+  Future<String?> _resolveImageUrl() async {
     if (directUrl != null && directUrl!.isNotEmpty) {
-      return _buildImageCard(context, directUrl!);
+      if (directUrl!.startsWith('http') || directUrl!.startsWith('data:')) {
+        return directUrl;
+      }
     }
 
-    if (providerId.isEmpty) {
+    if (docType == 'photo') {
+      final doc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(providerId)
+          .get();
+      return doc.data()?['photoUrl'] as String?;
+    }
+
+    // request 5 minute presigned url from backend
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+      final token = await user.getIdToken();
+      final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+      final uri = Uri.parse('$cleanBase/nic-url');
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'x-helaservice-key': AppConfig.apiSecretKey,
+        },
+        body: jsonEncode({
+          'providerId': providerId,
+          'side': docType,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final presignedUrl = data['url'] as String?;
+        if (presignedUrl != null && presignedUrl.isNotEmpty) {
+          return presignedUrl;
+        }
+      }
+    } catch (_) {}
+
+    // fallback to technicians doc read
+    try {
+      final techDoc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(providerId)
+          .get();
+      final data = techDoc.data();
+      if (docType == 'front') return data?['nicFrontUrl'] as String?;
+      if (docType == 'back') return data?['nicBackUrl'] as String?;
+    } catch (_) {}
+
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (providerId.isEmpty && (directUrl == null || directUrl!.isEmpty)) {
       return _buildFallback(context, context.l10n.nicDeskNoId);
     }
 
-    // fallback lookup
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: FirebaseFirestore.instance
-          .collection(FirestorePaths.technicians)
-          .doc(providerId)
-          .get(),
+    return FutureBuilder<String?>(
+      future: _resolveImageUrl(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Expanded(
@@ -1714,16 +1807,7 @@ class _NicDocImagePreview extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data?.data();
-        String? resolvedUrl;
-        if (docType == 'photo') {
-          resolvedUrl = data?['photoUrl'] as String?;
-        } else if (docType == 'front') {
-          resolvedUrl = data?['nicFrontUrl'] as String?;
-        } else if (docType == 'back') {
-          resolvedUrl = data?['nicBackUrl'] as String?;
-        }
-
+        final resolvedUrl = snapshot.data;
         if (resolvedUrl == null || resolvedUrl.isEmpty) {
           return _buildFallback(context, context.l10n.nicDeskNoImage);
         }

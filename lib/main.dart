@@ -10,6 +10,9 @@ import 'app_router.dart';
 import 'state/role_provider.dart';
 import 'state/theme_provider.dart';
 import 'state/locale_provider.dart';
+import 'services/category_service.dart';
+import 'services/connectivity_service.dart';
+import 'shared/widgets/offline_banner.dart';
 import 'theme/app_theme.dart';
 import 'splash_screen.dart';
 import 'constants/app_config.dart';
@@ -38,6 +41,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  CategoryService.instance.init();
+  ConnectivityService.instance.init();
 
   try {
     if (kIsWeb) {
@@ -93,6 +99,9 @@ class HelaServiceApp extends StatelessWidget {
         pv.ChangeNotifierProvider<LocaleProvider>(
           create: (_) => LocaleProvider(initialLocale: initialLocale),
         ),
+        pv.ChangeNotifierProvider<CategoryService>.value(
+          value: CategoryService.instance,
+        ),
       ],
       child: pv.Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, _) {
@@ -111,6 +120,8 @@ class HelaServiceApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
+            builder: (context, child) =>
+                OfflineBannerWrapper(child: child ?? const SizedBox()),
             home: const SplashScreen(),
             routes: appRoutes,
           );

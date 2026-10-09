@@ -6,7 +6,11 @@ import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/booking.dart';
+import '../../../models/technician.dart';
+import '../widgets/working_hours_sheet.dart';
+import '../widgets/portfolio_management_sheet.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../services/review_service.dart';
 import '../../../state/theme_provider.dart';
@@ -17,6 +21,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/legal_content_sheet.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -79,19 +84,75 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              pv.Provider.of<RoleProvider>(context, listen: false).logout();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.login,
-                (route) => false,
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
               );
+              try {
+                await pv.Provider.of<RoleProvider>(context, listen: false).logout();
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
             ),
             child: Text(context.l10n.logout),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // delete account dialog and execution
+  void _deleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.deleteAccountTitle),
+        content: Text(context.l10n.deleteAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+              try {
+                await pv.Provider.of<RoleProvider>(context, listen: false).deleteAccount();
+              } finally {
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.login,
+                    (route) => false,
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(context.l10n.deleteAccountConfirmAction),
           ),
         ],
       ),
@@ -119,9 +180,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         : context.l10n.roleProvider;
     final email = user?.email.isNotEmpty == true ? user!.email : '';
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
-    final category = user?.serviceCategory ?? context.l10n.provSpecialist;
+    final category = user?.serviceCategory ?? '';
     final district = user?.district ?? context.l10n.cdmSriLanka;
     final nic = user?.nic?.isNotEmpty == true ? user!.nic! : '';
+    final resolvedCatName = CategoryService.instance.nameOf(category, context: context);
+    final categoryName = resolvedCatName.isNotEmpty
+        ? resolvedCatName
+        : context.l10n.provSpecialist;
 
     return Scaffold(
       appBar: AppBar(
@@ -183,7 +248,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              '${LocalizedData.getCategory(context, category)} · ${LocalizedData.getDistrict(context, district)}',
+                              '$categoryName · ${LocalizedData.getDistrict(context, district)}',
                               style: const TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
@@ -562,38 +627,227 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
             ),
             const SizedBox(height: 8),
+            StreamBuilder<Technician?>(
+              stream: TechnicianRepository().streamById(user?.id ?? ''),
+              builder: (context, techSnap) {
+                final tech = techSnap.data;
+                final radiusKm = tech?.serviceRadiusKm ?? 25.0;
+                final isEmergency = tech?.emergencyAvailable ?? _emergencyAvailable;
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: context.themeSurface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        value: isEmergency,
+                        activeThumbColor: Colors.white,
+                        activeTrackColor: const Color(0xFF22C55E),
+                        title: Text(
+                          context.l10n.emergencyCallout,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        subtitle: Text(
+                          context.l10n.emergencyCalloutDesc,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        onChanged: (val) async {
+                          setState(() => _emergencyAvailable = val);
+                          final uid = FirebaseAuth.instance.currentUser?.uid;
+                          if (uid != null && uid.isNotEmpty) {
+                            await TechnicianRepository()
+                                .updateEmergencyStatus(uid, val);
+                          }
+                        },
+                      ),
+                      Divider(height: 1, color: context.themeBorder),
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.schedule_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          context.l10n.workingHoursTitle,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        subtitle: Text(
+                          tech != null && tech.isAvailableNow
+                              ? context.l10n.availableNow
+                              : context.l10n.outsideWorkingHours,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: tech != null && tech.isAvailableNow
+                                ? const Color(0xFF22C55E)
+                                : context.themeTextSecondary,
+                            fontWeight: tech != null && tech.isAvailableNow
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: context.themeTextSecondary,
+                        ),
+                        onTap: tech != null
+                            ? () => WorkingHoursSheet.show(context, tech)
+                            : null,
+                      ),
+                      Divider(height: 1, color: context.themeBorder),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(
+                                        Icons.radar_rounded,
+                                        color: AppColors.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      context.l10n.serviceRadiusTitle,
+                                      style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    context.l10n.serviceRadiusKm(radiusKm.round()),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              context.l10n.serviceRadiusSubtitle,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Slider(
+                              value: radiusKm.clamp(5.0, 50.0),
+                              min: 5,
+                              max: 50,
+                              divisions: 9,
+                              label: '${radiusKm.round()} km',
+                              activeColor: AppColors.primary,
+                              onChanged: (val) {
+                                final uid =
+                                    FirebaseAuth.instance.currentUser?.uid;
+                                if (uid != null && uid.isNotEmpty) {
+                                  TechnicianRepository()
+                                      .updateServiceRadius(uid, val);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
                 color: context.themeSurface,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: context.themeBorder),
               ),
-              child: SwitchListTile(
+              child: ListTile(
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                value: _emergencyAvailable,
-                activeThumbColor: Colors.white,
-                activeTrackColor: const Color(0xFF22C55E),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.collections_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
                 title: Text(
-                  context.l10n.emergencyCallout,
+                  context.l10n.portfolioTitle,
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 subtitle: Text(
-                  context.l10n.emergencyCalloutDesc,
+                  context.l10n.portfolioSubtitle,
                   style: TextStyle(
                     fontSize: 11.5,
                     color: context.themeTextSecondary,
                   ),
                 ),
-                onChanged: (val) async {
-                  setState(() => _emergencyAvailable = val);
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: context.themeTextSecondary,
+                ),
+                onTap: () {
                   final uid = FirebaseAuth.instance.currentUser?.uid;
                   if (uid != null && uid.isNotEmpty) {
-                    await TechnicianRepository()
-                        .updateEmergencyStatus(uid, val);
+                    PortfolioManagementSheet.show(context, uid);
                   }
                 },
               ),
@@ -825,7 +1079,28 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 0),
+                  child: Text(
+                    context.l10n.privacyPolicy,
+                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                  ),
+                ),
+                Text('•', style: TextStyle(color: context.themeBorder)),
+                TextButton(
+                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 1),
+                  child: Text(
+                    context.l10n.termsOfService,
+                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => _logout(context),
               icon: const Icon(Icons.logout_rounded,
@@ -846,6 +1121,18 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => _deleteAccount(context),
+              child: Text(
+                context.l10n.deleteAccountTitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.themeTextSecondary,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),

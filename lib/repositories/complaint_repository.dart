@@ -10,23 +10,37 @@ class ComplaintRepository {
   final CollectionReference<Map<String, dynamic>> _col =
       FirebaseFirestore.instance.collection(FirestorePaths.complaints);
 
+  // submit new complaint
   Future<String> submitComplaint(Complaint complaint) async {
+    final targetId = complaint.providerId.trim().toLowerCase();
+    final senderId = complaint.customerId.trim().toLowerCase();
+    if (targetId == 'admin_support' ||
+        targetId == 'admin' ||
+        complaint.accusedRole?.toLowerCase() == 'admin' ||
+        senderId == 'admin_support') {
+      throw ArgumentError('Admins cannot be reported.');
+    }
     final docRef = await _col.add(complaint.toMap());
     return docRef.id;
   }
 
-  Stream<List<Complaint>> streamAllComplaints() {
-    return _col.orderBy('createdAt', descending: true).snapshots().map((snap) {
+  Stream<List<Complaint>> streamAllComplaints({int limit = 50}) {
+    return _col
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) {
       return snap.docs
           .map((doc) => Complaint.fromMap(doc.id, doc.data()))
           .toList();
     });
   }
 
-  Stream<List<Complaint>> streamComplaintsForProvider(String providerId) {
+  Stream<List<Complaint>> streamComplaintsForProvider(String providerId, {int limit = 50}) {
     if (providerId.isEmpty) return Stream.value(const []);
     return _col
         .where('providerId', isEqualTo: providerId)
+        .limit(limit)
         .snapshots()
         .map((snap) {
       final items = snap.docs

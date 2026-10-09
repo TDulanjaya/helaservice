@@ -179,12 +179,15 @@ class VerificationQueueItem {
   final String phone;
   final String preferredLanguage;
   final String? photoUrl;
-  final String? nicFrontUrl;
-  final String? nicBackUrl;
+  final String? nicFrontKey;
+  final String? nicBackKey;
   final List<String> certificationUrls;
   final bool photoApproved;
   final bool nicApproved;
   final bool certsApproved;
+
+  String? get nicFrontUrl => nicFrontKey;
+  String? get nicBackUrl => nicBackKey;
 
   bool get hasComputedMatch => matchPercent > 0;
 
@@ -208,13 +211,16 @@ class VerificationQueueItem {
     this.phone = '',
     this.preferredLanguage = '',
     this.photoUrl,
-    this.nicFrontUrl,
-    this.nicBackUrl,
+    String? nicFrontKey,
+    String? nicBackKey,
+    String? nicFrontUrl,
+    String? nicBackUrl,
     this.certificationUrls = const [],
     this.photoApproved = false,
     this.nicApproved = false,
     this.certsApproved = false,
-  });
+  })  : nicFrontKey = nicFrontKey ?? nicFrontUrl,
+        nicBackKey = nicBackKey ?? nicBackUrl;
 
   Map<String, dynamic> toMap() {
     return {
@@ -234,8 +240,8 @@ class VerificationQueueItem {
       if (phone.isNotEmpty) 'phone': phone,
       if (preferredLanguage.isNotEmpty) 'preferredLanguage': preferredLanguage,
       if (photoUrl != null) 'photoUrl': photoUrl,
-      if (nicFrontUrl != null) 'nicFrontUrl': nicFrontUrl,
-      if (nicBackUrl != null) 'nicBackUrl': nicBackUrl,
+      if (nicFrontKey != null) 'nicFrontKey': nicFrontKey,
+      if (nicBackKey != null) 'nicBackKey': nicBackKey,
       if (certificationUrls.isNotEmpty) 'certificationUrls': certificationUrls,
       'photoApproved': photoApproved,
       'nicApproved': nicApproved,
@@ -298,8 +304,8 @@ class VerificationQueueItem {
       phone: map['phone'] as String? ?? '',
       preferredLanguage: map['preferredLanguage'] as String? ?? '',
       photoUrl: map['photoUrl'] as String?,
-      nicFrontUrl: map['nicFrontUrl'] as String?,
-      nicBackUrl: map['nicBackUrl'] as String?,
+      nicFrontKey: map['nicFrontKey'] as String? ?? map['nicFrontUrl'] as String?,
+      nicBackKey: map['nicBackKey'] as String? ?? map['nicBackUrl'] as String?,
       certificationUrls: certList,
       photoApproved: map['photoApproved'] as bool? ?? false,
       nicApproved: map['nicApproved'] as bool? ?? false,
@@ -331,13 +337,15 @@ class CategoryRow {
   final String description;
   final String registered;
   final String onlineNow;
-  final String baseFee;
-  final String hourlyCap;
   final List<String> districts;
   final List<String> districtsOff;
   final String surge;
   final String status;
   final String iconKey;
+  final bool isLive;
+  final int basePrice;
+  final String code;
+  final Map<String, String>? names;
 
   const CategoryRow({
     this.id = '',
@@ -346,13 +354,15 @@ class CategoryRow {
     required this.description,
     required this.registered,
     required this.onlineNow,
-    required this.baseFee,
-    required this.hourlyCap,
     required this.districts,
     this.districtsOff = const [],
     required this.surge,
     required this.status,
     this.iconKey = '',
+    this.isLive = true,
+    this.basePrice = 1500,
+    this.code = '',
+    this.names,
   });
 
   Map<String, dynamic> toMap() => {
@@ -361,17 +371,42 @@ class CategoryRow {
         'description': description,
         'registered': registered,
         'onlineNow': onlineNow,
-        'baseFee': baseFee,
-        'hourlyCap': hourlyCap,
         'districts': districts,
         'districtsOff': districtsOff,
         'surge': surge,
         'status': status,
         'iconKey': iconKey.isNotEmpty ? iconKey : _iconToKey(icon),
+        'isLive': isLive,
+        'basePrice': basePrice,
+        'code': code.isNotEmpty ? code : id,
+        if (names != null) 'names': names,
       };
 
   factory CategoryRow.fromMap(String id, Map<String, dynamic> map) {
     final key = map['iconKey'] as String? ?? '';
+    final statusStr = map['status'] as String? ?? 'Active';
+    final live = map['isLive'] is bool
+        ? map['isLive'] as bool
+        : (statusStr.toLowerCase() == 'active');
+
+    Map<String, String>? namesMap;
+    if (map['names'] is Map) {
+      namesMap = (map['names'] as Map).map(
+        (k, v) => MapEntry(k.toString(), v.toString()),
+      );
+    } else {
+      final en = map['name_en'] ?? map['name'];
+      final si = map['name_si'];
+      final ta = map['name_ta'];
+      if (en != null || si != null || ta != null) {
+        namesMap = {
+          if (en != null) 'en': en.toString(),
+          if (si != null) 'si': si.toString(),
+          if (ta != null) 'ta': ta.toString(),
+        };
+      }
+    }
+
     return CategoryRow(
       id: id,
       icon: _keyToIcon(key),
@@ -379,13 +414,15 @@ class CategoryRow {
       description: map['description'] ?? '',
       registered: map['registered'] ?? '0 Registered',
       onlineNow: map['onlineNow'] ?? '0 Online Now',
-      baseFee: map['baseFee'] ?? 'LKR 1,500',
-      hourlyCap: map['hourlyCap'] ?? 'LKR 1,000 /hr',
       districts: List<String>.from(map['districts'] ?? ['Colombo', 'Gampaha']),
       districtsOff: List<String>.from(map['districtsOff'] ?? []),
       surge: map['surge'] ?? '1.0x Normal',
-      status: map['status'] ?? 'Active',
+      status: statusStr,
       iconKey: key,
+      isLive: live,
+      basePrice: (map['basePrice'] as num?)?.toInt() ?? 1500,
+      code: map['code'] as String? ?? id,
+      names: namesMap,
     );
   }
 

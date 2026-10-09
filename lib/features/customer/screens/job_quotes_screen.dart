@@ -8,6 +8,7 @@ import '../../../models/booking.dart';
 import '../../../constants/firestore_paths.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../repositories/job_request_repository.dart';
+import '../../../services/category_service.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/l10n_extension.dart';
@@ -20,6 +21,8 @@ import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/job_location_picker.dart';
+import '../../../services/call_service.dart';
 
 class JobQuotesScreen extends StatelessWidget {
   final String requestId;
@@ -76,6 +79,10 @@ class JobQuotesScreen extends StatelessWidget {
 
                       if (request.status == 'assigned') {
                         return _buildAssignedView(context, request, quotes);
+                      }
+
+                      if (request.status == 'cancelled') {
+                        return _buildCancelledView(context, request);
                       }
 
                       if (quotes.isEmpty) {
@@ -340,6 +347,45 @@ class JobQuotesScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                final pId = request.selectedProviderId ??
+                    (acceptedQuote.isNotEmpty ? acceptedQuote.first.providerId : '');
+                final pName = acceptedQuote.isNotEmpty
+                    ? acceptedQuote.first.providerName
+                    : context.l10n.roleProvider;
+                final pPhone = acceptedQuote.isNotEmpty
+                    ? acceptedQuote.first.providerPhone
+                    : null;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DirectChatScreen(
+                      otherPartyId: pId,
+                      otherPartyName: pName,
+                      otherPartyRole: 'provider',
+                      otherPartyPhone: pPhone,
+                      jobRequestId: request.id,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.chat_bubble_outline, size: 18),
+              label: Text(context.l10n.chatWithProvider),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () => _cancelJob(context, request),
+              icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.error),
+              label: Text(
+                context.l10n.cancelBookingOrQuote,
+                style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 12),
             TextButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
@@ -351,8 +397,356 @@ class JobQuotesScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildCancelledView(BuildContext context, JobRequest request) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.highlight_off,
+                  color: AppColors.error, size: 48),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              LocalizedData.getStatus(context, 'cancelled'),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (request.cancellationReason != null && request.cancellationReason!.isNotEmpty) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '${context.l10n.cancellationReasonPrompt}:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      request.cancellationReason!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: context.l10n.repostJob,
+              leadingIcon: Icons.refresh,
+              expand: false,
+              onPressed: () => _repostJob(context, request),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _deleteJob(context, request),
+              icon: const Icon(Icons.delete_forever, size: 18, color: AppColors.error),
+              label: Text(context.l10n.deleteJob, style: const TextStyle(color: AppColors.error)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.error),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: Text(context.l10n.backToHome),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _cancelJob(BuildContext context, JobRequest request) async {
+    final reasons = [
+      context.l10n.cancelReasonCustomerRequest,
+      context.l10n.cancelReasonScheduleConflict,
+      context.l10n.cancelReasonPriceDispute,
+      context.l10n.cancelReasonOther,
+    ];
+    String selectedReason = reasons.first;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            context.l10n.cancelBookingOrQuote,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.cancelBookingPrompt,
+                style: TextStyle(fontSize: 13, color: ctx.themeTextSecondary),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: context.l10n.cancellationReasonPrompt,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: reasons
+                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setDialogState(() => selectedReason = val);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(context.l10n.confirmCancellation),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().cancelAssignedJob(
+          requestId: request.id,
+          cancelledByRole: 'customer',
+          reason: selectedReason,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.bookingCancelledSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _repostJob(BuildContext context, JobRequest request) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.repostJob, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.repostJobConfirm, style: TextStyle(color: ctx.themeTextSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.cancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.repostJob),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().repostJobRequest(request.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.repostJobSuccess), backgroundColor: AppColors.primary),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteJob(BuildContext context, JobRequest request) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.deleteJob, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.deleteJobConfirm, style: TextStyle(color: ctx.themeTextSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.cancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.deleteJob),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().deleteJobRequest(request.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.deleteJobSuccess), backgroundColor: AppColors.primary),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _promptSetJobLocationAndAccept(
+      BuildContext context, Quote quote, JobRequest request) async {
+    final setLocation = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.location_off_rounded, color: AppColors.warning, size: 24),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Location Required',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'This job has no location. Please set the location and repost.',
+          style: TextStyle(fontSize: 13.5, color: ctx.themeTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.pin_drop_rounded, size: 16),
+            label: Text(context.l10n.setServiceLocation),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (setLocation != true || !context.mounted) return;
+
+    final picked = await JobLocationPicker.pickLocation(
+      context,
+      title: context.l10n.setServiceLocation,
+    );
+
+    if (picked != null && context.mounted) {
+      try {
+        await JobRequestRepository().updateJobLocation(
+          requestId: request.id,
+          latitude: picked.latitude,
+          longitude: picked.longitude,
+          address: picked.address,
+          landmark: picked.landmark,
+        );
+
+        final updatedRequest = request.copyWith(
+          latitude: picked.latitude,
+          longitude: picked.longitude,
+          address: picked.address,
+          landmark: picked.landmark,
+        );
+
+        if (context.mounted) {
+          await _acceptQuote(context, quote, updatedRequest);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.failedToUpdateJobLocation(e.toString())),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _acceptQuote(
       BuildContext context, Quote quote, JobRequest request) async {
+    if (request.latitude == null || request.longitude == null) {
+      await _promptSetJobLocationAndAccept(context, quote, request);
+      return;
+    }
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -447,7 +841,7 @@ class JobQuotesScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(dialogCtx),
               child: Text(context.l10n.later),
             ),
-            ElevatedButton.icon(
+            OutlinedButton.icon(
               onPressed: () {
                 Navigator.pop(dialogCtx);
                 Navigator.of(context).push(
@@ -464,6 +858,24 @@ class JobQuotesScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.chat_bubble_outline, size: 16),
               label: Text(context.l10n.openChat),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                final tech =
+                    await TechnicianRepository().getById(quote.providerId);
+                if (!context.mounted) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LiveTrackingScreen(
+                      technician: tech,
+                      showBottomNav: false,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.near_me_rounded, size: 16),
+              label: Text(context.l10n.openLiveGpsTracking),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.onPrimary,
@@ -475,6 +887,12 @@ class JobQuotesScreen extends StatelessWidget {
         ),
       );
     } catch (e) {
+      if (e.toString().contains('JOB_LOCATION_MISSING')) {
+        if (context.mounted) {
+          await _promptSetJobLocationAndAccept(context, quote, request);
+        }
+        return;
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -515,7 +933,7 @@ class _JobSummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      LocalizedData.getCategory(context, request.category),
+                      CategoryService.instance.nameOf(request.category, context: context),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -591,7 +1009,7 @@ class _JobSummaryCard extends StatelessWidget {
   }
 }
 
-class _QuoteCard extends StatelessWidget {
+class _QuoteCard extends StatefulWidget {
   final Quote quote;
   final JobRequest request;
   final VoidCallback onAccept;
@@ -603,7 +1021,79 @@ class _QuoteCard extends StatelessWidget {
   });
 
   @override
+  State<_QuoteCard> createState() => _QuoteCardState();
+}
+
+class _QuoteCardState extends State<_QuoteCard> {
+  String? _fallbackLocation;
+  String? _fallbackPhone;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveProviderDetailsIfNeeded();
+  }
+
+  void _resolveProviderDetailsIfNeeded() async {
+    if (widget.quote.providerLocation.isEmpty || widget.quote.providerPhone.isEmpty) {
+      final tech = await TechnicianRepository().getById(widget.quote.providerId);
+      if (mounted && tech != null) {
+        setState(() {
+          if (widget.quote.providerLocation.isEmpty && tech.serviceArea.isNotEmpty) {
+            _fallbackLocation = tech.serviceArea;
+          }
+          if (widget.quote.providerPhone.isEmpty && tech.phone.isNotEmpty) {
+            _fallbackPhone = tech.phone;
+          }
+        });
+      }
+    }
+  }
+
+  void _callProvider() {
+    final phone = widget.quote.providerPhone.isNotEmpty
+        ? widget.quote.providerPhone
+        : (_fallbackPhone ?? '');
+    if (phone.isNotEmpty) {
+      CallService.instance.startCall(
+        context: context,
+        calleePhone: phone,
+        calleeName: widget.quote.providerName,
+        calleeUid: widget.quote.providerId,
+        calleeRole: widget.quote.providerTrade.isNotEmpty
+            ? widget.quote.providerTrade
+            : 'provider',
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.providerPhoneNotAvailable)),
+      );
+    }
+  }
+
+  void _chatProvider() {
+    final phone = widget.quote.providerPhone.isNotEmpty
+        ? widget.quote.providerPhone
+        : _fallbackPhone;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DirectChatScreen(
+          otherPartyId: widget.quote.providerId,
+          otherPartyName: widget.quote.providerName,
+          otherPartyRole: widget.quote.providerTrade.isNotEmpty
+              ? widget.quote.providerTrade
+              : 'provider',
+          otherPartyPhone: phone,
+          jobRequestId: widget.request.id,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final quote = widget.quote;
+    final request = widget.request;
     final isAccepted = request.status == 'assigned' && quote.status == 'accepted';
 
     String? distanceLabel;
@@ -618,6 +1108,19 @@ class _QuoteCard extends StatelessWidget {
         quote.providerLongitude!,
       );
       distanceLabel = LocationUtils.formatDistanceL10n(context, km);
+    }
+
+    final locationName = quote.providerLocation.isNotEmpty
+        ? quote.providerLocation
+        : (_fallbackLocation ?? '');
+
+    String displayLocation = '';
+    if (locationName.isNotEmpty && distanceLabel != null) {
+      displayLocation = '$locationName · $distanceLabel';
+    } else if (locationName.isNotEmpty) {
+      displayLocation = locationName;
+    } else if (distanceLabel != null) {
+      displayLocation = distanceLabel;
     }
 
     return AppCard(
@@ -671,15 +1174,23 @@ class _QuoteCard extends StatelessWidget {
                             color: context.themeTextSecondary,
                           ),
                         ),
-                        if (distanceLabel != null) ...[
+                        if (displayLocation.isNotEmpty) ...[
                           const SizedBox(width: 8),
-                          Icon(Icons.near_me, size: 11, color: context.themeTextSecondary),
+                          Icon(
+                            distanceLabel != null ? Icons.near_me : Icons.location_on_outlined,
+                            size: 11,
+                            color: context.themeTextSecondary,
+                          ),
                           const SizedBox(width: 2),
-                          Text(
-                            distanceLabel,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: context.themeTextSecondary,
+                          Flexible(
+                            child: Text(
+                              displayLocation,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: context.themeTextSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -737,10 +1248,77 @@ class _QuoteCard extends StatelessWidget {
           ],
           if (request.status == 'open') ...[
             const SizedBox(height: 14),
-            PrimaryButton(
-              label: context.l10n.acceptHire,
-              leadingIcon: Icons.handshake_outlined,
-              onPressed: onAccept,
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _callProvider,
+                  icon: const Icon(Icons.call_rounded, size: 16),
+                  label: Text(context.l10n.callTech),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _chatProvider,
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                  label: Text(context.l10n.chat),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: quote.isExpired
+                      ? OutlinedButton(
+                          onPressed: null,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            context.l10n.expiredPill,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                          ),
+                        )
+                      : PrimaryButton(
+                          label: context.l10n.acceptHire,
+                          leadingIcon: Icons.handshake_outlined,
+                          onPressed: widget.onAccept,
+                        ),
+                ),
+              ],
+            ),
+          ] else if (isAccepted) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _callProvider,
+                    icon: const Icon(Icons.call_rounded, size: 16),
+                    label: Text(context.l10n.callTech),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _chatProvider,
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                    label: Text(context.l10n.chat),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

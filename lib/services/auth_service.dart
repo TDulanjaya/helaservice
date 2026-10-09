@@ -1,11 +1,14 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile.dart';
 import '../models/admin_user.dart';
 import '../state/role_provider.dart';
+import 'category_service.dart';
+import 'package:http/http.dart' as http;
+import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 
 class AuthService {
@@ -65,6 +68,8 @@ class AuthService {
     String? district,
     String? address,
     String? nic,
+    String? nicFrontKey,
+    String? nicBackKey,
     String? nicFrontUrl,
     String? nicBackUrl,
     String? serviceCategory,
@@ -90,8 +95,8 @@ class AuthService {
         district: district,
         address: address,
         nic: nic,
-        nicFrontUrl: nicFrontUrl,
-        nicBackUrl: nicBackUrl,
+        nicFrontKey: nicFrontKey ?? nicFrontUrl,
+        nicBackKey: nicBackKey ?? nicBackUrl,
         serviceCategory: serviceCategory,
       );
 
@@ -163,7 +168,9 @@ class AuthService {
     try {
       final doc = await userDocRef.get().timeout(const Duration(seconds: 3));
       if (doc.exists && doc.data() != null) {
-        final profile = UserProfile.fromMap(doc.data()!);
+        final data = doc.data()!;
+        await _migrateCustomerLocationIfNeeded(uid, data);
+        final profile = UserProfile.fromMap(data);
         _currentUser = profile;
         _cachedProfiles[uid] = profile;
         return profile;
@@ -179,6 +186,96 @@ class AuthService {
     } catch (_) {}
 
     return newProfile;
+  }
+
+  Future<void> _migrateCustomerLocationIfNeeded(
+      String uid, Map<String, dynamic> data) async {
+    final roleStr = data['role'] as String?;
+    // skip if role is empty or user has admin access
+    if (roleStr == null || roleStr == 'provider') return;
+    if ((data['serviceCategory'] as String?)?.trim().isNotEmpty == true) return;
+    if ((data['nic'] as String?)?.trim().isNotEmpty == true) return;
+
+    final firestore = FirebaseFirestore.instance;
+
+    // skip migration if user is technician or admin
+    try {
+      final checks = await Future.wait([
+        firestore.collection('technicians').doc(uid).get(),
+        firestore.collection('superAdmins').doc(uid).get(),
+        firestore.collection('admins').doc(uid).get(),
+      ]).timeout(const Duration(seconds: 2));
+      if (checks.any((doc) => doc.exists)) return;
+    } catch (e) {
+      debugPrint('[AuthService] Provider/Admin check error: $e. Aborting migration for retry.');
+      return;
+    }
+
+    final rawLat = data['latitude'];
+    final rawLng = data['longitude'];
+    final hasAddress = data.containsKey('address') && data['address'] != null;
+    final hasDistrict = data.containsKey('district') && data['district'] != null;
+
+    if (rawLat == null && rawLng == null && !hasAddress && !hasDistrict) {
+      return;
+    }
+
+    try {
+      final double? lat = (rawLat is num) ? rawLat.toDouble() : null;
+      final double? lng = (rawLng is num) ? rawLng.toDouble() : null;
+
+      bool hasRealCoordinates = false;
+      if (lat != null && lng != null && lat.isFinite && lng.isFinite && lat != 0.0 && lng != 0.0) {
+        final isColomboDefault = (lat - 6.9271).abs() < 0.0001 && (lng - 79.8612).abs() < 0.0001;
+        if (!isColomboDefault) {
+          hasRealCoordinates = true;
+        }
+      }
+
+      final batch = firestore.batch();
+      final userDocRef = firestore.collection(FirestorePaths.users).doc(uid);
+
+      if (hasRealCoordinates) {
+        final savedCol = userDocRef.collection('savedAddresses');
+        final existing = await savedCol.where('label', isEqualTo: 'Home').limit(1).get();
+
+        if (existing.docs.isEmpty) {
+          final address = (data['address'] as String?)?.trim().isNotEmpty == true
+              ? (data['address'] as String).trim()
+              : ((data['district'] as String?)?.trim().isNotEmpty == true
+                  ? data['district'] as String
+                  : 'Home');
+
+          final newAddrRef = savedCol.doc();
+          batch.set(newAddrRef, {
+            'label': 'Home',
+            'latitude': lat,
+            'longitude': lng,
+            'address': address,
+            'landmark': '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      // remove old location fields from customer record
+      batch.update(userDocRef, {
+        'latitude': FieldValue.delete(),
+        'longitude': FieldValue.delete(),
+        'address': FieldValue.delete(),
+        'district': FieldValue.delete(),
+      });
+
+      await batch.commit();
+
+      // update memory profile to match database
+      data.remove('latitude');
+      data.remove('longitude');
+      data.remove('address');
+      data.remove('district');
+    } catch (e) {
+      debugPrint('[AuthService] Customer location migration error: $e');
+    }
   }
 
   Future<UserProfile> saveUserProfile(UserProfile updatedProfile) async {
@@ -217,8 +314,10 @@ class AuthService {
           'initials': initials,
           'avatarColor': 0xFFD6900F,
           'title': profileWithId.serviceCategory != null
-              ? '${profileWithId.serviceCategory} Specialist'
+              ? '${CategoryService.instance.nameOf(profileWithId.serviceCategory)} Specialist'
               : 'Service Technician',
+          'category': profileWithId.serviceCategory ?? '',
+          'serviceCategory': profileWithId.serviceCategory ?? '',
           'online': true,
           'etaLabel': 'Available Today',
           'baseRateLkr': 1500,
@@ -229,14 +328,11 @@ class AuthService {
           'latitude': profileWithId.latitude,
           'longitude': profileWithId.longitude,
           'phone': profileWithId.phone,
-          'nic': profileWithId.nic,
-          'nicFrontUrl': profileWithId.nicFrontUrl,
-          'nicBackUrl': profileWithId.nicBackUrl,
         };
 
         if (isNewTech) {
           techData['nicVerified'] = false;
-          techData['rating'] = 5.0;
+          techData['rating'] = null;
           techData['reviewCount'] = 0;
           techData['jobsCount'] = 0;
           techData['banned'] = false;
@@ -245,8 +341,25 @@ class AuthService {
 
         batch.set(techDoc, techData, SetOptions(merge: true));
 
-        if (profileWithId.nicFrontUrl != null ||
-            profileWithId.nicBackUrl != null) {
+        // store private kyc details
+        if (profileWithId.nic != null ||
+            profileWithId.nicFrontKey != null ||
+            profileWithId.nicBackKey != null) {
+          final kycDoc = techDoc.collection('private').doc('kyc');
+          batch.set(
+            kycDoc,
+            {
+              if (profileWithId.nic != null) 'nic': profileWithId.nic,
+              if (profileWithId.nicFrontKey != null) 'nicFrontKey': profileWithId.nicFrontKey,
+              if (profileWithId.nicBackKey != null) 'nicBackKey': profileWithId.nicBackKey,
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true),
+          );
+        }
+
+        if (profileWithId.nicFrontKey != null ||
+            profileWithId.nicBackKey != null) {
           final verQueueDoc = FirebaseFirestore.instance
               .collection(FirestorePaths.verificationQueue)
               .doc(uid);
@@ -255,15 +368,15 @@ class AuthService {
           final existingData = verSnap.data();
           final existingStatus = existingData?['status'] as String?;
 
-          // queue review if new or new photos uploaded
+          // queue review if photo updated
           bool shouldQueue = false;
           if (!docExists) {
             shouldQueue = true;
           } else if (existingStatus == 'rejected') {
-            final oldFront = existingData?['nicFrontUrl'] as String?;
-            final oldBack = existingData?['nicBackUrl'] as String?;
-            if (profileWithId.nicFrontUrl != oldFront ||
-                profileWithId.nicBackUrl != oldBack) {
+            final oldFront = existingData?['nicFrontKey'] as String? ?? existingData?['nicFrontUrl'] as String?;
+            final oldBack = existingData?['nicBackKey'] as String? ?? existingData?['nicBackUrl'] as String?;
+            if (profileWithId.nicFrontKey != oldFront ||
+                profileWithId.nicBackKey != oldBack) {
               shouldQueue = true;
             }
           }
@@ -278,8 +391,8 @@ class AuthService {
                 'phone': profileWithId.phone,
                 'district': profileWithId.district,
                 'nic': profileWithId.nic,
-                'nicFrontUrl': profileWithId.nicFrontUrl,
-                'nicBackUrl': profileWithId.nicBackUrl,
+                'nicFrontKey': profileWithId.nicFrontKey,
+                'nicBackKey': profileWithId.nicBackKey,
                 'status': 'pending',
                 'submittedAt': FieldValue.serverTimestamp(),
               },
@@ -362,6 +475,35 @@ class AuthService {
       'email': cleanEmail,
       'displayName': displayName,
     };
+  }
+
+  // delete account permanently
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final token = await user.getIdToken();
+      final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+      final uri = Uri.parse('$baseUrl/delete-account');
+
+      await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'x-helaservice-key': AppConfig.apiSecretKey,
+        },
+      ).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint('remote delete account note: $e');
+    }
+
+    try {
+      await user.delete();
+    } catch (_) {}
+
+    await signOut();
   }
 
   Future<void> signOut() async {

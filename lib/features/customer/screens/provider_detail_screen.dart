@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
 import '../../../models/booking.dart';
-import '../../../models/complaint.dart';
+import '../../../models/portfolio_item.dart';
 import '../../../repositories/booking_repository.dart';
-import '../../../repositories/complaint_repository.dart';
+import '../../../repositories/portfolio_repository.dart';
+import '../../../services/category_service.dart';
+import '../../../repositories/technician_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/photo_viewer_dialog.dart';
+import '../../../shared/widgets/block_report_dialog.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../services/review_service.dart';
@@ -18,6 +21,8 @@ import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/status_pill.dart';
+import '../../../shared/widgets/job_location_picker.dart';
+import '../../../services/call_service.dart';
 
 class ProviderDetailScreen extends StatelessWidget {
   final Technician technician;
@@ -45,15 +50,51 @@ class ProviderDetailScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
-          Center(
-            child: IconSquareButton.small(
-              icon: Icons.flag_outlined,
-              iconColor: AppColors.error,
-              tooltip: context.l10n.reportProvider,
-              onTap: () => _showReportProviderSheet(context, technician),
-            ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, color: context.themeInk),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            onSelected: (value) {
+              if (value == 'report') {
+                BlockReportHelper.showReportSheet(
+                  context,
+                  targetUid: technician.id,
+                  targetName: technician.name,
+                  targetRole: 'provider',
+                  tradeCategory: technician.title,
+                );
+              } else if (value == 'block') {
+                BlockReportHelper.showBlockConfirmation(
+                  context,
+                  targetUid: technician.id,
+                  targetName: technician.name,
+                  onBlocked: () => Navigator.pop(context),
+                );
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'report',
+                child: Row(
+                  children: [
+                    const Icon(Icons.flag_outlined, size: 18, color: AppColors.error),
+                    const SizedBox(width: 10),
+                    Text(ctx.l10n.reportProvider),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'block',
+                child: Row(
+                  children: [
+                    const Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+                    const SizedBox(width: 10),
+                    Text(ctx.l10n.blockUserAction),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
         ],
       ),
       body: ListView(
@@ -93,19 +134,64 @@ class ProviderDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${LocalizedData.getCategory(context, technician.title)} · ${technician.serviceArea.isNotEmpty ? LocalizedData.getDistrict(context, technician.serviceArea) : context.l10n.custFallbackColombo}',
+                  '${CategoryService.instance.nameOf(technician.category.isNotEmpty ? technician.category : technician.title, context: context)} · ${technician.serviceArea.isNotEmpty ? LocalizedData.getDistrict(context, technician.serviceArea) : context.l10n.custFallbackColombo}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: context.themeTextSecondary,
                   ),
                 ),
-                if (technician.nicVerified) ...[
+                if (!technician.isApproved) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                        SizedBox(width: 8),
+                        Text(
+                          'Pending Admin Approval · Unavailable for hire',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
                   const SizedBox(height: 8),
-                  StatusPill(
-                    type: StatusPillType.online,
-                    label: context.l10n.verifiedArtisan,
-                    showDot: true,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (technician.nicVerified)
+                        StatusPill(
+                          type: StatusPillType.online,
+                          label: context.l10n.verifiedArtisan,
+                          showDot: true,
+                        ),
+                      StatusPill(
+                        type: technician.isAvailableNow
+                            ? StatusPillType.online
+                            : (technician.online
+                                ? StatusPillType.pending
+                                : StatusPillType.offline),
+                        label: technician.isAvailableNow
+                            ? context.l10n.availableNow
+                            : (technician.online
+                                ? context.l10n.outsideWorkingHours
+                                : context.l10n.statusOffline),
+                        showDot: true,
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -113,52 +199,241 @@ class ProviderDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           AppCard(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            padding: const EdgeInsets.all(16),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StatTile(
-                  icon: Icons.star_rounded,
-                  value: technician.rating.toStringAsFixed(1),
-                  label: context.l10n.rating,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryContainer.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.star_rounded,
+                            color: AppColors.secondaryContainer, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (technician.isNewProvider || technician.rating == null) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  context.l10n.newProviderBadge,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ] else ...[
+                              Row(
+                                children: [
+                                  Text(
+                                    technician.rating!.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '(${technician.reviewCount})',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: context.themeTextSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 2),
+                            Text(
+                              context.l10n.rating,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                _StatTile(
-                  icon: Icons.task_alt_rounded,
-                  value: '${technician.jobsCount}',
-                  label: context.l10n.completedJobs,
+                Container(
+                  width: 1,
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  color: context.themeBorder,
                 ),
-                _StatTile(
-                  icon: Icons.work_history_rounded,
-                  value: technician.yearsExperience,
-                  label: context.l10n.experience,
-                ),
-                _StatTile(
-                  icon: Icons.timer_outlined,
-                  value: technician.onTimePercent,
-                  label: context.l10n.onTimeArrival,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.location_on_rounded,
+                            color: AppColors.primary, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              LocalizedData.getDistrict(context, technician.serviceArea),
+                              style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              context.l10n.district,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          _SectionCard(
-            title: context.l10n.transparentPricing,
+          const SizedBox(height: 16),
+          AppCard(
+            padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _PriceRow(
-                    context.l10n.baseInspectionFee,
-                    context.l10n.baseInspectionSub,
-                    'LKR ${technician.baseRateLkr}'),
-                const Divider(),
-                _PriceRow(context.l10n.standardHourlyLabour, null,
-                    context.l10n.custRatePerHour('${technician.hourlyRateLkr}')),
-                const Divider(),
-                _PriceRow(context.l10n.emergencyRate, null,
-                    context.l10n.custRatePerHour('${technician.emergencyRateLkr}')),
-                const SizedBox(height: 6),
-                Text(context.l10n.materialsBilledSeparately,
-                    style: TextStyle(
-                        color: context.themeTextSecondary, fontSize: 11)),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.contact_phone_rounded,
+                          color: AppColors.primary, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Direct Contact & Fast Quotes',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            technician.phone.isNotEmpty
+                                ? technician.phone
+                                : 'Verified phone available',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          String phone = technician.phone.trim();
+                          if (phone.isEmpty) {
+                            final t = await TechnicianRepository().getById(technician.id);
+                            phone = t?.phone.trim() ?? '';
+                          }
+                          if (phone.isNotEmpty && context.mounted) {
+                            CallService.instance.startCall(
+                              context: context,
+                              calleePhone: phone,
+                              calleeName: technician.name,
+                              calleeUid: technician.id,
+                              calleeRole: technician.category.isNotEmpty
+                                  ? technician.category
+                                  : 'provider',
+                            );
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(context.l10n.providerPhoneNotAvailable)),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.call_rounded, size: 16),
+                        label: Text(context.l10n.callTech),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => DirectChatScreen(
+                                otherPartyId: technician.id,
+                                otherPartyName: technician.name,
+                                otherPartyRole: technician.title,
+                                otherPartyPhone: technician.phone,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                        label: Text(context.l10n.chat),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -168,64 +443,238 @@ class ProviderDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(technician.about,
-                    style: TextStyle(
-                        color: context.themeTextSecondary, height: 1.4)),
-                const SizedBox(height: 10),
-                Wrap(spacing: 8, runSpacing: 8, children: [
-                  PillBadge(label: technician.languages, icon: Icons.translate),
-                  PillBadge(
-                      label: LocalizedData.getDistrict(context, technician.serviceArea), icon: Icons.location_on),
-                  PillBadge(
-                      label: technician.certification,
-                      icon: Icons.workspace_premium),
-                ]),
+                if (technician.about.trim().isNotEmpty)
+                  Text(technician.about,
+                      style: TextStyle(
+                          color: context.themeTextSecondary, height: 1.4)),
+                if (technician.about.trim().isNotEmpty)
+                  const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (technician.serviceArea.trim().isNotEmpty)
+                      PillBadge(
+                        label: '${context.l10n.district}: ${LocalizedData.getDistrict(context, technician.serviceArea)}',
+                        icon: Icons.location_on,
+                      ),
+                    if (technician.languages.trim().isNotEmpty)
+                      PillBadge(
+                        label: technician.languages,
+                        icon: Icons.translate,
+                      ),
+                    if (technician.certification.trim().isNotEmpty)
+                      PillBadge(
+                        label: technician.certification,
+                        icon: Icons.workspace_premium,
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                  '${context.l10n.recentWorkCompleted} (${technician.jobsCount})',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(context.l10n.viewAll,
-                  style:
-                      const TextStyle(color: AppColors.primary, fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 90,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: technician.recentWork.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, i) {
-                final w = technician.recentWork[i];
-                return Container(
-                  width: 110,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: context.themeSurfaceLow,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: context.themeBorder)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(w.title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12)),
-                      Text(w.location,
-                          style: TextStyle(
-                              fontSize: 11, color: context.themeTextSecondary)),
-                    ],
-                  ),
-                );
-              },
+          _SectionCard(
+            title: context.l10n.workingHoursTitle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      technician.isAvailableNow
+                          ? Icons.check_circle_rounded
+                          : Icons.schedule_rounded,
+                      size: 18,
+                      color: technician.isAvailableNow
+                          ? const Color(0xFF22C55E)
+                          : AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        technician.isAvailableNow
+                            ? context.l10n.availableNow
+                            : (technician.online
+                                ? context.l10n.outsideWorkingHours
+                                : context.l10n.statusOffline),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: technician.isAvailableNow
+                              ? const Color(0xFF22C55E)
+                              : context.themeInk,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        context.l10n.serviceRadiusKm(
+                            technician.serviceRadiusKm.round()),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+          StreamBuilder<List<PortfolioItem>>(
+            stream: PortfolioRepository()
+                .streamPortfolio(technician.id, approvedOnly: true),
+            builder: (context, portSnap) {
+              final portfolioItems = portSnap.data ?? [];
+              if (portfolioItems.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.l10n.portfolioTitle,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '${portfolioItems.length}',
+                          style: TextStyle(
+                            color: context.themeTextSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 130,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: portfolioItems.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, i) {
+                          final p = portfolioItems[i];
+                          return GestureDetector(
+                            onTap: () => PhotoViewerDialog.show(
+                              context,
+                              photoUrl: p.photoUrl,
+                              title: p.title,
+                            ),
+                            child: Container(
+                              width: 140,
+                              decoration: BoxDecoration(
+                                color: context.themeSurfaceLow,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Image.network(
+                                      p.photoUrl,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: context.themeSurface,
+                                        child: const Icon(
+                                            Icons.broken_image_rounded),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Text(
+                                      p.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 11.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              if (technician.recentWork.isNotEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.l10n.recentWorkCompleted,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          context.l10n.viewAll,
+                          style: const TextStyle(
+                              color: AppColors.primary, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 90,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: technician.recentWork.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, i) {
+                          final w = technician.recentWork[i];
+                          return Container(
+                            width: 110,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: context.themeSurfaceLow,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: context.themeBorder)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(w.title,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12)),
+                                Text(w.location,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.themeTextSecondary)),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
           StreamBuilder<List<Map<String, dynamic>>>(
             stream: ReviewService.instance.streamProviderReviews(technician.id),
@@ -238,7 +687,7 @@ class ProviderDetailScreen extends StatelessWidget {
               final reviewCount = liveReviews.isNotEmpty
                   ? liveReviews.length
                   : technician.reviewCount;
-              double rating = technician.rating;
+              double rating = technician.rating ?? 5.0;
               if (liveReviews.isNotEmpty) {
                 final total = liveReviews.fold<double>(
                   0,
@@ -424,6 +873,37 @@ class ProviderDetailScreen extends StatelessWidget {
           child: Row(
             children: [
               IconSquareButton(
+                icon: Icons.phone_rounded,
+                size: 54,
+                radius: 16,
+                tooltip: context.l10n.callTech,
+                onTap: () async {
+                  String phone = technician.phone.trim();
+                  if (phone.isEmpty) {
+                    final t = await TechnicianRepository().getById(technician.id);
+                    phone = t?.phone.trim() ?? '';
+                  }
+                  if (phone.isNotEmpty && context.mounted) {
+                    CallService.instance.startCall(
+                      context: context,
+                      calleePhone: phone,
+                      calleeName: technician.name,
+                      calleeUid: technician.id,
+                      calleeRole: technician.category.isNotEmpty
+                          ? technician.category
+                          : 'provider',
+                    );
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(context.l10n.providerPhoneNotAvailable)),
+                      );
+                    }
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              IconSquareButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 size: 54,
                 radius: 16,
@@ -446,64 +926,95 @@ class ProviderDetailScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 54,
                   child: PrimaryButton(
-                    label: '${context.l10n.requestService} · LKR ${technician.baseRateLkr}',
-                    trailingIcon: Icons.arrow_forward_rounded,
-                    onPressed: () async {
-                      final user = FirebaseAuth.instance.currentUser;
-                  final custName = user?.displayName?.isNotEmpty == true
-                      ? user!.displayName!
-                      : 'Customer';
-                  final initials = custName.isNotEmpty
-                      ? custName.substring(0, 1).toUpperCase()
-                      : 'C';
+                    label: !technician.isApproved
+                        ? 'Provider Verification Pending'
+                        : context.l10n.requestService,
+                    trailingIcon: technician.isApproved ? Icons.arrow_forward_rounded : null,
+                    onPressed: !technician.isApproved
+                        ? null
+                        : () async {
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(context.l10n.signIn),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
 
-                  final bookingObj = Booking(
-                    customerId: user?.uid ?? '',
-                    providerId: technician.id,
-                    providerName: technician.name,
-                    providerPhone: technician.phone,
-                    status: 'confirmed',
-                    time: 'Now',
-                    relativeTime: 'Just now',
-                    title: technician.title,
-                    estRate: 'LKR ${technician.baseRateLkr}',
-                    customerName: custName,
-                    customerInitials: initials,
-                    location: technician.serviceArea.isNotEmpty
-                        ? technician.serviceArea
-                        : 'Colombo',
-                    distance: technician.etaLabel,
-                  );
+                            // pick location first
+                            final location =
+                                await JobLocationPicker.pickLocation(
+                              context,
+                              title: context.l10n.confirmServiceLocation,
+                            );
+                            if (location == null || !context.mounted) return;
 
-                  final bookingId =
-                      await BookingRepository().createBooking(bookingObj);
-                  if (!context.mounted) return;
+                            final custName =
+                                user.displayName?.isNotEmpty == true
+                                    ? user.displayName!
+                                    : 'Customer';
+                            final initials = custName.isNotEmpty
+                                ? custName.substring(0, 1).toUpperCase()
+                                : 'C';
 
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => LiveTrackingScreen(
-                        technician: technician,
-                        booking: Booking(
-                          id: bookingId,
-                          customerId: bookingObj.customerId,
-                          providerId: bookingObj.providerId,
-                          providerName: bookingObj.providerName,
-                          providerPhone: bookingObj.providerPhone,
-                          status: bookingObj.status,
-                          time: bookingObj.time,
-                          relativeTime: bookingObj.relativeTime,
-                          title: bookingObj.title,
-                          estRate: bookingObj.estRate,
-                          customerName: bookingObj.customerName,
-                          customerInitials: bookingObj.customerInitials,
-                          location: bookingObj.location,
-                          distance: bookingObj.distance,
-                        ),
-                        showBottomNav: false,
-                      ),
-                    ),
-                  );
-                },
+                            final bookingObj = Booking(
+                              customerId: user.uid,
+                              providerId: technician.id,
+                              providerName: technician.name,
+                              providerPhone: technician.phone,
+                              status: 'confirmed',
+                              time: 'Now',
+                              relativeTime: 'Just now',
+                              title: technician.title,
+                              estRate: 'Custom Quote',
+                              customerName: custName,
+                              customerInitials: initials,
+                              customerLatitude: location.latitude,
+                              customerLongitude: location.longitude,
+                              location: location.address,
+                              entryInstructions: location.landmark,
+                              distance: technician.etaLabel,
+                            );
+
+                            final bookingId = await BookingRepository()
+                                .createBooking(bookingObj);
+                            if (!context.mounted) return;
+
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => LiveTrackingScreen(
+                                  technician: technician,
+                                  booking: Booking(
+                                    id: bookingId,
+                                    customerId: bookingObj.customerId,
+                                    providerId: bookingObj.providerId,
+                                    providerName: bookingObj.providerName,
+                                    providerPhone: bookingObj.providerPhone,
+                                    status: bookingObj.status,
+                                    time: bookingObj.time,
+                                    relativeTime: bookingObj.relativeTime,
+                                    title: bookingObj.title,
+                                    estRate: bookingObj.estRate,
+                                    customerName: bookingObj.customerName,
+                                    customerInitials:
+                                        bookingObj.customerInitials,
+                                    customerLatitude:
+                                        bookingObj.customerLatitude,
+                                    customerLongitude:
+                                        bookingObj.customerLongitude,
+                                    location: bookingObj.location,
+                                    entryInstructions:
+                                        bookingObj.entryInstructions,
+                                    distance: bookingObj.distance,
+                                  ),
+                                  showBottomNav: false,
+                                ),
+                              ),
+                            );
+                          },
               ),
             ),
           ),
@@ -512,37 +1023,6 @@ class ProviderDetailScreen extends StatelessWidget {
     ),
   ),
 );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  const _StatTile(
-      {required this.icon, required this.value, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(height: 4),
-          Text(value,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: 10, height: 1.15, color: context.themeTextSecondary),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -573,349 +1053,3 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _PriceRow extends StatelessWidget {
-  final String label;
-  final String? sub;
-  final String price;
-  const _PriceRow(this.label, this.sub, this.price);
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.themeInk,
-                  ),
-                ),
-                if (sub != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      sub!,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: context.themeTextSecondary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            price,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              color: context.themeInk,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-void _showReportProviderSheet(BuildContext context, Technician technician) {
-  final reasons = [
-    'Unprofessional Conduct',
-    'Late or No-Show',
-    'Overcharging / Price Dispute',
-    'Poor Quality of Work',
-    'Safety or Harassment Concern',
-    'Fraud or Identity Issue',
-    'Other Issue',
-  ];
-
-  String selectedReason = reasons.first;
-  final descController = TextEditingController();
-  bool isSubmitting = false;
-
-  String getLocalizedComplaintReason(BuildContext ctx, String reason) {
-    switch (reason) {
-      case 'Unprofessional Conduct':
-        return ctx.l10n.complaintUnprofessionalConduct;
-      case 'Late or No-Show':
-        return ctx.l10n.complaintLateNoShow;
-      case 'Overcharging / Price Dispute':
-        return ctx.l10n.complaintPriceDispute;
-      case 'Poor Quality of Work':
-        return ctx.l10n.complaintPoorQuality;
-      case 'Safety or Harassment Concern':
-        return ctx.l10n.complaintSafetyConcern;
-      case 'Fraud or Identity Issue':
-        return ctx.l10n.complaintFraudIssue;
-      case 'Other Issue':
-        return ctx.l10n.complaintOtherIssue;
-      default:
-        return reason;
-    }
-  }
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: AppColors.getSurface(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (sheetContext) {
-      return StatefulBuilder(
-        builder: (ctx, setModalState) {
-          final surface = AppColors.getSurface(ctx);
-          final onSurface = AppColors.getTextPrimary(ctx);
-          final onSurfaceVar = AppColors.getTextSecondary(ctx);
-
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 20,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.getBorder(ctx),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.errorContainer.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.flag_rounded,
-                            color: AppColors.error, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ctx.l10n.reportServiceProvider,
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: onSurface,
-                              ),
-                            ),
-                            Text(
-                              ctx.l10n.reportingTechnician(technician.name, technician.title),
-                              style:
-                                  TextStyle(fontSize: 12, color: onSurfaceVar),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    ctx.l10n.selectComplaintReason,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.getBorder(ctx)),
-                      color: AppColors.getSurfaceLow(ctx),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedReason,
-                        isExpanded: true,
-                        dropdownColor: surface,
-                        items: reasons.map((r) {
-                          return DropdownMenuItem<String>(
-                            value: r,
-                            child: Text(getLocalizedComplaintReason(ctx, r),
-                                style:
-                                    TextStyle(color: onSurface, fontSize: 14)),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setModalState(() => selectedReason = val);
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    ctx.l10n.explainIncidentDetails,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: descController,
-                    minLines: 3,
-                    maxLines: 5,
-                    style: TextStyle(color: onSurface, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: ctx.l10n.explainIncidentHint,
-                      hintStyle: TextStyle(
-                          color: onSurfaceVar.withValues(alpha: 0.6),
-                          fontSize: 13),
-                      filled: true,
-                      fillColor: AppColors.getSurfaceLow(ctx),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.getBorder(ctx)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.getBorder(ctx)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              final text = descController.text.trim();
-                              if (text.isEmpty) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          ctx.l10n.describeIssueBeforeSubmitting)),
-                                );
-                                return;
-                              }
-
-                              final user = FirebaseAuth.instance.currentUser;
-                              if (user == null) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          ctx.l10n.signInToSubmitComplaint)),
-                                );
-                                return;
-                              }
-
-                              setModalState(() => isSubmitting = true);
-
-                              try {
-                                final complaint = Complaint(
-                                  customerId: user.uid,
-                                  customerName: (user.displayName != null &&
-                                          user.displayName!.isNotEmpty)
-                                      ? user.displayName!
-                                      : (user.phoneNumber != null
-                                          ? 'User (${user.phoneNumber})'
-                                          : 'Customer'),
-                                  customerPhone: user.phoneNumber ?? '',
-                                  providerId: technician.id,
-                                  providerName: technician.name,
-                                  providerTrade: technician.title,
-                                  reason: selectedReason,
-                                  description: text,
-                                );
-
-                                await ComplaintRepository()
-                                    .submitComplaint(complaint);
-
-                                if (ctx.mounted) {
-                                  Navigator.pop(ctx);
-                                }
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Row(
-                                        children: [
-                                          const Icon(Icons.check_circle,
-                                              color: Colors.white, size: 20),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                                context.l10n.complaintSubmittedSuccess),
-                                          ),
-                                        ],
-                                      ),
-                                      backgroundColor: AppColors.primary,
-                                      duration: const Duration(seconds: 4),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (ctx.mounted) {
-                                  setModalState(() => isSubmitting = false);
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            '${ctx.l10n.failedToSubmitReport}: $e')),
-                                  );
-                                }
-                              }
-                            },
-                      child: isSubmitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : Text(
-                              ctx.l10n.submitOfficialReport,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}

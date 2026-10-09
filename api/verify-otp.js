@@ -1,13 +1,14 @@
 const crypto = require('crypto');
 const { admin, db } = require('./_firebase');
+const { verifyApiKey } = require('./_auth');
 
 module.exports = async function handler(req, res) {
-  // cors
+  // allow cross origin
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-helaservice-key');
 
-  // cors preflight
+  // handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -17,10 +18,8 @@ module.exports = async function handler(req, res) {
   }
 
   // verify api key
-  const expectedKey = (process.env.HELASERVICE_API_KEY || 'hela_app_sec_k9827x_prod').trim();
-  const clientKey = (req.headers['x-helaservice-key'] || '').trim();
-  if (clientKey !== expectedKey) {
-    return res.status(401).json({ error: 'Unauthorized: Valid API key required.' });
+  if (!verifyApiKey(req, res)) {
+    return;
   }
 
   try {
@@ -44,7 +43,7 @@ module.exports = async function handler(req, res) {
 
     const data = doc.data();
 
-    // check if expired
+    // check expiration
     if (Date.now() > data.expiresAt) {
       await docRef.delete();
       return res.status(400).json({
@@ -52,7 +51,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // max 5 attempts check
+    // check maximum attempts
     if (data.attempts >= 5) {
       await docRef.delete();
       return res.status(403).json({
@@ -89,7 +88,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // delete otp once verified
+    // remove session once verified
     await docRef.delete();
 
     return res.status(200).json({

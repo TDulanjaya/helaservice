@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
-// crop, resize and compress profile picture
+// process profile picture
 Uint8List _processProfileImage(Uint8List rawBytes) {
   final image = img.decodeImage(rawBytes);
   if (image == null) {
@@ -25,7 +25,7 @@ Uint8List _processProfileImage(Uint8List rawBytes) {
     height: minDim,
   );
 
-  // resize to 400x400
+  // resize image
   final resized = img.copyResize(
     cropped,
     width: 400,
@@ -33,7 +33,7 @@ Uint8List _processProfileImage(Uint8List rawBytes) {
     interpolation: img.Interpolation.linear,
   );
 
-  // compress under 150kb
+  // compress image
   const targetMaxBytes = 150000;
   final qualitySteps = [75, 65, 55, 45, 35, 25];
 

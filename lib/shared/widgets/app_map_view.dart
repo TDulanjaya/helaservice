@@ -13,7 +13,7 @@ bool get _isDesktopOrWeb {
       defaultTargetPlatform == TargetPlatform.linux;
 }
 
-// sri lanka center
+// center coordinates
 const LatLng kSriLankaCenter = LatLng(7.8731, 80.7718);
 const LatLng kColomboCenter = LatLng(6.9271, 79.8612);
 
@@ -172,7 +172,7 @@ class AppMapMarker {
   }) {
     final isZero = count == 0;
     final size = isZero ? 24.0 : (isLarge ? 42.0 : 32.0);
-    final totalHeight = size + 18.0; // icon circle + label + spacing
+    final totalHeight = size + 18.0; // total height with label and spacing
     final markerColor = color ?? (isZero ? const Color(0xFF9E9E9E) : AppColors.primary);
 
     return AppMapMarker(
@@ -285,7 +285,7 @@ class _AppMapViewState extends State<AppMapView> {
   }
 
   void _loadLightStyle() {
-    // on desktop platforms or web, rely on the fast, reliable raster tile layer
+    // raster tiles for web and desktop
     if (_isDesktopOrWeb) {
       return;
     }
@@ -389,7 +389,7 @@ class _AppMapViewState extends State<AppMapView> {
                   onMapReady: widget.onMapReady,
                 ),
                 children: [
-                  // on mobile when vector style is loaded, render crisp vector tiles
+                  // vector tiles for mobile
                   if (!_isDesktopOrWeb && _vectorStyle != null)
                     vmt.VectorTileLayer(
                       key: const ValueKey('vmt_light_layer'),
@@ -398,7 +398,7 @@ class _AppMapViewState extends State<AppMapView> {
                       tileProviders: _vectorStyle!.providers,
                     )
                   else
-                    // on desktop/web or while mobile style is loading, render fast reliable raster tiles
+                    // fallback to raster tiles
                     TileLayer(
                       key: const ValueKey('osm_raster_layer'),
                       urlTemplate:

@@ -893,7 +893,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get editProfile => 'சுயவிவரத்தைத் திருத்தவும்';
 
   @override
-  String get contactSupport => 'உதவி & ஆதரவு தொலைபேசி எண்';
+  String get contactSupport => 'ஆதரவைத் தொடர்பு கொள்ளவும்';
 
   @override
   String get appSettings => 'விருப்பத்தேர்வுகள் & அமைப்புகள்';
@@ -2594,7 +2594,7 @@ class AppLocalizationsTa extends AppLocalizations {
   }
 
   @override
-  String get etaLabel => 'ETA';
+  String get etaLabel => 'வருகை நேரம்';
 
   @override
   String get minsUnit => 'நிமி';
@@ -2951,7 +2951,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get permManageCategoriesDesc =>
-      'தொழில் வகைகள், அடிப்படைக் கட்டணங்கள் மற்றும் மாகாண மைய வரம்புகளை அமைக்க.';
+      'தொழில் வகைகள் மற்றும் மாகாண மைய வரம்புகளை அமைக்க.';
 
   @override
   String get permBroadcastAlertsDesc =>
@@ -3762,7 +3762,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get presetPolicyViolation => 'கொள்கை மீறல்';
 
   @override
-  String get reasonLabel => 'காரணம்';
+  String get reasonLabel => 'காரணம்:';
 
   @override
   String get suspendedByAdmin => 'நிர்வாகியால் இடைநிறுத்தப்பட்டது';
@@ -4800,7 +4800,7 @@ class AppLocalizationsTa extends AppLocalizations {
       'வேறு சேவைப் பிரிவைத் தேர்ந்தெடுக்கவும் அல்லது அவசர வேலைக் கோரிக்கையைப் பதிவு செய்யவும்.';
 
   @override
-  String get emergencyCalloutRate => 'அவசர சேவை கட்டணம்';
+  String get emergencyCalloutRate => 'அவசர அழைப்பு கட்டணம்';
 
   @override
   String emergencyEtaApprox(int mins) {
@@ -4854,4 +4854,1222 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get urgentHelpBannerAction => 'அவசர உதவி பெறவும்';
+
+  @override
+  String get myRates => 'எனது கட்டணங்கள்';
+
+  @override
+  String get rateCardTitle => 'நிலையான சேவை கட்டணங்கள்';
+
+  @override
+  String get dailyRate => 'தினசரி கட்டணம்';
+
+  @override
+  String get perKmTravelRate => 'ஒரு கி.மீ பயணக் கட்டணம்';
+
+  @override
+  String get standardVisitFee => 'பார்வை / வருகைக் கட்டணம்';
+
+  @override
+  String get quoteTypeFirm => 'நிலையான விலை';
+
+  @override
+  String get quoteTypeEstimate => 'மதிப்பிடப்பட்ட விலை';
+
+  @override
+  String get quoteTypeInspect => 'பார்வை மட்டும்';
+
+  @override
+  String get priceRevisionProposed => 'விலை திருத்தம் முன்மொழியப்பட்டது';
+
+  @override
+  String get extraWorkRequested => 'கூடுதல் வேலை / பொருட்கள்';
+
+  @override
+  String get visitOnlyCompletedNote =>
+      'இந்த முன்பதிவு பார்வைக்காக மட்டுமே நிறைவு செய்யப்பட்டது. மதிப்பாய்வுகள் முடக்கப்பட்டுள்ளன.';
+
+  @override
+  String get completionTypeNormal => 'வழக்கமான வேலை நிறைவு';
+
+  @override
+  String get completionTypeVisitOnly => 'பார்வை / வருகை மட்டும்';
+
+  @override
+  String get hourlyRate => 'மணிநேரக் கட்டணம்';
+
+  @override
+  String get yourUsualRates => 'உங்கள் வழக்கமான கட்டணங்கள்';
+
+  @override
+  String get yourUsualRatesSubtitle =>
+      'குறைந்தபட்சம் ஒரு கட்டணமாவது தேவை. வாடிக்கையாளர்கள் விலை மேற்கோள் கோரும்போது பயன்படுத்தப்படும்.';
+
+  @override
+  String get dailyRateHint => 'எ.கா. 3500 (1 - 100,000)';
+
+  @override
+  String get hourlyRateHint => 'எ.கா. 500 (1 - 20,000)';
+
+  @override
+  String get perKmRateHint => 'எ.கா. 80 (1 - 1,000)';
+
+  @override
+  String get visitFeeOptionalHint => 'விருப்பமானது, எ.கா. 1000 (0 - 20,000)';
+
+  @override
+  String get atLeastOneRateRequired =>
+      'குறைந்தபட்சம் ஒரு கட்டணம் (தினசரி, மணிநேரம் அல்லது ஒரு கி.மீ) தேவை.';
+
+  @override
+  String get dailyRateRangeError =>
+      'தினசரி கட்டணம் ரூ. 1 முதல் 100,000 வரை இருக்க வேண்டும்';
+
+  @override
+  String get hourlyRateRangeError =>
+      'மணிநேர கட்டணம் ரூ. 1 முதல் 20,000 வரை இருக்க வேண்டும்';
+
+  @override
+  String get perKmRateRangeError =>
+      'ஒரு கி.மீ கட்டணம் ரூ. 1 முதல் 1,000 வரை இருக்க வேண்டும்';
+
+  @override
+  String get visitFeeRangeError =>
+      'பார்வை கட்டணம் ரூ. 0 முதல் 20,000 வரை இருக்க வேண்டும்';
+
+  @override
+  String get withinAgreedPrice => 'ஒப்புக்கொள்ளப்பட்ட விலைக்குள்';
+
+  @override
+  String get visitFeeOnly => 'பார்வை கட்டணம் மட்டுமே';
+
+  @override
+  String get approvedExtrasBreakdown => 'ஒப்புதல் பெற்ற கூடுதல் கட்டணங்கள்';
+
+  @override
+  String get initialEstimateLabel => 'ஆரம்ப மேற்கோள் / மதிப்பீட்டு விலை';
+
+  @override
+  String get revisedAgreedPrice => 'ஒப்புக்கொள்ளப்பட்ட விலை';
+
+  @override
+  String get finalAmountToPay => 'செலுத்த வேண்டிய இறுதித் தொகை';
+
+  @override
+  String get priceMatchesQuote => 'விலை அசல் மேற்கோளுடன் பொருந்துகிறது';
+
+  @override
+  String get proposeNewPrice => 'புதிய விலையை முன்மொழியவும்';
+
+  @override
+  String get proposeRevisedPrice => 'திருத்தப்பட்ட விலையை முன்மொழியவும்';
+
+  @override
+  String get billingUnit => 'பில்லிங் அலகு';
+
+  @override
+  String get billingUnitFixed => 'நிலையான வேலை';
+
+  @override
+  String get billingUnitHour => 'மணிநேரம்';
+
+  @override
+  String get billingUnitDay => 'நாள்';
+
+  @override
+  String get unitRateLkr => 'அலகு விகிதம் (ரூ.)';
+
+  @override
+  String get quantityLabel => 'அளவு';
+
+  @override
+  String get priceChangeReason => 'விலை மாற்றத்திற்கான காரணம்';
+
+  @override
+  String get priceChangeReasonHint =>
+      'எ.கா. மறைக்கப்பட்ட குழாய் சேதம் கண்டுபிடிக்கப்பட்டது';
+
+  @override
+  String get totalRevisedPrice => 'மொத்த திருத்தப்பட்ட விலை';
+
+  @override
+  String get submitProposal => 'முன்மொழிவைச் சமர்ப்பிக்கவும்';
+
+  @override
+  String get addExtraWorkItem => 'கூடுதல் வேலை / உருப்படியைச் சேர்க்கவும்';
+
+  @override
+  String get extraDescription => 'விளக்கம்';
+
+  @override
+  String get extraDescriptionHint =>
+      'எ.கா. கூடுதல் 2மீ பிவிசி குழாய் மற்றும் இணைப்பு';
+
+  @override
+  String get extraAmountLkr => 'தொகை (ரூ.)';
+
+  @override
+  String get proposeExtra => 'கூடுதல் வேலையை முன்மொழியவும்';
+
+  @override
+  String get awaitingCustomerApproval =>
+      'வாடிக்கையாளர் ஒப்புதலுக்காக காத்திருக்கிறது';
+
+  @override
+  String get priceProposalSent =>
+      'விலை முன்மொழிவு வாடிக்கையாளர் ஒப்புதலுக்கு அனுப்பப்பட்டது';
+
+  @override
+  String get extraProposalSent =>
+      'கூடுதல் வேலை முன்மொழிவு வாடிக்கையாளருக்கு அனுப்பப்பட்டது';
+
+  @override
+  String get priceConfirmedMatches =>
+      'விலை அசல் மேற்கோளுடன் பொருந்துவது உறுதிப்படுத்தப்பட்டது';
+
+  @override
+  String get priceProposalRejected => 'விலை முன்மொழிவு நிராகரிக்கப்பட்டது';
+
+  @override
+  String get priceProposalApproved => 'விலை முன்மொழிவு அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get myRateCard => 'எனது கட்டண அட்டை';
+
+  @override
+  String get rateCardSubtitle =>
+      'வாடிக்கையாளர்களுக்குக் காட்டப்படும் மற்றும் மேற்கோள்களில் பயன்படுத்தப்படும் உங்கள் நிலையான கட்டணங்களை அமைக்கவும்.';
+
+  @override
+  String get saveRates => 'கட்டணங்களைச் சேமிக்கவும்';
+
+  @override
+  String get rateCardUpdatedSuccess =>
+      'கட்டண அட்டை வெற்றிகரமாக புதுப்பிக்கப்பட்டது';
+
+  @override
+  String get travelRate => 'பயணக் கட்டணம்';
+
+  @override
+  String get pricingStandardRates => 'விலை மற்றும் நிலையான கட்டணங்கள்';
+
+  @override
+  String get uploadRetry => 'மீண்டும் பதிவேற்றவும்';
+
+  @override
+  String get largeMediaWarningTitle => 'பெரிய கோப்பு எச்சரிக்கை';
+
+  @override
+  String get largeMediaWarningMessage =>
+      'கோப்பு 20MB ஐ விட அதிகமாக உள்ளது. மொபைல் டேட்டாவைப் பயன்படுத்தி பதிவேற்ற நேரம் மற்றும் டேட்டா செலவாகலாம். தொடரவா?';
+
+  @override
+  String get proceed => 'தொடரவும்';
+
+  @override
+  String get somethingWentWrong =>
+      'ஏதோ தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String customerDidNotAgreeVisitOnly(String amount) {
+    return 'வாடிக்கையாளர் ஏற்கவில்லை. வருகைக் கட்டணத்தை மட்டும் பெறவும்: LKR $amount';
+  }
+
+  @override
+  String get completeVisitOnly => 'வருகையை மட்டும் முடிக்கவும்';
+
+  @override
+  String get priceRevisionReasonRequired =>
+      'விலை திருத்தத்திற்கான காரணத்தை உள்ளிடவும்';
+
+  @override
+  String get checkRateAndQuantity =>
+      'கட்டணம் மற்றும் அளவு மதிப்புகளை சரிபார்க்கவும்';
+
+  @override
+  String get extraDescriptionLimit =>
+      'விவரத்தை உள்ளிடவும் (அதிகபட்சம் 300 எழுத்துக்கள்)';
+
+  @override
+  String get extraAmountLimit =>
+      'LKR 1 மற்றும் 1,000,000 இடையே உள்ள தொகையை உள்ளிடவும்';
+
+  @override
+  String get notesLimit500 =>
+      'குறிப்புகள் 500 எழுத்துக்கள் அல்லது குறைவாக இருக்க வேண்டும்';
+
+  @override
+  String get validVisitFeePrompt =>
+      'செல்லுபடியாகும் வருகைக் கட்டணத்தை உள்ளிடவும் (LKR 1 - 20,000)';
+
+  @override
+  String get validUnitRatePrompt =>
+      'செல்லுபடியாகும் அலகு கட்டணத்தை உள்ளிடவும் (குறைந்தபட்சம் LKR 1)';
+
+  @override
+  String get validQuantityPrompt =>
+      'செல்லுபடியாகும் அளவை உள்ளிடவும் (0.5 முதல் 60)';
+
+  @override
+  String get materialsEstimateLimit =>
+      'பொருட்கள் மதிப்பீடு LKR 0 மற்றும் 1,000,000 இடையே இருக்க வேண்டும்';
+
+  @override
+  String get visitInspectionFee => 'வருகை / ஆய்வு கட்டணம்:';
+
+  @override
+  String get materialsEstimateColon => 'பொருட்கள் மதிப்பீடு:';
+
+  @override
+  String get addIssueVideoMax =>
+      'சிக்கல் வீடியோவைச் சேர்க்கவும் (அதிகபட்சம் 120வி)';
+
+  @override
+  String get recordVideo => 'வீடியோ பதிவு செய்யவும்';
+
+  @override
+  String get errorPickingVideo =>
+      'வீடியோவைத் தேர்ந்தெடுக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get videoOfIssueOptional => 'சிக்கலின் வீடியோ (விருப்பத்திற்குரியது)';
+
+  @override
+  String get jobVideo => 'வேலை வீடியோ';
+
+  @override
+  String get videoClip => 'வீடியோ பகுதி';
+
+  @override
+  String get failedToPlayVideo => 'வீடியோவை இயக்க முடியவில்லை';
+
+  @override
+  String get failedToUpdateRates =>
+      'கட்டணங்களைப் புதுப்பிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get quoteOutdatedDeclined =>
+      'இந்த மேற்கோள் காலாவதியானது, புதியதை அனுப்புமாறு வழங்குநரிடம் கேளுங்கள்';
+
+  @override
+  String youAreMetersAway(String distance) {
+    return 'நீங்கள் பணி இருப்பிடத்திலிருந்து சுமார் $distance மீ தொலைவில் உள்ளீர்கள்.';
+  }
+
+  @override
+  String get imHereGpsWrong => 'நான் வந்துவிட்டேன், ஆனால் GPS தவறாக உள்ளது';
+
+  @override
+  String get slideToClaimArrival => 'வருகையை பதிவு செய்ய ஸ்லைடு செய்யவும்';
+
+  @override
+  String get waitingCustomerConfirmation =>
+      'வருகை அறிவிக்கப்பட்டது. வாடிக்கையாளர் உறுதிப்படுத்தலுக்காக காத்திருக்கிறது...';
+
+  @override
+  String get arrivalDeniedProviderNotice =>
+      'நீங்கள் இன்னும் வரவில்லை என்று வாடிக்கையாளர் கூறுகிறார். இடத்தை சரிபார்க்கவும் அல்லது அழைக்கவும்.';
+
+  @override
+  String get claimAgainArrival => 'மீண்டும் வருகையை பதிவு செய்யவும்';
+
+  @override
+  String get maxClaimsReached => 'அதிகபட்ச வருகை பதிவுகள் எட்டப்பட்டது (3/3).';
+
+  @override
+  String get customerDidNotAnswer =>
+      '10 நிமிடங்களுக்குப் பிறகும் வாடிக்கையாளர் பதிலளிக்கவில்லை.';
+
+  @override
+  String get startJobVerifiedGps =>
+      'பணியைத் தொடங்குங்கள் (GPS உறுதிப்படுத்தப்பட்டது)';
+
+  @override
+  String get callCustomerToConfirm =>
+      'வருகையை உறுதிப்படுத்த வாடிக்கையாளரை அழைக்கவும்';
+
+  @override
+  String providerSaysArrived(String providerName) {
+    return '$providerName வந்துவிட்டதாக கூறுகிறார். அவர் உங்களுடன் இருக்கிறாரா?';
+  }
+
+  @override
+  String providerGpsShowsAway(String distance) {
+    return 'அவர்களின் GPS $distance மீ தொலைவில் உள்ளதாகக் காட்டுகிறது.';
+  }
+
+  @override
+  String get yesTheyAreHere => 'ஆம், வந்துவிட்டார்';
+
+  @override
+  String get noNotHere => 'இல்லை, வரவில்லை';
+
+  @override
+  String get providerDidNotCome => 'சேவை வழங்குநர் வரவில்லை';
+
+  @override
+  String get confirmNoShowTitle => 'வராததை புகாரளிக்கவா?';
+
+  @override
+  String get confirmNoShowMessage =>
+      'சேவை வழங்குநர் வராததால் இந்த முன்பதிவு ரத்து செய்யப்படும்.';
+
+  @override
+  String get locationRequiredToBook =>
+      'முன்பதிவு செய்ய சரியான GPS இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get arrivalMockedFlag => 'போலி GPS கண்டறியப்பட்டது';
+
+  @override
+  String get arrivalOutsideZoneFlag => 'எல்லைக்கு வெளியே பதிவு செய்யப்பட்டது';
+
+  @override
+  String get arrivalDeniedFlag => 'வாடிக்கையாளர் வருகையை மறுத்தார்';
+
+  @override
+  String get noShowFlag => 'வழங்குநர் வரவில்லை';
+
+  @override
+  String gpsOutsideZoneAlert(String distance) {
+    return 'நீங்கள் எல்லைக்கு வெளியே ($distance மீ தொலைவில்) இருப்பதாக GPS காட்டுகிறது. வருகையை பதிவு செய்யவா?';
+  }
+
+  @override
+  String get proceedAnyway => 'தொடரவும்';
+
+  @override
+  String get claimSuccessNotified =>
+      'வருகை பதிவு செய்யப்பட்டது. வாடிக்கையாளருக்கு அறிவிக்கப்பட்டது.';
+
+  @override
+  String get completeJobEnterPin =>
+      'வேலையை முடிக்கவும் (வாடிக்கையாளர் PIN ஐ உள்ளிடவும்)';
+
+  @override
+  String get noShowReportedSuccess =>
+      'சேவை வழங்குநர் வரவில்லை என புகாரளிக்கப்பட்டது. முன்பதிவு ரத்து செய்யப்பட்டது.';
+
+  @override
+  String get providerReliability90Days => '90-நாள் வருகை மற்றும் நம்பகத்தன்மை';
+
+  @override
+  String get providerNoShowsCount => 'வராதவை';
+
+  @override
+  String get providerArrivalDenialsCount => 'மறுக்கப்பட்ட வருகைகள்';
+
+  @override
+  String get providerMockedGpsCount => 'போலி GPS';
+
+  @override
+  String get providerOutsideZoneCount => 'எல்லைக்கு வெளியே';
+
+  @override
+  String get scheduledTimePassedPrompt =>
+      'திட்டமிடப்பட்ட நேரம் கடந்துவிட்டது. புதிய தேதி மற்றும் நேரத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get chooseNewScheduleTitle =>
+      'திட்டமிடப்பட்ட நேரத்தைப் புதுப்பிக்கவும்';
+
+  @override
+  String get revisedEstimateDefault => 'தளத்திலான திருத்தப்பட்ட மதிப்பீடு';
+
+  @override
+  String get pleaseEnterSixDigits => 'தயவுசெய்து 6 இலக்கங்களை உள்ளிடவும்';
+
+  @override
+  String get customerLocationNotAvailableTitle =>
+      'வாடிக்கையாளர் இருப்பிடம் கிடைக்கவில்லை';
+
+  @override
+  String get customerLocationNotAvailableDesc =>
+      'இந்த பணிக்கு துல்லியமான GPS ஒருங்கிணைப்புகள் வழங்கப்படவில்லை. வருகையை ஒருங்கிணைக்க வாடிக்கையாளரை கீழே தொடர்பு கொள்ளவும்.';
+
+  @override
+  String get locationRequiredTitle => 'இருப்பிடம் தேவை';
+
+  @override
+  String get jobNoLocationRepost =>
+      'இந்த பணிக்கு இருப்பிடம் இல்லை. தயவுசெய்து இருப்பிடத்தை அமைத்து மீண்டும் பதிவிடவும்.';
+
+  @override
+  String quoteAcceptedChatMessage(String providerName, String price) {
+    return 'வணக்கம் $providerName, உங்கள் மேற்கோளை ஏற்றுக்கொண்டேன் (LKR $price). பணி விவரங்களை ஒருங்கிணைப்போம்!';
+  }
+
+  @override
+  String get pleaseEnterServiceLocation =>
+      'தயவுசெய்து சேவை இருப்பிட முகவரியை உள்ளிடவும்';
+
+  @override
+  String get optimizingVideoNotice =>
+      'வீடியோ மேம்படுத்தப்படுகிறது (அதிகபட்சம் 120 நொடி)...';
+
+  @override
+  String get addShortVideo => 'குறுகிய வீடியோவைச் சேர்க்கவும்';
+
+  @override
+  String get addShortVideoSubtitle =>
+      'பழுதுபார்ப்பு அல்லது சிக்கலை விளக்கும் 120 வினாடிகள் வரையிலான வீடியோ';
+
+  @override
+  String get noServicesAvailableYet => 'இன்னும் சேவைகள் கிடைக்கவில்லை';
+
+  @override
+  String get editSavedAddress => 'சேமிக்கப்பட்ட முகவரியைத் திருத்து';
+
+  @override
+  String get signInToManageSavedAddresses =>
+      'சேமிக்கப்பட்ட முகவரிகளை நிர்வகிக்க உள்நுழையவும்.';
+
+  @override
+  String get noSavedAddressesSubtitle =>
+      'இன்னும் சேமிக்கப்பட்ட முகவரிகள் இல்லை. எளிதாக முன்பதிவு செய்ய வீடு அல்லது அலுவலக முகவரிகளைச் சேர்க்கவும்.';
+
+  @override
+  String get becomeProviderSubtitle =>
+      'உங்கள் தொழில் திறன்களை வழங்கி, வேலைகளைப் பெற்று, அதிக வருமானம் ஈட்டவும்';
+
+  @override
+  String get switchToProvider => 'சேவை வழங்குநர் முறைக்கு மாறவும்';
+
+  @override
+  String get switchToProviderSubtitle =>
+      'உங்கள் சேவை வழங்குநர் பணியிடத்திற்கு திரும்ப மாறவும்';
+
+  @override
+  String get adminInspectionMode => 'நிர்வாக ஆய்வு முறை';
+
+  @override
+  String get adminInspectionModeDesc =>
+      'நிர்வாக அணுகலுடன் சேவை வழங்குநர் பணியிடம் பார்க்கப்படுகிறது.';
+
+  @override
+  String get setStandardRatesSubtitle =>
+      'நிலையான வருகை மற்றும் மணிநேரக் கட்டணங்களை அமைக்கவும்';
+
+  @override
+  String get quoteAcceptedTitle => 'மேற்கோள் ஏற்றுக்கொள்ளப்பட்டது!';
+
+  @override
+  String get customerConfirmedBooking =>
+      'வாடிக்கையாளர் இந்த முன்பதிவை உறுதிப்படுத்தினார்';
+
+  @override
+  String get enterProjectTitle => 'தயவுசெய்து திட்டத்தின் தலைப்பை உள்ளிடவும்';
+
+  @override
+  String get selectPhotoForShowcase =>
+      'தயவுசெய்து இந்த உருப்படிக்கு ஒரு புகைப்படத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String failedToSaveShowcase(String error) {
+    return 'உருப்படியைச் சேமிக்க முடியவில்லை: $error';
+  }
+
+  @override
+  String get quoteType => 'மேற்கோள் வகை';
+
+  @override
+  String get inspectionQuoteNotice =>
+      'ஆய்வு மேற்கோளில் தள வருகைக் கட்டணம் மற்றும் பயணச் செலவு அடங்கும். வருகைக்குப் பிறகு மொத்த பணி விலை ஒப்புக்கொள்ளப்படும்.';
+
+  @override
+  String get materialsEstimateOptional => 'பொருட்கள் மதிப்பீடு (விருப்பமானது)';
+
+  @override
+  String get estDistanceKm => 'மதிப்பிடப்பட்ட தூரம் (கி.மீ.)';
+
+  @override
+  String get travelRateLkrKm => 'பயணக் கட்டணம் (LKR/கி.மீ.)';
+
+  @override
+  String get totalQuotedPrice => 'மொத்த மேற்கோள் விலை';
+
+  @override
+  String get travelFee => 'பயணக் கட்டணம்';
+
+  @override
+  String get statusSelected => 'தேர்ந்தெடுக்கப்பட்டது';
+
+  @override
+  String get providerBaseLocationRequired =>
+      'வழங்குநரின் அடிப்படை இருப்பிடம் தேவை. தயவுசெய்து GPS மற்றும் முகவரியை அமைக்கவும்.';
+
+  @override
+  String get baseWorkshopLocation => 'அடிப்படை பட்டறை / சேவை இருப்பிடம் *';
+
+  @override
+  String get baseLocationDispatchNotice =>
+      'அருகிலுள்ள வழங்குநரைக் கணக்கிடத் தேவை';
+
+  @override
+  String get suspensionReasonLabel => 'இடைநிறுத்தத்திற்கான காரணம்:';
+
+  @override
+  String get registerBannerSubtitle =>
+      'இலங்கை முழுவதும் சரிபார்க்கப்பட்ட சாலை மற்றும் வீட்டு சேவை நிபுணர்களை அணுக நொடிகளில் பதிவு செய்யவும்.';
+
+  @override
+  String get sortOrder => 'வரிசைப்படுத்தும் ஒழுங்கு';
+
+  @override
+  String get isLive => 'நேரலையில் உள்ளது';
+
+  @override
+  String get editCategory => 'வகையைத் திருத்து';
+
+  @override
+  String get priceHistoryAudit => 'விலை வரலாறு & தணிக்கை';
+
+  @override
+  String get finalChargedAmount => 'இறுதியாக வசூலிக்கப்பட்ட தொகை:';
+
+  @override
+  String suspendCustomerConfirmPrompt(String name) {
+    return '\"$name\" வாடிக்கையாளரை இடைநிறுத்த நிச்சயமாக விரும்புகிறீர்களா? அவர்களின் கணக்கு பூட்டப்பட்டு, கோரிக்கைகளை உருவாக்குவதிலிருந்தோ அல்லது தளத்தை அணுகுவதிலிருந்தோ அவர்கள் தடுக்கப்படுவார்கள்.';
+  }
+
+  @override
+  String get unableToLoadPhoto => 'புகைப்படத்தை ஏற்ற முடியவில்லை';
+
+  @override
+  String get newTimeLabel => 'புதிய நேரம்:';
+
+  @override
+  String get noteLabel => 'குறிப்பு:';
+
+  @override
+  String get resetPinAttempts => 'PIN முயற்சிகளை மீட்டமைக்கவும்';
+
+  @override
+  String get noServiceHistoryYet => 'இன்னும் சேவை வரலாறு இல்லை';
+
+  @override
+  String get noServiceHistorySubtitle =>
+      'நிறைவு செய்யப்பட்ட மற்றும் முந்தைய முன்பதிவுகள் இங்கு தோன்றும்.';
+
+  @override
+  String get yourRatingReview => 'உங்கள் மதிப்பீடு மற்றும் விமர்சனம்';
+
+  @override
+  String get signInToViewBookings =>
+      'உங்கள் முன்பதிவுகளைப் பார்க்க உள்நுழையவும்';
+
+  @override
+  String get pendingAdminApprovalUnavailable =>
+      'நிர்வாகி ஒப்புதலுக்காக காத்திருக்கிறது · பணியமர்த்த கிடைக்கவில்லை';
+
+  @override
+  String get directContactFastQuotes => 'நேரடி தொடர்பு & விரைவான மேற்கோள்கள்';
+
+  @override
+  String get verifiedPhoneAvailable => 'சரிபார்க்கப்பட்ட தொலைபேசி எண் உள்ளது';
+
+  @override
+  String get officialSupport => 'அதிகாரப்பூர்வ ஆதரவு';
+
+  @override
+  String get failedToSaveSchedule => 'அட்டவணையைச் சேமிக்க முடியவில்லை';
+
+  @override
+  String get statusConfirmed => 'உறுதி செய்யப்பட்டது';
+
+  @override
+  String get statusEnRoute => 'வருகை தருகிறார்';
+
+  @override
+  String get statusDeclined => 'நிராகரிக்கப்பட்டது';
+
+  @override
+  String get statusAssigned => 'நியமிக்கப்பட்டது';
+
+  @override
+  String get statusScheduled => 'திட்டமிடப்பட்டது';
+
+  @override
+  String get completionPinLabel => 'முடிவு PIN:';
+
+  @override
+  String get chatPhotoMessage => 'புகைப்படம்';
+
+  @override
+  String get hintFullName => 'உங்கள் முழுப் பெயர்';
+
+  @override
+  String get hintEmail => 'மின்னஞ்சல் முகவரி';
+
+  @override
+  String get hintPhone => 'கைபேසි எண்';
+
+  @override
+  String get hintCategorySearch => 'எ.கா. மின் வேலை, குழாய் வேலை';
+
+  @override
+  String get hintAmount => 'எ.கா. 3500';
+
+  @override
+  String get hintNicFormat => '12 இலக்கங்கள், அல்லது 9 இலக்கங்கள் + V';
+
+  @override
+  String get hintCustomerName => 'எ.கா. சந்துனி பெரேரா';
+
+  @override
+  String get hintProviderEmail => 'மின்னஞ்சல் முகவரி';
+
+  @override
+  String get hintAdminName => 'எ.கா. ருவன் ஜயசுந்தர';
+
+  @override
+  String get priceStatusLabel => 'விலை நிலை:';
+
+  @override
+  String get proposedLabel => 'முன்மொழியப்பட்டது:';
+
+  @override
+  String get roleServiceProvider => 'சேவை வழங்குநர்';
+
+  @override
+  String get roleSuperAdmin => 'முதன்மை நிர்வாகி';
+
+  @override
+  String get roleSupportAdmin => 'ஆதரவு நிர்வாகி';
+
+  @override
+  String get roleOperationsAdmin => 'செயல்பாட்டு நிர்வாகி';
+
+  @override
+  String get generalDispute => 'பொதுவான சர்ச்சை';
+
+  @override
+  String get nicApprovedMessage =>
+      'உங்கள் NIC அடையாளம் நிர்வாகியால் அங்கீகரிக்கப்பட்டது. நீங்கள் அனைத்து வேலை ஏலங்களையும் பெறலாம்.';
+
+  @override
+  String get nicUnderReviewMessage =>
+      'உங்கள் சரிபார்ப்பு சமர்ப்பிப்பு HelaService நிர்வாகத்தால் மதிப்பாய்வு செய்யப்படுகிறது.';
+
+  @override
+  String amountLkrLabel(Object amount) {
+    return 'தொகை: LKR $amount';
+  }
+
+  @override
+  String get searchCategoryHint => 'வகையைத் தேடுங்கள்...';
+
+  @override
+  String get searchDistrictHint => 'மாவட்டத்தைத் தேடுங்கள்...';
+
+  @override
+  String get visitFeeOnlyDescription =>
+      'வருகை / ஆய்வுக் கட்டணம் மட்டும் வசூலிக்கப்படும். முழு சேவையின்றி வேலை முடிவடையும்.';
+
+  @override
+  String get providerVerificationPending =>
+      'சேவை வழங்குநர் சரிபார்ப்பு நிலுவையில்';
+
+  @override
+  String sendQuoteLkr(Object amount) {
+    return 'விலைப்புள்ளி அனுப்பு · LKR $amount';
+  }
+
+  @override
+  String get customQuote => 'தனிப்பயன் விலைப்புள்ளி';
+
+  @override
+  String get pastService => 'முந்தைய சேவை';
+
+  @override
+  String get youEnRouteLabel => 'நீங்கள் (வருகை)';
+
+  @override
+  String get hintJobAddress => 'வீட்டு எண், வீதி, நகரம்';
+
+  @override
+  String get hintCategoryName => 'வகை பெயர்';
+
+  @override
+  String get hintAmountLkr => 'LKR இல் தொகை';
+
+  @override
+  String complaintInvestigationSuspended(String reason) {
+    return 'புகார் விசாரணையைத் தொடர்ந்து இடைநிறுத்தப்பட்டது: \"$reason\"';
+  }
+
+  @override
+  String get adminSuspensionViolations =>
+      'கொள்கை மீறல்கள் காரணமாக நிர்வாக இடைநிறுத்தம்';
+
+  @override
+  String categoryCreatedWithSortOrder(String name, int order) {
+    return '$order வரிசையுடன் $name வகை உருவாக்கப்பட்டது';
+  }
+
+  @override
+  String categoryUpdatedWithSortOrder(String name, int order, bool status) {
+    return '$name வகை புதுப்பிக்கப்பட்டது (வரிசை: $order, இயங்குநிலை: $status)';
+  }
+
+  @override
+  String categoryDeletedName(String name) {
+    return '$name வகை நீக்கப்பட்டது';
+  }
+
+  @override
+  String categoryDescriptionDefault(String service) {
+    return 'இலங்கை முழுவதும் சான்றளிக்கப்பட்ட உள்நாட்டு $service சேவைகள்.';
+  }
+
+  @override
+  String get zeroRegistered => '0 பதிவு செய்யப்பட்டுள்ளது';
+
+  @override
+  String get zeroOnlineNow => '0 இப்போது ஆன்லைனில்';
+
+  @override
+  String get marketRate => 'சந்தை விலை';
+
+  @override
+  String categoryUpdatedSuccess(String name) {
+    return '\"$name\" வகை வெற்றிகரமாக புதுப்பிக்கப்பட்டது.';
+  }
+
+  @override
+  String get manualDispatchAssigned => 'கைமுறை அனுப்புதல் ஒதுக்கப்பட்டது';
+
+  @override
+  String get dispatchTitle => 'அனுப்பு';
+
+  @override
+  String get reassignTitle => 'மீண்டும் ஒதுக்கு';
+
+  @override
+  String manualDispatchAssignedDesc(
+      String provider, String job, String address) {
+    return '$provider \"$job\" ($address) பணிக்கு அனுப்பப்பட்டார்';
+  }
+
+  @override
+  String ledgerPriceStatus(String status) {
+    return 'விலை நிலை: $status';
+  }
+
+  @override
+  String ledgerProposedLkr(String amount) {
+    return 'முன்மொழியப்பட்டது: LKR $amount';
+  }
+
+  @override
+  String get ledgerCustomer => 'வாடிக்கையாளர்';
+
+  @override
+  String get verificationFlagged => 'கொடியிடப்பட்டது';
+
+  @override
+  String get verificationMatch => 'பொருந்துகிறது';
+
+  @override
+  String get verificationValid => 'செல்லුපடியாகும்';
+
+  @override
+  String get profileTrustPhotoRationale =>
+      'தெளிவான புகைப்படம் வாடிக்கையாளர் நம்பிக்கையை உருவாக்குகிறது.';
+
+  @override
+  String get profileChooseGalleryPhoto =>
+      'உங்கள் கேலரியில் இருந்து ஒரு புகைப்படத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get captureNicFront => 'தே.அ.அ முன் பக்கத்தைப் படம் பிடிக்கவும்';
+
+  @override
+  String get captureNicBack => 'தே.அ.அ பின் பக்கத்தைப் படம் பிடிக்கவும்';
+
+  @override
+  String get captureNicPrompt =>
+      'உங்கள் தேசிய அடையாள அட்டையின் தெளிவான புகைப்படத்தை எடுக்கவும்.';
+
+  @override
+  String get selectNicFront => 'தே.அ.அ முன் பக்கத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get selectNicBack => 'தே.அ.அ பின் பக்கத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get selectNicGalleryPrompt =>
+      'கேலரியில் இருந்து உங்கள் தேசிய அடையாள அட்டை புகைப்படத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get completeProviderProfileTitle =>
+      'சேவை வழங்குநர் சுயவிவரத்தை முடிக்கவும்';
+
+  @override
+  String get providingServicesAcrossSriLanka =>
+      'இலங்கை முழுவதும் சேவைகளை வழங்குதல்';
+
+  @override
+  String get requestingDomesticServices =>
+      'வீட்டு மற்றும் உள்நாட்டு சேவைகளைக் கோருதல்';
+
+  @override
+  String get phonePlaceholderPattern => '7X XXXXXXX';
+
+  @override
+  String get selectServiceCategory => 'சேவை வகையைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get updatePinButton => 'குறியீட்டைப் புதுப்பிக்கவும்';
+
+  @override
+  String get pickOnMapButton => 'வரைபடத்தில் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get workshopAddressRequiredLabel => 'பணிமனை / இயங்கும் முகவரி *';
+
+  @override
+  String get operatingAddressRequiredError => 'இயங்கும் முகவரி தேவை';
+
+  @override
+  String get completeProviderRegistration => 'வழங்குநர் பதிவை முடிக்கவும்';
+
+  @override
+  String get saveProfile => 'சுயவிவரத்தைச் சேமிக்கவும்';
+
+  @override
+  String get phoneNotSet => 'தொலைபேசி அமைக்கப்படவில்லை';
+
+  @override
+  String get addressLabelHome => 'வீடு';
+
+  @override
+  String get addressLabelWork => 'பணிமனை';
+
+  @override
+  String get addressLabelOther => 'மற்றவை';
+
+  @override
+  String get videoExceedsMax120s =>
+      'வீடியோ அனுமதிக்கப்பட்ட அதிகபட்ச 120 வினாடிகளை (2 நிமிடங்கள்) தாண்டியது';
+
+  @override
+  String failedToProcessVideo(String error) {
+    return 'வீடியோவை செயலாக்க முடியவில்லை: $error';
+  }
+
+  @override
+  String get jobLocationLabel => 'பணி இடம்';
+
+  @override
+  String get selectJobLocationSubtitle =>
+      'GPS, வரைபடக் குறி அல்லது சேமித்த முகவரிகள் மூலம் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get changeButton => 'மாற்றுக';
+
+  @override
+  String get setPinButton => 'குறியிடவும்';
+
+  @override
+  String get setPinHereButton => 'இங்கு குறிக்கவும்';
+
+  @override
+  String get uploadFailedAttempts =>
+      '3 முயற்சிகளுக்குப் பிறகு பதிவேற்றம் தோல்வியடைந்தது.';
+
+  @override
+  String get bookingPastService => 'முந்தைய சேவை';
+
+  @override
+  String get bookingStatusCompleted => 'முடிந்தது';
+
+  @override
+  String get bookingNotSpecified => 'குறிப்பிடப்படவில்லை';
+
+  @override
+  String get bookingStatusScheduled => 'திட்டமிடப்பட்டது';
+
+  @override
+  String quantityUnitLabel(String unit) {
+    return 'அளவு ($unit)';
+  }
+
+  @override
+  String get rateHourlyUnit => 'LKR / மணி';
+
+  @override
+  String get rateDailyUnit => 'LKR / நாள்';
+
+  @override
+  String get rateTravelUnit => 'LKR / கி.மீ.';
+
+  @override
+  String get pickerTabForm => 'படிவம்';
+
+  @override
+  String get pickerTabMapPin => 'வரைபடக் குறி';
+
+  @override
+  String get cameraPermissionRationale =>
+      'சுயவிவரப் புகைப்படத்தை எடுக்க கேமரா அணுகல் தேவை.';
+
+  @override
+  String get photoLibraryPermissionRationale =>
+      'சுயவிவரப் புகைப்படத்தைத் தேர்ந்தெடுக்க புகைப்பட தொகுப்பு அணுகல் தேவை.';
+
+  @override
+  String get privacyDataCollectionPoints =>
+      '• சுயவிவரப் பெயர், தொலைபேசி எண் மற்றும் கணக்கு விவரங்கள்\n• வேலை விளக்கங்கள், முகவரிகள் மற்றும் சேவை இடங்கள்\n• சரிபார்ப்பு ஆவணங்கள் (தே.அ.அ, வணிக உரிமங்கள்)\n• தளம் மூலமான செய்திகள் மற்றும் தொடர்புகள்';
+
+  @override
+  String get timelineBookingCreated => 'சேவை உருவாக்கப்பட்டது';
+
+  @override
+  String get timelineBookingAccepted => 'ஏற்றுக்கொள்ளப்பட்டது';
+
+  @override
+  String get timelineArrivalClaimed => 'வருகை கோரப்பட்டது';
+
+  @override
+  String get timelineArrivalDenied => 'வருகை மறுக்கப்பட்டது';
+
+  @override
+  String get timelineAutoStarted => 'தானாகத் தொடங்கப்பட்டது';
+
+  @override
+  String get timelineVisitFeeOnly => 'வருகைக் கட்டணம் மட்டும்';
+
+  @override
+  String get timelinePriceProposed => 'விலை முன்மொழியப்பட்டது';
+
+  @override
+  String get timelinePriceApproved => 'விலை அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get timelinePriceRejected => 'விலை நிராகரிக்கப்பட்டது';
+
+  @override
+  String get timelineExtraRequested => 'கூடுதல் தொகை கோரப்பட்டது';
+
+  @override
+  String get timelineExtraApproved => 'கூடுதல் தொகை அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get timelineExtraRejected => 'கூடுதல் தொகை நிராகரிக்கப்பட்டது';
+
+  @override
+  String get timelinePaymentConfirmed => 'கட்டணம் உறுதிப்படுத்தப்பட்டது';
+
+  @override
+  String get timelinePaymentDisputed => 'கட்டண சர்ச்சை';
+
+  @override
+  String get timelineNoShowReported => 'வராமை அறிவிக்கப்பட்டது';
+
+  @override
+  String get timelineBeforePhotoAdded => 'ஆரம்பப் புகைப்படம் சேர்க்கப்பட்டது';
+
+  @override
+  String get timelineAfterPhotoAdded => 'இறுதிப் புகைப்படம் சேர்க்கப்பட்டது';
+
+  @override
+  String get statusOpen => 'விலைப்புள்ளிகளுக்கு திறந்துள்ளது';
+
+  @override
+  String get statusDispatched => 'புறப்பட்டுவிட்டது';
+
+  @override
+  String get selectJobLocation => 'வேலை இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get tapToPickLocationDesc =>
+      'GPS, வரைபடம் அல்லது சேமிக்கப்பட்ட முகவரிகள் மூலம் தேர்ந்தெடுக்க தட்டவும்';
+
+  @override
+  String get setPin => 'குறியை அமைக்கவும்';
+
+  @override
+  String rateCardSummary(Object visitFee, Object hourlyRate) {
+    return 'வருகைக் கட்டணம்: LKR $visitFee · மணித்தியாலத்திற்கு: LKR $hourlyRate';
+  }
+
+  @override
+  String get standardVisitFeeWithCurrency => 'வழக்கமான வருகைக் கட்டணம் (LKR)';
+
+  @override
+  String get hourlyRateWithUnit => 'மணிநேரக் கட்டணம் (LKR / மணி)';
+
+  @override
+  String get dailyRateWithUnit => 'தினசரி கட்டணம் (LKR / நாள்)';
+
+  @override
+  String get travelRateWithUnit => 'பயணக் கட்டணம் (LKR / கி.மீ)';
+
+  @override
+  String priceMatchesQuoteAmount(Object amount) {
+    return 'விலைப்புள்ளியுடன் விலை பொருந்துகிறதா? (LKR $amount)';
+  }
+
+  @override
+  String quantityWithUnit(String unit) {
+    return 'அளவு ($unit)';
+  }
+
+  @override
+  String get unitHours => 'மணிநேரம்';
+
+  @override
+  String get unitDays => 'நாட்கள்';
+
+  @override
+  String get unitJobs => 'வேலைகள்';
+
+  @override
+  String get languageEnglish => 'ஆங்கிலம்';
+
+  @override
+  String get languageSinhala => 'சிங்களம்';
+
+  @override
+  String get languageTamil => 'தமிழ்';
+
+  @override
+  String get locationPermissionRequired =>
+      'வாடிக்கையாளர் இருப்பிடத்திற்கு வருகை சரிபார்க்க இருப்பிட அனுமதி தேவை.';
+
+  @override
+  String get none => 'எதுவுமில்லை';
+
+  @override
+  String get optional => 'விருப்பமானது';
+
+  @override
+  String get errorProviderCategoryMissing =>
+      'இந்த சேவை வழங்குநருக்கு செயலில் உள்ள சேவை வகை எதுவும் இல்லை.';
+
+  @override
+  String get permManageUsersLabel => 'பயனர்களை நிர்வகி';
+
+  @override
+  String get permManageUsersDesc =>
+      'பயனர்கள் மற்றும் வழங்குநர்களை இடைநிறுத்த அல்லது மீண்டும் செயல்படுத்த.';
+
+  @override
+  String get permHandleSupportLabel => 'ஆதரவு & கோரிக்கைகள்';
+
+  @override
+  String get permHandleSupportDesc =>
+      'வாடிக்கையாளர் மற்றும் வழங்குநர் ஆதரவு கோரிக்கைகளை பரிசீலித்து பதிலளிக்க.';
+
+  @override
+  String get noPermissionForAction => 'இதைச் செய்ய உங்களுக்கு அனுமதி இல்லை.';
+
+  @override
+  String get helpAndSupport => 'உதவி & ஆதரவு';
+
+  @override
+  String get myTickets => 'எனது கோரிக்கைகள்';
+
+  @override
+  String get reportAProblem => 'சிக்கலைப் புகாரளிக்கவும்';
+
+  @override
+  String get ticketReplyPrompt =>
+      'நாங்கள் பொதுவாக 24 மணி நேரத்திற்குள் பதிலளிப்போம்';
+
+  @override
+  String get ticketStatusOpen => 'திறந்துள்ளது';
+
+  @override
+  String get ticketStatusInProgress => 'செயலில் உள்ளது';
+
+  @override
+  String get ticketStatusWaitingUser => 'உங்கள் பதிலுக்காக காத்திருக்கிறது';
+
+  @override
+  String get ticketStatusResolved => 'தீர்க்கப்பட்டது';
+
+  @override
+  String get ticketStatusClosed => 'மூடப்பட்டது';
+
+  @override
+  String get typeHelp => 'உதவி';
+
+  @override
+  String get typeReportUser => 'பயனரைப் புகாரளிக்கவும்';
+
+  @override
+  String get typeBookingProblem => 'முன்பதிவு சிக்கல்';
+
+  @override
+  String get typePaymentDispute => 'கட்டண சர்ச்சை';
+
+  @override
+  String get typeAccount => 'கணக்கு';
+
+  @override
+  String get typeAppProblem => 'செயலி சிக்கல்';
+
+  @override
+  String get typeFeedback => 'கருத்துகள் & பரிந்துரைகள்';
+
+  @override
+  String get ticketSubject => 'தலைப்பு';
+
+  @override
+  String get ticketDescription => 'விவரம்';
+
+  @override
+  String get ticketSend => 'கோரிக்கையை சமர்ப்பிக்கவும்';
+
+  @override
+  String get ticketAttachPhoto => 'புகைப்படத்தை இணைக்கவும்';
+
+  @override
+  String get ticketReplyHint => 'செய்தியை உள்ளிடவும்...';
+
+  @override
+  String get ticketCloseConfirm => 'கோரிக்கையை மூடவும்';
+
+  @override
+  String get ticketResolvedNote => 'தீர்வு குறிப்பு';
+
+  @override
+  String get ticketAssignToMe => 'எனக்கு ஒதுக்குங்கள்';
+
+  @override
+  String get warnUser => 'பயனரை எச்சரிக்கவும்';
+
+  @override
+  String get banUser => 'பயனரைத் தடைசெய்';
+
+  @override
+  String get supportPhone => 'ஆதரவு தொலைபேசி';
+
+  @override
+  String get supportEmail => 'ஆதரவு மின்னஞ்சல்';
+
+  @override
+  String get callSupport => 'ஆதரவை அழைக்கவும்';
+
+  @override
+  String get emailSupport => 'மின்னஞ்சல் அனுப்பவும்';
+
+  @override
+  String get noTicketsYet => 'இன்னும் ஆதரவு கோரிக்கைகள் இல்லை';
+
+  @override
+  String get ticketCreatedSuccess =>
+      'ஆதரவு கோரிக்கை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது';
+
+  @override
+  String get helpSupportTitle => 'உதவி & ஆதரவு';
+
+  @override
+  String get helpSupportSubtitle =>
+      'உதவி பெறவும் அல்லது கோரிக்கையை சமர்ப்பிக்கவும்';
+
+  @override
+  String get reportProblemTitle => 'சிக்கலைப் புகாரளிக்கவும்';
 }

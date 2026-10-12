@@ -44,15 +44,19 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
   Set<AdminPermission> _getDefaultPermissionsForRole(AdminRole role) {
     switch (role) {
       case AdminRole.superAdmin:
+        return AdminPermission.values.toSet();
       case AdminRole.opsAdmin:
         return {
           AdminPermission.verifyNic,
           AdminPermission.manageCategories,
           AdminPermission.broadcastAlerts,
+          AdminPermission.manageUsers,
+          AdminPermission.handleSupport,
         };
       case AdminRole.supportAdmin:
         return {
           AdminPermission.verifyNic,
+          AdminPermission.handleSupport,
         };
     }
   }
@@ -304,7 +308,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     controller: _nameController,
                     style: TextStyle(color: context.themeTextPrimary),
                     decoration: InputDecoration(
-                      hintText: 'e.g. Ruwan Jayasundara',
+                      hintText: context.l10n.hintFullName,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
                       prefixIcon: Icon(Icons.person_outline, size: 20, color: context.themeTextSecondary),
                       filled: true,
@@ -339,7 +343,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     style: TextStyle(color: context.themeTextPrimary),
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: 'name@example.com',
+                      hintText: context.l10n.hintEmail,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
                       prefixIcon: Icon(Icons.email_outlined, size: 20, color: context.themeTextSecondary),
                       filled: true,
@@ -377,7 +381,7 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     style: TextStyle(color: context.themeTextPrimary),
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      hintText: '+94 77 123 4567',
+                      hintText: context.l10n.hintPhone,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
                       prefixIcon: Icon(Icons.phone_outlined, size: 20, color: context.themeTextSecondary),
                       filled: true,

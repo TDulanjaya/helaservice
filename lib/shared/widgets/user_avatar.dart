@@ -129,14 +129,14 @@ class _UserAvatarState extends State<UserAvatar> {
       final allowed = await PermissionUtils.requestCameraWithRationale(
         context,
         title: context.l10n.takePhoto,
-        description: 'Camera access is required to take your profile photo.',
+        description: context.l10n.profileTrustPhotoRationale,
       );
       if (!allowed) return;
     } else {
       final allowed = await PermissionUtils.requestGalleryWithRationale(
         context,
         title: context.l10n.chooseFromGallery,
-        description: 'Photo library access is required to select your profile photo.',
+        description: context.l10n.profileChooseGalleryPhoto,
       );
       if (!allowed) return;
     }

@@ -147,3 +147,10 @@ design_ref/
 # Data reset backups
 backups/
 
+# Scratch workspace
+scratch/
+
+# Android signing keys
+*.jks
+*.keystore
+**/key.properties

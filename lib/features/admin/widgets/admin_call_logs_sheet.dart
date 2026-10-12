@@ -129,7 +129,7 @@ class AdminCallLogsSheet extends StatelessWidget {
                                     Text(
                                       log.startedAt != null
                                           ? log.startedAt!.toLocal().toString().substring(0, 16)
-                                          : 'Just now',
+                                          : context.l10n.timeJustNow,
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: context.themeTextSecondary,

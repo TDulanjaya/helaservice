@@ -15,7 +15,6 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../services/storage_service.dart';
-import '../../../services/category_service.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 
 // compress identity photo
@@ -127,10 +126,10 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   Future<void> _handleUpload(String docType) async {
     final allowed = await PermissionUtils.requestCameraWithRationale(
       context,
-      title: docType == 'selfie' ? 'Take Verification Selfie' : 'Capture National Identity Card',
+      title: docType == 'selfie' ? context.l10n.takeProfilePhoto : context.l10n.nationalIdVerification,
       description: docType == 'selfie'
-          ? 'A selfie is required to verify identity against your National Identity Card.'
-          : 'Camera access is required to take a clear, legible photo of your National Identity Card.',
+          ? context.l10n.uploadClearFacePhoto
+          : context.l10n.permissionCameraDesc,
     );
     if (!allowed) return;
 
@@ -235,15 +234,15 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         if (_backKey != null) 'nicBackKey': _backKey,
         'name': profile?.displayName.isNotEmpty == true
             ? profile!.displayName
-            : (authUser?.displayName ?? 'Service Provider'),
+            : (authUser?.displayName ?? ''),
         'trade': profile?.serviceCategory?.isNotEmpty == true
-            ? '${CategoryService.instance.nameOf(profile!.serviceCategory!, context: context)} Specialist'
-            : 'Certified Specialist',
+            ? profile!.serviceCategory!
+            : '',
         'location': profile?.district?.isNotEmpty == true
             ? profile!.district!
-            : 'Sri Lanka',
+            : '',
         'nicNumber':
-            profile?.nic?.isNotEmpty == true ? profile!.nic! : 'Pending NIC',
+            profile?.nic?.isNotEmpty == true ? profile!.nic! : '',
         'phone': profile?.phone?.isNotEmpty == true
             ? profile!.phone!
             : (authUser?.phoneNumber ?? ''),

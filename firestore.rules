@@ -26,6 +26,14 @@ service cloud.firestore {
       return isSuperAdmin() || isStaffAdmin();
     }
 
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function hasPerm(p) {
+      return isSuperAdmin() || (isStaffAdmin() && adminDoc().get('permissions', []).hasAny([p]));
+    }
+
     // check if user is active
     function isUserActive() {
       return isAuthenticated() && (
@@ -47,26 +55,175 @@ service cloud.firestore {
     }
 
     function lockedFieldsUnchanged() {
-      return !changed().hasAny(['customerId','providerId','agreedPrice','jobRequestId',
-        'customerLatitude','customerLongitude','createdAt','type']);
+      return !changed().hasAny([
+        'customerId','providerId','agreedPrice','jobRequestId',
+        'customerLatitude','customerLongitude','createdAt','type',
+        'quoteType','estimatedTotalLkr','visitFeeLkr','travelCostLkr',
+        'priceUnit','unitRateLkr','quantity','materialsEstimateLkr'
+      ]);
+    }
+
+    function validTechnicianRates(data) {
+      return (!('dailyRateLkr' in data) || data.dailyRateLkr == null || (data.dailyRateLkr is int && data.dailyRateLkr >= 1 && data.dailyRateLkr <= 100000)) &&
+        (!('hourlyRateLkr' in data) || data.hourlyRateLkr == null || (data.hourlyRateLkr is int && data.hourlyRateLkr >= 1 && data.hourlyRateLkr <= 20000)) &&
+        (!('perKmRateLkr' in data) || data.perKmRateLkr == null || (data.perKmRateLkr is int && data.perKmRateLkr >= 1 && data.perKmRateLkr <= 1000)) &&
+        (!('visitFeeLkr' in data) || data.visitFeeLkr == null || (data.visitFeeLkr is int && data.visitFeeLkr >= 0 && data.visitFeeLkr <= 20000));
+    }
+
+    function validPhotoAt(photos, i, customerId) {
+      return i >= photos.size() || (
+        photos[i] is map &&
+        photos[i].url is string &&
+        photos[i].key is string &&
+        photos[i].url.matches('^https://f005[.]backblazeb2[.]com/file/helaservice-objects/uploads/' + customerId + '/.*') &&
+        photos[i].key.matches('^uploads/' + customerId + '/.*')
+      );
+    }
+
+    function validJobPhotos(data, customerId) {
+      return !('photos' in data) || (
+        data.photos is list && data.photos.size() <= 10 &&
+        validPhotoAt(data.photos, 0, customerId) &&
+        validPhotoAt(data.photos, 1, customerId) &&
+        validPhotoAt(data.photos, 2, customerId) &&
+        validPhotoAt(data.photos, 3, customerId) &&
+        validPhotoAt(data.photos, 4, customerId) &&
+        validPhotoAt(data.photos, 5, customerId) &&
+        validPhotoAt(data.photos, 6, customerId) &&
+        validPhotoAt(data.photos, 7, customerId) &&
+        validPhotoAt(data.photos, 8, customerId) &&
+        validPhotoAt(data.photos, 9, customerId)
+      );
+    }
+
+    function validJobVideo(data, customerId) {
+      return !('video' in data) || data.video == null || (
+        data.video is map &&
+        data.video.url is string &&
+        data.video.key is string &&
+        data.video.url.matches('^https://f005[.]backblazeb2[.]com/file/helaservice-objects/uploads/' + customerId + '/.*') &&
+        data.video.key.matches('^uploads/' + customerId + '/.*') &&
+        (!('durationSec' in data.video) || (data.video.durationSec is number && data.video.durationSec > 0 && data.video.durationSec <= 120))
+      );
+    }
+
+    function validQuoteFields(data) {
+      return data.keys().hasOnly([
+        'requestId', 'providerId', 'createdBy', 'providerName', 'providerTrade',
+        'providerLocation', 'etaMinutes', 'notes', 'status', 'createdAt', 'updatedAt',
+        'quoteType', 'priceUnit', 'unitRateLkr', 'quantity', 'materialsEstimateLkr',
+        'visitFeeLkr', 'travelKm', 'travelRateLkr', 'travelCostLkr', 'quotedPrice'
+      ]) &&
+      !data.keys().hasAny(['providerRating', 'providerReviewCount', 'providerNicVerified', 'providerPhone', 'providerLatitude', 'providerLongitude']) &&
+      (
+        (!('quoteType' in data) && data.quotedPrice is int && data.quotedPrice > 0) ||
+        (
+          data.quoteType in ['firm', 'estimate', 'inspect'] &&
+          data.travelKm is number && data.travelKm >= 0 && data.travelKm <= 200 &&
+          data.travelRateLkr is int && data.travelRateLkr >= 0 && data.travelRateLkr <= 1000 &&
+          data.travelCostLkr is int && data.travelCostLkr == math.round(data.travelKm * data.travelRateLkr) &&
+          data.notes is string && data.notes.size() <= 500 &&
+          data.etaMinutes is int && data.etaMinutes >= 0 &&
+          (
+            (
+              data.quoteType in ['firm', 'estimate'] &&
+              data.priceUnit in ['fixed', 'day', 'hour'] &&
+              data.unitRateLkr is int && data.unitRateLkr >= 1 &&
+              data.quantity is number && data.quantity >= 0.5 && data.quantity <= 60 &&
+              data.visitFeeLkr is int && data.visitFeeLkr >= 0 && data.visitFeeLkr <= 20000 &&
+              (!('materialsEstimateLkr' in data) || data.materialsEstimateLkr == null || (data.materialsEstimateLkr is int && data.materialsEstimateLkr >= 0 && data.materialsEstimateLkr <= 1000000)) &&
+              data.quotedPrice is int && data.quotedPrice == math.round(data.unitRateLkr * data.quantity) + data.get('materialsEstimateLkr', 0) + data.travelCostLkr
+            ) ||
+            (
+              data.quoteType == 'inspect' &&
+              !('priceUnit' in data) && !('unitRateLkr' in data) && !('quantity' in data) &&
+              !('materialsEstimateLkr' in data) &&
+              data.visitFeeLkr is int && data.visitFeeLkr > 0 && data.visitFeeLkr <= 20000 &&
+              data.quotedPrice is int && data.quotedPrice == data.visitFeeLkr + data.travelCostLkr
+            )
+          )
+        )
+      );
+    }
+
+    function validProposedPrice(p) {
+      return p is map &&
+        p.priceUnit in ['fixed', 'day', 'hour'] &&
+        p.unitRateLkr is int && p.unitRateLkr >= 1 &&
+        p.quantity is number && p.quantity >= 0.5 && p.quantity <= 60 &&
+        (!('materialsLkr' in p) || p.materialsLkr == null || (p.materialsLkr is int && p.materialsLkr >= 0 && p.materialsLkr <= 1000000)) &&
+        p.travelCostLkr is int && p.travelCostLkr >= 0 &&
+        p.totalLkr is int && p.totalLkr == math.round(p.unitRateLkr * p.quantity) + p.get('materialsLkr', 0) + p.travelCostLkr &&
+        (!('note' in p) || (p.note is string && p.note.size() <= 500)) &&
+        (!('photos' in p) || (p.photos is list && p.photos.size() <= 5));
+    }
+
+    function validBookingFromQuote(b, q) {
+      return q.providerId == b.providerId &&
+        b.agreedPrice == q.quotedPrice &&
+        b.estimatedTotalLkr == q.quotedPrice &&
+        b.quoteType == q.quoteType &&
+        b.visitFeeLkr == q.visitFeeLkr &&
+        b.travelCostLkr == q.travelCostLkr &&
+        b.travelKm == q.travelKm &&
+        b.travelRateLkr == q.travelRateLkr &&
+        b.get('priceUnit', null) == q.get('priceUnit', null) &&
+        b.get('unitRateLkr', null) == q.get('unitRateLkr', null) &&
+        b.get('quantity', null) == q.get('quantity', null) &&
+        b.get('materialsEstimateLkr', null) == q.get('materialsEstimateLkr', null) &&
+        b.get('approvedExtrasLkr', 0) == 0 &&
+        b.get('proposalCount', 0) == 0 &&
+        (
+          (q.quoteType == 'firm' &&
+           b.priceStatus == 'approved' &&
+           b.approvedTotalLkr == q.quotedPrice) ||
+          (q.quoteType in ['estimate', 'inspect'] &&
+           b.priceStatus == 'awaiting_confirmation' &&
+           !('approvedTotalLkr' in b))
+        );
+    }
+
+    function validScheduledStartAt(data) {
+      return !('scheduledStartAt' in data) || (
+        data.scheduledStartAt is timestamp &&
+        data.scheduledStartAt >= request.time - duration.value(15, 'm') &&
+        data.scheduledStartAt <= request.time + duration.value(60, 'd') &&
+        (
+          !('scheduledDate' in data) ||
+          (
+            data.scheduledStartAt >= data.scheduledDate - duration.value(1, 'd') &&
+            data.scheduledStartAt <= data.scheduledDate + duration.value(1, 'd')
+          )
+        )
+      );
     }
 
     // super admin collection
     match /superAdmins/{adminId} {
-      allow read: if isAuthenticated();
+      allow read: if request.auth.uid == adminId || isAdmin();
       allow write: if false;
     }
 
     // staff admin collection
     match /admins/{adminId} {
-      allow read: if isAuthenticated();
+      allow read: if isAdmin() || request.auth.uid == adminId;
       allow write: if isSuperAdmin();
     }
 
     // service categories
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if hasPerm('manage_categories') &&
+        !('basePrice' in request.resource.data) &&
+        request.resource.data.names is map &&
+        request.resource.data.names.en is string &&
+        request.resource.data.names.en.size() >= 1 &&
+        request.resource.data.names.en.size() <= 40 &&
+        request.resource.data.isLive is bool &&
+        request.resource.data.sortOrder is int &&
+        (!('si' in request.resource.data.names) || (request.resource.data.names.si is string && request.resource.data.names.si.size() <= 40)) &&
+        (!('ta' in request.resource.data.names) || (request.resource.data.names.ta is string && request.resource.data.names.ta.size() <= 40));
+      allow delete: if hasPerm('manage_categories');
     }
 
     // user profiles
@@ -77,19 +234,24 @@ service cloud.firestore {
         request.resource.data.get('isVerified', false) == false &&
         request.resource.data.get('nicVerified', false) == false &&
         request.resource.data.get('phoneVerified', false) == false &&
-        request.resource.data.get('isBanned', false) == false
+        request.resource.data.get('isBanned', false) == false &&
+        !request.resource.data.keys().hasAny(['isSuperAdmin', 'isAdmin', 'adminRole']) &&
+        (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider'])
       );
-      allow update: if isAdmin() || (
+      allow update: if hasPerm('manage_users') || (
         isOwner(userId) && (
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil', 'nicVerified', 'isVerified', 'certificationsStatus'
+          !changed().hasAny([
+            'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil',
+            'nicVerified', 'isVerified', 'certificationsStatus',
+            'isSuperAdmin', 'isAdmin', 'adminRole'
           ]) &&
+          (!changed().hasAny(['role']) || request.resource.data.role in ['customer', 'provider']) &&
           (
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['phoneVerified']) ||
+            !changed().hasAny(['phoneVerified']) ||
             request.resource.data.phoneVerified == false
           ) &&
           (
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['phone']) ||
+            !changed().hasAny(['phone']) ||
             request.resource.data.get('phoneVerified', false) == false
           )
         )
@@ -128,7 +290,7 @@ service cloud.firestore {
     // technicians catalog
     match /technicians/{techId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin() || (
+      allow create: if isSuperAdmin() || (
         isOwner(techId) &&
         request.resource.data.get('isVerified', false) == false &&
         request.resource.data.get('nicVerified', false) == false &&
@@ -137,9 +299,15 @@ service cloud.firestore {
         (!('rating' in request.resource.data) || request.resource.data.rating == null) &&
         request.resource.data.get('reviewCount', 0) == 0 &&
         request.resource.data.get('jobsCount', 0) == 0 &&
-        (!('status' in request.resource.data) || request.resource.data.status == 'pending')
+        (!('status' in request.resource.data) || request.resource.data.status == 'pending') &&
+        validTechnicianRates(request.resource.data)
       );
-      allow update: if isAdmin() || (
+      allow update: if (
+        isAdmin() &&
+        (!changed().hasAny(['isBanned', 'banned', 'bannedAt', 'banReason']) || hasPerm('manage_users')) &&
+        (!changed().hasAny(['isVerified', 'nicVerified', 'status', 'certificationsStatus']) || hasPerm('verify_nic')) &&
+        (hasPerm('manage_users') || hasPerm('verify_nic'))
+      ) || (
         isOwner(techId) && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount'
@@ -148,14 +316,15 @@ service cloud.firestore {
             !('category' in resource.data) ||
             resource.data.category == '' ||
             request.resource.data.category == resource.data.category
-          )
+          ) &&
+          validTechnicianRates(request.resource.data)
         )
       );
       allow delete: if isSuperAdmin();
 
       // private verification details
       match /private/{document=**} {
-        allow read, write: if isOwner(techId) || isAdmin();
+        allow read, write: if isOwner(techId) || hasPerm('verify_nic');
       }
 
       // portfolio showcase subcollection
@@ -180,14 +349,18 @@ service cloud.firestore {
         request.resource.data.longitude is number &&
         !('customerPhone' in request.resource.data) &&
         !('address' in request.resource.data) &&
-        !('landmark' in request.resource.data);
+        !('landmark' in request.resource.data) &&
+        validJobPhotos(request.resource.data, request.auth.uid) &&
+        validJobVideo(request.resource.data, request.auth.uid);
       allow update: if isAdmin() ||
         (
           isUserActive() && resource.data.customerId == request.auth.uid &&
           !changed().hasAny(['customerId']) &&
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
-          !('landmark' in request.resource.data)
+          !('landmark' in request.resource.data) &&
+          validJobPhotos(request.resource.data, resource.data.customerId) &&
+          validJobVideo(request.resource.data, resource.data.customerId)
         ) ||
         (
           isUserActive() && resource.data.selectedProviderId == request.auth.uid &&
@@ -239,7 +412,9 @@ service cloud.firestore {
           get(/databases/$(database)/documents/jobRequests/$(jobId)).data.status in ['open', 'pending'] &&
           (!('expiresAt' in get(/databases/$(database)/documents/jobRequests/$(jobId)).data) || get(/databases/$(database)/documents/jobRequests/$(jobId)).data.expiresAt > request.time) &&
           !exists(/databases/$(database)/documents/users/$(get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId)/blocked/$(request.auth.uid)) &&
-          !exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked/$(get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId));
+          !exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked/$(get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId)) &&
+          request.resource.data.status == 'pending' &&
+          validQuoteFields(request.resource.data);
         allow update: if isAdmin() ||
           (
             get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
@@ -249,7 +424,8 @@ service cloud.firestore {
           (
             resource.data.providerId == request.auth.uid &&
             resource.data.status == 'pending' &&
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['providerId', 'jobRequestId'])
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'providerId', 'requestId', 'jobRequestId', 'createdBy', 'createdAt']) &&
+            validQuoteFields(request.resource.data)
           );
         allow delete: if isAdmin() || (
           resource.data.providerId == request.auth.uid &&
@@ -281,192 +457,382 @@ service cloud.firestore {
             request.resource.data.expiresAt is timestamp &&
             request.resource.data.expiresAt <= request.time + duration.value(3, 'm') + duration.value(10, 's')
           )
-        )
-      );
-      allow update: if isAdmin() || (
-        isUserActive() &&
-        lockedFieldsUnchanged() &&
+        ) &&
         (
-          // customer rules
+          !('quoteId' in request.resource.data) ||
           (
-            resource.data.customerId == request.auth.uid && (
-              // cancel booking
+            request.resource.data.quoteId is string &&
+            request.resource.data.jobRequestId is string &&
+            exists(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)/quotes/$(request.resource.data.quoteId)) &&
+            validBookingFromQuote(
+              request.resource.data,
+              get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)/quotes/$(request.resource.data.quoteId)).data
+            ) &&
+            (
+              !('scheduledDate' in get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data) ||
+              request.resource.data.get('scheduledDate', null) == get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data.scheduledDate
+            )
+          )
+        ) &&
+        (
+          !('visitFeeLkr' in request.resource.data) ||
+          ('quoteId' in request.resource.data) ||
+          (
+            exists(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)) &&
+            request.resource.data.visitFeeLkr == (
+              request.resource.data.get('type', 'standard') == 'urgent'
+                ? get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('emergencyRateLkr', get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('baseRateLkr', 0))
+                : get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('visitFeeLkr', get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('baseRateLkr', 0))
+            )
+          )
+        ) &&
+        validScheduledStartAt(request.resource.data)
+      );
+    function validCustomerBookingUpdate(bookingId) {
+      return (
+        request.resource.data.status != resource.data.status ? (
+          // Status changing:
+          (
+            // cancel booking
+            resource.data.status in ['pending','confirmed','en_route'] &&
+            request.resource.data.status == 'cancelled' &&
+            !('noShow' in request.resource.data) &&
+            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+            request.resource.data.cancellationReason is string &&
+            request.resource.data.cancellationReason.size() > 0
+          ) ||
+          (
+            // customer cancels for provider no-show
+            resource.data.status in ['confirmed', 'en_route'] &&
+            request.resource.data.status == 'cancelled' &&
+            request.resource.data.noShow == true &&
+            request.resource.data.cancellationReason == 'provider_no_show' &&
+            request.resource.data.cancelledBy == request.auth.uid &&
+            request.resource.data.cancelledAt == request.time &&
+            (
+              (resource.data.status == 'en_route' && resource.data.get('arrivalStatus', '') == 'denied') ||
+              (resource.data.status == 'en_route' && 'enRouteStartedAt' in resource.data && request.time >= resource.data.enRouteStartedAt + duration.value(90, 'm')) ||
+              (resource.data.status == 'confirmed' && (
+                'scheduledStartAt' in resource.data
+                  ? request.time >= resource.data.scheduledStartAt + duration.value(60, 'm')
+                  : ('scheduledDate' in resource.data && request.time >= resource.data.scheduledDate + duration.value(1, 'd'))
+              ))
+            ) &&
+            changed().hasOnly(['status', 'cancellationReason', 'noShow', 'cancelledAt', 'cancelledBy', 'updatedAt'])
+          ) ||
+          (
+            // customer confirms provider arrival
+            resource.data.status == 'en_route' &&
+            resource.data.arrivalStatus == 'claimed' &&
+            request.resource.data.status == 'in_progress' &&
+            request.resource.data.arrivalStatus == 'confirmed' &&
+            request.resource.data.arrivalConfirmedBy == 'customer' &&
+            request.resource.data.arrivedAt == request.time &&
+            changed().hasOnly(['status', 'arrivalStatus', 'arrivalConfirmedBy', 'arrivedAt', 'updatedAt'])
+          ) ||
+          (
+            // urgent expire
+            resource.data.get('type', 'standard') == 'urgent' &&
+            resource.data.status == 'pending' &&
+            request.resource.data.status == 'expired' &&
+            changed().hasOnly(['status','expiredAt','updatedAt'])
+          )
+        ) : (
+          // Status not changing:
+          (
+            // customer denies provider arrival
+            resource.data.status == 'en_route' &&
+            resource.data.arrivalStatus == 'claimed' &&
+            request.resource.data.arrivalStatus == 'denied' &&
+            request.resource.data.arrivalDeniedCount == resource.data.get('arrivalDeniedCount', 0) + 1 &&
+            changed().hasOnly(['arrivalStatus', 'arrivalDeniedCount', 'updatedAt'])
+          ) ||
+          (
+            // rate booking
+            resource.data.status == 'completed' &&
+            changed().hasOnly(['rating','reviewedAt']) &&
+            request.resource.data.rating is int &&
+            request.resource.data.rating >= 1 &&
+            request.resource.data.rating <= 5
+          ) ||
+          (
+            // customer payment confirmation or dispute
+            resource.data.status == 'completed' &&
+            !('customerConfirmedPaidAt' in resource.data) &&
+            !('paymentDisputed' in resource.data) &&
+            (
               (
-                resource.data.status in ['pending','confirmed','en_route'] &&
-                request.resource.data.status == 'cancelled' &&
-                changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
-                request.resource.data.cancellationReason is string &&
-                request.resource.data.cancellationReason.size() > 0
+                changed().hasOnly(['customerConfirmedPaidAt']) &&
+                request.resource.data.customerConfirmedPaidAt != null
               ) ||
-              // urgent expire
               (
-                resource.data.get('type', 'standard') == 'urgent' &&
-                resource.data.status == 'pending' &&
-                request.resource.data.status == 'expired' &&
-                changed().hasOnly(['status','expiredAt','updatedAt'])
-              ) ||
-              // rate booking
-              (
-                resource.data.status == 'completed' &&
-                changed().hasOnly(['rating','reviewedAt']) &&
-                request.resource.data.rating is int &&
-                request.resource.data.rating >= 1 &&
-                request.resource.data.rating <= 5
-              ) ||
-              // customer payment confirmation or dispute
-              (
-                resource.data.status == 'completed' &&
-                !('customerConfirmedPaidAt' in resource.data) &&
-                !('paymentDisputed' in resource.data) &&
-                (
-                  (
-                    changed().hasOnly(['customerConfirmedPaidAt']) &&
-                    request.resource.data.customerConfirmedPaidAt != null
-                  ) ||
-                  (
-                    changed().hasOnly(['paymentDisputed','paymentDisputeReason','paymentDisputedAt']) &&
-                    request.resource.data.paymentDisputed == true &&
-                    request.resource.data.paymentDisputeReason is string &&
-                    request.resource.data.paymentDisputeReason.size() > 0
-                  )
-                )
-              ) ||
-              // remove legacy pin
-              (
-                changed().hasOnly(['completionPin']) &&
-                !('completionPin' in request.resource.data)
-              ) ||
-              // reset pin attempts
-              (
-                changed().hasOnly(['pinAttempts']) &&
-                request.resource.data.pinAttempts == 0
-              ) ||
-              // customer reschedule actions propose accept decline
-              (
-                resource.data.status in ['pending','confirmed'] && (
-                  // propose reschedule
-                  (
-                    changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    request.resource.data.rescheduleRequestedBy == request.auth.uid &&
-                    request.resource.data.rescheduleReason is string &&
-                    request.resource.data.rescheduleReason.size() > 0
-                  ) ||
-                  // accept reschedule
-                  (
-                    changed().hasOnly(['rescheduledAt','scheduledDate','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    !('rescheduleRequestedBy' in request.resource.data)
-                  ) ||
-                  // decline reschedule
-                  (
-                    changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
-                    !('rescheduleRequestedBy' in request.resource.data)
-                  )
-                )
+                changed().hasAny(['paymentDisputed']) &&
+                changed().hasOnly(['paymentDisputed','paymentDisputeReason','paymentDisputedAt','disputeTicketId']) &&
+                request.resource.data.paymentDisputed == true &&
+                request.resource.data.paymentDisputeReason is string &&
+                request.resource.data.paymentDisputeReason.size() > 0
               )
             )
           ) ||
-          // provider rules
           (
-            resource.data.providerId == request.auth.uid && (
-              // accept booking
+            // remove legacy pin
+            changed().hasOnly(['completionPin']) &&
+            !('completionPin' in request.resource.data)
+          ) ||
+          (
+            // reset pin attempts
+            changed().hasOnly(['pinAttempts']) &&
+            request.resource.data.pinAttempts == 0
+          ) ||
+          (
+            // customer reschedule actions propose accept decline
+            resource.data.status in ['pending','confirmed'] && (
               (
-                resource.data.status == 'pending' &&
-                request.resource.data.status == 'confirmed' &&
-                changed().hasOnly(['status','providerAcceptedAt']) &&
-                (
-                  resource.data.get('type', 'standard') != 'urgent' ||
-                  request.time < resource.data.expiresAt
-                )
+                changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                request.resource.data.rescheduleRequestedBy == request.auth.uid &&
+                request.resource.data.rescheduleReason is string &&
+                request.resource.data.rescheduleReason.size() > 0
               ) ||
-              // decline booking
               (
-                resource.data.status == 'pending' &&
-                request.resource.data.status == 'declined' &&
-                changed().hasOnly(['status','declinedAt','declineReason'])
+                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                !('rescheduleRequestedBy' in request.resource.data) &&
+                validScheduledStartAt(request.resource.data)
               ) ||
-              // start travel
               (
-                resource.data.status == 'confirmed' &&
-                request.resource.data.status == 'en_route' &&
-                changed().hasOnly(['status','enRouteStartedAt'])
-              ) ||
-              // mark arrived
-              (
-                resource.data.status == 'en_route' &&
-                request.resource.data.status == 'in_progress' &&
-                changed().hasOnly(['status','arrivedAt'])
-              ) ||
-              // cancel booking
-              (
-                resource.data.status in ['confirmed','en_route'] &&
-                request.resource.data.status == 'cancelled' &&
-                changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
-                request.resource.data.cancellationReason is string &&
-                request.resource.data.cancellationReason.size() > 0
-              ) ||
-              // record delay
-              (
-                resource.data.status in ['confirmed','en_route'] &&
-                changed().hasOnly(['delayReason','delayMinutes','delayedAt'])
-              ) ||
-              // provider reschedule actions propose accept decline
-              (
-                resource.data.status in ['pending','confirmed'] && (
-                  // propose reschedule
-                  (
-                    changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    request.resource.data.rescheduleRequestedBy == request.auth.uid &&
-                    request.resource.data.rescheduleReason is string &&
-                    request.resource.data.rescheduleReason.size() > 0
-                  ) ||
-                  // accept reschedule
-                  (
-                    changed().hasOnly(['rescheduledAt','scheduledDate','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    !('rescheduleRequestedBy' in request.resource.data)
-                  ) ||
-                  // decline reschedule
-                  (
-                    changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
-                    request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
-                    !('rescheduleRequestedBy' in request.resource.data)
-                  )
-                )
-              ) ||
-              // upload before and after job photos
-              (
-                resource.data.status in ['in_progress','completed'] &&
-                changed().hasOnly(['beforePhotos','afterPhotos','updatedAt'])
-              ) ||
-              // record pin attempt
-              (
-                resource.data.status == 'in_progress' &&
-                changed().hasOnly(['pinAttempts']) &&
-                request.resource.data.pinAttempts == resource.data.get('pinAttempts', 0) + 1 &&
-                request.resource.data.pinAttempts <= 5
-              ) ||
-              // complete booking with pin and cash payment
-              (
-                resource.data.status == 'in_progress' &&
-                request.resource.data.status == 'completed' &&
-                changed().hasOnly(['status','enteredPin','completedAt','finalAmount','paymentMethod','paymentNote','providerMarkedPaidAt']) &&
-                resource.data.get('pinAttempts', 0) >= 1 &&
-                resource.data.get('pinAttempts', 0) <= 5 &&
-                exists(/databases/$(database)/documents/bookings/$(bookingId)/private/pin) &&
-                request.resource.data.enteredPin ==
-                  get(/databases/$(database)/documents/bookings/$(bookingId)/private/pin).data.pin &&
-                (!('finalAmount' in request.resource.data) || (
-                  request.resource.data.finalAmount is number &&
-                  request.resource.data.finalAmount > 0 &&
-                  (resource.data.agreedPrice == null || request.resource.data.finalAmount <= resource.data.agreedPrice * 5)
-                )) &&
-                (!('paymentMethod' in request.resource.data) || request.resource.data.paymentMethod == 'cash')
+                changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
+                !('rescheduleRequestedBy' in request.resource.data)
               )
             )
+          ) ||
+          (
+            // customer approves proposed price
+            resource.data.status == 'in_progress' &&
+            resource.data.get('priceStatus', '') == 'proposed' &&
+            request.resource.data.priceStatus == 'approved' &&
+            request.resource.data.approvedTotalLkr == resource.data.proposedPrice.totalLkr &&
+            changed().hasOnly(['priceStatus', 'approvedTotalLkr', 'priceApprovedAt', 'updatedAt'])
+          ) ||
+          (
+            // customer rejects proposed price
+            resource.data.status == 'in_progress' &&
+            resource.data.get('priceStatus', '') == 'proposed' &&
+            request.resource.data.priceStatus == 'rejected' &&
+            changed().hasOnly(['priceStatus', 'priceRejectedAt', 'updatedAt'])
+          ) ||
+          (
+            // customer approves extra
+            resource.data.status == 'in_progress' &&
+            resource.data.get('priceStatus', '') == 'approved' &&
+            'lastApprovedExtraId' in request.resource.data &&
+            request.resource.data.lastApprovedExtraId is string &&
+            exists(/databases/$(database)/documents/bookings/$(bookingId)/extras/$(request.resource.data.lastApprovedExtraId)) &&
+            get(/databases/$(database)/documents/bookings/$(bookingId)/extras/$(request.resource.data.lastApprovedExtraId)).data.status == 'proposed' &&
+            getAfter(/databases/$(database)/documents/bookings/$(bookingId)/extras/$(request.resource.data.lastApprovedExtraId)).data.status == 'approved' &&
+            changed().hasOnly(['approvedExtrasLkr', 'approvedTotalLkr', 'lastApprovedExtraId', 'updatedAt']) &&
+            request.resource.data.approvedExtrasLkr is int &&
+            request.resource.data.approvedExtrasLkr == resource.data.get('approvedExtrasLkr', 0) + get(/databases/$(database)/documents/bookings/$(bookingId)/extras/$(request.resource.data.lastApprovedExtraId)).data.amountLkr &&
+            request.resource.data.approvedTotalLkr == resource.data.approvedTotalLkr + get(/databases/$(database)/documents/bookings/$(bookingId)/extras/$(request.resource.data.lastApprovedExtraId)).data.amountLkr
           )
         )
       );
-      allow delete: if isAdmin();
+    }
+
+    function validProviderBookingUpdate(bookingId) {
+      return (
+        request.resource.data.status != resource.data.status ? (
+          // Status changing:
+          (
+            // accept booking
+            resource.data.status == 'pending' &&
+            request.resource.data.status == 'confirmed' &&
+            changed().hasOnly(['status','providerAcceptedAt']) &&
+            (
+              resource.data.get('type', 'standard') != 'urgent' ||
+              request.time < resource.data.expiresAt
+            )
+          ) ||
+          (
+            // decline booking
+            resource.data.status == 'pending' &&
+            request.resource.data.status == 'declined' &&
+            changed().hasOnly(['status','declinedAt','declineReason'])
+          ) ||
+          (
+            // start travel
+            resource.data.status == 'confirmed' &&
+            request.resource.data.status == 'en_route' &&
+            (request.resource.data.enRouteStartedAt is timestamp || request.resource.data.enRouteStartedAt == request.time) &&
+            changed().hasOnly(['status','enRouteStartedAt'])
+          ) ||
+          (
+            // provider marks arrived / in_progress
+            resource.data.status == 'en_route' &&
+            request.resource.data.status == 'in_progress' &&
+            changed().hasOnly(['status', 'arrivedAt'])
+          ) ||
+          (
+            // provider auto-starts after 10m timeout if inside zone and not mocked
+            resource.data.status == 'en_route' &&
+            resource.data.get('arrivalStatus', '') == 'claimed' &&
+            resource.data.get('arrivalOutsideZone', true) == false &&
+            resource.data.get('arrivalMocked', false) == false &&
+            request.time >= resource.data.arrivalClaimedAt + duration.value(10, 'm') &&
+            request.resource.data.status == 'in_progress' &&
+            request.resource.data.arrivalStatus == 'auto_started' &&
+            request.resource.data.arrivalConfirmedBy == 'gps_timeout' &&
+            request.resource.data.arrivedAt == request.time &&
+            changed().hasOnly(['status', 'arrivalStatus', 'arrivalConfirmedBy', 'arrivedAt', 'updatedAt'])
+          ) ||
+          (
+            // cancel booking
+            resource.data.status in ['confirmed','en_route'] &&
+            request.resource.data.status == 'cancelled' &&
+            !('noShow' in request.resource.data) &&
+            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+            request.resource.data.cancellationReason is string &&
+            request.resource.data.cancellationReason.size() > 0
+          ) ||
+          (
+            // complete booking with pin and cash payment
+            resource.data.status == 'in_progress' &&
+            request.resource.data.status == 'completed' &&
+            changed().hasOnly(['status','enteredPin','completedAt','finalAmount','paymentMethod','paymentNote','providerMarkedPaidAt','completionType']) &&
+            resource.data.get('pinAttempts', 0) >= 1 &&
+            resource.data.get('pinAttempts', 0) <= 5 &&
+            exists(/databases/$(database)/documents/bookings/$(bookingId)/private/pin) &&
+            request.resource.data.get('enteredPin', '') ==
+              get(/databases/$(database)/documents/bookings/$(bookingId)/private/pin).data.pin &&
+            (!('paymentMethod' in request.resource.data) || request.resource.data.paymentMethod == 'cash') &&
+            (
+              // legacy bookings without priceStatus
+              (!('priceStatus' in resource.data) && (
+                !('finalAmount' in request.resource.data) || (
+                  request.resource.data.finalAmount is number &&
+                  request.resource.data.finalAmount > 0 &&
+                  (resource.data.agreedPrice == null || request.resource.data.finalAmount <= resource.data.agreedPrice * 5)
+                )
+              )) ||
+              // new bookings with priceStatus
+              ('priceStatus' in resource.data && (
+                (
+                  request.resource.data.get('completionType', 'normal') == 'visit_only' &&
+                  resource.data.priceStatus == 'rejected' &&
+                  request.resource.data.finalAmount is int &&
+                  request.resource.data.finalAmount > 0 &&
+                  request.resource.data.finalAmount <= resource.data.get('visitFeeLkr', 0) + resource.data.get('travelCostLkr', 0)
+                ) ||
+                (
+                  request.resource.data.get('completionType', 'normal') == 'normal' &&
+                  resource.data.priceStatus == 'approved' &&
+                  request.resource.data.finalAmount is int &&
+                  request.resource.data.finalAmount > 0 &&
+                  request.resource.data.finalAmount <= resource.data.approvedTotalLkr
+                )
+              ))
+            )
+          )
+        ) : (
+          // Status not changing:
+          (
+            // provider claims arrival with GPS
+            resource.data.status == 'en_route' &&
+            (!('arrivalStatus' in resource.data) || resource.data.arrivalStatus == 'denied') &&
+            request.resource.data.arrivalStatus == 'claimed' &&
+            request.resource.data.arrivalClaimedAt == request.time &&
+            request.resource.data.arrivalLat is number &&
+            request.resource.data.arrivalLat >= 5 &&
+            request.resource.data.arrivalLat <= 10 &&
+            request.resource.data.arrivalLng is number &&
+            request.resource.data.arrivalLng >= 79 &&
+            request.resource.data.arrivalLng <= 82 &&
+            request.resource.data.arrivalAccuracyM is int &&
+            request.resource.data.arrivalAccuracyM >= 0 &&
+            request.resource.data.arrivalAccuracyM <= 5000 &&
+            request.resource.data.arrivalDistanceM is int &&
+            request.resource.data.arrivalDistanceM >= 0 &&
+            request.resource.data.arrivalDistanceM <= 500000 &&
+            request.resource.data.arrivalOutsideZone is bool &&
+            request.resource.data.arrivalMocked is bool &&
+            request.resource.data.arrivalClaimCount == resource.data.get('arrivalClaimCount', 0) + 1 &&
+            request.resource.data.arrivalClaimCount <= 3 &&
+            changed().hasOnly([
+              'arrivalStatus', 'arrivalClaimedAt', 'arrivalLat', 'arrivalLng',
+              'arrivalAccuracyM', 'arrivalDistanceM', 'arrivalOutsideZone',
+              'arrivalMocked', 'arrivalClaimCount', 'updatedAt'
+            ])
+          ) ||
+          (
+            // record delay
+            resource.data.status in ['confirmed','en_route'] &&
+            changed().hasOnly(['delayReason','delayMinutes','delayedAt'])
+          ) ||
+          (
+            // provider reschedule actions propose accept decline
+            resource.data.status in ['pending','confirmed'] && (
+              (
+                changed().hasOnly(['rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                request.resource.data.rescheduleRequestedBy == request.auth.uid &&
+                request.resource.data.rescheduleReason is string &&
+                request.resource.data.rescheduleReason.size() > 0
+              ) ||
+              (
+                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                !('rescheduleRequestedBy' in request.resource.data) &&
+                validScheduledStartAt(request.resource.data)
+              ) ||
+              (
+                changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                request.resource.data.rescheduleDeclinedBy == request.auth.uid &&
+                !('rescheduleRequestedBy' in request.resource.data)
+              )
+            )
+          ) ||
+          (
+            // upload before and after job photos
+            resource.data.status in ['in_progress','completed'] &&
+            changed().hasOnly(['beforePhotos','afterPhotos','updatedAt'])
+          ) ||
+          (
+            // record pin attempt
+            resource.data.status == 'in_progress' &&
+            changed().hasOnly(['pinAttempts']) &&
+            request.resource.data.pinAttempts == resource.data.get('pinAttempts', 0) + 1 &&
+            request.resource.data.pinAttempts <= 5
+          ) ||
+          (
+            // provider confirms price stays same
+            resource.data.status == 'in_progress' &&
+            resource.data.get('quoteType', '') == 'estimate' &&
+            resource.data.get('priceStatus', '') == 'awaiting_confirmation' &&
+            request.resource.data.priceStatus == 'approved' &&
+            request.resource.data.approvedTotalLkr == resource.data.estimatedTotalLkr &&
+            changed().hasOnly(['priceStatus', 'approvedTotalLkr', 'priceConfirmedAt', 'updatedAt'])
+          ) ||
+          (
+            // provider proposes new price
+            resource.data.status == 'in_progress' &&
+            resource.data.get('quoteType', '') in ['estimate', 'inspect'] &&
+            resource.data.get('priceStatus', '') in ['awaiting_confirmation', 'proposed'] &&
+            request.resource.data.priceStatus == 'proposed' &&
+            validProposedPrice(request.resource.data.proposedPrice) &&
+            request.resource.data.proposalCount == resource.data.get('proposalCount', 0) + 1 &&
+            request.resource.data.proposalCount <= 3 &&
+            changed().hasOnly(['priceStatus', 'proposedPrice', 'proposalCount', 'priceProposedAt', 'updatedAt'])
+          )
+        )
+      );
+    }
+
+      allow update: if hasPerm('manage_users') || (
+        isUserActive() &&
+        lockedFieldsUnchanged() &&
+        (
+          (resource.data.customerId == request.auth.uid && validCustomerBookingUpdate(bookingId)) ||
+          (resource.data.providerId == request.auth.uid && validProviderBookingUpdate(bookingId))
+        )
+      );
+      allow delete: if hasPerm('manage_users');
 
       // private pin subcollection
       match /private/{docId} {
@@ -489,7 +855,46 @@ service cloud.firestore {
             )
           )
         );
-        allow update, delete: if isAdmin();
+        allow update, delete: if hasPerm('manage_users');
+      }
+
+      // booking extras subcollection
+      match /extras/{extraId} {
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          (
+            exists(/databases/$(database)/documents/bookings/$(bookingId)) && (
+              get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid ||
+              get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid
+            )
+          )
+        );
+        allow create: if isUserActive() && (
+          hasPerm('manage_users') || (
+            exists(/databases/$(database)/documents/bookings/$(bookingId)) &&
+            get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid &&
+            get(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress' &&
+            request.resource.data.providerId == request.auth.uid &&
+            request.resource.data.customerId == get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId &&
+            request.resource.data.status == 'proposed' &&
+            request.resource.data.amountLkr is int &&
+            request.resource.data.amountLkr >= 1 &&
+            request.resource.data.amountLkr <= 1000000 &&
+            request.resource.data.description is string &&
+            request.resource.data.description.size() > 0 &&
+            request.resource.data.description.size() <= 300
+          )
+        );
+        allow update: if isUserActive() && (
+          hasPerm('manage_users') || (
+            exists(/databases/$(database)/documents/bookings/$(bookingId)) &&
+            get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId == request.auth.uid &&
+            resource.data.status == 'proposed' &&
+            request.resource.data.status in ['approved', 'rejected'] &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'customerRespondedAt', 'approvedAt', 'rejectedAt', 'updatedAt'])
+          )
+        );
+        allow delete: if hasPerm('manage_users');
       }
 
       // booking timeline events subcollection
@@ -529,11 +934,16 @@ service cloud.firestore {
                 request.resource.data.get('type', request.resource.data.get('action', '')) in [
                   'created', 'booking_created', 'cancelled', 'reschedule_proposed', 'reschedule_requested',
                   'reschedule_accepted', 'reschedule_declined', 'payment_confirmed', 'payment_disputed',
-                  'rated', 'reviewed', 'pin_reset', 'note'
+                  'rated', 'reviewed', 'pin_reset', 'note', 'price_approved', 'price_rejected', 'extra_approved', 'extra_rejected',
+                  'arrival_confirmed', 'arrival_denied', 'no_show_reported'
                 ] &&
                 (
-                  request.resource.data.get('type', request.resource.data.get('action', '')) != 'cancelled' ||
-                  getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled'
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'cancelled' ||
+                   getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'arrival_confirmed' ||
+                   getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'no_show_reported' ||
+                   getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled')
                 )
               ) ||
               // provider role validation
@@ -545,13 +955,16 @@ service cloud.firestore {
                 request.resource.data.get('type', request.resource.data.get('action', '')) in [
                   'accepted', 'declined', 'en_route', 'arrived', 'completed', 'cancelled',
                   'delayed', 'reschedule_proposed', 'reschedule_requested', 'reschedule_accepted',
-                  'reschedule_declined', 'photos_uploaded', 'pin_attempt', 'note'
+                  'reschedule_declined', 'photos_uploaded', 'before_photo_added', 'after_photo_added', 'pin_attempt', 'note',
+                  'price_proposed', 'price_kept', 'price_confirmed_same', 'price_confirmed', 'extra_requested', 'extra_proposed', 'completed_visit_only',
+                  'arrival_claimed', 'arrival_auto_started'
                 ] &&
                 (
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'accepted' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status in ['confirmed', 'accepted']) &&
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'declined' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'declined') &&
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'en_route' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'en_route') &&
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'arrived' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress') &&
+                  (request.resource.data.get('type', request.resource.data.get('action', '')) != 'arrival_auto_started' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress') &&
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'completed' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'completed') &&
                   (request.resource.data.get('type', request.resource.data.get('action', '')) != 'cancelled' || getAfter(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'cancelled')
                 )
@@ -572,7 +985,8 @@ service cloud.firestore {
       allow create: if isUserActive() &&
         request.resource.data.participants is list &&
         request.resource.data.participants.size() == 2 &&
-        request.auth.uid in request.resource.data.participants;
+        request.auth.uid in request.resource.data.participants &&
+        !request.resource.data.participants.hasAny(['admin_support', 'admin']);
       allow update: if isAdmin() || (
         isUserActive() &&
         request.auth.uid in resource.data.participants &&
@@ -618,6 +1032,7 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/bookings/$(reviewId)) &&
         get(/databases/$(database)/documents/bookings/$(reviewId)).data.customerId == request.auth.uid &&
         get(/databases/$(database)/documents/bookings/$(reviewId)).data.status == 'completed' &&
+        get(/databases/$(database)/documents/bookings/$(reviewId)).data.get('completionType', 'normal') != 'visit_only' &&
         request.resource.data.providerId == get(/databases/$(database)/documents/bookings/$(reviewId)).data.providerId &&
         request.resource.data.rating is int &&
         request.resource.data.rating >= 1 &&
@@ -625,32 +1040,146 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // complaints collection
+    // complaints & support tickets
+    // complaints & support tickets
     match /complaints/{complaintId} {
+      // Read: Part G tickets: reporter only or handle_support admin (accused cannot read).
+      // Legacy docs (no reporterUid and no reportedUid): customerId or providerId or handle_support admin.
       allow read: if isAuthenticated() && (
-        resource.data.customerId == request.auth.uid ||
-        resource.data.providerId == request.auth.uid ||
-        (resource.data.reporterUid != null && resource.data.reporterUid == request.auth.uid) ||
-        isAdmin()
+        hasPerm('handle_support') ||
+        (
+          'reporterUid' in resource.data &&
+          resource.data.reporterUid == request.auth.uid
+        ) ||
+        (
+          !('reporterUid' in resource.data) &&
+          !('reportedUid' in resource.data) &&
+          (resource.data.customerId == request.auth.uid || resource.data.providerId == request.auth.uid)
+        )
       );
+      // Create: user submitting ticket or handle_support admin
       allow create: if isUserActive() && (
-        request.resource.data.customerId == request.auth.uid ||
-        request.resource.data.providerId == request.auth.uid ||
-        (request.resource.data.reporterUid != null && request.resource.data.reporterUid == request.auth.uid) ||
-        isAdmin()
+        hasPerm('handle_support') ||
+        (
+          (
+            ('reporterUid' in request.resource.data && request.resource.data.reporterUid == request.auth.uid) ||
+            (!('reporterUid' in request.resource.data) && (request.resource.data.customerId == request.auth.uid || request.resource.data.providerId == request.auth.uid))
+          ) &&
+          (!('reportedUid' in request.resource.data) || request.resource.data.reportedUid != request.auth.uid) &&
+          (!('status' in request.resource.data) || request.resource.data.status in ['open', 'pending']) &&
+          !request.resource.data.keys().hasAny(['assignedAdminId', 'adminNotes', 'resolutionNote', 'resolvedAt']) &&
+          (
+            !('type' in request.resource.data) ||
+            request.resource.data.type in ['help', 'report_user', 'booking_problem', 'payment_dispute', 'account', 'app_problem', 'feedback']
+          ) &&
+          (
+            !('subject' in request.resource.data) ||
+            (request.resource.data.subject is string && request.resource.data.subject.size() <= 100)
+          ) &&
+          (
+            !('description' in request.resource.data) ||
+            (request.resource.data.description is string && request.resource.data.description.size() <= 2000)
+          ) &&
+          (
+            !('photos' in request.resource.data) ||
+            (request.resource.data.photos is list && request.resource.data.photos.size() <= 3)
+          ) &&
+          (
+            !('bookingId' in request.resource.data) ||
+            request.resource.data.bookingId == null ||
+            (
+              (
+                exists(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)) &&
+                (
+                  get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.customerId == request.auth.uid ||
+                  get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.providerId == request.auth.uid
+                ) &&
+                (
+                  !('reportedUid' in request.resource.data) ||
+                  request.resource.data.reportedUid == null ||
+                  get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.customerId == request.resource.data.reportedUid ||
+                  get(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.providerId == request.resource.data.reportedUid
+                )
+              ) ||
+              (
+                existsAfter(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)) &&
+                (
+                  getAfter(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.customerId == request.auth.uid ||
+                  getAfter(/databases/$(database)/documents/bookings/$(request.resource.data.bookingId)).data.providerId == request.auth.uid
+                )
+              )
+            )
+          )
+        )
       );
-      allow update, delete: if isAdmin();
+      // Update: handle_support admin, or reporter
+      allow update: if hasPerm('handle_support') || (
+        isUserActive() &&
+        (
+          ('reporterUid' in resource.data && resource.data.reporterUid == request.auth.uid) ||
+          (!('reporterUid' in resource.data) && resource.data.customerId == request.auth.uid)
+        ) &&
+        resource.data.status != 'closed' &&
+        (
+          (
+            request.resource.data.status == 'closed' &&
+            changed().hasOnly(['status', 'updatedAt'])
+          ) ||
+          (
+            changed().hasOnly(['lastMessageAt', 'updatedAt', 'status']) &&
+            request.resource.data.lastMessageAt == request.time &&
+            (
+              request.resource.data.status == resource.data.status ||
+              (resource.data.status == 'waiting_user' && request.resource.data.status == 'open') ||
+              request.resource.data.status == 'closed'
+            )
+          )
+        )
+      );
+      allow delete: if isSuperAdmin();
+
+      // Messages thread subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/complaints/$(complaintId)).data.reporterUid == request.auth.uid ||
+          (!('reporterUid' in get(/databases/$(database)/documents/complaints/$(complaintId)).data) && get(/databases/$(database)/documents/complaints/$(complaintId)).data.customerId == request.auth.uid) ||
+          hasPerm('handle_support')
+        );
+        allow create: if isUserActive() && (
+          (
+            (
+              get(/databases/$(database)/documents/complaints/$(complaintId)).data.reporterUid == request.auth.uid ||
+              (!('reporterUid' in get(/databases/$(database)/documents/complaints/$(complaintId)).data) && get(/databases/$(database)/documents/complaints/$(complaintId)).data.customerId == request.auth.uid)
+            ) &&
+            get(/databases/$(database)/documents/complaints/$(complaintId)).data.status != 'closed' &&
+            request.resource.data.senderRole in ['user', 'customer', 'provider'] &&
+            request.resource.data.senderUid == request.auth.uid &&
+            request.resource.data.text is string &&
+            request.resource.data.text.size() <= 2000 &&
+            (!('photos' in request.resource.data) || (request.resource.data.photos is list && request.resource.data.photos.size() <= 3))
+          ) ||
+          (
+            hasPerm('handle_support') &&
+            request.resource.data.senderRole == 'admin' &&
+            request.resource.data.senderUid == request.auth.uid &&
+            request.resource.data.text is string &&
+            request.resource.data.text.size() <= 2000 &&
+            (!('photos' in request.resource.data) || (request.resource.data.photos is list && request.resource.data.photos.size() <= 3))
+          )
+        );
+        allow update, delete: if isSuperAdmin();
+      }
     }
 
     // verification queue
     match /verificationQueue/{item} {
-      allow read: if isAdmin() || (
+      allow read: if hasPerm('verify_nic') || (
         isAuthenticated() && (
           item == request.auth.uid ||
           (resource != null && resource.data.providerId == request.auth.uid)
         )
       );
-      allow create: if isAdmin() || (
+      allow create: if hasPerm('verify_nic') || (
         isAuthenticated() && (
           item == request.auth.uid ||
           request.resource.data.providerId == request.auth.uid
@@ -659,7 +1188,7 @@ service cloud.firestore {
         !('reviewedBy' in request.resource.data) &&
         !('reviewedAt' in request.resource.data)
       );
-      allow update: if isAdmin() || (
+      allow update: if hasPerm('verify_nic') || (
         isAuthenticated() && (
           item == request.auth.uid ||
           resource.data.providerId == request.auth.uid
@@ -676,11 +1205,12 @@ service cloud.firestore {
           )
         )
       );
-      allow delete: if isAdmin();
+      allow delete: if hasPerm('verify_nic');
     }
 
     match /dispatchEvents/{event} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if hasPerm('broadcast_alerts');
     }
 
     match /districtStats/{stat} {
@@ -724,5 +1254,11 @@ service cloud.firestore {
     match /otp_rate_limits/{id} {
       allow read, write: if false;
     }
+
+    // upload rate limits
+    match /upload_rate_limits/{id} {
+      allow read, write: if false;
+    }
   }
 }
+

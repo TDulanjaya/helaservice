@@ -82,7 +82,7 @@ class LegalContentSheet extends StatelessWidget {
         const SizedBox(height: 16),
         _buildSectionHeader('1. Information We Collect'),
         Text(
-          '• Profile name, phone number, and account credentials\n• Job descriptions, addresses, and GPS coordinates\n• National identity card (NIC) photos for artisan verification\n• Audit logs of phone calls and cash payment confirmations',
+          context.l10n.privacyDataCollectionPoints,
           style: TextStyle(fontSize: 13, height: 1.6, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),

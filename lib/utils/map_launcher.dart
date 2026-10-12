@@ -17,7 +17,7 @@ class MapLauncher {
     if (latitude < -90.0 || latitude > 90.0) return false;
     if (longitude < -180.0 || longitude > 180.0) return false;
 
-    final title = Uri.encodeComponent(destinationTitle ?? 'Service Location');
+    final title = Uri.encodeComponent(destinationTitle ?? '');
 
     if (kIsWeb) {
       final webUrl = Uri.parse(
@@ -46,7 +46,10 @@ class MapLauncher {
       }
     } else if (Platform.isIOS) {
       try {
-        final appleMapsUri = Uri.parse('maps:?daddr=$latitude,$longitude&q=$title');
+        final appleMapsUri = Uri(
+          scheme: 'maps',
+          queryParameters: {'daddr': '$latitude,$longitude', 'q': title},
+        );
         if (await canLaunchUrl(appleMapsUri)) {
           return await launchUrl(appleMapsUri, mode: LaunchMode.externalApplication);
         }

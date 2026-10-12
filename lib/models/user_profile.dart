@@ -27,6 +27,10 @@ class UserProfile {
   final bool isBanned;
   final String? banReason;
   final bool isVerified;
+  final int? dailyRateLkr;
+  final int? hourlyRateLkr;
+  final int? perKmRateLkr;
+  final int? visitFeeLkr;
 
   String? get nicFrontUrl => nicFrontKey;
   String? get nicBackUrl => nicBackKey;
@@ -58,6 +62,10 @@ class UserProfile {
     this.isBanned = false,
     this.banReason,
     this.isVerified = false,
+    this.dailyRateLkr,
+    this.hourlyRateLkr,
+    this.perKmRateLkr,
+    this.visitFeeLkr,
   }) : nicFrontKey = nicFrontKey ?? nicFrontUrl,
        nicBackKey = nicBackKey ?? nicBackUrl;
 
@@ -75,10 +83,10 @@ class UserProfile {
   }) {
     final phone = user.phoneNumber;
     final fallbackName = phone != null && phone.isNotEmpty
-        ? 'User ($phone)'
+        ? phone
         : (user.email != null && user.email!.isNotEmpty
             ? user.email!.split('@').first
-            : 'Hela User');
+            : '');
 
     return UserProfile(
       id: user.uid,
@@ -125,6 +133,10 @@ class UserProfile {
     bool? isBanned,
     String? banReason,
     bool? isVerified,
+    int? dailyRateLkr,
+    int? hourlyRateLkr,
+    int? perKmRateLkr,
+    int? visitFeeLkr,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -151,6 +163,10 @@ class UserProfile {
       isBanned: isBanned ?? this.isBanned,
       banReason: banReason ?? this.banReason,
       isVerified: isVerified ?? this.isVerified,
+      dailyRateLkr: dailyRateLkr ?? this.dailyRateLkr,
+      hourlyRateLkr: hourlyRateLkr ?? this.hourlyRateLkr,
+      perKmRateLkr: perKmRateLkr ?? this.perKmRateLkr,
+      visitFeeLkr: visitFeeLkr ?? this.visitFeeLkr,
     );
   }
 
@@ -179,6 +195,10 @@ class UserProfile {
       'banned': isBanned,
       if (banReason != null) 'banReason': banReason,
       'isVerified': isVerified,
+      if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
+      if (hourlyRateLkr != null) 'hourlyRateLkr': hourlyRateLkr,
+      if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
+      if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
     };
   }
 
@@ -187,10 +207,6 @@ class UserProfile {
     final rawRole = map['role']?.toString().toLowerCase();
     if (rawRole == 'provider' || rawRole == 'technician') {
       parsedRole = AppRole.provider;
-    } else if (rawRole == 'admin' ||
-        rawRole == 'super_admin' ||
-        rawRole == 'superadmin') {
-      parsedRole = AppRole.admin;
     } else if (rawRole == 'customer') {
       parsedRole = AppRole.customer;
     } else if (map['role'] != null) {
@@ -198,14 +214,6 @@ class UserProfile {
     }
 
     AdminRole? parsedAdminRole;
-    final rawAdminRole = map['adminRole']?.toString();
-    if (rawAdminRole != null && rawAdminRole.isNotEmpty) {
-      parsedAdminRole = AdminRole.fromKey(rawAdminRole);
-    } else if (rawRole == 'super_admin' ||
-        rawRole == 'superadmin' ||
-        map['isSuperAdmin'] == true) {
-      parsedAdminRole = AdminRole.superAdmin;
-    }
 
     final certsRaw = map['certificationUrls'];
     final certList = (certsRaw is List)
@@ -245,6 +253,10 @@ class UserProfile {
           map['status'] == 'banned',
       banReason: map['banReason']?.toString(),
       isVerified: (map['isVerified'] == true) || (map['nicVerified'] == true),
+      dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
+      hourlyRateLkr: (map['hourlyRateLkr'] as num?)?.toInt(),
+      perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
+      visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
     );
   }
 }

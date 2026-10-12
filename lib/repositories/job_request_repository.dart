@@ -6,10 +6,17 @@ import '../constants/job_status.dart';
 import '../models/job_request.dart';
 import '../models/quote.dart';
 import '../services/notification_service.dart';
+import 'booking_repository.dart';
 
 class JobRequestRepository {
-  final _col =
-      FirebaseFirestore.instance.collection(FirestorePaths.jobRequests);
+  final FirebaseFirestore? _customFirestore;
+
+  JobRequestRepository({FirebaseFirestore? firestore})
+      : _customFirestore = firestore;
+
+  CollectionReference<Map<String, dynamic>> get _col =>
+      (_customFirestore ?? FirebaseFirestore.instance)
+          .collection(FirestorePaths.jobRequests);
 
   Future<String> createJobRequest(JobRequest request) async {
     final docRef = _col.doc();
@@ -91,9 +98,15 @@ class JobRequestRepository {
     });
   }
 
+  Future<JobRequest?> getById(String requestId) async {
+    final doc = await _col.doc(requestId).get();
+    if (!doc.exists || doc.data() == null) return null;
+    return JobRequest.fromMap(doc.id, doc.data()!);
+  }
+
   Future<void> submitQuote(String requestId, Quote quote) async {
     final quoteRef =
-        _col.doc(requestId).collection(FirestorePaths.quotes).doc();
+        _col.doc(requestId).collection(FirestorePaths.quotes).doc(quote.providerId);
     await quoteRef.set(quote.toMap());
 
     // send alert to customer
@@ -123,14 +136,41 @@ class JobRequestRepository {
     JobRequest? request,
     Quote? quote,
   }) async {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final custId = (request?.customerId.isNotEmpty == true)
-        ? request!.customerId
-        : currentUid;
-
     if (request == null || request.latitude == null || request.longitude == null) {
       throw Exception('JOB_LOCATION_MISSING');
     }
+
+    // stop if slot has already passed
+    DateTime? scheduledStartAt;
+    if (request.scheduledDate != null) {
+      scheduledStartAt = computeScheduledStartAt(
+        request.scheduledDate!,
+        request.scheduledSlot,
+      );
+      if (scheduledStartAt.isBefore(DateTime.now().subtract(const Duration(minutes: 15)))) {
+        throw 'SCHEDULE_PASSED';
+      }
+    }
+
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final custId = request.customerId.isNotEmpty == true
+        ? request.customerId
+        : currentUid;
+
+    final quoteDoc = await _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId).get();
+    final quoteData = quoteDoc.data();
+    final rawQuoteType = quoteData?['quoteType'] as String?;
+    if (rawQuoteType == null || rawQuoteType.isEmpty) {
+      try {
+        await _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId).update({
+          'status': 'declined',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (_) {}
+      throw Exception('QUOTE_OUTDATED');
+    }
+
+    final resolvedQuote = quote ?? Quote.fromMap(quoteId, quoteData!);
 
     // generate pin code
     final pin = (100000 + Random().nextInt(900000)).toString();
@@ -177,10 +217,33 @@ class JobRequestRepository {
     final exactLat = (contactData?['latitude'] as num?)?.toDouble() ?? request.latitude!;
     final exactLng = (contactData?['longitude'] as num?)?.toDouble() ?? request.longitude!;
 
-    batch.set(bookingRef, {
+    // Read provider phone from technicians/{providerId} (or users/{providerId})
+    String providerPhone = '';
+    try {
+      final techDoc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(providerId)
+          .get();
+      if (techDoc.exists && techDoc.data() != null) {
+        providerPhone = (techDoc.data()?['phone'] as String?) ?? '';
+      }
+      if (providerPhone.isEmpty) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection(FirestorePaths.users)
+            .doc(providerId)
+            .get();
+        if (userDoc.exists && userDoc.data() != null) {
+          providerPhone = (userDoc.data()?['phone'] as String?) ?? '';
+        }
+      }
+    } catch (_) {}
+
+    final bookingPrice = resolvedQuote.quotedPrice.round();
+
+    final bookingData = <String, dynamic>{
       'customerId': custId,
       'providerId': providerId,
-      'providerName': quote?.providerName ?? '',
+      'providerName': resolvedQuote.providerName,
       'status': JobStatus.confirmed,
       'createdAt': FieldValue.serverTimestamp(),
       'time': 'Scheduled Now',
@@ -188,8 +251,8 @@ class JobRequestRepository {
       'title': request.title.isNotEmpty == true
           ? request.title
           : 'Domestic Service Request',
-      'estRate': 'LKR ${agreedPrice.toStringAsFixed(0)}',
-      'agreedPrice': agreedPrice,
+      'estRate': 'LKR $bookingPrice',
+      'agreedPrice': bookingPrice,
       'customerName': request.customerName.isNotEmpty == true
           ? request.customerName
           : 'Customer',
@@ -197,13 +260,48 @@ class JobRequestRepository {
           ? request.customerName[0].toUpperCase()
           : 'C',
       'customerPhone': exactPhone,
-      'providerPhone': quote?.providerPhone ?? '',
+      'providerPhone': providerPhone,
       'customerLatitude': exactLat,
       'customerLongitude': exactLng,
       'location': exactAddress,
       'entryInstructions': exactLandmark,
-      'distance': quote != null ? '${quote.etaMinutes} mins ETA' : 'Scheduled',
+      'distance': '${resolvedQuote.etaMinutes} mins ETA',
       'jobRequestId': requestId,
+      'quoteId': quoteId,
+      'quoteType': resolvedQuote.quoteType,
+      'priceStatus': resolvedQuote.quoteType == 'firm' ? 'approved' : 'awaiting_confirmation',
+      if (resolvedQuote.quoteType == 'firm') 'approvedTotalLkr': resolvedQuote.quotedPrice.round(),
+      if (resolvedQuote.priceUnit != null) 'priceUnit': resolvedQuote.priceUnit,
+      if (resolvedQuote.unitRateLkr != null) 'unitRateLkr': resolvedQuote.unitRateLkr,
+      if (resolvedQuote.quantity != null) 'quantity': resolvedQuote.quantity,
+      if (resolvedQuote.materialsEstimateLkr != null) 'materialsEstimateLkr': resolvedQuote.materialsEstimateLkr,
+      'visitFeeLkr': resolvedQuote.visitFeeLkr,
+      'travelKm': resolvedQuote.travelKm,
+      'travelRateLkr': resolvedQuote.travelRateLkr,
+      'travelCostLkr': resolvedQuote.travelCostLkr,
+      'estimatedTotalLkr': resolvedQuote.quotedPrice.round(),
+      'approvedExtrasLkr': 0,
+      'proposalCount': 0,
+      'type': request.bookingType,
+      if (request.scheduledDate != null)
+        'scheduledDate': Timestamp.fromDate(request.scheduledDate!),
+      if (scheduledStartAt != null)
+        'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+      if (request.scheduledSlot != null && request.scheduledSlot!.isNotEmpty)
+        'scheduledSlot': request.scheduledSlot,
+    };
+
+    batch.set(bookingRef, bookingData);
+
+    // timeline event
+    final eventRef = bookingRef.collection('timeline').doc();
+    batch.set(eventRef, {
+      'action': 'created',
+      'title': 'Booking Confirmed',
+      'description': 'Customer accepted quote from ${resolvedQuote.providerName}',
+      'timestamp': FieldValue.serverTimestamp(),
+      'actorUid': custId,
+      'actorRole': 'customer',
     });
 
     await batch.commit();
@@ -261,6 +359,19 @@ class JobRequestRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();
+  }
+
+  Future<void> updateJobSchedule({
+    required String requestId,
+    required DateTime scheduledDate,
+    required String? scheduledSlot,
+  }) async {
+    await _col.doc(requestId).update({
+      'scheduledDate': Timestamp.fromDate(scheduledDate),
+      if (scheduledSlot != null && scheduledSlot.isNotEmpty)
+        'scheduledSlot': scheduledSlot,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Stream<List<Quote>> streamProviderQuotes(String providerId, {int limit = 50}) {

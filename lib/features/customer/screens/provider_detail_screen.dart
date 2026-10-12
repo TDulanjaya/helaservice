@@ -150,14 +150,14 @@ class ProviderDetailScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.info_outline, size: 16, color: AppColors.warning),
-                        SizedBox(width: 8),
+                        const Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                        const SizedBox(width: 8),
                         Text(
-                          'Pending Admin Approval · Unavailable for hire',
-                          style: TextStyle(
+                          context.l10n.pendingAdminApprovalUnavailable,
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppColors.warning,
@@ -347,9 +347,9 @@ class ProviderDetailScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Direct Contact & Fast Quotes',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.directContactFastQuotes,
+                            style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w800,
                             ),
@@ -357,7 +357,7 @@ class ProviderDetailScreen extends StatelessWidget {
                           Text(
                             technician.phone.isNotEmpty
                                 ? technician.phone
-                                : 'Verified phone available',
+                                : context.l10n.verifiedPhoneAvailable,
                             style: TextStyle(
                               fontSize: 12,
                               color: context.themeTextSecondary,
@@ -526,6 +526,31 @@ class ProviderDetailScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SectionCard(
+            title: context.l10n.pricingStandardRates,
+            child: Column(
+              children: [
+                _buildRateRow(context.l10n.standardVisitFee, 'LKR ${technician.effectiveVisitFeeLkr}'),
+                if (technician.hourlyRateLkr > 0) ...[
+                  const Divider(height: 16),
+                  _buildRateRow(context.l10n.hourlyRate, 'LKR ${technician.hourlyRateLkr} / hr'),
+                ],
+                if (technician.dailyRateLkr != null && technician.dailyRateLkr! > 0) ...[
+                  const Divider(height: 16),
+                  _buildRateRow(context.l10n.dailyRate, 'LKR ${technician.dailyRateLkr} / day'),
+                ],
+                if (technician.perKmRateLkr != null && technician.perKmRateLkr! > 0) ...[
+                  const Divider(height: 16),
+                  _buildRateRow(context.l10n.travelRate, 'LKR ${technician.perKmRateLkr} / km'),
+                ],
+                if (technician.emergencyAvailable && technician.emergencyRateLkr > 0) ...[
+                  const Divider(height: 16),
+                  _buildRateRow(context.l10n.emergencyCalloutRate, 'LKR ${technician.emergencyRateLkr}'),
+                ],
               ],
             ),
           ),
@@ -927,7 +952,7 @@ class ProviderDetailScreen extends StatelessWidget {
                   height: 54,
                   child: PrimaryButton(
                     label: !technician.isApproved
-                        ? 'Provider Verification Pending'
+                        ? context.l10n.providerVerificationPending
                         : context.l10n.requestService,
                     trailingIcon: technician.isApproved ? Icons.arrow_forward_rounded : null,
                     onPressed: !technician.isApproved
@@ -955,7 +980,7 @@ class ProviderDetailScreen extends StatelessWidget {
                             final custName =
                                 user.displayName?.isNotEmpty == true
                                     ? user.displayName!
-                                    : 'Customer';
+                                    : context.l10n.roleCustomer;
                             final initials = custName.isNotEmpty
                                 ? custName.substring(0, 1).toUpperCase()
                                 : 'C';
@@ -966,54 +991,76 @@ class ProviderDetailScreen extends StatelessWidget {
                               providerName: technician.name,
                               providerPhone: technician.phone,
                               status: 'confirmed',
-                              time: 'Now',
-                              relativeTime: 'Just now',
-                              title: technician.title,
-                              estRate: 'Custom Quote',
+                              time: '',
+                              relativeTime: '',
+                              title: technician.category.isNotEmpty ? technician.category : technician.title,
+                              estRate: 'LKR ${technician.effectiveVisitFeeLkr}',
                               customerName: custName,
                               customerInitials: initials,
                               customerLatitude: location.latitude,
                               customerLongitude: location.longitude,
                               location: location.address,
                               entryInstructions: location.landmark,
-                              distance: technician.etaLabel,
+                              distance: '',
+                              quoteType: 'inspect',
+                              priceStatus: 'awaiting_confirmation',
+                              visitFeeLkr: technician.effectiveVisitFeeLkr,
+                              travelCostLkr: 0,
+                              estimatedTotalLkr: technician.effectiveVisitFeeLkr,
+                              agreedPrice: technician.effectiveVisitFeeLkr.toDouble(),
                             );
 
-                            final bookingId = await BookingRepository()
-                                .createBooking(bookingObj);
-                            if (!context.mounted) return;
+                            try {
+                              final bookingId = await BookingRepository()
+                                  .createBooking(bookingObj);
+                              if (!context.mounted) return;
 
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => LiveTrackingScreen(
-                                  technician: technician,
-                                  booking: Booking(
-                                    id: bookingId,
-                                    customerId: bookingObj.customerId,
-                                    providerId: bookingObj.providerId,
-                                    providerName: bookingObj.providerName,
-                                    providerPhone: bookingObj.providerPhone,
-                                    status: bookingObj.status,
-                                    time: bookingObj.time,
-                                    relativeTime: bookingObj.relativeTime,
-                                    title: bookingObj.title,
-                                    estRate: bookingObj.estRate,
-                                    customerName: bookingObj.customerName,
-                                    customerInitials:
-                                        bookingObj.customerInitials,
-                                    customerLatitude:
-                                        bookingObj.customerLatitude,
-                                    customerLongitude:
-                                        bookingObj.customerLongitude,
-                                    location: bookingObj.location,
-                                    entryInstructions:
-                                        bookingObj.entryInstructions,
-                                    distance: bookingObj.distance,
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => LiveTrackingScreen(
+                                    technician: technician,
+                                    booking: Booking(
+                                      id: bookingId,
+                                      customerId: bookingObj.customerId,
+                                      providerId: bookingObj.providerId,
+                                      providerName: bookingObj.providerName,
+                                      providerPhone: bookingObj.providerPhone,
+                                      status: bookingObj.status,
+                                      time: bookingObj.time,
+                                      relativeTime: bookingObj.relativeTime,
+                                      title: bookingObj.title,
+                                      estRate: bookingObj.estRate,
+                                      customerName: bookingObj.customerName,
+                                      customerInitials:
+                                          bookingObj.customerInitials,
+                                      customerLatitude:
+                                          bookingObj.customerLatitude,
+                                      customerLongitude:
+                                          bookingObj.customerLongitude,
+                                      location: bookingObj.location,
+                                      entryInstructions:
+                                          bookingObj.entryInstructions,
+                                      distance: bookingObj.distance,
+                                    ),
+                                    showBottomNav: false,
                                   ),
-                                  showBottomNav: false,
                                 ),
-                              ),
-                            );
+                              );
+                            } catch (e) {
+                              if (context.mounted) {
+                                final message = e.toString().contains('LOCATION_REQUIRED')
+                                    ? context.l10n.locationRequiredToBook
+                                    : (e.toString().contains('PROVIDER_CATEGORY_MISSING')
+                                        ? context.l10n.errorProviderCategoryMissing
+                                        : e.toString());
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(message),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
+                            }
                           },
               ),
             ),
@@ -1023,6 +1070,16 @@ class ProviderDetailScreen extends StatelessWidget {
     ),
   ),
 );
+  }
+
+  Widget _buildRateRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.primary)),
+      ],
+    );
   }
 }
 

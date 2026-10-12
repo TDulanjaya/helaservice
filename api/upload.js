@@ -1,6 +1,8 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const busboy = require('busboy');
 const { verifyFirebaseToken } = require('./_auth');
+const { admin, db } = require('./_firebase');
 
 // initialize storage client
 function getS3Client(isPrivate = false) {
@@ -95,6 +97,87 @@ module.exports = async (req, res) => {
     const clusterMatch = rawEndpoint.match(/00\d+/);
     const cluster = clusterMatch ? clusterMatch[0] : '004';
     publicPrefix = `https://f${cluster}.backblazeb2.com/file/${bucketName}`;
+  }
+
+  // JSON mode: presigned URL generation for job media uploads
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (_) {}
+  }
+
+  if (body && body.mode === 'presign') {
+    const presignPurpose = (body.purpose || '').toLowerCase();
+    if (presignPurpose !== 'job_media') {
+      return res.status(400).json({ error: 'Invalid purpose for presign. Expected job_media.' });
+    }
+    const contentType = (body.contentType || '').toLowerCase();
+    const ALLOWED_PRESIGN_TYPES = ['image/jpeg', 'video/mp4'];
+    if (!ALLOWED_PRESIGN_TYPES.includes(contentType)) {
+      return res.status(415).json({
+        error: 'Unsupported Media Type for presign. Allowed types are image/jpeg, video/mp4.',
+      });
+    }
+    const sizeBytes = Number(body.sizeBytes);
+    if (!sizeBytes || isNaN(sizeBytes) || sizeBytes <= 0) {
+      return res.status(400).json({ error: 'Valid sizeBytes is required.' });
+    }
+    const isVideo = contentType === 'video/mp4';
+    const maxSize = isVideo ? 60 * 1024 * 1024 : 3 * 1024 * 1024;
+    if (sizeBytes > maxSize) {
+      return res.status(400).json({
+        error: `File size exceeds limit (${isVideo ? '60 MB' : '3 MB'}).`,
+      });
+    }
+
+    // Rate limiting: 40 presigns per user per hour
+    const now = Date.now();
+    const oneHourMs = 60 * 60 * 1000;
+    const rateRef = db.collection('upload_rate_limits').doc(authUid);
+    const rateDoc = await rateRef.get();
+    let count = 0;
+    let windowStart = now;
+    if (rateDoc.exists) {
+      const data = rateDoc.data() || {};
+      const docWindowStart = data.windowStart || 0;
+      if (now - docWindowStart < oneHourMs) {
+        count = data.count || 0;
+        windowStart = docWindowStart;
+      }
+    }
+    if (count >= 40) {
+      const remainingSeconds = Math.ceil((windowStart + oneHourMs - now) / 1000);
+      return res.status(429).json({
+        error: 'Too many presign requests. Limit is 40 per hour.',
+        retryAfter: remainingSeconds,
+      });
+    }
+    await rateRef.set({
+      count: count + 1,
+      windowStart,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const ext = isVideo ? 'mp4' : 'jpg';
+    const randomStr = Math.random().toString(36).substring(2, 9);
+    const key = `uploads/${authUid}/jobs/${Date.now()}_${randomStr}.${ext}`;
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      ContentType: contentType,
+      ContentLength: sizeBytes,
+    });
+
+    try {
+      const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 600 });
+      const cleanPrefix = publicPrefix.replace(/\/+$/, '');
+      const publicUrl = `${cleanPrefix}/${key}`;
+      return res.status(200).json({ uploadUrl, key, publicUrl });
+    } catch (err) {
+      return res.status(500).json({ error: `Presign generation failed: ${err.message}` });
+    }
   }
 
   try {

@@ -51,11 +51,11 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   double? _longitude;
   bool _isGpsLoading = false;
   bool _isSavingAddress = false;
-  String _selectedLabel = 'Home';
+  String _selectedLabel = 'home';
   bool _saveForFuture = false;
   bool _isMapMode = false;
 
-  final List<String> _labelOptions = ['Home', 'Work', 'Other'];
+  final List<String> _labelOptions = ['home', 'work', 'other'];
 
   @override
   void initState() {
@@ -65,7 +65,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       _longitude = widget.initialLocation!.longitude;
       _addressController.text = widget.initialLocation!.address;
       _landmarkController.text = widget.initialLocation!.landmark ?? '';
-      _selectedLabel = widget.initialLocation!.label ?? 'Home';
+      _selectedLabel = widget.initialLocation!.label?.toLowerCase() ?? 'home';
     }
   }
 
@@ -255,7 +255,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                           _isMapMode ? Icons.list_rounded : Icons.map_rounded,
                           size: 18,
                         ),
-                        label: Text(_isMapMode ? 'Form' : 'Map Pin'),
+                        label: Text(_isMapMode ? context.l10n.pickerTabForm : context.l10n.pickerTabMapPin),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
@@ -361,7 +361,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                             },
                             icon: const Icon(Icons.pin_drop_rounded, size: 16),
                             label: Text(
-                              _latitude != null ? 'Update Pin' : 'Set Pin Here',
+                              _latitude != null ? context.l10n.updatePinButton : context.l10n.setPinHereButton,
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700),
                             ),
@@ -463,31 +463,44 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                item.label == 'Home'
-                                                    ? Icons.home_rounded
-                                                    : (item.label == 'Work'
-                                                        ? Icons.work_rounded
-                                                        : Icons.location_on_rounded),
-                                                size: 14,
-                                                color: isCurrent
-                                                    ? AppColors.primary
-                                                    : context.themeTextSecondary,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                item.label,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: isCurrent
-                                                      ? AppColors.primary
-                                                      : context.themeInk,
-                                                ),
-                                              ),
-                                            ],
+                                          Builder(
+                                            builder: (ctx) {
+                                              final isHome = item.label.toLowerCase() == 'home';
+                                              final isWork = item.label.toLowerCase() == 'work';
+                                              final itemDisplayLabel = isHome
+                                                  ? ctx.l10n.addressLabelHome
+                                                  : (isWork
+                                                      ? ctx.l10n.addressLabelWork
+                                                      : (item.label.toLowerCase() == 'other'
+                                                          ? ctx.l10n.addressLabelOther
+                                                          : item.label));
+                                              return Row(
+                                                children: [
+                                                  Icon(
+                                                    isHome
+                                                        ? Icons.home_rounded
+                                                        : (isWork
+                                                            ? Icons.work_rounded
+                                                            : Icons.location_on_rounded),
+                                                    size: 14,
+                                                    color: isCurrent
+                                                        ? AppColors.primary
+                                                        : ctx.themeTextSecondary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    itemDisplayLabel,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: isCurrent
+                                                          ? AppColors.primary
+                                                          : ctx.themeInk,
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -583,13 +596,18 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: 8,
-                      children: _labelOptions.map((label) {
-                        final isSel = _selectedLabel == label;
+                      children: _labelOptions.map((labelKey) {
+                        final isSel = _selectedLabel == labelKey;
+                        final chipText = labelKey == 'home'
+                            ? context.l10n.addressLabelHome
+                            : (labelKey == 'work'
+                                ? context.l10n.addressLabelWork
+                                : context.l10n.addressLabelOther);
                         return ChoiceChip(
-                          label: Text(label),
+                          label: Text(chipText),
                           selected: isSel,
                           onSelected: (_) =>
-                              setState(() => _selectedLabel = label),
+                              setState(() => _selectedLabel = labelKey),
                           selectedColor:
                               AppColors.primary.withValues(alpha: 0.15),
                           labelStyle: TextStyle(

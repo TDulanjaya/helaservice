@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/l10n_extension.dart';
 
 class PhotoViewerDialog extends StatelessWidget {
   final String photoUrl;
@@ -82,16 +83,16 @@ class PhotoViewerDialog extends StatelessWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         padding: const EdgeInsets.all(32),
-                        child: const Center(
+                        child: Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.broken_image_rounded,
+                              const Icon(Icons.broken_image_rounded,
                                   color: Colors.white54, size: 48),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                               Text(
-                                'Unable to load photo',
-                                style: TextStyle(color: Colors.white70),
+                                context.l10n.unableToLoadPhoto,
+                                style: const TextStyle(color: Colors.white70),
                               ),
                             ],
                           ),

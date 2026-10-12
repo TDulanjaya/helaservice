@@ -19,6 +19,7 @@ import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/legal_content_sheet.dart';
 import '../../auth/screens/complete_profile_screen.dart';
+import '../../support/screens/help_support_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
@@ -139,9 +140,9 @@ class CustomerProfileScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Edit Saved Address',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+        title: Text(
+          context.l10n.editSavedAddress,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -470,7 +471,7 @@ class CustomerProfileScreen extends StatelessWidget {
                           size: 18, color: context.themeTextSecondary),
                       const SizedBox(width: 10),
                       Text(
-                        phone.isNotEmpty ? '+94 $phone' : 'Phone not set',
+                        phone.isNotEmpty ? '+94 $phone' : context.l10n.phoneNotSet,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13.5,
@@ -513,7 +514,7 @@ class CustomerProfileScreen extends StatelessWidget {
                           if (picked != null && uid.isNotEmpty) {
                             await SavedAddressRepository().addSavedAddress(
                               userId: uid,
-                              label: picked.label ?? 'Other',
+                              label: picked.label ?? 'other',
                               latitude: picked.latitude,
                               longitude: picked.longitude,
                               address: picked.address,
@@ -534,7 +535,7 @@ class CustomerProfileScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   if (uid.isEmpty)
                     Text(
-                      'Sign in to manage saved addresses.',
+                      context.l10n.signInToManageSavedAddresses,
                       style: TextStyle(
                           color: context.themeTextSecondary, fontSize: 12),
                     )
@@ -549,7 +550,7 @@ class CustomerProfileScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Center(
                               child: Text(
-                                'No saved addresses yet. Add home or work addresses for one-tap booking.',
+                                context.l10n.noSavedAddressesSubtitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 12,
@@ -570,6 +571,15 @@ class CustomerProfileScreen extends StatelessWidget {
                           ),
                           itemBuilder: (context, index) {
                             final item = addresses[index];
+                            final isHome = item.label.toLowerCase() == 'home';
+                            final isWork = item.label.toLowerCase() == 'work';
+                            final displayLabel = isHome
+                                ? context.l10n.addressLabelHome
+                                : (isWork
+                                    ? context.l10n.addressLabelWork
+                                    : (item.label.toLowerCase() == 'other'
+                                        ? context.l10n.addressLabelOther
+                                        : item.label));
                             return Row(
                               children: [
                                 Container(
@@ -580,9 +590,9 @@ class CustomerProfileScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
-                                    item.label == 'Home'
+                                    isHome
                                         ? Icons.home_rounded
-                                        : (item.label == 'Work'
+                                        : (isWork
                                             ? Icons.work_rounded
                                             : Icons.location_on_rounded),
                                     size: 16,
@@ -596,7 +606,7 @@ class CustomerProfileScreen extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        item.label,
+                                        displayLabel,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w800,
                                           fontSize: 13,
@@ -760,6 +770,16 @@ class CustomerProfileScreen extends StatelessWidget {
                 );
               },
             ),
+            _SettingsTile(
+              icon: Icons.help_outline_rounded,
+              title: context.l10n.helpSupportTitle,
+              subtitle: context.l10n.helpSupportSubtitle,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                );
+              },
+            ),
             const SizedBox(height: 12),
 
             // become provider card
@@ -796,15 +816,15 @@ class CustomerProfileScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Become a Service Provider',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.becomeProvider,
+                            style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           Text(
-                            'Offer your trade skills, receive jobs, and earn more',
+                            context.l10n.becomeProviderSubtitle,
                             style: TextStyle(
                               fontSize: 11.5,
                               color: context.themeTextSecondary,
@@ -891,15 +911,15 @@ class CustomerProfileScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Switch to Provider Mode',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.switchToProvider,
+                            style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           Text(
-                            'Switch back to your Service Provider workspace',
+                            context.l10n.switchToProviderSubtitle,
                             style: TextStyle(
                               fontSize: 11.5,
                               color: context.themeTextSecondary,

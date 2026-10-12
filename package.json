@@ -5,13 +5,7 @@
   "main": "api/send-otp.js",
   "scripts": {
     "start": "vercel dev",
-    "test:rules": "firebase emulators:exec --only firestore \"npx jest test/firestore_rules\"",
-    "reset:dry": "node scripts/reset-data.js",
-    "reset:confirm": "node scripts/reset-data.js --confirm",
-    "seed:categories": "node scripts/seed-categories.js",
-    "seed:categories:confirm": "node scripts/seed-categories.js --confirm",
-    "cleanup:jobs": "node scripts/seed-categories.js --cleanup-jobs",
-    "cleanup:jobs:confirm": "node scripts/seed-categories.js --cleanup-jobs --confirm"
+    "test:rules": "firebase emulators:exec --only firestore \"npx jest test/firestore_rules\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",

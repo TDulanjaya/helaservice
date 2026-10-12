@@ -75,10 +75,10 @@ class DispatchEvent {
     String calcTimeAgo(DateTime? dt, String fallback) {
       if (dt == null) return fallback;
       final diff = DateTime.now().difference(dt);
-      if (diff.inMinutes < 1) return 'Just now';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      return '${diff.inDays}d ago';
+      if (diff.inMinutes < 1) return '';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      return '${diff.inDays}d';
     }
 
     final iconKey = map['iconKey'] as String? ?? '';
@@ -89,7 +89,7 @@ class DispatchEvent {
       icon: _keyToIcon(iconKey),
       iconColor: Color(colorVal),
       title: map['title'] as String? ?? '',
-      timeAgo: calcTimeAgo(ts, map['timeAgo'] as String? ?? 'Just now'),
+      timeAgo: calcTimeAgo(ts, map['timeAgo'] as String? ?? ''),
       detail: map['detail'] as String? ?? '',
       tagLabel: map['tagLabel'] as String? ?? '',
       timestamp: ts,
@@ -152,7 +152,7 @@ class DistrictLoad {
       id: id,
       name: map['name'] as String? ?? '',
       percent: (map['percent'] as num?)?.toDouble() ?? 0.5,
-      loadLabel: map['loadLabel'] as String? ?? 'Normal',
+      loadLabel: map['loadLabel'] as String? ?? '',
       detail: map['detail'] as String? ?? '',
     );
   }
@@ -258,12 +258,12 @@ class VerificationQueueItem {
 
     final submitted = parseDate(map['submittedAt']);
     String calcTimeAgo(DateTime? dt) {
-      if (dt == null) return map['timeAgo'] as String? ?? 'Just now';
+      if (dt == null) return map['timeAgo'] as String? ?? '';
       final diff = DateTime.now().difference(dt);
-      if (diff.inMinutes < 1) return 'Just now';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24) return '${diff.inHours}h ago';
-      return '${diff.inDays}d ago';
+      if (diff.inMinutes < 1) return '';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      return '${diff.inDays}d';
     }
 
     IconData resolveTradeIcon(String tradeStr) {
@@ -292,13 +292,13 @@ class VerificationQueueItem {
       submittedAt: submitted,
       reviewedAt: parseDate(map['reviewedAt']),
       reviewedBy: map['reviewedBy'] as String?,
-      name: map['name'] as String? ?? 'Artisan',
+      name: map['name'] as String? ?? '',
       timeAgo: calcTimeAgo(submitted),
-      trade: map['trade'] as String? ?? 'Technician',
+      trade: map['trade'] as String? ?? '',
       tradeIcon: resolveTradeIcon(map['trade'] as String? ?? ''),
-      location: map['location'] as String? ?? 'Sri Lanka',
-      nicNumber: map['nicNumber'] as String? ?? 'Pending NIC',
-      docNote: map['docNote'] as String? ?? 'NIC front + back',
+      location: map['location'] as String? ?? '',
+      nicNumber: map['nicNumber'] as String? ?? '',
+      docNote: map['docNote'] as String? ?? '',
       matchPercent: (map['matchPercent'] as num?)?.toInt() ?? 0,
       flagged: map['flagged'] as bool? ?? false,
       phone: map['phone'] as String? ?? '',
@@ -343,7 +343,7 @@ class CategoryRow {
   final String status;
   final String iconKey;
   final bool isLive;
-  final int basePrice;
+  final int sortOrder;
   final String code;
   final Map<String, String>? names;
 
@@ -360,10 +360,46 @@ class CategoryRow {
     required this.status,
     this.iconKey = '',
     this.isLive = true,
-    this.basePrice = 1500,
+    this.sortOrder = 0,
     this.code = '',
     this.names,
   });
+
+  CategoryRow copyWith({
+    String? id,
+    IconData? icon,
+    String? name,
+    String? description,
+    String? registered,
+    String? onlineNow,
+    List<String>? districts,
+    List<String>? districtsOff,
+    String? surge,
+    String? status,
+    String? iconKey,
+    bool? isLive,
+    int? sortOrder,
+    String? code,
+    Map<String, String>? names,
+  }) {
+    return CategoryRow(
+      id: id ?? this.id,
+      icon: icon ?? this.icon,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      registered: registered ?? this.registered,
+      onlineNow: onlineNow ?? this.onlineNow,
+      districts: districts ?? this.districts,
+      districtsOff: districtsOff ?? this.districtsOff,
+      surge: surge ?? this.surge,
+      status: status ?? this.status,
+      iconKey: iconKey ?? this.iconKey,
+      isLive: isLive ?? this.isLive,
+      sortOrder: sortOrder ?? this.sortOrder,
+      code: code ?? this.code,
+      names: names ?? this.names,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         'label': name,
@@ -377,14 +413,14 @@ class CategoryRow {
         'status': status,
         'iconKey': iconKey.isNotEmpty ? iconKey : _iconToKey(icon),
         'isLive': isLive,
-        'basePrice': basePrice,
+        'sortOrder': sortOrder,
         'code': code.isNotEmpty ? code : id,
-        if (names != null) 'names': names,
+        'names': names ?? {'en': name},
       };
 
   factory CategoryRow.fromMap(String id, Map<String, dynamic> map) {
     final key = map['iconKey'] as String? ?? '';
-    final statusStr = map['status'] as String? ?? 'Active';
+    final statusStr = map['status'] as String? ?? 'active';
     final live = map['isLive'] is bool
         ? map['isLive'] as bool
         : (statusStr.toLowerCase() == 'active');
@@ -410,17 +446,17 @@ class CategoryRow {
     return CategoryRow(
       id: id,
       icon: _keyToIcon(key),
-      name: map['name'] ?? map['label'] ?? '',
+      name: namesMap?['en'] ?? map['name'] ?? map['label'] ?? '',
       description: map['description'] ?? '',
-      registered: map['registered'] ?? '0 Registered',
-      onlineNow: map['onlineNow'] ?? '0 Online Now',
-      districts: List<String>.from(map['districts'] ?? ['Colombo', 'Gampaha']),
+      registered: map['registered'] ?? '0',
+      onlineNow: map['onlineNow'] ?? '0',
+      districts: List<String>.from(map['districts'] ?? []),
       districtsOff: List<String>.from(map['districtsOff'] ?? []),
-      surge: map['surge'] ?? '1.0x Normal',
+      surge: map['surge'] ?? '1.0x',
       status: statusStr,
       iconKey: key,
       isLive: live,
-      basePrice: (map['basePrice'] as num?)?.toInt() ?? 1500,
+      sortOrder: (map['sortOrder'] as num?)?.toInt() ?? 0,
       code: map['code'] as String? ?? id,
       names: namesMap,
     );
@@ -501,10 +537,10 @@ class ExpansionDistrict {
       readiness:
           ((map['readiness'] ?? map['percent'] ?? 0.5) as num).toDouble(),
       location: map['location'] ?? map['detail'] ?? '',
-      description: map['description'] ?? 'Target expansion corridor.',
-      signups: map['signups'] ?? '500+ users',
-      preregistrations: map['preregistrations'] ?? '20+ vetted',
-      ctaLabel: map['ctaLabel'] ?? 'Review Hub',
+      description: map['description'] ?? '',
+      signups: map['signups'] ?? '',
+      preregistrations: map['preregistrations'] ?? '',
+      ctaLabel: map['ctaLabel'] ?? '',
       ctaIcon: Icons.rocket_launch,
     );
   }

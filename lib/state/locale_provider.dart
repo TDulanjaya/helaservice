@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 
 class LocaleProvider extends ChangeNotifier {
@@ -36,9 +37,14 @@ class LocaleProvider extends ChangeNotifier {
       await prefs.setString(_prefKey, newLocale.languageCode);
     } catch (_) {}
 
-    if (userId != null && userId.isNotEmpty) {
+    final currentUid = (userId != null && userId.isNotEmpty)
+        ? userId
+        : FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUid != null && currentUid.isNotEmpty) {
       try {
-        await AuthService().updateUserField(userId, {
+        await AuthService().updateUserField(currentUid, {
+          'language': newLocale.languageCode,
           'preferredLanguage': newLocale.languageCode,
         });
       } catch (_) {}

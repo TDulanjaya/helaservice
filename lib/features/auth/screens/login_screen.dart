@@ -271,7 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'name@example.com',
+                      hintText: context.l10n.hintEmail,
                       prefixIcon: Icon(Icons.email_outlined, size: 20, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.isDark ? context.themeSurfaceLow : Colors.white,
@@ -415,9 +415,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Suspension Reason:',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.suspensionReasonLabel,
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: AppColors.error,
@@ -559,7 +559,7 @@ class _LoginScreenState extends State<LoginScreen> {
           keyboardType: TextInputType.emailAddress,
           style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
           decoration: InputDecoration(
-            hintText: 'name@example.com',
+            hintText: context.l10n.hintEmail,
             hintStyle: TextStyle(
               color: context.themeTextSecondary.withValues(alpha: 0.6),
             ),

@@ -15,6 +15,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import '../../../services/storage_service.dart';
+import '../../../services/video_service.dart';
 import '../../../utils/permission_utils.dart';
 
 class PostJobRequestScreen extends StatefulWidget {
@@ -33,12 +34,17 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   String? _selectedCategory;
   JobLocation? _selectedLocation;
   final List<XFile> _photos = [];
+  ProcessedVideoResult? _processedVideo;
+  bool _processingVideo = false;
+  String? _uploadProgressText;
+  double _uploadProgressFraction = 0.0;
+  bool _uploadFailed = false;
   bool _submitting = false;
   String _bookingType = 'asap';
   DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
   String _scheduledSlot = 'morning';
 
-  static const int _maxPhotos = 4;
+  static const int _maxPhotos = 10;
 
   String _getSlotLabel(BuildContext context, String slotKey) {
     switch (slotKey) {
@@ -73,6 +79,46 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     super.dispose();
   }
 
+  Future<bool> _confirmLargeFileIfExceeds20Mb(String path) async {
+    try {
+      final size = await File(path).length();
+      if (size > 20 * 1024 * 1024) {
+        if (!mounted) return false;
+        final res = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: ctx.themeSurface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              context.l10n.largeMediaWarningTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            content: Text(
+              context.l10n.largeMediaWarningMessage,
+              style: TextStyle(fontSize: 13, color: ctx.themeTextSecondary),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(context.l10n.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(context.l10n.proceed),
+              ),
+            ],
+          ),
+        );
+        return res ?? false;
+      }
+    } catch (_) {}
+    return true;
+  }
+
   Future<void> _pickPhoto(ImageSource source) async {
     if (_photos.length >= _maxPhotos) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +143,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         imageQuality: 70,
       );
       if (picked != null) {
-        setState(() => _photos.add(picked));
+        final ok = await _confirmLargeFileIfExceeds20Mb(picked.path);
+        if (ok && mounted) {
+          setState(() => _photos.add(picked));
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -152,6 +201,95 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     );
   }
 
+  void _showVideoSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(context.l10n.addIssueVideoMax,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.videocam_rounded, color: AppColors.primary),
+                title: Text(context.l10n.recordVideo),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickVideo(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library_rounded, color: AppColors.primary),
+                title: Text(context.l10n.chooseFromGallery),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickVideo(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final allowed = await PermissionUtils.requestCameraWithRationale(context);
+      if (!allowed) return;
+    } else {
+      final allowed = await PermissionUtils.requestGalleryWithRationale(context);
+      if (!allowed) return;
+    }
+
+    try {
+      final picked = await _picker.pickVideo(
+        source: source,
+        maxDuration: const Duration(seconds: 120),
+      );
+      if (picked == null) return;
+      final ok = await _confirmLargeFileIfExceeds20Mb(picked.path);
+      if (!ok) return;
+
+      setState(() => _processingVideo = true);
+
+      try {
+        final processed = await VideoService.instance.processJobVideo(File(picked.path));
+        setState(() {
+          _processedVideo = processed;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().contains('120')
+                  ? context.l10n.videoExceedsMax120s
+                  : context.l10n.failedToProcessVideo('$e')),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _processingVideo = false);
+      }
+    } catch (e) {
+      debugPrint('Error picking video: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.errorPickingVideo), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   Future<void> _pickLocation() async {
     final result = await JobLocationPicker.pickLocation(
       context,
@@ -184,8 +322,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     final scheduledSlotLabel =
         _bookingType == 'scheduled' ? _getSlotLabel(context, _scheduledSlot) : null;
+    final defaultCustomerRole = context.l10n.roleCustomer;
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _uploadFailed = false;
+      _uploadProgressFraction = 0.0;
+      _uploadProgressText = 'Preparing media...';
+    });
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -193,22 +337,128 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         throw Exception('Not logged in');
       }
 
-      final List<String> photoUrls = [];
-      for (final photo in _photos) {
-        final uploaded =
-            await StorageService.instance.uploadFile(File(photo.path));
-        photoUrls.add(uploaded);
+      final List<JobMediaItem> photosList = [];
+      for (int i = 0; i < _photos.length; i++) {
+        setState(() {
+          _uploadProgressFraction = 0.0;
+          _uploadProgressText = 'Uploading photo ${i + 1} of ${_photos.length}...';
+        });
+        final rawBytes = await File(_photos[i].path).readAsBytes();
+        final stripped = StorageService.instance.stripExifAndCompressImage(rawBytes);
+        JobMediaUploadResult? res;
+        for (int attempt = 0; attempt < 3; attempt++) {
+          try {
+            final photoName = 'photo_$i.jpg';
+            res = await StorageService.instance.uploadJobMedia(
+              bytes: stripped,
+              filename: photoName,
+              contentType: 'image/jpeg',
+              onProgress: (sent, total) {
+                if (mounted) {
+                  setState(() {
+                    _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
+                    final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
+                    final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
+                    _uploadProgressText = 'Photo ${i + 1}/${_photos.length}: $sentMb MB / $totalMb MB';
+                  });
+                }
+              },
+            );
+            break;
+          } catch (e) {
+            if (attempt == 2) {
+              setState(() => _uploadFailed = true);
+              rethrow;
+            }
+            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+          }
+        }
+        if (res != null) {
+          photosList.add(JobMediaItem(url: res.url, key: res.key));
+        }
+      }
+
+      JobVideoItem? videoItem;
+      if (_processedVideo != null) {
+        setState(() {
+          _uploadProgressFraction = 0.0;
+          _uploadProgressText = 'Uploading video thumbnail...';
+        });
+        final thumbBytes = await _processedVideo!.thumbnailFile.readAsBytes();
+        final thumbStripped = StorageService.instance.stripExifAndCompressImage(thumbBytes);
+        JobMediaUploadResult? thumbRes;
+        for (int attempt = 0; attempt < 3; attempt++) {
+          try {
+            thumbRes = await StorageService.instance.uploadJobMedia(
+              bytes: thumbStripped,
+              filename: 'video_thumb.jpg',
+              contentType: 'image/jpeg',
+            );
+            break;
+          } catch (e) {
+            if (attempt == 2) {
+              setState(() => _uploadFailed = true);
+              rethrow;
+            }
+            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+          }
+        }
+
+        setState(() {
+          _uploadProgressFraction = 0.0;
+          _uploadProgressText = 'Uploading video file...';
+        });
+        final videoBytes = await _processedVideo!.compressedFile.readAsBytes();
+        JobMediaUploadResult? videoRes;
+        for (int attempt = 0; attempt < 3; attempt++) {
+          try {
+            const videoName = 'video.mp4';
+            videoRes = await StorageService.instance.uploadJobMedia(
+              bytes: videoBytes,
+              filename: videoName,
+              contentType: 'video/mp4',
+              onProgress: (sent, total) {
+                if (mounted) {
+                  setState(() {
+                    _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
+                    final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
+                    final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
+                    _uploadProgressText = 'Video: $sentMb MB / $totalMb MB';
+                  });
+                }
+              },
+            );
+            break;
+          } catch (e) {
+            if (attempt == 2) {
+              setState(() => _uploadFailed = true);
+              rethrow;
+            }
+            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+          }
+        }
+
+        if (thumbRes != null && videoRes != null) {
+          videoItem = JobVideoItem(
+            url: videoRes.url,
+            key: videoRes.key,
+            thumbUrl: thumbRes.url,
+            durationSec: _processedVideo!.durationSec,
+          );
+        }
       }
 
       final request = JobRequest(
         customerId: user.uid,
         customerName:
-            user.displayName ?? user.email?.split('@').first ?? 'Customer',
+            user.displayName ?? user.email?.split('@').first ?? defaultCustomerRole,
         customerPhone: user.phoneNumber ?? '',
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         category: _selectedCategory!,
-        photoUrls: photoUrls,
+        photoUrls: photosList.map((p) => p.url).toList(),
+        photos: photosList,
+        video: videoItem,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
         district: _selectedLocation!.label,
@@ -220,6 +470,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       );
 
       final requestId = await JobRequestRepository().createJobRequest(request);
+
+      // Clean up local temp video caches
+      await VideoService.instance.cleanCache();
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -233,6 +486,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() {
+          _uploadFailed = true;
+          _uploadProgressText = 'Upload failed: $e';
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${context.l10n.failedToSubmitRequest}: $e'),
@@ -241,7 +498,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          if (!_uploadFailed) {
+            _uploadProgressText = null;
+          }
+        });
+      }
     }
   }
 
@@ -348,7 +612,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         border: Border.all(color: context.themeBorder),
                       ),
                       child: Text(
-                        'No services available yet',
+                        context.l10n.noServicesAvailableYet,
                         style: TextStyle(
                           fontSize: 13,
                           color: context.themeTextSecondary,
@@ -526,6 +790,159 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // video section (optional, max 120s)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(context.l10n.videoOfIssueOptional,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w800)),
+                  Text(_processedVideo != null ? '1/1' : '0/1 (max 120s)',
+                      style: TextStyle(
+                          fontSize: 11.5, color: context.themeTextSecondary)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_processingVideo)
+                Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          context.l10n.optimizingVideoNotice,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (_processedVideo != null)
+                Row(
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            _processedVideo!.thumbnailFile,
+                            width: 120,
+                            height: 85,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 6,
+                          left: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '${_processedVideo!.durationSec}s',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () => setState(() {
+                              _processedVideo = null;
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: AppColors.error,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              else
+                InkWell(
+                  onTap: _showVideoSourceSheet,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 64,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.videocam_outlined, color: AppColors.primary, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                context.l10n.addShortVideo,
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                context.l10n.addShortVideoSubtitle,
+                                style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               const SizedBox(height: 20),
 
               // timing selection
@@ -770,8 +1187,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           children: [
                             Text(
                               _selectedLocation != null
-                                  ? (_selectedLocation!.label ?? 'Job Location')
-                                  : 'Select Job Location',
+                                  ? (_selectedLocation!.label ?? context.l10n.selectJobLocation)
+                                  : context.l10n.selectJobLocation,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
@@ -782,7 +1199,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             Text(
                               _selectedLocation != null
                                   ? _selectedLocation!.address
-                                  : 'Tap to pick via GPS, map pin, or saved addresses',
+                                  : context.l10n.tapToPickLocationDesc,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -807,7 +1224,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedLocation != null ? 'Change' : 'Set Pin',
+                        _selectedLocation != null ? context.l10n.change : context.l10n.setPin,
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
@@ -821,6 +1238,78 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
 
+              if (_uploadProgressText != null || _uploadFailed) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _uploadFailed
+                        ? AppColors.error.withValues(alpha: 0.1)
+                        : AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _uploadFailed
+                          ? AppColors.error.withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (_submitting) ...[
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 12),
+                          ] else if (_uploadFailed) ...[
+                            const Icon(Icons.error_outline_rounded, size: 18, color: AppColors.error),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              _uploadProgressText ?? context.l10n.uploadFailedAttempts,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: _uploadFailed ? AppColors.error : AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_submitting && _uploadProgressFraction > 0) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _uploadProgressFraction,
+                            minHeight: 6,
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                          ),
+                        ),
+                      ],
+                      if (_uploadFailed) ...[
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          onPressed: _submitRequest,
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: Text(context.l10n.uploadRetry),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 28),
               SizedBox(
                 height: 54,

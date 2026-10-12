@@ -257,7 +257,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Full Name',
+          context.l10n.fullName,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -271,7 +271,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           textCapitalization: TextCapitalization.words,
           style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
           decoration: InputDecoration(
-            hintText: 'e.g. Kasun Perera',
+            hintText: context.l10n.hintFullName,
             hintStyle: TextStyle(
               color: context.themeTextSecondary.withValues(alpha: 0.6),
             ),
@@ -316,7 +316,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: TextInputType.emailAddress,
           style: TextStyle(color: context.themeTextPrimary, fontSize: 14.5),
           decoration: InputDecoration(
-            hintText: 'name@example.com',
+            hintText: context.l10n.hintEmail,
             hintStyle: TextStyle(
               color: context.themeTextSecondary.withValues(alpha: 0.6),
             ),
@@ -620,7 +620,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Sign up in seconds to access verified roadside and home service experts across Sri Lanka.',
+                              context.l10n.registerBannerSubtitle,
                               style: TextStyle(
                                 fontSize: 14.5,
                                 color: context.themeTextSecondary,

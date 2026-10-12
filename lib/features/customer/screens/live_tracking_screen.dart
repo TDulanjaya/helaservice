@@ -27,6 +27,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_discovery_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../widgets/customer_payment_card.dart';
+import '../widgets/price_extras_banner.dart';
 import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
@@ -292,7 +293,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              'Customer location not available',
+                                              context.l10n.customerLocationNotAvailableTitle,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w800,
                                                 fontSize: 14,
@@ -304,7 +305,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Coordinates were not attached to this booking. Contact the service provider below.',
+                                        context.l10n.customerLocationNotAvailableDesc,
                                         style: TextStyle(
                                             fontSize: 12,
                                             color: context.themeTextSecondary),
@@ -504,9 +505,9 @@ class LiveTrackingScreen extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      const Text(
-                                        'Completion PIN: ',
-                                        style: TextStyle(
+                                      Text(
+                                        '${context.l10n.pinCode}: ',
+                                        style: const TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -540,6 +541,10 @@ class LiveTrackingScreen extends StatelessWidget {
                   ),
                 ],
                 if (currentBooking != null) ...[
+                  if (currentBooking.arrivalStatus == 'claimed')
+                    _buildArrivalClaimBanner(context, currentBooking, tech),
+                  PriceProposalBanner(booking: currentBooking),
+                  ExtrasCustomerBanner(booking: currentBooking),
                   RescheduleProposalBanner(
                     booking: currentBooking,
                     currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
@@ -802,7 +807,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                     currentBooking.id.isNotEmpty) {
                                   await BookingRepository().cancelBooking(
                                     bookingId: currentBooking.id,
-                                    reason: 'Customer cancelled during tracking',
+                                    reason: 'CUSTOMER_CANCELLED_TRACKING',
                                     cancelledBy: 'customer',
                                     jobRequestId: currentBooking.jobRequestId,
                                   );
@@ -837,6 +842,15 @@ class LiveTrackingScreen extends StatelessWidget {
                             );
                           })),
                 ]),
+                if (currentBooking != null && currentBooking.isEligibleForNoShow) ...[
+                  const SizedBox(height: 10),
+                  AppOutlineButton(
+                    label: context.l10n.providerDidNotCome,
+                    icon: Icons.person_off_outlined,
+                    color: AppColors.error,
+                    onPressed: () => _promptReportNoShow(context, currentBooking),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 if (currentBooking != null && currentBooking.status == JobStatus.completed)
                   PrimaryButton(
@@ -853,6 +867,7 @@ class LiveTrackingScreen extends StatelessWidget {
                               : tech.title,
                           totalPrice: currentBooking.agreedPrice ??
                               tech.baseRateLkr.toDouble(),
+                          completionType: currentBooking.completionType,
                         ),
                       ),
                     ),
@@ -881,6 +896,186 @@ class LiveTrackingScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _buildArrivalClaimBanner(
+    BuildContext context,
+    Booking booking,
+    Technician tech,
+  ) {
+    final displayName = tech.name.isNotEmpty
+        ? tech.name
+        : (booking.providerName.isNotEmpty ? booking.providerName : context.l10n.roleProvider);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  context.l10n.providerSaysArrived(displayName),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (booking.arrivalDistanceM != null && (booking.arrivalOutsideZone || booking.arrivalDistanceM! > 200)) ...[
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.providerGpsShowsAway(booking.arrivalDistanceM.toString()),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: context.themeTextSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    minimumSize: const Size.fromHeight(42),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(
+                    context.l10n.yesTheyAreHere,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await BookingRepository().confirmCustomerArrival(
+                        bookingId: booking.id,
+                        jobRequestId: booking.jobRequestId,
+                      );
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    minimumSize: const Size.fromHeight(42),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: Text(
+                    context.l10n.noNotHere,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await BookingRepository().denyCustomerArrival(
+                        bookingId: booking.id,
+                        currentDeniedCount: booking.arrivalDeniedCount,
+                      );
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _promptReportNoShow(BuildContext context, Booking booking) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          context.l10n.confirmNoShowTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          context.l10n.confirmNoShowMessage,
+          style: TextStyle(color: context.themeTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.providerDidNotCome),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await BookingRepository().reportNoShow(
+          bookingId: booking.id,
+          jobRequestId: booking.jobRequestId,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.noShowReportedSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

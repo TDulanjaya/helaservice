@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
@@ -28,10 +27,13 @@ import '../screens/post_job_request_screen.dart';
 import '../screens/direct_chat_screen.dart';
 import '../screens/rating_completion_screen.dart';
 import 'customer_payment_card.dart';
+import 'price_extras_banner.dart';
 import '../../admin/widgets/booking_timeline_sheet.dart';
 import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
+import '../../shared/widgets/job_media_gallery.dart';
+import '../../support/widgets/report_problem_dialog.dart';
 
 class CustomerBookingsView extends StatefulWidget {
   final VoidCallback? onTrackPressed;
@@ -139,7 +141,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
     if (customerId.isEmpty) {
       return Center(
         child: Text(
-          'Please sign in to view your bookings',
+          context.l10n.signInToViewBookings,
           style: TextStyle(color: context.themeTextSecondary),
         ),
       );
@@ -397,9 +399,9 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                         children: [
                           Row(
                             children: [
-                              const Text(
-                                'Completion PIN: ',
-                                style: TextStyle(
+                              Text(
+                                '${context.l10n.pinCode}: ',
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -417,7 +419,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Share this PIN with provider once service is completed at your premises.',
+                            context.l10n.givePinHint,
                             style: TextStyle(
                               fontSize: 11,
                               color: context.themeTextSecondary,
@@ -440,9 +442,9 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                                   }
                                 },
                                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                                label: const Text(
-                                  'Reset PIN attempts',
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                label: Text(
+                                  context.l10n.resetPinAttempts,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.error,
@@ -463,6 +465,28 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
               );
             },
           ),
+          if (b.arrivalStatus == 'claimed') _buildArrivalClaimCard(context, b),
+          PriceProposalBanner(booking: b),
+          ExtrasCustomerBanner(booking: b),
+          if (b.jobRequestId != null && b.jobRequestId!.isNotEmpty)
+            FutureBuilder<JobRequest?>(
+              future: JobRequestRepository().getById(b.jobRequestId!),
+              builder: (ctx, snap) {
+                final jr = snap.data;
+                if (jr == null ||
+                    (jr.photoUrls.isEmpty &&
+                        (jr.videoUrl == null || jr.videoUrl!.isEmpty))) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: JobMediaGallery(
+                    photoUrls: jr.photoUrls,
+                    videoUrl: jr.videoUrl,
+                  ),
+                );
+              },
+            ),
           if (b.status == JobStatus.inProgress ||
               b.beforePhotos.isNotEmpty ||
               b.afterPhotos.isNotEmpty) ...[
@@ -592,11 +616,215 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   onTap: () => _cancelBooking(context, b),
                 ),
               ],
+              const SizedBox(width: 8),
+              IconSquareButton(
+                icon: Icons.flag_outlined,
+                size: 42,
+                iconSize: 18,
+                radius: 12,
+                color: AppColors.error,
+                tooltip: context.l10n.reportProblemTitle,
+                onTap: () => ReportProblemDialog.show(
+                  context,
+                  bookingId: b.id,
+                  otherPartyId: b.providerId,
+                  otherPartyRole: 'provider',
+                  otherPartyName: b.providerName,
+                ),
+              ),
+            ],
+          ),
+          if (b.isEligibleForNoShow) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                minimumSize: const Size.fromHeight(38),
+              ),
+              label: Text(
+                context.l10n.providerDidNotCome,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+              ),
+              icon: const Icon(Icons.person_off_outlined, size: 16),
+              onPressed: () => _promptReportNoShow(context, b),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArrivalClaimCard(BuildContext context, Booking booking) {
+    final displayName = booking.providerName.isNotEmpty
+        ? booking.providerName
+        : context.l10n.roleProvider;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.l10n.providerSaysArrived(displayName),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          if (booking.arrivalDistanceM != null &&
+              (booking.arrivalOutsideZone || booking.arrivalDistanceM! > 200)) ...[
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.providerGpsShowsAway(booking.arrivalDistanceM.toString()),
+              style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    minimumSize: const Size.fromHeight(38),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 16),
+                  label: Text(
+                    context.l10n.yesTheyAreHere,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await BookingRepository().confirmCustomerArrival(
+                        bookingId: booking.id,
+                        jobRequestId: booking.jobRequestId,
+                      );
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    minimumSize: const Size.fromHeight(38),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined, size: 16),
+                  label: Text(
+                    context.l10n.noNotHere,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await BookingRepository().denyCustomerArrival(
+                        bookingId: booking.id,
+                        currentDeniedCount: booking.arrivalDeniedCount,
+                      );
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _promptReportNoShow(BuildContext context, Booking booking) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          context.l10n.confirmNoShowTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          context.l10n.confirmNoShowMessage,
+          style: TextStyle(color: context.themeTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.providerDidNotCome),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await BookingRepository().reportNoShow(
+          bookingId: booking.id,
+          jobRequestId: booking.jobRequestId,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.noShowReportedSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildJobRequestsStream(BuildContext context, String customerId) {
@@ -775,13 +1003,13 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'No Service History Yet',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  Text(
+                    context.l10n.noServiceHistoryYet,
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Completed and past bookings will appear here.',
+                    context.l10n.noServiceHistorySubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -923,7 +1151,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'), backgroundColor: AppColors.error),
+                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                backgroundColor: AppColors.error),
           );
         }
       }
@@ -957,7 +1186,7 @@ class _HistoryBookingCard extends StatelessWidget {
                 Text(
                   booking.relativeTime.isNotEmpty
                       ? booking.relativeTime
-                      : (booking.time.isNotEmpty ? booking.time : 'Past service'),
+                      : (booking.time.isNotEmpty ? booking.time : context.l10n.pastService),
                   style: TextStyle(
                     fontSize: 11.5,
                     color: context.themeTextSecondary,
@@ -1091,7 +1320,7 @@ class _JobHistoryDetailModal extends StatelessWidget {
                       label: context.l10n.serviceDate,
                       value: booking.relativeTime.isNotEmpty
                           ? booking.relativeTime
-                          : (booking.time.isNotEmpty ? booking.time : 'Completed'),
+                          : (booking.time.isNotEmpty ? booking.time : context.l10n.statusCompleted),
                     ),
                     const Divider(height: 16),
                     _buildDetailRow(
@@ -1100,7 +1329,7 @@ class _JobHistoryDetailModal extends StatelessWidget {
                       label: context.l10n.location,
                       value: booking.location.isNotEmpty
                           ? booking.location
-                          : 'Not specified',
+                          : context.l10n.notSpecified,
                     ),
                     const Divider(height: 16),
                     _buildDetailRow(
@@ -1109,7 +1338,7 @@ class _JobHistoryDetailModal extends StatelessWidget {
                       label: context.l10n.agreedPrice,
                       value: booking.estRate.isNotEmpty
                           ? booking.estRate
-                          : 'Completed',
+                          : context.l10n.statusCompleted,
                     ),
                     if (isCompleted) ...[
                       const Divider(height: 16),
@@ -1134,6 +1363,26 @@ class _JobHistoryDetailModal extends StatelessWidget {
                 label: Text(context.l10n.viewTimeline),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => ReportProblemDialog.show(
+                  context,
+                  bookingId: booking.id,
+                  otherPartyId: booking.providerId,
+                  otherPartyRole: 'provider',
+                  otherPartyName: booking.providerName,
+                ),
+                icon: const Icon(Icons.flag_outlined, size: 16, color: AppColors.error),
+                label: Text(
+                  context.l10n.reportProblemTitle,
+                  style: const TextStyle(color: AppColors.error),
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 44),
+                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -1164,6 +1413,25 @@ class _JobHistoryDetailModal extends StatelessWidget {
                   ),
                 ),
               ],
+              if (booking.jobRequestId != null && booking.jobRequestId!.isNotEmpty)
+                FutureBuilder<JobRequest?>(
+                  future: JobRequestRepository().getById(booking.jobRequestId!),
+                  builder: (ctx, snap) {
+                    final jr = snap.data;
+                    if (jr == null ||
+                        (jr.photoUrls.isEmpty &&
+                            (jr.videoUrl == null || jr.videoUrl!.isEmpty))) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: JobMediaGallery(
+                        photoUrls: jr.photoUrls,
+                        videoUrl: jr.videoUrl,
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 16),
               Text(
                 context.l10n.providerDetailsTitle,
@@ -1244,9 +1512,9 @@ class _JobHistoryDetailModal extends StatelessWidget {
               const SizedBox(height: 16),
               if (isCompleted) ...[
                 if (booking.rating != null && booking.rating! > 0) ...[
-                  const Text(
-                    'Your Rating & Review',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                  Text(
+                    context.l10n.yourRatingReview,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   AppCard(
@@ -1276,11 +1544,18 @@ class _JobHistoryDetailModal extends StatelessWidget {
                     onPressed: () async {
                       Navigator.pop(context);
                       final tech = await TechnicianRepository()
-                              .getById(booking.providerId) ??
-                          Technician.placeholder(
-                            id: booking.providerId,
-                            name: booking.providerName,
+                              .getById(booking.providerId);
+                      if (tech == null) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error,
+                            ),
                           );
+                        }
+                        return;
+                      }
                       if (context.mounted) {
                         Navigator.push(
                           context,
@@ -1291,6 +1566,7 @@ class _JobHistoryDetailModal extends StatelessWidget {
                               jobRequestId: booking.jobRequestId ?? '',
                               jobTitle: booking.title,
                               totalPrice: booking.agreedPrice,
+                              completionType: booking.completionType,
                             ),
                           ),
                         );
@@ -1360,52 +1636,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
     return LocalizedData.getStatus(context, status);
   }
 
-  void _showPhotoZoom(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(12),
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: InteractiveViewer(
-                maxScale: 4.0,
-                child: url.startsWith('data:')
-                    ? Image.memory(
-                        base64Decode(url.split(',').last),
-                        fit: BoxFit.contain,
-                      )
-                    : Image.network(
-                        url,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.black,
-                          padding: const EdgeInsets.all(40),
-                          child: const Icon(Icons.broken_image,
-                              color: Colors.white, size: 48),
-                        ),
-                      ),
-              ),
-            ),
-            IconButton(
-              onPressed: () => Navigator.pop(ctx),
-              icon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.close, color: Colors.white, size: 20),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1467,7 +1698,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
                           const Icon(Icons.calendar_month_outlined, size: 12, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            request.scheduledSlot ?? 'Scheduled',
+                            request.scheduledSlot ?? context.l10n.statusScheduled,
                             style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
@@ -1516,44 +1747,14 @@ class _CustomerJobRequestCard extends StatelessWidget {
               ),
             ),
           ],
-          if (request.photoUrls.isNotEmpty) ...[
+          if (request.photoUrls.isNotEmpty ||
+              (request.videoUrl != null && request.videoUrl!.isNotEmpty)) ...[
             const SizedBox(height: 10),
-            SizedBox(
+            JobMediaGallery(
+              photoUrls: request.photoUrls,
+              videoUrl: request.videoUrl,
               height: 56,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: request.photoUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (ctx, idx) {
-                  final pUrl = request.photoUrls[idx];
-                  return GestureDetector(
-                    onTap: () => _showPhotoZoom(context, pUrl),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        color: context.themeSurfaceLow,
-                        child: pUrl.startsWith('data:')
-                            ? Image.memory(
-                                base64Decode(pUrl.split(',').last),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.broken_image,
-                                    size: 20),
-                              )
-                            : Image.network(
-                                pUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.broken_image,
-                                    size: 20),
-                              ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+              showHeader: false,
             ),
           ],
           const SizedBox(height: 10),
@@ -1724,7 +1925,8 @@ class _CustomerJobRequestCard extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'), backgroundColor: AppColors.error),
+                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                backgroundColor: AppColors.error),
           );
         }
       }
@@ -1775,7 +1977,8 @@ class _CustomerJobRequestCard extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'), backgroundColor: AppColors.error),
+                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                backgroundColor: AppColors.error),
           );
         }
       }

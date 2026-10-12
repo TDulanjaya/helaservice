@@ -6,7 +6,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile.dart';
 import '../models/admin_user.dart';
 import '../state/role_provider.dart';
-import 'category_service.dart';
 import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
@@ -73,6 +72,10 @@ class AuthService {
     String? nicFrontUrl,
     String? nicBackUrl,
     String? serviceCategory,
+    int? dailyRateLkr,
+    int? hourlyRateLkr,
+    int? perKmRateLkr,
+    int? visitFeeLkr,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
 
@@ -98,6 +101,10 @@ class AuthService {
         nicFrontKey: nicFrontKey ?? nicFrontUrl,
         nicBackKey: nicBackKey ?? nicBackUrl,
         serviceCategory: serviceCategory,
+        dailyRateLkr: dailyRateLkr,
+        hourlyRateLkr: hourlyRateLkr,
+        perKmRateLkr: perKmRateLkr,
+        visitFeeLkr: visitFeeLkr,
       );
 
       return await saveUserProfile(profile);
@@ -129,7 +136,7 @@ class AuthService {
         if (googleUser == null) {
           throw fb.FirebaseAuthException(
             code: 'ERROR_ABORTED_BY_USER',
-            message: 'Sign-in cancelled by user.',
+            message: 'ERROR_ABORTED_BY_USER',
           );
         }
 
@@ -244,11 +251,11 @@ class AuthService {
               ? (data['address'] as String).trim()
               : ((data['district'] as String?)?.trim().isNotEmpty == true
                   ? data['district'] as String
-                  : 'Home');
+                  : 'home');
 
           final newAddrRef = savedCol.doc();
           batch.set(newAddrRef, {
-            'label': 'Home',
+            'label': 'home',
             'latitude': lat,
             'longitude': lng,
             'address': address,
@@ -313,21 +320,22 @@ class AuthService {
           'name': profileWithId.displayName,
           'initials': initials,
           'avatarColor': 0xFFD6900F,
-          'title': profileWithId.serviceCategory != null
-              ? '${CategoryService.instance.nameOf(profileWithId.serviceCategory)} Specialist'
-              : 'Service Technician',
+          'title': profileWithId.serviceCategory ?? '',
           'category': profileWithId.serviceCategory ?? '',
           'serviceCategory': profileWithId.serviceCategory ?? '',
           'online': true,
-          'etaLabel': 'Available Today',
-          'baseRateLkr': 1500,
-          'responseTimeLabel': 'Usually responds in 10 mins',
-          'yearsExperience': 'Verified',
-          'serviceArea': profileWithId.district ?? 'Sri Lanka',
+          'etaLabel': '',
+          'responseTimeLabel': '',
+          'yearsExperience': '',
+          'serviceArea': profileWithId.district ?? '',
           'district': profileWithId.district,
           'latitude': profileWithId.latitude,
           'longitude': profileWithId.longitude,
           'phone': profileWithId.phone,
+          if (profileWithId.dailyRateLkr != null) 'dailyRateLkr': profileWithId.dailyRateLkr,
+          if (profileWithId.hourlyRateLkr != null) 'hourlyRateLkr': profileWithId.hourlyRateLkr,
+          if (profileWithId.perKmRateLkr != null) 'perKmRateLkr': profileWithId.perKmRateLkr,
+          if (profileWithId.visitFeeLkr != null) 'visitFeeLkr': profileWithId.visitFeeLkr,
         };
 
         if (isNewTech) {
@@ -461,7 +469,7 @@ class AuthService {
       'email': cleanEmail,
       'displayName': displayName.trim().isNotEmpty
           ? displayName.trim()
-          : (usersSnap.docs.first.data()['displayName'] ?? 'Admin'),
+          : (usersSnap.docs.first.data()['displayName'] ?? 'ADMIN'),
       if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
       'role': role.key,
       'status': 'active',
@@ -524,29 +532,8 @@ class AuthService {
 
   static String getReadableAuthError(dynamic error) {
     if (error is fb.FirebaseAuthException) {
-      switch (error.code) {
-        case 'user-not-found':
-          return 'No account found with this email. Please check your spelling or register.';
-        case 'wrong-password':
-        case 'invalid-credential':
-          return 'Incorrect password or email. Please check your credentials.';
-        case 'email-already-in-use':
-          return 'An account already exists with this email address.';
-        case 'weak-password':
-          return 'The password is too weak. Please use at least 6 characters.';
-        case 'invalid-email':
-          return 'Please enter a valid email address.';
-        case 'user-disabled':
-          return 'This account has been disabled. Please contact support.';
-        case 'too-many-requests':
-          return 'Too many attempts. Please wait a moment before trying again.';
-        case 'network-request-failed':
-          return 'Network connection issue. Please check your internet connection.';
-        default:
-          return error.message ?? error.code;
-      }
+      return error.code;
     }
-    final str = error.toString().replaceFirst('Exception: ', '');
-    return str;
+    return error.toString().replaceFirst('Exception: ', '');
   }
 }

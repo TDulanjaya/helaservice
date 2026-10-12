@@ -151,7 +151,7 @@ class ChatRoomSummary {
   String getOtherPartyName(String currentUserId) {
     final otherId = getOtherPartyId(currentUserId);
     final name = participantNames[otherId];
-    return (name != null && name.isNotEmpty) ? name : 'User';
+    return (name != null && name.isNotEmpty) ? name : '';
   }
 
   // get other participant role
@@ -306,7 +306,7 @@ class ChatService {
 
     final previewText = text.trim().isNotEmpty
         ? text.trim()
-        : (imageUrl != null ? '📷 Photo' : '');
+        : (imageUrl != null ? 'photo' : '');
 
     batch.set(msgRef, {
       'senderId': senderId,
@@ -361,9 +361,10 @@ class ChatService {
     if (imageInput is File) {
       uploadedUrl = await StorageService.instance.uploadFile(imageInput);
     } else if (imageInput is Uint8List) {
+      final chatFilename = 'chat_${DateTime.now().millisecondsSinceEpoch}.jpg';
       uploadedUrl = await StorageService.instance.uploadBytes(
         imageInput,
-        filename: 'chat_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        filename: chatFilename,
       );
     } else if (imageInput is String && imageInput.startsWith('http')) {
       uploadedUrl = imageInput;

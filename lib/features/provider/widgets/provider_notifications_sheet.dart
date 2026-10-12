@@ -216,8 +216,8 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                             children: [
                                               Text(
                                                 isApproved
-                                                    ? 'Account Verified'
-                                                    : 'Verification Under Review',
+                                                    ? context.l10n.accountVerified
+                                                    : context.l10n.verificationUnderReview,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 14,
@@ -226,8 +226,8 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                               const SizedBox(height: 3),
                                               Text(
                                                 isApproved
-                                                    ? 'Your NIC identity has been approved by admin. You can receive all job bids.'
-                                                    : 'Your verification submission is being reviewed by HelaService administration.',
+                                                    ? context.l10n.nicApprovedMessage
+                                                    : context.l10n.nicUnderReviewMessage,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: context.themeTextSecondary,
@@ -267,16 +267,16 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
-                                            'Quote Accepted!',
-                                            style: TextStyle(
+                                          Text(
+                                            context.l10n.quoteAcceptedTitle,
+                                            style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 13.5,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            'LKR ${q.quotedPrice.toStringAsFixed(0)} • Customer confirmed this booking',
+                                            'LKR ${q.quotedPrice.toStringAsFixed(0)} • ${context.l10n.customerConfirmedBooking}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: context.themeTextSecondary,

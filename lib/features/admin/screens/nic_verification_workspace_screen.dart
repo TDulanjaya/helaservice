@@ -171,7 +171,7 @@ class _NicVerificationWorkspaceScreenState
         batch.set(tDoc, {
           'nicVerified': true,
           'isVerified': true,
-          'status': 'Active',
+          'status': 'active',
         }, SetOptions(merge: true));
 
         final uDoc = FirebaseFirestore.instance
@@ -971,7 +971,9 @@ class _NicVerificationWorkspaceScreenState
                   field: context.l10n.ocrNicNumber,
                   extracted: selectedItem.nicNumber,
                   registry: selectedItem.nicNumber,
-                  status: selectedItem.flagged ? 'Flagged' : 'Match',
+                  status: selectedItem.flagged
+                      ? context.l10n.verificationFlagged
+                      : context.l10n.verificationMatch,
                 ),
                 OcrField(
                   icon: Icons.home_outlined,
@@ -979,7 +981,7 @@ class _NicVerificationWorkspaceScreenState
                   extracted: selectedItem.location,
                   registry: context.l10n
                       .nicDeskVerifiedGnDivision(selectedItem.location),
-                  status: 'Valid',
+                  status: context.l10n.verificationValid,
                 ),
                 OcrField(
                   icon: Icons.assignment_turned_in_outlined,

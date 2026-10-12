@@ -45,6 +45,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _nicController = TextEditingController();
+  final _dailyRateController = TextEditingController();
+  final _hourlyRateController = TextEditingController();
+  final _perKmRateController = TextEditingController();
+  final _visitFeeController = TextEditingController();
 
   String _district = 'Colombo';
   String _category = '';
@@ -89,6 +93,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           profile!.serviceCategory!.isNotEmpty) {
         _category = profile.serviceCategory!;
       }
+      if (profile?.dailyRateLkr != null) {
+        _dailyRateController.text = profile!.dailyRateLkr.toString();
+      }
+      if (profile?.hourlyRateLkr != null) {
+        _hourlyRateController.text = profile!.hourlyRateLkr.toString();
+      }
+      if (profile?.perKmRateLkr != null) {
+        _perKmRateController.text = profile!.perKmRateLkr.toString();
+      }
+      if (profile?.visitFeeLkr != null) {
+        _visitFeeController.text = profile!.visitFeeLkr.toString();
+      }
     }
   }
 
@@ -98,6 +114,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _nicController.dispose();
+    _dailyRateController.dispose();
+    _hourlyRateController.dispose();
+    _perKmRateController.dispose();
+    _visitFeeController.dispose();
     super.dispose();
   }
 
@@ -177,14 +197,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       final ok = await PermissionUtils.requestCameraWithRationale(
         context,
         title: context.l10n.takeProfilePhoto,
-        description: 'A clear photo builds trust with customers.',
+        description: context.l10n.profileTrustPhotoRationale,
       );
       if (!ok) return;
     } else {
       final ok = await PermissionUtils.requestGalleryWithRationale(
         context,
         title: context.l10n.selectProfilePhoto,
-        description: 'Choose a photo from your gallery.',
+        description: context.l10n.profileChooseGalleryPhoto,
       );
       if (!ok) return;
     }
@@ -215,15 +235,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (source == ImageSource.camera) {
       final ok = await PermissionUtils.requestCameraWithRationale(
         context,
-        title: isFront ? 'Capture NIC Front' : 'Capture NIC Back',
-        description: 'Take a clear, well-lit photo of your National ID.',
+        title: isFront ? context.l10n.captureNicFront : context.l10n.captureNicBack,
+        description: context.l10n.captureNicPrompt,
       );
       if (!ok) return;
     } else {
       final ok = await PermissionUtils.requestGalleryWithRationale(
         context,
-        title: isFront ? 'Select NIC Front' : 'Select NIC Back',
-        description: 'Select your National Identity Card photo from gallery.',
+        title: isFront ? context.l10n.selectNicFront : context.l10n.selectNicBack,
+        description: context.l10n.selectNicGalleryPrompt,
       );
       if (!ok) return;
     }
@@ -279,7 +299,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ),
               const SizedBox(height: 14),
               Text(
-                'Profile Photo',
+                context.l10n.profilePhoto,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -418,9 +438,59 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           _longitude == null ||
           _addressController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Provider base location is required. Please set GPS/Map pin and address.'),
+          SnackBar(
+            content: Text(context.l10n.providerBaseLocationRequired),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      final daily = int.tryParse(_dailyRateController.text.trim());
+      final hourly = int.tryParse(_hourlyRateController.text.trim());
+      final perKm = int.tryParse(_perKmRateController.text.trim());
+      final visitFee = int.tryParse(_visitFeeController.text.trim());
+
+      if (daily == null && hourly == null && perKm == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.atLeastOneRateRequired),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (daily != null && (daily < 1 || daily > 100000)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.dailyRateRangeError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (hourly != null && (hourly < 1 || hourly > 20000)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.hourlyRateRangeError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (perKm != null && (perKm < 1 || perKm > 1000)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.perKmRateRangeError),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      if (visitFee != null && (visitFee < 0 || visitFee > 20000)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.visitFeeRangeError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -504,6 +574,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           certificationUrls: current?.certificationUrls ?? const [],
           certificationsStatus: current?.certificationsStatus,
           serviceCategory: _category,
+          dailyRateLkr: int.tryParse(_dailyRateController.text.trim()),
+          hourlyRateLkr: int.tryParse(_hourlyRateController.text.trim()),
+          perKmRateLkr: int.tryParse(_perKmRateController.text.trim()),
+          visitFeeLkr: int.tryParse(_visitFeeController.text.trim()) ?? 0,
           preferredLanguage: localeProvider.languageCode,
         );
       }
@@ -545,9 +619,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     required IconData icon,
     required bool isDark,
     String? prefixText,
+    String? labelText,
   }) {
     final bg = isDark ? context.themeSurfaceLow : Colors.white;
     return InputDecoration(
+      labelText: labelText,
       hintText: hint,
       hintStyle: TextStyle(
         color: context.themeTextSecondary.withValues(alpha: 0.6),
@@ -622,7 +698,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ),
         title: Text(
           _selectedRole == AppRole.provider
-              ? 'Complete Provider Profile'
+              ? context.l10n.completeProviderProfileTitle
               : context.l10n.completeProfileTitle,
           style: TextStyle(
             fontWeight: FontWeight.w800,
@@ -806,9 +882,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                             .withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Text(
-                                        'Selected',
-                                        style: TextStyle(
+                                      child: Text(
+                                        context.l10n.statusSelected,
+                                        style: const TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
@@ -820,8 +896,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   _selectedRole == AppRole.provider
-                                      ? 'Providing services across Sri Lanka'
-                                      : 'Requesting home & domestic services',
+                                      ? context.l10n.providingServicesAcrossSriLanka
+                                      : context.l10n.requestingDomesticServices,
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     color: context.themeTextSecondary,
@@ -844,9 +920,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
-                              'Change',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.change,
+                              style: const TextStyle(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
@@ -919,7 +995,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           Text(
                             _selectedRole == AppRole.provider
                                 ? '${context.l10n.profilePhoto} *'
-                                : '${context.l10n.profilePhoto} (Optional)',
+                                : '${context.l10n.profilePhoto} (${context.l10n.optional})',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -977,7 +1053,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           color: context.themeTextPrimary, fontSize: 14.5),
                       decoration: _inputDecoration(
                         context,
-                        hint: '7X XXXXXXX',
+                        hint: context.l10n.phonePlaceholderPattern,
                         icon: Icons.phone_outlined,
                         isDark: context.isDark,
                         prefixText: '+94 ',
@@ -1011,7 +1087,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                     Border.all(color: context.themeBorder),
                               ),
                               child: Text(
-                                'No services available yet',
+                                context.l10n.noServicesAvailableYet,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: context.themeTextSecondary,
@@ -1041,8 +1117,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 : null,
                             prefixIcon: Icons.handyman_outlined,
                             isDarkField: context.isDark,
-                            modalTitle: 'Select Service Category',
-                            searchHint: 'Search category...',
+                            modalTitle: context.l10n.selectServiceCategory,
+                            searchHint: context.l10n.searchCategoryHint,
                             items: liveCats.map((c) {
                               return SearchableSelectItem<String>(
                                 value: c.id,
@@ -1064,7 +1140,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         prefixIcon: Icons.map_outlined,
                         isDarkField: context.isDark,
                         modalTitle: context.l10n.district,
-                        searchHint: 'Search district...',
+                        searchHint: context.l10n.searchDistrictHint,
                         items: _districts.map((d) {
                           final localizedName =
                               LocalizedData.getDistrict(context, d);
@@ -1115,7 +1191,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Base Workshop / Service Location *',
+                                        context.l10n.baseWorkshopLocation,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w800,
                                           fontSize: 13.5,
@@ -1123,7 +1199,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Required for nearest provider dispatch calculations',
+                                        context.l10n.baseLocationDispatchNotice,
                                         style: TextStyle(
                                           fontSize: 11.5,
                                           color: context.themeTextSecondary,
@@ -1171,8 +1247,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                         Icons.pin_drop_rounded,
                                         size: 16),
                                     label: Text(_latitude != null
-                                        ? 'Update Pin'
-                                        : 'Pick on Map'),
+                                        ? context.l10n.updatePinButton
+                                        : context.l10n.pickOnMapButton),
                                     style: OutlinedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 12),
@@ -1202,7 +1278,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                         color: AppColors.primary, size: 14),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Coordinates: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
+                                      '${context.l10n.location}: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
                                       style: const TextStyle(
                                         color: AppColors.primary,
                                         fontSize: 12,
@@ -1221,14 +1297,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                   fontSize: 14),
                               decoration: _inputDecoration(
                                 context,
-                                hint: 'Workshop / Operating Address *',
+                                hint: context.l10n.workshopAddressRequiredLabel,
                                 icon: Icons.location_on_outlined,
                                 isDark: context.isDark,
                               ),
                               validator: (val) {
                                 if (_selectedRole == AppRole.provider &&
                                     (val == null || val.trim().isEmpty)) {
-                                  return 'Operating address is required';
+                                  return context.l10n.operatingAddressRequiredError;
                                 }
                                 return null;
                               },
@@ -1293,6 +1369,81 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+
+                      // provider usual rates
+                      Text(
+                        context.l10n.yourUsualRates,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.l10n.yourUsualRatesSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _dailyRateController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: context.l10n.dailyRateHint,
+                          icon: Icons.calendar_today_outlined,
+                          prefixText: 'LKR ',
+                          labelText: context.l10n.dailyRate,
+                          isDark: context.isDark,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _hourlyRateController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: context.l10n.hourlyRateHint,
+                          icon: Icons.timer_outlined,
+                          prefixText: 'LKR ',
+                          labelText: context.l10n.hourlyRate,
+                          isDark: context.isDark,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _perKmRateController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: context.l10n.perKmRateHint,
+                          icon: Icons.directions_car_outlined,
+                          prefixText: 'LKR ',
+                          labelText: context.l10n.perKmTravelRate,
+                          isDark: context.isDark,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _visitFeeController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: context.l10n.visitFeeOptionalHint,
+                          icon: Icons.meeting_room_outlined,
+                          prefixText: 'LKR ',
+                          labelText: context.l10n.standardVisitFee,
+                          isDark: context.isDark,
+                        ),
+                      ),
                     ],
 
                     const SizedBox(height: 20),
@@ -1318,8 +1469,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     // submit button
                     PrimaryButton(
                       label: _selectedRole == AppRole.provider
-                          ? 'Complete Provider Registration'
-                          : 'Save Profile',
+                          ? context.l10n.completeProviderRegistration
+                          : context.l10n.saveProfile,
                       loading: _isSubmitting,
                       onPressed: _agreeTerms && !_isSubmitting ? _submit : null,
                     ),

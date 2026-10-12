@@ -342,9 +342,10 @@ class _AppMapViewState extends State<AppMapView> {
     } catch (e) {
       debugPrint(
           '[AppMapView] Liberty style failed ($e), falling back to positron style.');
+      const positronUri = 'https://tiles.openfreemap.org/styles/positron';
       try {
         return await vmt.StyleReader(
-          uri: 'https://tiles.openfreemap.org/styles/positron',
+          uri: positronUri,
         ).read().timeout(const Duration(seconds: 10));
       } catch (err) {
         debugPrint('[AppMapView] Positron style also failed: $err');

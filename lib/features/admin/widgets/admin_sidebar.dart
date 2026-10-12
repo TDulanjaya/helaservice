@@ -71,6 +71,8 @@ class AdminSidebar extends StatelessWidget {
           return !roleProvider.isSuperAdmin;
         case 5:
           return !roleProvider.hasAdminPermission(AdminPermission.viewFinances);
+        case 6:
+          return !roleProvider.hasAdminPermission(AdminPermission.handleSupport);
         default:
           return false;
       }
@@ -124,6 +126,11 @@ class AdminSidebar extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ...List.generate(entries.length, (i) {
+            if (i == 6 &&
+                !roleProvider.isSuperAdmin &&
+                !roleProvider.hasAdminPermission(AdminPermission.handleSupport)) {
+              return const SizedBox.shrink();
+            }
             final e = entries[i];
             final active = i == selectedIndex;
             final restricted = isRestricted(i);

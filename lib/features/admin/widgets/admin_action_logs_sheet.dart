@@ -176,8 +176,9 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
                             separatorBuilder: (_, __) => const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final log = filteredLogs[index];
+                              final locale = Localizations.localeOf(context).languageCode;
                               final timeStr = log.timestamp != null
-                                  ? DateFormat('MMM d, hh:mm a').format(log.timestamp!)
+                                  ? DateFormat('MMM d, hh:mm a', locale).format(log.timestamp!)
                                   : '';
 
                               return Container(

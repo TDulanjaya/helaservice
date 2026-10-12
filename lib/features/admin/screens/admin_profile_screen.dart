@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -124,10 +125,10 @@ class AdminProfileScreen extends StatelessWidget {
                 await FirebaseFirestore.instance
                     .collection(FirestorePaths.dispatchEvents)
                     .add({
-                  'title': 'Emergency Broadcast',
+                  'title': 'EMERGENCY_BROADCAST',
                   'detail': text,
                   'tagLabel': 'ALERT',
-                  'timeAgo': 'Just now',
+                  'timeAgo': '',
                   'iconKey': 'bolt',
                   'colorValue': 0xFFD6900F,
                   'timestamp': FieldValue.serverTimestamp(),
@@ -284,10 +285,16 @@ class AdminProfileScreen extends StatelessWidget {
                                   context.l10n.adminSetAuditTag;
                               final author = d['author'] as String?;
                               final ts = d['timestamp'];
-                              final dateStr = ts is Timestamp
-                                  ? '${ts.toDate().hour.toString().padLeft(2, '0')}:${ts.toDate().minute.toString().padLeft(2, '0')} • ${ts.toDate().day}/${ts.toDate().month}/${ts.toDate().year}'
-                                  : (d['timeAgo'] as String? ??
-                                      context.l10n.adminSetRecent);
+                              final String dateStr;
+                              if (ts is Timestamp) {
+                                final dt = ts.toDate();
+                                final locale = Localizations.localeOf(context).languageCode;
+                                dateStr = DateFormat('HH:mm • dd/MM/yyyy', locale).format(dt);
+                              } else {
+                                dateStr = (d['timeAgo'] as String? ?? context.l10n.adminSetRecent);
+                              }
+
+                              final authorPrefix = author != null ? '${context.l10n.byTechnician(author)} • ' : '';
 
                               return ListTile(
                                 dense: true,
@@ -330,7 +337,7 @@ class AdminProfileScreen extends StatelessWidget {
                                     ],
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${author != null ? '${context.l10n.byTechnician(author)} • ' : ''}$dateStr',
+                                      '$authorPrefix$dateStr',
                                       style: TextStyle(fontSize: 10, color: context.themeTextSecondary),
                                     ),
                                   ],
@@ -367,7 +374,7 @@ class AdminProfileScreen extends StatelessWidget {
     final roleTag = isSuperAdmin
         ? '${context.l10n.roleSuperAdminBadge} • ${context.l10n.adminSetPlatformGovernance}'
         : (adminUser != null
-            ? '${adminRoleLabel(context, adminUser.role)} • ${context.l10n.navOperations}'
+            ? (adminUser.role != null ? '${adminRoleLabel(context, adminUser.role!)} • ${context.l10n.navOperations}' : 'Admin')
             : context.l10n.roleOpsAdminBadge);
 
     final permissions = isSuperAdmin

@@ -329,14 +329,14 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a project title')),
+        SnackBar(content: Text(context.l10n.enterProjectTitle)),
       );
       return;
     }
 
     if (_selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a photo for this showcase item')),
+        SnackBar(content: Text(context.l10n.selectPhotoForShowcase)),
       );
       return;
     }
@@ -371,7 +371,7 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save showcase item: $e'),
+            content: Text(context.l10n.failedToSaveShowcase(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );

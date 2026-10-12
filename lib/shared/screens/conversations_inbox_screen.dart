@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
 
 import '../../features/customer/screens/direct_chat_screen.dart';
+import '../../features/support/screens/help_support_screen.dart';
 import '../../services/chat_service.dart';
 import '../../state/role_provider.dart';
 import '../../theme/app_theme.dart';
@@ -353,7 +354,9 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                                   Expanded(
                                                     child: Text(
                                                       lastMessage.isNotEmpty
-                                                          ? lastMessage
+                                                          ? ((lastMessage == 'photo' || lastMessage == '📷 Photo')
+                                                              ? '📷 ${context.l10n.chatPhotoMessage}'
+                                                              : lastMessage)
                                                           : context.l10n.tapToStartConversation,
                                                       style: TextStyle(
                                                         fontSize: 13,
@@ -454,12 +457,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const DirectChatScreen(
-                  otherPartyId: 'admin_support',
-                  otherPartyName: 'HelaService Admin Support',
-                  otherPartyRole: 'admin',
-                  otherPartyPhone: '1919',
-                ),
+                builder: (_) => const HelpSupportScreen(),
               ),
             );
           },

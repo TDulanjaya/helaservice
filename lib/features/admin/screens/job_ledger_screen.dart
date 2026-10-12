@@ -1,7 +1,8 @@
-import 'dart:convert';
+import '../../shared/widgets/job_media_gallery.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/booking.dart';
+import '../../../models/booking_extra.dart';
 import '../../../models/job_request.dart';
 import '../../../models/technician.dart';
 import '../../../repositories/booking_repository.dart';
@@ -12,6 +13,10 @@ import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../widgets/booking_timeline_sheet.dart';
+import '../../../shared/widgets/pill_badge.dart';
+import 'package:provider/provider.dart';
+import '../../../state/role_provider.dart';
+import '../../../models/admin_user.dart';
 
 enum LedgerStatusFilter { all, completed, inProgress, cancelled }
 
@@ -102,7 +107,8 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
     for (final b in bookings) {
       final id = b.id;
       final date = b.createdAt != null ? b.createdAt!.toIso8601String() : b.time;
-      final title = '"${b.title.replaceAll('"', '""')}"';
+      final escapedTitle = b.title.replaceAll('"', '""');
+      final title = '"$escapedTitle"';
       final provider = '"${(b.providerName.isNotEmpty ? b.providerName : techMap[b.providerId] ?? b.providerId).replaceAll('"', '""')}"';
       final customer = '"${b.customerName.replaceAll('"', '""')}"';
       final status = b.status;
@@ -134,6 +140,26 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final roleProvider = Provider.of<RoleProvider>(context);
+    if (!roleProvider.hasAdminPermission(AdminPermission.viewFinances)) {
+      return Scaffold(
+        backgroundColor: context.themeSurface,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.noPermissionForAction,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return StreamBuilder<List<Technician>>(
@@ -944,6 +970,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ),
             ),
           ],
+          _buildPriceHistory(context, booking),
           if (booking.paymentNote != null && booking.paymentNote!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
@@ -999,17 +1026,65 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      '${context.l10n.delayReported}: ${booking.delayMinutes != null && booking.delayMinutes! > 0 ? "${context.l10n.ledgerDelayMinutes('${booking.delayMinutes}')} • " : ""}${booking.delayReason ?? ""}',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeAmberText,
-                      ),
+                    child: Builder(
+                      builder: (ctx) {
+                        final delayMins = booking.delayMinutes;
+                        final delayPrefix = (delayMins != null && delayMins > 0)
+                            ? '${context.l10n.ledgerDelayMinutes(delayMins.toString())} • '
+                            : '';
+                        return Text(
+                          '${context.l10n.delayReported}: $delayPrefix${booking.delayReason ?? ""}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: context.themeAmberText,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
+            ),
+          ],
+          if (booking.arrivalMocked ||
+              booking.arrivalOutsideZone ||
+              booking.arrivalStatus == 'denied' ||
+              booking.noShow) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                if (booking.arrivalMocked)
+                  PillBadge(
+                    label: context.l10n.arrivalMockedFlag,
+                    icon: Icons.gps_off_rounded,
+                    background: AppColors.error.withValues(alpha: 0.12),
+                    foreground: AppColors.error,
+                  ),
+                if (booking.arrivalOutsideZone)
+                  PillBadge(
+                    label: context.l10n.arrivalOutsideZoneFlag,
+                    icon: Icons.wrong_location_rounded,
+                    background: AppColors.warning.withValues(alpha: 0.12),
+                    foreground: AppColors.warning,
+                  ),
+                if (booking.arrivalStatus == 'denied')
+                  PillBadge(
+                    label: context.l10n.arrivalDeniedFlag,
+                    icon: Icons.cancel_outlined,
+                    background: AppColors.error.withValues(alpha: 0.12),
+                    foreground: AppColors.error,
+                  ),
+                if (booking.noShow)
+                  PillBadge(
+                    label: context.l10n.noShowFlag,
+                    icon: Icons.person_off_rounded,
+                    background: AppColors.error.withValues(alpha: 0.12),
+                    foreground: AppColors.error,
+                  ),
+              ],
             ),
           ],
           const SizedBox(height: 12),
@@ -1031,6 +1106,172 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceHistory(BuildContext context, Booking booking) {
+    String quoteLabel;
+    switch (booking.quoteType) {
+      case 'estimate':
+        quoteLabel = context.l10n.quoteTypeEstimate;
+        break;
+      case 'inspect':
+        quoteLabel = context.l10n.quoteTypeInspect;
+        break;
+      case 'firm':
+      default:
+        quoteLabel = context.l10n.quoteTypeFirm;
+        break;
+    }
+
+    final initialQuote = booking.estimatedTotalLkr ?? booking.agreedPrice?.round() ?? booking.agreedPriceLkr;
+    final finalCharged = booking.finalAmount ?? booking.agreedPrice ?? booking.agreedPriceLkr;
+    final completionLabel = booking.completionType == 'visit_only'
+        ? context.l10n.completionTypeVisitOnly
+        : context.l10n.completionTypeNormal;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.themeSurfaceLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.themeBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.l10n.priceHistoryAudit,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: (booking.completionType == 'visit_only' ? AppColors.warning : AppColors.success)
+                      .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  completionLabel,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: booking.completionType == 'visit_only' ? AppColors.warning : AppColors.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Quote Type: $quoteLabel',
+                style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+              ),
+              Text(
+                'Quoted: LKR $initialQuote',
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: context.themeTextPrimary),
+              ),
+            ],
+          ),
+          if (booking.proposedPrice != null ||
+              (booking.priceStatus != null && booking.priceStatus != 'awaiting_confirmation')) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  context.l10n.ledgerPriceStatus(booking.priceStatus ?? context.l10n.none),
+                  style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                ),
+                if (booking.proposedPrice != null)
+                  Text(
+                    context.l10n.ledgerProposedLkr('${booking.proposedPrice!["totalLkr"] ?? ""}'),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: booking.priceStatus == 'approved'
+                          ? AppColors.success
+                          : (booking.priceStatus == 'rejected' ? AppColors.error : AppColors.warning),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          StreamBuilder<List<BookingExtra>>(
+            stream: BookingRepository().streamExtras(booking.id),
+            builder: (context, snap) {
+              final extras = snap.data ?? [];
+              if (extras.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  const Divider(height: 12),
+                  Text(
+                    'Extras (${extras.length}):',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.themeTextSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                  ...extras.map((ex) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '• ${ex.description} (${ex.status})',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: ex.status == 'approved'
+                                      ? AppColors.success
+                                      : (ex.status == 'rejected' ? AppColors.error : context.themeTextSecondary),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              'LKR ${ex.amountLkr}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: context.themeTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                ],
+              );
+            },
+          ),
+          const Divider(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.l10n.finalChargedAmount,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+              ),
+              Text(
+                'LKR ${finalCharged.toStringAsFixed(0)}',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary),
+              ),
+            ],
           ),
         ],
       ),
@@ -1234,7 +1475,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        req.customerName.isNotEmpty ? req.customerName : 'Customer',
+                        req.customerName.isNotEmpty ? req.customerName : context.l10n.ledgerCustomer,
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       if (req.customerPhone.isNotEmpty)
@@ -1266,63 +1507,14 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
               ],
             ),
           ),
-          // attached photos
-          if (req.photoUrls.isNotEmpty) ...[
+          // attached media
+          if (req.photoUrls.isNotEmpty ||
+              (req.videoUrl != null && req.videoUrl!.isNotEmpty)) ...[
             const SizedBox(height: 12),
-            Text(
-              'Attached Photos (${req.photoUrls.length}) - Tap to Zoom:',
-              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: context.themeTextSecondary),
-            ),
-            const SizedBox(height: 6),
-            SizedBox(
+            JobMediaGallery(
+              photoUrls: req.photoUrls,
+              videoUrl: req.videoUrl,
               height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: req.photoUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (ctx, photoIdx) {
-                  final photoUrl = req.photoUrls[photoIdx];
-                  return GestureDetector(
-                    onTap: () => _showPhotoZoomModal(context, photoUrl),
-                    child: Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            width: 72,
-                            height: 72,
-                            color: context.themeSurfaceLow,
-                            child: photoUrl.startsWith('data:')
-                                ? Image.memory(
-                                    base64Decode(photoUrl.split(',').last),
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.network(
-                                    photoUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Center(
-                                      child: Icon(Icons.broken_image_outlined, size: 24),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 2,
-                          right: 2,
-                          child: Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.zoom_in, color: Colors.white, size: 14),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -1367,48 +1559,5 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
     );
   }
 
-  void _showPhotoZoomModal(BuildContext context, String photoUrl) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            InteractiveViewer(
-              minScale: 0.8,
-              maxScale: 4.0,
-              child: photoUrl.startsWith('data:')
-                  ? Image.memory(
-                      base64Decode(photoUrl.split(',').last),
-                      fit: BoxFit.contain,
-                    )
-                  : Image.network(
-                      photoUrl,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (_, child, prog) => prog == null
-                          ? child
-                          : const Center(
-                              child: CircularProgressIndicator(color: AppColors.primary),
-                            ),
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 48),
-                      ),
-                    ),
-            ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                onPressed: () => Navigator.pop(ctx),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }

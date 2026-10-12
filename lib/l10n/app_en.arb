@@ -105,7 +105,7 @@
   "budgetHint": "e.g., 2500",
   "jobLocationGps": "Job Location & GPS",
   "photosOfIssue": "Photos of the Issue",
-  "jobPhotos": "Job Site Photos (Optional)",
+  "jobPhotos": "Job Photos & Proof of Work",
   "add": "Add",
   "addPhoto": "Add Photo",
   "takePhoto": "Take Photo",
@@ -227,7 +227,7 @@
   "statusCancelled": "Cancelled",
   "verifiedArtisan": "NIC Verified",
   "activeFleet": "Active Fleet",
-  "availableNow": "Available Now",
+  "availableNow": "Available now",
   "kmAway": "km away",
   "rating": "Rating",
   "reviews": "Reviews",
@@ -275,7 +275,7 @@
   "logout": "Log Out",
   "logoutConfirm": "Are you sure you want to log out from HelaService?",
   "editProfile": "Edit Profile",
-  "contactSupport": "Help & Support Hotline",
+  "contactSupport": "Contact Support",
   "appSettings": "Preferences & Settings",
   "editProfileAndPhoto": "Edit Profile & Photo",
   "editContactInfo": "Edit Contact Info",
@@ -1354,7 +1354,7 @@
   "permViewFinancesLabel": "Service & Financial Logs",
   "permManageAdminsDesc": "Invite, configure, demote, and deactivate administrators.",
   "permVerifyNicDesc": "Review smart NICs, police reports, and approve/reject artisan registrations.",
-  "permManageCategoriesDesc": "Configure trade categories, base rates, and provincial hub thresholds.",
+  "permManageCategoriesDesc": "Configure trade categories and provincial hub thresholds.",
   "permBroadcastAlertsDesc": "Send push alerts and critical warnings to active island artisans.",
   "permViewFinancesDesc": "Inspect service metrics, provider earnings, and completed job records.",
   "adminStatusInvited": "Invited",
@@ -1922,7 +1922,7 @@
   "presetFraudActivity": "Fraudulent activity",
   "presetFailedDispute": "Failed dispute resolution",
   "presetPolicyViolation": "Policy violation",
-  "reasonLabel": "Reason",
+  "reasonLabel": "Reason:",
   "suspendedByAdmin": "Suspended by Administrator",
   "zoomIn": "Zoom In",
   "zoomOut": "Zoom Out",
@@ -2228,9 +2228,7 @@
   "adminActionLogsTitle": "Admin Action Logs",
   "adminAuditTrailSubtitle": "Immutable audit trail of administrator actions",
   "noAdminLogsFound": "No admin audit logs recorded yet",
-  "filterAll": "All",
   "filterUsers": "Users",
-  "filterProviders": "Providers",
   "filterBookings": "Bookings",
   "filterSystem": "System",
   "noEntriesToExport": "No entries to export",
@@ -2241,8 +2239,6 @@
   "termsOfService": "Terms of Service",
   "photo": "Photo",
   "sendPhoto": "Send Photo",
-  "takePhoto": "Take Photo",
-  "chooseFromGallery": "Choose from Gallery",
   "uploadingImage": "Uploading image...",
   "failedToUploadImage": "Failed to upload image",
   "viewPhoto": "View Photo",
@@ -2280,7 +2276,6 @@
   "presetAllDays": "All 7 Days (8 AM - 8 PM)",
   "preset247": "Open 24/7",
   "unavailableNow": "Unavailable now",
-  "availableNow": "Available now",
   "outsideWorkingHours": "Outside working hours",
   "savedScheduleSuccess": "Working hours updated successfully",
   "savedRadiusSuccess": "Service radius updated",
@@ -2294,7 +2289,6 @@
   },
   "rescheduleRequestedNotice": "Reschedule proposal pending response",
   "saveChanges": "Save Changes",
-  "jobPhotos": "Job Photos & Proof of Work",
   "jobPhotosSubtitle": "Before and after service inspection photos",
   "beforePhotos": "Before Service",
   "afterPhotos": "After Service",
@@ -2345,7 +2339,7 @@
   "dispatchTimerLabel": "Dispatch search window",
   "noEmergencyProvidersFound": "No emergency artisans found within 15km right now",
   "noEmergencyProvidersDesc": "Try selecting a different trade category or post an urgent job request.",
-  "emergencyCalloutRate": "Emergency Callout",
+  "emergencyCalloutRate": "Emergency / Callout Rate",
   "emergencyEtaApprox": "approx {mins} mins away",
   "@emergencyEtaApprox": {
     "placeholders": {
@@ -2384,6 +2378,565 @@
   "hotlineFire": "Fire & Rescue (110)",
   "urgentHelpBannerTitle": "Urgent Repair or Breakdown?",
   "urgentHelpBannerDesc": "Instant 15km artisan dispatch for water leaks, power failures, or locksmith emergencies.",
-  "urgentHelpBannerAction": "Get Urgent Help"
+  "urgentHelpBannerAction": "Get Urgent Help",
+  "myRates": "My Rates",
+  "rateCardTitle": "Standard Service Rates",
+  "dailyRate": "Daily Rate",
+  "perKmTravelRate": "Per Km Travel Rate",
+  "standardVisitFee": "Inspection / Visit Fee",
+  "quoteTypeFirm": "Firm Price",
+  "quoteTypeEstimate": "Estimated Range",
+  "quoteTypeInspect": "Inspection / Visit Only",
+  "priceRevisionProposed": "Price Revision Proposed",
+  "extraWorkRequested": "Extra Work / Materials",
+  "visitOnlyCompletedNote": "This booking was completed as an Inspection / Visit only. Standard reviews are disabled.",
+  "completionTypeNormal": "Normal Job Completion",
+  "completionTypeVisitOnly": "Inspection / Visit Only",
+  "hourlyRate": "Hourly Rate",
+  "yourUsualRates": "Your Usual Rates",
+  "yourUsualRatesSubtitle": "At least one rate is required. Used when customers request quotes.",
+  "dailyRateHint": "e.g. 3500 (1 - 100,000)",
+  "hourlyRateHint": "e.g. 500 (1 - 20,000)",
+  "perKmRateHint": "e.g. 80 (1 - 1,000)",
+  "visitFeeOptionalHint": "Optional, e.g. 1000 (0 - 20,000)",
+  "atLeastOneRateRequired": "At least one rate (daily, hourly, or per km) is required.",
+  "dailyRateRangeError": "Daily rate must be between LKR 1 and 100,000",
+  "hourlyRateRangeError": "Hourly rate must be between LKR 1 and 20,000",
+  "perKmRateRangeError": "Per km rate must be between LKR 1 and 1,000",
+  "visitFeeRangeError": "Visit fee must be between LKR 0 and 20,000",
+  "withinAgreedPrice": "Within agreed price",
+  "visitFeeOnly": "Visit fee only",
+  "approvedExtrasBreakdown": "Approved Extras",
+  "initialEstimateLabel": "Initial Quoted / Estimated Price",
+  "revisedAgreedPrice": "Agreed Price",
+  "finalAmountToPay": "Final Amount to Pay",
+  "priceMatchesQuote": "Price Matches Quote",
+  "proposeNewPrice": "Propose New Price",
+  "proposeRevisedPrice": "Propose Revised Price",
+  "billingUnit": "Billing Unit",
+  "billingUnitFixed": "Fixed Job",
+  "billingUnitHour": "Hourly",
+  "billingUnitDay": "Daily",
+  "unitRateLkr": "Unit Rate (LKR)",
+  "quantityLabel": "Quantity",
+  "priceChangeReason": "Reason for Price Change",
+  "priceChangeReasonHint": "e.g. Additional concealed pipeline damage discovered",
+  "totalRevisedPrice": "Total Revised Price",
+  "submitProposal": "Submit Proposal",
+  "addExtraWorkItem": "Add Extra Work / Item",
+  "extraDescription": "Description",
+  "extraDescriptionHint": "e.g. Extra 2m PVC pipe & joint fitting",
+  "extraAmountLkr": "Amount (LKR)",
+  "proposeExtra": "Propose Extra",
+  "awaitingCustomerApproval": "Waiting for customer approval",
+  "priceProposalSent": "Price proposal sent to customer for approval",
+  "extraProposalSent": "Extra work proposal sent to customer",
+  "priceConfirmedMatches": "Price confirmed matches original quote",
+  "priceProposalRejected": "Price proposal rejected",
+  "priceProposalApproved": "Price proposal approved",
+  "myRateCard": "My Rate Card",
+  "rateCardSubtitle": "Configure your standard rates shown to customers and used in quotes.",
+  "saveRates": "Save Rates",
+  "rateCardUpdatedSuccess": "Rate card updated successfully",
+  "travelRate": "Travel Rate",
+  "pricingStandardRates": "Pricing & Standard Rates",
+  "uploadRetry": "Retry Upload",
+  "largeMediaWarningTitle": "Large File Warning",
+  "largeMediaWarningMessage": "File is large (>20MB). Uploading over mobile data may take time and consume data. Proceed?",
+  "proceed": "Proceed",
+  "somethingWentWrong": "Something went wrong. Please try again.",
+  "customerDidNotAgreeVisitOnly": "Customer did not agree. Collect only the visit fee: LKR {amount}",
+  "@customerDidNotAgreeVisitOnly": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "completeVisitOnly": "Complete Visit Only",
+  "priceRevisionReasonRequired": "Please enter a reason for the price revision",
+  "checkRateAndQuantity": "Please check rate and quantity values",
+  "extraDescriptionLimit": "Please enter a description (max 300 characters)",
+  "extraAmountLimit": "Please enter an amount between LKR 1 and 1,000,000",
+  "notesLimit500": "Notes must be 500 characters or less",
+  "validVisitFeePrompt": "Please enter a valid visit fee (LKR 1 - 20,000)",
+  "validUnitRatePrompt": "Please enter a valid unit rate (minimum LKR 1)",
+  "validQuantityPrompt": "Please enter a valid quantity (0.5 to 60)",
+  "materialsEstimateLimit": "Materials estimate must be between LKR 0 and 1,000,000",
+  "visitInspectionFee": "Visit / Inspection Fee:",
+  "materialsEstimateColon": "Materials Estimate:",
+  "addIssueVideoMax": "Add Issue Video (Max 120s)",
+  "recordVideo": "Record Video",
+  "errorPickingVideo": "Failed to pick video. Please try again.",
+  "videoOfIssueOptional": "Video of Issue (Optional)",
+  "jobVideo": "Job Video",
+  "videoClip": "Video Clip",
+  "failedToPlayVideo": "Failed to play video",
+  "failedToUpdateRates": "Failed to update rates. Please try again.",
+  "quoteOutdatedDeclined": "This quote is outdated, ask the provider to send a new one",
+  "youAreMetersAway": "You are about {distance} m away from the job location.",
+  "@youAreMetersAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "imHereGpsWrong": "I'm here, but GPS is wrong",
+  "slideToClaimArrival": "Slide to claim arrival",
+  "waitingCustomerConfirmation": "Arrival claimed. Waiting for customer confirmation...",
+  "arrivalDeniedProviderNotice": "Customer says you have not arrived. Please check the location or call the customer.",
+  "claimAgainArrival": "Claim Arrival Again",
+  "maxClaimsReached": "Maximum arrival claims reached (3/3).",
+  "customerDidNotAnswer": "Customer has not responded after 10 minutes.",
+  "startJobVerifiedGps": "Start Job (GPS Verified)",
+  "callCustomerToConfirm": "Call customer to confirm arrival",
+  "providerSaysArrived": "{providerName} says they have arrived. Are they with you?",
+  "@providerSaysArrived": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      }
+    }
+  },
+  "providerGpsShowsAway": "Their GPS shows {distance} m away.",
+  "@providerGpsShowsAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "yesTheyAreHere": "Yes, they're here",
+  "noNotHere": "No, not here",
+  "providerDidNotCome": "Provider didn't come",
+  "confirmNoShowTitle": "Report Provider No-Show?",
+  "confirmNoShowMessage": "This will cancel the booking because the service provider did not arrive.",
+  "locationRequiredToBook": "Please select a location with GPS coordinates to book this service.",
+  "arrivalMockedFlag": "Mocked GPS Detected",
+  "arrivalOutsideZoneFlag": "Claimed Outside Zone",
+  "arrivalDeniedFlag": "Customer Denied Arrival",
+  "noShowFlag": "Provider No-Show",
+  "gpsOutsideZoneAlert": "GPS indicates you are outside the job zone ({distance} m away). Do you want to submit an arrival claim anyway?",
+  "@gpsOutsideZoneAlert": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "proceedAnyway": "Proceed Anyway",
+  "claimSuccessNotified": "Arrival claim submitted. The customer has been notified.",
+  "completeJobEnterPin": "Complete Job (Enter Customer PIN)",
+  "noShowReportedSuccess": "Provider no-show reported. Booking cancelled.",
+  "providerReliability90Days": "90-Day Reliability & Arrival Verification",
+  "providerNoShowsCount": "No-Shows",
+  "providerArrivalDenialsCount": "Arrival Denials",
+  "providerMockedGpsCount": "Mocked GPS",
+  "providerOutsideZoneCount": "Outside Zone",
+  "scheduledTimePassedPrompt": "The scheduled time has passed. Please choose a new date and time.",
+  "chooseNewScheduleTitle": "Update Scheduled Time",
+  "revisedEstimateDefault": "Revised on-site estimate",
+  "pleaseEnterSixDigits": "Please enter 6 digits",
+  "customerLocationNotAvailableTitle": "Customer location not available",
+  "customerLocationNotAvailableDesc": "Exact GPS coordinates were not provided for this job. Contact the customer below to coordinate arrival.",
+  "locationRequiredTitle": "Location Required",
+  "jobNoLocationRepost": "This job has no location. Please set the location and repost.",
+  "quoteAcceptedChatMessage": "Hello {providerName}, I have accepted your quote (LKR {price}). Let's coordinate the job details!",
+  "@quoteAcceptedChatMessage": {
+    "placeholders": {
+      "providerName": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterServiceLocation": "Please enter service location address",
+  "optimizingVideoNotice": "Optimizing video (max 120s)...",
+  "addShortVideo": "Add Short Video",
+  "addShortVideoSubtitle": "Up to 120s explaining the repair or issue",
+  "noServicesAvailableYet": "No services available yet",
+  "editSavedAddress": "Edit Saved Address",
+  "signInToManageSavedAddresses": "Sign in to manage saved addresses.",
+  "noSavedAddressesSubtitle": "No saved addresses yet. Add home or work addresses for one-tap booking.",
+  "becomeProviderSubtitle": "Offer your trade skills, receive jobs, and earn more",
+  "switchToProvider": "Switch to Provider Mode",
+  "switchToProviderSubtitle": "Switch back to your Service Provider workspace",
+  "adminInspectionMode": "Admin Inspection Mode",
+  "adminInspectionModeDesc": "Viewing provider workspace with administrative bypass.",
+  "setStandardRatesSubtitle": "Set standard visit and hourly rates",
+  "quoteAcceptedTitle": "Quote Accepted!",
+  "customerConfirmedBooking": "Customer confirmed this booking",
+  "enterProjectTitle": "Please enter a project title",
+  "selectPhotoForShowcase": "Please select a photo for this showcase item",
+  "failedToSaveShowcase": "Failed to save showcase item: {error}",
+  "@failedToSaveShowcase": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "quoteType": "Quote Type",
+  "inspectionQuoteNotice": "Inspection quote includes on-site visit fee and travel cost. Total job price will be agreed upon arrival.",
+  "materialsEstimateOptional": "Materials Estimate (Optional)",
+  "estDistanceKm": "Est. Distance (km)",
+  "travelRateLkrKm": "Travel Rate (LKR/km)",
+  "totalQuotedPrice": "Total Quoted Price",
+  "travelFee": "Travel Fee",
+  "statusSelected": "Selected",
+  "providerBaseLocationRequired": "Provider base location is required. Please set GPS/Map pin and address.",
+  "baseWorkshopLocation": "Base Workshop / Service Location *",
+  "baseLocationDispatchNotice": "Required for nearest provider dispatch calculations",
+  "suspensionReasonLabel": "Suspension Reason:",
+  "registerBannerSubtitle": "Sign up in seconds to access verified roadside and home service experts across Sri Lanka.",
+  "sortOrder": "Sort Order",
+  "isLive": "Is Live",
+  "editCategory": "Edit Category",
+  "priceHistoryAudit": "Price History & Audit",
+  "finalChargedAmount": "Final Charged Amount:",
+  "suspendCustomerConfirmPrompt": "Are you sure you want to suspend customer \"{name}\"? Their account will be locked and they will be barred from creating requests or accessing the platform.",
+  "@suspendCustomerConfirmPrompt": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unableToLoadPhoto": "Unable to load photo",
+  "newTimeLabel": "New Time:",
+  "noteLabel": "Note:",
+  "resetPinAttempts": "Reset PIN attempts",
+  "noServiceHistoryYet": "No Service History Yet",
+  "noServiceHistorySubtitle": "Completed and past bookings will appear here.",
+  "yourRatingReview": "Your Rating & Review",
+  "signInToViewBookings": "Please sign in to view your bookings",
+  "pendingAdminApprovalUnavailable": "Pending Admin Approval · Unavailable for hire",
+  "directContactFastQuotes": "Direct Contact & Fast Quotes",
+  "verifiedPhoneAvailable": "Verified phone available",
+  "officialSupport": "Official Support",
+  "failedToSaveSchedule": "Failed to save schedule",
+  "statusConfirmed": "Confirmed",
+  "statusEnRoute": "En Route",
+  "statusDeclined": "Declined",
+  "statusAssigned": "Assigned",
+  "statusScheduled": "Scheduled",
+  "completionPinLabel": "Completion PIN:",
+  "chatPhotoMessage": "Photo",
+  "hintFullName": "Your full name",
+  "hintEmail": "Email address",
+  "hintPhone": "Mobile number",
+  "hintCategorySearch": "e.g. Electrician, Plumber",
+  "hintAmount": "e.g. 3500",
+  "hintNicFormat": "12 digits, or 9 digits + V",
+  "hintCustomerName": "e.g. Sanduni Perera",
+  "hintProviderEmail": "Email address",
+  "hintAdminName": "e.g. Ruwan Jayasundara",
+  "priceStatusLabel": "Price Status:",
+  "proposedLabel": "Proposed:",
+  "roleServiceProvider": "Service Provider",
+  "roleSuperAdmin": "Super Admin",
+  "roleSupportAdmin": "Support Admin",
+  "roleOperationsAdmin": "Operations Admin",
+  "generalDispute": "General Dispute",
+  "nicApprovedMessage": "Your NIC identity has been approved by admin. You can receive all job bids.",
+  "nicUnderReviewMessage": "Your verification submission is being reviewed by HelaService administration.",
+  "amountLkrLabel": "Amount: LKR {amount}",
+  "@amountLkrLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "searchCategoryHint": "Search category...",
+  "searchDistrictHint": "Search district...",
+  "visitFeeOnlyDescription": "Charge visit / inspection fee only. Job will be completed without full service.",
+  "providerVerificationPending": "Provider Verification Pending",
+  "sendQuoteLkr": "Send Quote · LKR {amount}",
+  "@sendQuoteLkr": {
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "customQuote": "Custom Quote",
+  "pastService": "Past service",
+  "youEnRouteLabel": "You (En Route)",
+  "hintJobAddress": "House no., street, town",
+  "hintCategoryName": "Category name",
+  "hintAmountLkr": "Amount in LKR",
+  "complaintInvestigationSuspended": "Suspended following complaint investigation: \"{reason}\"",
+  "adminSuspensionViolations": "Administrative suspension due to policy violations",
+  "categoryCreatedWithSortOrder": "Created category {name} with sort order {order}",
+  "categoryUpdatedWithSortOrder": "Updated category {name} (sort order: {order}, isLive: {status})",
+  "categoryDeletedName": "Deleted category {name}",
+  "categoryDescriptionDefault": "Certified domestic {service} services across Sri Lanka.",
+  "zeroRegistered": "0 Registered",
+  "zeroOnlineNow": "0 Online Now",
+  "marketRate": "Market Rate",
+  "categoryUpdatedSuccess": "Category \"{name}\" updated successfully.",
+  "manualDispatchAssigned": "Manual Dispatch Assigned",
+  "dispatchTitle": "Dispatch",
+  "reassignTitle": "Re-assign",
+  "manualDispatchAssignedDesc": "{provider} dispatched to \"{job}\" ({address})",
+  "ledgerPriceStatus": "Price Status: {status}",
+  "ledgerProposedLkr": "Proposed: LKR {amount}",
+  "ledgerCustomer": "Customer",
+  "verificationFlagged": "Flagged",
+  "verificationMatch": "Match",
+  "verificationValid": "Valid",
+  "profileTrustPhotoRationale": "A clear photo builds trust with customers.",
+  "profileChooseGalleryPhoto": "Choose a photo from your gallery.",
+  "captureNicFront": "Capture NIC Front",
+  "captureNicBack": "Capture NIC Back",
+  "captureNicPrompt": "Take a clear, well-lit photo of your National ID.",
+  "selectNicFront": "Select NIC Front",
+  "selectNicBack": "Select NIC Back",
+  "selectNicGalleryPrompt": "Select your National Identity Card photo from gallery.",
+  "completeProviderProfileTitle": "Complete Provider Profile",
+  "providingServicesAcrossSriLanka": "Providing services across Sri Lanka",
+  "requestingDomesticServices": "Requesting home & domestic services",
+  "phonePlaceholderPattern": "7X XXXXXXX",
+  "selectServiceCategory": "Select Service Category",
+  "updatePinButton": "Update Pin",
+  "pickOnMapButton": "Pick on Map",
+  "workshopAddressRequiredLabel": "Workshop / Operating Address *",
+  "operatingAddressRequiredError": "Operating address is required",
+  "completeProviderRegistration": "Complete Provider Registration",
+  "saveProfile": "Save Profile",
+  "phoneNotSet": "Phone not set",
+  "addressLabelHome": "Home",
+  "addressLabelWork": "Work",
+  "addressLabelOther": "Other",
+  "videoExceedsMax120s": "Video exceeds maximum allowed 120s (2 minutes)",
+  "failedToProcessVideo": "Failed to process video: {error}",
+  "jobLocationLabel": "Job Location",
+  "selectJobLocationSubtitle": "Tap to pick via GPS, map pin, or saved addresses",
+  "changeButton": "Change",
+  "setPinButton": "Set Pin",
+  "setPinHereButton": "Set Pin Here",
+  "uploadFailedAttempts": "Upload failed after 3 attempts.",
+  "bookingPastService": "Past service",
+  "bookingStatusCompleted": "Completed",
+  "bookingNotSpecified": "Not specified",
+  "bookingStatusScheduled": "Scheduled",
+  "quantityUnitLabel": "Quantity ({unit})",
+  "rateHourlyUnit": "LKR / hr",
+  "rateDailyUnit": "LKR / day",
+  "rateTravelUnit": "LKR / km",
+  "pickerTabForm": "Form",
+  "pickerTabMapPin": "Map Pin",
+  "cameraPermissionRationale": "Camera access is required to take your profile photo.",
+  "photoLibraryPermissionRationale": "Photo library access is required to select your profile photo.",
+  "privacyDataCollectionPoints": "• Profile name, phone number, and account credentials\n• Job descriptions, addresses, and service locations\n• Verification documents (NIC, business licenses)\n• Messages and communications through the platform",
+  "@complaintInvestigationSuspended": {
+    "description": "Provider suspended reason in complaint investigation dialog",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "@categoryCreatedWithSortOrder": {
+    "description": "Admin log category created",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "order": {
+        "type": "int"
+      }
+    }
+  },
+  "@categoryUpdatedWithSortOrder": {
+    "description": "Admin log category updated",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "order": {
+        "type": "int"
+      },
+      "status": {
+        "type": "bool"
+      }
+    }
+  },
+  "@categoryDeletedName": {
+    "description": "Admin log category deleted",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@categoryDescriptionDefault": {
+    "description": "Default description for category",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "@categoryUpdatedSuccess": {
+    "description": "Snack bar category updated successfully",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@manualDispatchAssignedDesc": {
+    "description": "Event detail for manual dispatch assignment",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      },
+      "job": {
+        "type": "String"
+      },
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "@ledgerPriceStatus": {
+    "description": "Ledger price status label",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "@ledgerProposedLkr": {
+    "description": "Ledger proposed LKR label",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@failedToProcessVideo": {
+    "description": "Error processing video upload",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "@quantityUnitLabel": {
+    "description": "Quantity with unit label",
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineBookingCreated": "Booking Created",
+  "timelineBookingAccepted": "Booking Accepted",
+  "timelineArrivalClaimed": "Arrival Claimed",
+  "timelineArrivalDenied": "Arrival Denied",
+  "timelineAutoStarted": "Auto-Started",
+  "timelineVisitFeeOnly": "Visit Fee Only",
+  "timelinePriceProposed": "Price Proposed",
+  "timelinePriceApproved": "Price Approved",
+  "timelinePriceRejected": "Price Rejected",
+  "timelineExtraRequested": "Extra Requested",
+  "timelineExtraApproved": "Extra Approved",
+  "timelineExtraRejected": "Extra Rejected",
+  "timelinePaymentConfirmed": "Payment Confirmed",
+  "timelinePaymentDisputed": "Payment Disputed",
+  "timelineNoShowReported": "No Show Reported",
+  "timelineBeforePhotoAdded": "Before Photo Added",
+  "timelineAfterPhotoAdded": "After Photo Added",
+  "statusOpen": "Open for Quotes",
+  "statusDispatched": "Dispatched",
+  "selectJobLocation": "Select Job Location",
+  "tapToPickLocationDesc": "Tap to pick via GPS, map pin, or saved addresses",
+  "setPin": "Set Pin",
+  "rateCardSummary": "Visit Fee: LKR {visitFee} · Hourly: LKR {hourlyRate}",
+  "@rateCardSummary": {
+    "placeholders": {
+      "visitFee": {
+        "type": "Object"
+      },
+      "hourlyRate": {
+        "type": "Object"
+      }
+    }
+  },
+  "standardVisitFeeWithCurrency": "Standard Visit Fee (LKR)",
+  "hourlyRateWithUnit": "Hourly Rate (LKR / hr)",
+  "dailyRateWithUnit": "Daily Rate (LKR / day)",
+  "travelRateWithUnit": "Travel Rate (LKR / km)",
+  "priceMatchesQuoteAmount": "Does price match quote? (LKR {amount})",
+  "@priceMatchesQuoteAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "quantityWithUnit": "Quantity ({unit})",
+  "@quantityWithUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "unitHours": "hours",
+  "unitDays": "days",
+  "unitJobs": "jobs",
+  "languageEnglish": "English",
+  "languageSinhala": "Sinhala",
+  "languageTamil": "Tamil",
+  "locationPermissionRequired": "Location access is required to verify arrival at customer location.",
+  "none": "None",
+  "optional": "Optional",
+  "errorProviderCategoryMissing": "This service provider does not have an active service category.",
+  "permManageUsersLabel": "Manage Users",
+  "permManageUsersDesc": "Ban or unban users and providers, and handle account security actions.",
+  "permHandleSupportLabel": "Support & Tickets",
+  "permHandleSupportDesc": "Review and respond to customer and provider support tickets.",
+  "noPermissionForAction": "You don't have permission for this.",
+  "helpAndSupport": "Help & Support",
+  "myTickets": "My Tickets",
+  "reportAProblem": "Report a problem",
+  "ticketReplyPrompt": "We usually reply within 24 hours",
+  "ticketStatusOpen": "Open",
+  "ticketStatusInProgress": "In Progress",
+  "ticketStatusWaitingUser": "Waiting on You",
+  "ticketStatusResolved": "Resolved",
+  "ticketStatusClosed": "Closed",
+  "typeHelp": "Help",
+  "typeReportUser": "Report User",
+  "typeBookingProblem": "Booking Problem",
+  "typePaymentDispute": "Payment Dispute",
+  "typeAccount": "Account",
+  "typeAppProblem": "App Problem",
+  "typeFeedback": "Feedback & Suggestions",
+  "ticketSubject": "Subject",
+  "ticketDescription": "Description",
+  "ticketSend": "Submit Ticket",
+  "ticketAttachPhoto": "Attach Photo",
+  "ticketReplyHint": "Type a message...",
+  "ticketCloseConfirm": "Close Ticket",
+  "ticketResolvedNote": "Resolution Note",
+  "ticketAssignToMe": "Assign to me",
+  "warnUser": "Warn User",
+  "banUser": "Ban User",
+  "supportPhone": "Support Phone",
+  "supportEmail": "Support Email",
+  "callSupport": "Call Support",
+  "emailSupport": "Email Support",
+  "noTicketsYet": "No support tickets yet",
+  "ticketCreatedSuccess": "Support ticket created successfully",
+  "helpSupportTitle": "Help & Support",
+  "helpSupportSubtitle": "Get assistance, FAQs, or submit a ticket",
+  "reportProblemTitle": "Report a problem"
 }
-

@@ -5,6 +5,7 @@ import '../models/user_profile.dart';
 import '../models/admin_user.dart';
 import '../repositories/user_repository.dart';
 import '../services/auth_service.dart';
+import '../utils/l10n_extension.dart';
 
 enum AppRole { customer, provider, admin }
 
@@ -21,6 +22,7 @@ class RoleProvider extends ChangeNotifier {
   AppRole? get primaryRole => _primaryRole;
   UserProfile? get currentUser => _currentUser;
   AdminUser? get currentAdminUser => _currentAdminUser;
+  AdminUser? get currentAdmin => _currentAdminUser;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _currentUser != null;
   bool get isProfileCompleted => _currentUser?.isProfileComplete ?? false;
@@ -48,7 +50,7 @@ class RoleProvider extends ChangeNotifier {
           AdminUser(
             id: _currentUser?.id ?? 'super_admin',
             email: _currentUser?.email ?? '',
-            displayName: _currentUser?.displayName ?? 'Super Admin',
+            displayName: _currentUser?.displayName ?? 'SUPER_ADMIN',
             role: AdminRole.superAdmin,
             status: AdminStatus.active,
             permissions: AdminPermission.values,
@@ -105,7 +107,7 @@ class RoleProvider extends ChangeNotifier {
         final admin = AdminUser(
           id: uid,
           email: fbUser?.email ?? '',
-          displayName: fbUser?.displayName ?? 'Super Admin',
+          displayName: fbUser?.displayName ?? 'SUPER_ADMIN',
           role: AdminRole.superAdmin,
           status: AdminStatus.active,
           permissions: AdminPermission.values,
@@ -256,18 +258,18 @@ class RoleProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  String get roleLabel {
+  String roleLabelOf(BuildContext context) {
     switch (_role) {
       case AppRole.customer:
-        return 'Customer';
+        return context.l10n.roleCustomer;
       case AppRole.provider:
-        return 'Service Provider';
+        return context.l10n.roleServiceProvider;
       case AppRole.admin:
-        if (isSuperAdmin) return 'Super Admin';
+        if (isSuperAdmin) return context.l10n.roleSuperAdmin;
         if (_currentAdminUser?.role == AdminRole.supportAdmin) {
-          return 'Support Admin';
+          return context.l10n.roleSupportAdmin;
         }
-        return 'Operations Admin';
+        return context.l10n.roleOperationsAdmin;
     }
   }
 }

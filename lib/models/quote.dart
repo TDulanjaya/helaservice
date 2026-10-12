@@ -19,6 +19,18 @@ class Quote {
   final String providerLocation;
   final String status;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  // price breakdown
+  final String quoteType; // 'firm', 'estimate', 'inspect'
+  final String? priceUnit; // 'fixed', 'day', 'hour'
+  final int? unitRateLkr;
+  final double? quantity;
+  final int? materialsEstimateLkr;
+  final int visitFeeLkr;
+  final double travelKm;
+  final int travelRateLkr;
+  final int travelCostLkr;
 
   const Quote({
     this.id = '',
@@ -39,6 +51,16 @@ class Quote {
     this.providerLocation = '',
     this.status = 'pending',
     this.createdAt,
+    this.updatedAt,
+    this.quoteType = 'inspect',
+    this.priceUnit,
+    this.unitRateLkr,
+    this.quantity,
+    this.materialsEstimateLkr,
+    this.visitFeeLkr = 0,
+    this.travelKm = 0.0,
+    this.travelRateLkr = 0,
+    this.travelCostLkr = 0,
   });
 
   bool get isExpired =>
@@ -47,28 +69,34 @@ class Quote {
       DateTime.now().difference(createdAt!).inHours >= 48;
 
   Map<String, dynamic> toMap() => {
-
         'requestId': requestId,
         'providerId': providerId,
         'createdBy': createdBy,
         'providerName': providerName,
-        'providerRating': providerRating,
-        'providerReviewCount': providerReviewCount,
-        'providerNicVerified': providerNicVerified,
         'providerTrade': providerTrade,
-        if (providerLatitude != null) 'providerLatitude': providerLatitude,
-        if (providerLongitude != null) 'providerLongitude': providerLongitude,
-        'quotedPrice': quotedPrice,
+        'providerLocation': providerLocation,
         'etaMinutes': etaMinutes,
         'notes': notes,
-        'providerPhone': providerPhone,
-        'providerLocation': providerLocation,
         'status': status,
-        'createdAt': FieldValue.serverTimestamp(),
+        'quoteType': quoteType,
+        if (quoteType != 'inspect' && priceUnit != null) 'priceUnit': priceUnit,
+        if (quoteType != 'inspect' && unitRateLkr != null) 'unitRateLkr': unitRateLkr,
+        if (quoteType != 'inspect' && quantity != null) 'quantity': quantity,
+        if (quoteType != 'inspect' && materialsEstimateLkr != null) 'materialsEstimateLkr': materialsEstimateLkr,
+        'visitFeeLkr': visitFeeLkr,
+        'travelKm': travelKm,
+        'travelRateLkr': travelRateLkr,
+        'travelCostLkr': travelCostLkr,
+        'quotedPrice': quotedPrice.round(),
+        'createdAt': createdAt != null
+            ? Timestamp.fromDate(createdAt!)
+            : FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       };
 
   factory Quote.fromMap(String id, Map<String, dynamic> map) {
     final ts = map['createdAt'];
+    final uts = map['updatedAt'];
     return Quote(
       id: id,
       requestId: map['requestId'] ?? '',
@@ -91,6 +119,17 @@ class Quote {
           '',
       status: map['status'] ?? 'pending',
       createdAt: ts is Timestamp ? ts.toDate() : null,
+      updatedAt: uts is Timestamp ? uts.toDate() : null,
+      quoteType: map['quoteType'] as String? ?? 'inspect',
+      priceUnit: map['priceUnit'] as String?,
+      unitRateLkr: (map['unitRateLkr'] as num?)?.toInt(),
+      quantity: (map['quantity'] as num?)?.toDouble(),
+      materialsEstimateLkr: (map['materialsEstimateLkr'] as num?)?.toInt(),
+      visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt() ?? 0,
+      travelKm: (map['travelKm'] as num?)?.toDouble() ?? 0.0,
+      travelRateLkr: (map['travelRateLkr'] as num?)?.toInt() ?? 0,
+      travelCostLkr: (map['travelCostLkr'] as num?)?.toInt() ?? 0,
     );
   }
 }
+

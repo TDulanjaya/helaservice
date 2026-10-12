@@ -82,6 +82,11 @@ class Technician {
   final bool emergencyAvailable;
   final double serviceRadiusKm;
   final Map<String, WorkingDaySchedule> workingHours;
+  final int? dailyRateLkr;
+  final int? perKmRateLkr;
+  final int? visitFeeLkr;
+
+  int get effectiveVisitFeeLkr => visitFeeLkr ?? (baseRateLkr > 0 ? baseRateLkr : 0);
 
   const Technician({
     required this.id,
@@ -102,6 +107,9 @@ class Technician {
     required this.onTimePercent,
     required this.hourlyRateLkr,
     required this.emergencyRateLkr,
+    this.dailyRateLkr,
+    this.perKmRateLkr,
+    this.visitFeeLkr,
     required this.about,
     required this.languages,
     required this.serviceArea,
@@ -122,10 +130,10 @@ class Technician {
     required String id,
     required String name,
     String phone = '',
-    String title = 'Service Provider',
+    String title = '',
     String category = '',
     String serviceArea = '',
-    double? rating = 5.0,
+    double? rating,
   }) =>
       Technician(
         id: id,
@@ -134,26 +142,26 @@ class Technician {
         avatarColor: const Color(0xFF1B6B93),
         title: title,
         category: category,
-        nicVerified: true,
-        online: true,
-        rating: rating,
-        reviewCount: 1,
-        etaLabel: '20 mins',
-        baseRateLkr: 2000,
-        responseTimeLabel: '< 15 mins',
-        jobsCount: 1,
-        yearsExperience: '3 yrs',
-        onTimePercent: '100%',
-        hourlyRateLkr: 2000,
-        emergencyRateLkr: 3000,
+        nicVerified: false,
+        online: false,
+        rating: null,
+        reviewCount: 0,
+        etaLabel: '',
+        baseRateLkr: 0,
+        responseTimeLabel: '',
+        jobsCount: 0,
+        yearsExperience: '',
+        onTimePercent: '',
+        hourlyRateLkr: 0,
+        emergencyRateLkr: 0,
         about: '',
-        languages: 'English, Sinhala',
+        languages: '',
         serviceArea: serviceArea,
         phone: phone,
-        certification: 'Verified Artisan',
+        certification: '',
         recentWork: const [],
         reviews: const [],
-        isVerified: true,
+        isVerified: false,
         serviceRadiusKm: 25.0,
         workingHours: WorkingDaySchedule.defaultWeek(),
       );
@@ -217,6 +225,9 @@ class Technician {
         'onTimePercent': onTimePercent,
         'hourlyRateLkr': hourlyRateLkr,
         'emergencyRateLkr': emergencyRateLkr,
+        if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
+        if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
+        if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
         'about': about,
         'languages': languages,
         'serviceArea': serviceArea,
@@ -264,6 +275,9 @@ class Technician {
       onTimePercent: map['onTimePercent'] ?? '',
       hourlyRateLkr: map['hourlyRateLkr'] ?? 0,
       emergencyRateLkr: map['emergencyRateLkr'] ?? 0,
+      dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
+      perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
+      visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
       about: map['about'] ?? '',
       languages: map['languages'] ?? '',
       serviceArea: map['serviceArea'] ?? '',

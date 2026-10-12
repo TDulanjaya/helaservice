@@ -17,6 +17,7 @@ import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/job_location_picker.dart';
 import 'live_tracking_screen.dart';
 
 // emergency dispatch screen for urgent callouts within fifteen kilometers
@@ -226,7 +227,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                   controller: addressController,
                   style: const TextStyle(fontSize: 13.5),
                   decoration: InputDecoration(
-                    hintText: 'e.g. 45 Galle Road, Colombo 03',
+                    hintText: context.l10n.serviceAddressHint,
                     prefixIcon: const Icon(Icons.location_on_rounded, size: 18),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -265,8 +266,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             final currentAddress = addressController.text.trim();
                             if (currentAddress.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter service location address'),
+                                SnackBar(
+                                  content: Text(context.l10n.pleaseEnterServiceLocation),
                                 ),
                               );
                               return;
@@ -310,37 +311,70 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     required String address,
     required String notes,
   }) async {
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final user = roleProvider.currentUser;
     setState(() => _isCreatingBooking = true);
 
     try {
+      if (_userLat == null || _userLng == null) {
+        setState(() => _isCreatingBooking = false);
+        final picked = await JobLocationPicker.pickLocation(
+          context,
+          title: context.l10n.selectJobLocation,
+        );
+        if (picked == null ||
+            picked.latitude == 0.0 ||
+            picked.longitude == 0.0) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.locationPermissionRequired),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          return;
+        }
+        _userLat = picked.latitude;
+        _userLng = picked.longitude;
+        if (picked.address.isNotEmpty) {
+          _userAddress = picked.address;
+        }
+        setState(() => _isCreatingBooking = true);
+      }
+
       final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-      final user = roleProvider.currentUser;
-      final distKm = _getDistanceKm(tech);
 
       final booking = Booking(
         id: '',
-        title: 'Urgent Emergency Callout ${tech.category.isNotEmpty ? tech.category : tech.title}',
+        title: tech.category.isNotEmpty ? tech.category : tech.title,
         status: JobStatus.pending,
         providerName: tech.name,
         providerId: tech.id,
         providerPhone: tech.phone,
         customerId: currentUid,
-        customerName: user?.displayName ?? 'Customer',
+        customerName: user?.displayName ?? '',
         customerInitials: (user?.displayName.isNotEmpty == true)
             ? user!.displayName[0].toUpperCase()
             : 'C',
         customerPhone: user?.phone ?? '',
-        location: address,
-        distance: '${distKm.toStringAsFixed(1)} km away',
-        relativeTime: 'Just now',
-        customerLatitude: _userLat ?? 6.9271,
-        customerLongitude: _userLng ?? 79.8612,
+        location: address.isNotEmpty ? address : _userAddress,
+        distance: '',
+        relativeTime: '',
+        customerLatitude: _userLat!,
+        customerLongitude: _userLng!,
         estRate: 'LKR $rateLkr',
         agreedPrice: rateLkr.toDouble(),
-        time: 'Immediate Emergency Dispatch',
+        time: '',
         entryInstructions: notes,
         createdAt: DateTime.now(),
+        type: 'urgent',
+        expiresAt: DateTime.now().add(const Duration(minutes: 3)),
+        quoteType: 'inspect',
+        priceStatus: 'awaiting_confirmation',
+        visitFeeLkr: rateLkr,
+        travelCostLkr: 0,
+        estimatedTotalLkr: rateLkr,
       );
 
       final bookingId = await _bookingRepo.createBooking(booking);
@@ -362,9 +396,14 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       }
     } catch (e) {
       if (mounted) {
+        final message = e.toString().contains('LOCATION_REQUIRED')
+            ? context.l10n.locationRequiredToBook
+            : (e.toString().contains('PROVIDER_CATEGORY_MISSING')
+                ? context.l10n.errorProviderCategoryMissing
+                : e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to request emergency booking: $e'),
+            content: Text(message),
             backgroundColor: AppColors.error,
           ),
         );
@@ -387,7 +426,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Rescan Area',
+            tooltip: context.l10n.refreshGps,
             onPressed: () {
               _startCountdown();
               _resolveUserLocation();
@@ -880,7 +919,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                   ),
                   IconSquareButton.small(
                     icon: Icons.phone_in_talk_rounded,
-                    tooltip: 'Emergency Dial',
+                    tooltip: context.l10n.call,
                     onTap: () => MapLauncher.openPhoneCall('119'),
                   ),
                 ],

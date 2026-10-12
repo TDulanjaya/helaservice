@@ -246,22 +246,6 @@ class UserRepository {
           return true;
         }
       }
-
-      // check users
-      final userDoc =
-          await _db.collection(FirestorePaths.users).doc(userId).get();
-      if (userDoc.exists) {
-        final data = userDoc.data();
-        final adminRoleStr = data?['adminRole']?.toString().toLowerCase();
-        final roleStr = data?['role']?.toString().toLowerCase();
-        if (adminRoleStr == 'super_admin' ||
-            adminRoleStr == 'superadmin' ||
-            roleStr == 'super_admin' ||
-            roleStr == 'superadmin' ||
-            data?['isSuperAdmin'] == true) {
-          return true;
-        }
-      }
     } catch (_) {}
     return false;
   }

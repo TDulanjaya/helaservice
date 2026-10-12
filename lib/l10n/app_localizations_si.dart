@@ -871,7 +871,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get editProfile => 'පැතිකඩ සංස්කරණය';
 
   @override
-  String get contactSupport => 'උපකාරක සේවා ඇමතුම් අංකය';
+  String get contactSupport => 'සහාය අමතන්න';
 
   @override
   String get appSettings => 'මනාප සහ සැකසුම්';
@@ -1758,10 +1758,10 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get statusActive => 'සක්‍රියයි';
+  String get statusActive => 'සක්‍රිය';
 
   @override
-  String get statusPaused => 'අත්හිටුවා ඇත';
+  String get statusPaused => 'තාවකාලිකව නැවතුණි';
 
   @override
   String get dynamicBiddingBadge => 'ගතික ලංසු තැබීම';
@@ -2894,7 +2894,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permManageCategoriesDesc =>
-      'වෘත්තීය ප්‍රවර්ග, මූලික ගාස්තු සහ පළාත් මධ්‍යස්ථාන සීමා සැකසීම.';
+      'වෘත්තීය ප්‍රවර්ග සහ පළාත් මධ්‍යස්ථාන සීමා සැකසීම.';
 
   @override
   String get permBroadcastAlertsDesc =>
@@ -3697,7 +3697,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get presetPolicyViolation => 'ප්‍රතිපත්ති උල්ලංඝනය';
 
   @override
-  String get reasonLabel => 'හේතුව';
+  String get reasonLabel => 'හේතුව:';
 
   @override
   String get suspendedByAdmin => 'පරිපාලක විසින් අත්හිටුවන ලදී';
@@ -4710,7 +4710,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'වෙනත් සේවා කාණ්ඩයක් තෝරා ගැනීමට හෝ හදිසි රැකියා ඉල්ලීමක් පළ කිරීමට උත්සාහ කරන්න.';
 
   @override
-  String get emergencyCalloutRate => 'හදිසි සේවා ගාස්තුව';
+  String get emergencyCalloutRate => 'හදිසි ඇමතුම් ගාස්තුව';
 
   @override
   String emergencyEtaApprox(int mins) {
@@ -4764,4 +4764,1210 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get urgentHelpBannerAction => 'හදිසි සහන ලබාගන්න';
+
+  @override
+  String get myRates => 'මගේ මිල ගණන්';
+
+  @override
+  String get rateCardTitle => 'සම්මත සේවා මිල ගණන්';
+
+  @override
+  String get dailyRate => 'දෛනික ගාස්තුව';
+
+  @override
+  String get perKmTravelRate => 'කි.මී. එකකට ගමන් ගාස්තුව';
+
+  @override
+  String get standardVisitFee => 'නිරීක්ෂණ / පැමිණීමේ ගාස්තුව';
+
+  @override
+  String get quoteTypeFirm => 'ස්ථාවර මිල';
+
+  @override
+  String get quoteTypeEstimate => 'ඇස්තමේන්තුගත මිල';
+
+  @override
+  String get quoteTypeInspect => 'නිරීක්ෂණය පමණි';
+
+  @override
+  String get priceRevisionProposed => 'මිල සංශෝධනයක් යෝජනා කරන ලදී';
+
+  @override
+  String get extraWorkRequested => 'අමතර වැඩ / ද්‍රව්‍ය';
+
+  @override
+  String get visitOnlyCompletedNote =>
+      'මෙම වෙන්කිරීම පරීක්ෂාව / පැමිණීම සඳහා පමණක් සම්පූර්ණ කරන ලදී. සමාලෝචන අක්‍රීය කර ඇත.';
+
+  @override
+  String get completionTypeNormal => 'සාමාන්‍ය වැඩ සම්පූර්ණ කිරීම';
+
+  @override
+  String get completionTypeVisitOnly => 'නිරීක්ෂණය / පැමිණීම පමණි';
+
+  @override
+  String get hourlyRate => 'පැයක ගාස්තුව';
+
+  @override
+  String get yourUsualRates => 'ඔබේ සාමාන්‍ය ගාස්තු';
+
+  @override
+  String get yourUsualRatesSubtitle =>
+      'අවම වශයෙන් එක් ගාස්තුවක්වත් අවශ්‍ය වේ. ගනුදෙනුකරුවන් මිල ගණන් ඉල්ලා සිටින විට භාවිත කෙරේ.';
+
+  @override
+  String get dailyRateHint => 'උදා. 3500 (1 - 100,000)';
+
+  @override
+  String get hourlyRateHint => 'උදා. 500 (1 - 20,000)';
+
+  @override
+  String get perKmRateHint => 'උදා. 80 (1 - 1,000)';
+
+  @override
+  String get visitFeeOptionalHint => 'විකල්ප, උදා. 1000 (0 - 20,000)';
+
+  @override
+  String get atLeastOneRateRequired =>
+      'අවම වශයෙන් එක් ගාස්තුවක් (දෛනික, පැයක, හෝ කි.මී. එකකට) අවශ්‍ය වේ.';
+
+  @override
+  String get dailyRateRangeError =>
+      'දෛනික ගාස්තුව රු. 1 සහ 100,000 අතර විය යුතුය';
+
+  @override
+  String get hourlyRateRangeError =>
+      'පැයක ගාස්තුව රු. 1 සහ 20,000 අතර විය යුතුය';
+
+  @override
+  String get perKmRateRangeError =>
+      'කි.මී. එකකට ගාස්තුව රු. 1 සහ 1,000 අතර විය යුතුය';
+
+  @override
+  String get visitFeeRangeError =>
+      'පැමිණීමේ ගාස්තුව රු. 0 සහ 20,000 අතර විය යුතුය';
+
+  @override
+  String get withinAgreedPrice => 'එකඟ වූ මිල තුළ';
+
+  @override
+  String get visitFeeOnly => 'පැමිණීමේ ගාස්තුව පමණි';
+
+  @override
+  String get approvedExtrasBreakdown => 'අනුමත අමතර ගාස්තු';
+
+  @override
+  String get initialEstimateLabel => 'මූලික මිල ගණන් / ඇස්තමේන්තුව';
+
+  @override
+  String get revisedAgreedPrice => 'එකඟ වූ මිල';
+
+  @override
+  String get finalAmountToPay => 'ගෙවිය යුතු අවසන් මුදල';
+
+  @override
+  String get priceMatchesQuote => 'මිල මුල් මිල ගණනට සමානයි';
+
+  @override
+  String get proposeNewPrice => 'නව මිලක් යෝජනා කරන්න';
+
+  @override
+  String get proposeRevisedPrice => 'සංශෝධිත මිලක් යෝජනා කරන්න';
+
+  @override
+  String get billingUnit => 'අයකිරීම් ඒකකය';
+
+  @override
+  String get billingUnitFixed => 'ස්ථාවර රැකියාව';
+
+  @override
+  String get billingUnitHour => 'පැයකට';
+
+  @override
+  String get billingUnitDay => 'දිනකට';
+
+  @override
+  String get unitRateLkr => 'ඒකක ගාස්තුව (රු.)';
+
+  @override
+  String get quantityLabel => 'ප්‍රමාණය';
+
+  @override
+  String get priceChangeReason => 'මිල වෙනස්වීමට හේතුව';
+
+  @override
+  String get priceChangeReasonHint => 'උදා. සැඟවුණු නල හානියක් හමුවීම';
+
+  @override
+  String get totalRevisedPrice => 'මුළු සංශෝධිත මිල';
+
+  @override
+  String get submitProposal => 'යෝජනාව ඉදිරිපත් කරන්න';
+
+  @override
+  String get addExtraWorkItem => 'අමතර වැඩ / අයිතමයක් එක් කරන්න';
+
+  @override
+  String get extraDescription => 'විස්තරය';
+
+  @override
+  String get extraDescriptionHint =>
+      'උදා. අමතර මීටර් 2 පීවීසී බට සහ සවි කිරීම්';
+
+  @override
+  String get extraAmountLkr => 'මුදල (රු.)';
+
+  @override
+  String get proposeExtra => 'අමතර වැඩ යෝජනා කරන්න';
+
+  @override
+  String get awaitingCustomerApproval =>
+      'ගනුදෙනුකරුගේ අනුමැතිය බලාපොරොත්තුවෙන්';
+
+  @override
+  String get priceProposalSent =>
+      'මිල යෝජනාව අනුමැතිය සඳහා ගනුදෙනුකරු වෙත යවන ලදී';
+
+  @override
+  String get extraProposalSent => 'අමතර වැඩ යෝජනාව ගනුදෙනුකරු වෙත යවන ලදී';
+
+  @override
+  String get priceConfirmedMatches => 'මිල මුල් මිල ගණනට ගැළපෙන බව තහවුරු විය';
+
+  @override
+  String get priceProposalRejected => 'මිල යෝජනාව ප්‍රතික්ෂේප විය';
+
+  @override
+  String get priceProposalApproved => 'මිල යෝජනාව අනුමත විය';
+
+  @override
+  String get myRateCard => 'මගේ මිල කාඩ්පත';
+
+  @override
+  String get rateCardSubtitle =>
+      'ගනුදෙනුකරුවන්ට පෙන්වන සහ මිල ගණන් සඳහා භාවිත කරන ඔබේ සම්මත ගාස්තු සකසන්න.';
+
+  @override
+  String get saveRates => 'මිල ගණන් සුරකින්න';
+
+  @override
+  String get rateCardUpdatedSuccess => 'මිල කාඩ්පත සාර්ථකව යාවත්කාලීන විය';
+
+  @override
+  String get travelRate => 'ගමන් ගාස්තුව';
+
+  @override
+  String get pricingStandardRates => 'මිල ගණන් සහ සම්මත ගාස්තු';
+
+  @override
+  String get uploadRetry => 'නැවත උඩුගත කරන්න';
+
+  @override
+  String get largeMediaWarningTitle => 'විශාල ගොනු අනතුරු ඇඟවීම';
+
+  @override
+  String get largeMediaWarningMessage =>
+      'ගොනුව 20MB ට වඩා වැඩිය. ජංගම දත්ත භාවිතයෙන් උඩුගත කිරීමට වැඩි කාලයක් හා දත්ත වැය විය හැක. ඉදිරියට යන්නද?';
+
+  @override
+  String get proceed => 'ඉදිරියට යන්න';
+
+  @override
+  String get somethingWentWrong =>
+      'යම් දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String customerDidNotAgreeVisitOnly(String amount) {
+    return 'පාරිභෝගිකයා එකඟ නොවීය. පැමිණීමේ ගාස්තුව පමණක් අය කරන්න: LKR $amount';
+  }
+
+  @override
+  String get completeVisitOnly => 'පැමිණීම පමණක් සම්පූර්ණ කරන්න';
+
+  @override
+  String get priceRevisionReasonRequired =>
+      'කරුණාකර මිල සංශෝධනය සඳහා හේතුවක් ඇතුළත් කරන්න';
+
+  @override
+  String get checkRateAndQuantity =>
+      'කරුණාකර ගාස්තුව සහ ප්‍රමාණ අගයන් පරීක්ෂා කරන්න';
+
+  @override
+  String get extraDescriptionLimit =>
+      'කරුණාකර විස්තරයක් ඇතුළත් කරන්න (උපරිම අක්ෂර 300)';
+
+  @override
+  String get extraAmountLimit =>
+      'කරුණාකර LKR 1 සහ 1,000,000 අතර මුදලක් ඇතුළත් කරන්න';
+
+  @override
+  String get notesLimit500 => 'සටහන් අක්ෂර 500ක් හෝ ඊට අඩු විය යුතුය';
+
+  @override
+  String get validVisitFeePrompt =>
+      'කරුණාකර වලංගු පැමිණීමේ ගාස්තුවක් ඇතුළත් කරන්න (LKR 1 - 20,000)';
+
+  @override
+  String get validUnitRatePrompt =>
+      'කරුණාකර වලංගු ඒකක ගාස්තුවක් ඇතුළත් කරන්න (අවම LKR 1)';
+
+  @override
+  String get validQuantityPrompt =>
+      'කරුණාකර වලංගු ප්‍රමාණයක් ඇතුළත් කරන්න (0.5 සිට 60)';
+
+  @override
+  String get materialsEstimateLimit =>
+      'ද්‍රව්‍ය ඇස්තමේන්තුව LKR 0 සහ 1,000,000 අතර විය යුතුය';
+
+  @override
+  String get visitInspectionFee => 'පැමිණීමේ / පරීක්ෂණ ගාස්තුව:';
+
+  @override
+  String get materialsEstimateColon => 'ද්‍රව්‍ය ඇස්තමේන්තුව:';
+
+  @override
+  String get addIssueVideoMax =>
+      'ගැටලුවේ වීඩියෝවක් එක් කරන්න (උපරිම තත්පර 120)';
+
+  @override
+  String get recordVideo => 'වීඩියෝ පටිගත කරන්න';
+
+  @override
+  String get errorPickingVideo =>
+      'වීඩියෝ තෝරා ගැනීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get videoOfIssueOptional => 'ගැටලුවේ වීඩියෝව (විකල්ප)';
+
+  @override
+  String get jobVideo => 'කාර්ය වීඩියෝව';
+
+  @override
+  String get videoClip => 'වීඩියෝ පටය';
+
+  @override
+  String get failedToPlayVideo => 'වීඩියෝව වාදනය කිරීමට නොහැකි විය';
+
+  @override
+  String get failedToUpdateRates =>
+      'ගාස්තු යාවත්කාලීන කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get quoteOutdatedDeclined =>
+      'මෙම මිල ගණන් යල් පැන ගිය එකකි, කරුණාකර අලුත් එකක් එවන ලෙස සේවාදායකයාගෙන් ඉල්ලන්න';
+
+  @override
+  String youAreMetersAway(String distance) {
+    return 'ඔබ සේවා ස්ථානයෙන් මීටර් $distance ක් පමණ ඈතින් සිටී.';
+  }
+
+  @override
+  String get imHereGpsWrong => 'මම ස්ථානයට පැමිණියෙමි (GPS දෝෂ සහිතයි)';
+
+  @override
+  String get slideToClaimArrival => 'පැමිණීම තහවුරු කිරීමට ස්ලයිඩ් කරන්න';
+
+  @override
+  String get waitingCustomerConfirmation =>
+      'පැමිණීම වාර්තා කෙරිණි. පාරිභෝගිකයාගේ තහවුරු කිරීම අපේක්ෂාවෙන්...';
+
+  @override
+  String get arrivalDeniedProviderNotice =>
+      'ඔබ තවම පැමිණ නැති බව පාරිභෝගිකයා පවසයි. කරුණාකර ස්ථානය පරීක්ෂා කරන්න හෝ අමතන්න.';
+
+  @override
+  String get claimAgainArrival => 'නැවත පැමිණීම වාර්තා කරන්න';
+
+  @override
+  String get maxClaimsReached =>
+      'උපරිම පැමිණීම් වාර්තා කිරීම් සීමාව ඉක්මවා ඇත (3/3).';
+
+  @override
+  String get customerDidNotAnswer =>
+      'විනාඩි 10 ක් ගතවී ඇතත් පාරිභෝගිකයා ප්‍රතිචාර දක්වා නැත.';
+
+  @override
+  String get startJobVerifiedGps => 'කාර්යය ආරම්භ කරන්න (GPS තහවුරු කර ඇත)';
+
+  @override
+  String get callCustomerToConfirm =>
+      'පැමිණීම තහවුරු කරගැනීමට පාරිභෝගිකයා අමතන්න';
+
+  @override
+  String providerSaysArrived(String providerName) {
+    return '$providerName පැමිණ ඇතැයි දන්වයි. ඔහු ඔබ ළඟ සිටීද?';
+  }
+
+  @override
+  String providerGpsShowsAway(String distance) {
+    return 'ඔහුගේ GPS පෙන්වන්නේ මීටර් $distance ක් ඈතින් බවයි.';
+  }
+
+  @override
+  String get yesTheyAreHere => 'ඔව්, මෙහි පැමිණ ඇත';
+
+  @override
+  String get noNotHere => 'නැත, තවම පැමිණ නැත';
+
+  @override
+  String get providerDidNotCome => 'සේවා ශිල්පියා පැමිණියේ නැත';
+
+  @override
+  String get confirmNoShowTitle => 'නොපැමිණීම වාර්තා කරන්නද?';
+
+  @override
+  String get confirmNoShowMessage =>
+      'සේවා ශිල්පියා නොපැමිණි බැවින් මෙම වෙන්කිරීම අවලංගු කෙරේ.';
+
+  @override
+  String get locationRequiredToBook =>
+      'මෙම සේවාව වෙන්කිරීමට කරුණාකර GPS ස්ථානයක් තෝරන්න.';
+
+  @override
+  String get arrivalMockedFlag => 'ව්‍යාජ GPS හඳුනාගැනිණි';
+
+  @override
+  String get arrivalOutsideZoneFlag => 'කලාපයෙන් පිටතදී වාර්තා කෙරිණි';
+
+  @override
+  String get arrivalDeniedFlag => 'පාරිභෝගිකයා පැමිණීම ප්‍රතික්ෂේප කළේය';
+
+  @override
+  String get noShowFlag => 'සේවා ශිල්පියා නොපැමිණියේය';
+
+  @override
+  String gpsOutsideZoneAlert(String distance) {
+    return 'ඔබ සේවා කලාපයෙන් පිටත (මීටර් $distance ඈතින්) සිටින බව GPS පෙන්වයි. කෙසේ හෝ පැමිණීම වාර්තා කරනවාද?';
+  }
+
+  @override
+  String get proceedAnyway => 'කෙසේ හෝ ඉදිරියට යන්න';
+
+  @override
+  String get claimSuccessNotified =>
+      'පැමිණීම වාර්තා කරන ලදී. පාරිභෝගිකයා දැනුවත් කෙරිණි.';
+
+  @override
+  String get completeJobEnterPin =>
+      'කාර්යය සම්පූර්ණ කරන්න (පාරිභෝගික PIN ඇතුළත් කරන්න)';
+
+  @override
+  String get noShowReportedSuccess =>
+      'සේවා සපයන්නා නොපැමිණි බව වාර්තා කරන ලදී. වෙන්කිරීම අවලංගු විය.';
+
+  @override
+  String get providerReliability90Days =>
+      'දින 90 පැමිණීමේ සහ විශ්වාසනීයත්ව දත්ත';
+
+  @override
+  String get providerNoShowsCount => 'නොපැමිණීම්';
+
+  @override
+  String get providerArrivalDenialsCount => 'පැමිණීම් ප්‍රතික්ෂේප';
+
+  @override
+  String get providerMockedGpsCount => 'ව්‍යාජ GPS';
+
+  @override
+  String get providerOutsideZoneCount => 'කලාපයෙන් පිටත';
+
+  @override
+  String get scheduledTimePassedPrompt =>
+      'වෙන්කරන ලද වේලාව ඉක්මවා ගොස් ඇත. කරුණාකර නව දිනයක් සහ වේලාවක් තෝරන්න.';
+
+  @override
+  String get chooseNewScheduleTitle => 'වෙන්කළ වේලාව යාවත්කාලීන කරන්න';
+
+  @override
+  String get revisedEstimateDefault => 'ස්ථානීය සංශෝධිත ඇස්තමේන්තුව';
+
+  @override
+  String get pleaseEnterSixDigits => 'කරුණාකර ඉලක්කම් 6 ඇතුළත් කරන්න';
+
+  @override
+  String get customerLocationNotAvailableTitle => 'පාරිභෝගිකයාගේ ස්ථානය නොමැත';
+
+  @override
+  String get customerLocationNotAvailableDesc =>
+      'මෙම කාර්යය සඳහා නිශ්චිත GPS ඛණ්ඩාංක සපයා නොමැත. පැමිණීම සම්බන්ධීකරණය කිරීමට පහතින් පාරිභෝගිකයා අමතන්න.';
+
+  @override
+  String get locationRequiredTitle => 'ස්ථානය අවශ්‍යයි';
+
+  @override
+  String get jobNoLocationRepost =>
+      'මෙම කාර්යය සඳහා ස්ථානයක් සකසා නැත. කරුණාකර ස්ථානය සකසා නැවත පළ කරන්න.';
+
+  @override
+  String quoteAcceptedChatMessage(String providerName, String price) {
+    return 'හෙලෝ $providerName, මම ඔබේ මිල ගණන් පිළිගත්තා (රු. $price). අපි කාර්යයේ විස්තර සම්බන්ධීකරණය කරමු!';
+  }
+
+  @override
+  String get pleaseEnterServiceLocation =>
+      'කරුණාකර සේවා ස්ථානයේ ලිපිනය ඇතුළත් කරන්න';
+
+  @override
+  String get optimizingVideoNotice => 'වීඩියෝව සකසමින් (උපරිම තත්පර 120)...';
+
+  @override
+  String get addShortVideo => 'කෙටි වීඩියෝවක් එක් කරන්න';
+
+  @override
+  String get addShortVideoSubtitle =>
+      'අලුත්වැඩියාව හෝ ගැටලුව පැහැදිලි කරන තත්පර 120 දක්වා වීඩියෝවක්';
+
+  @override
+  String get noServicesAvailableYet => 'තවමත් සේවාවන් නොමැත';
+
+  @override
+  String get editSavedAddress => 'සුරකින ලද ලිපිනය සංස්කරණය කරන්න';
+
+  @override
+  String get signInToManageSavedAddresses =>
+      'සුරකින ලද ලිපින කළමනාකරණය කිරීමට ප්‍රවිෂ්ට වන්න.';
+
+  @override
+  String get noSavedAddressesSubtitle =>
+      'තවමත් සුරකින ලද ලිපින නොමැත. පහසු වෙන්කරවා ගැනීම සඳහා නිවසේ හෝ සේවා ස්ථානයේ ලිපිනය එක් කරන්න.';
+
+  @override
+  String get becomeProviderSubtitle =>
+      'ඔබගේ වෘත්තීය කුසලතා පිරිනමන්න, රැකියා ලබාගෙන වැඩිපුර උපයන්න';
+
+  @override
+  String get switchToProvider => 'සේවා සපයන්නාගේ ප්‍රකාරයට මාරු වන්න';
+
+  @override
+  String get switchToProviderSubtitle =>
+      'ඔබගේ සේවා සපයන්නාගේ වැඩබිමට ආපසු මාරු වන්න';
+
+  @override
+  String get adminInspectionMode => 'පරිපාලක පරීක්ෂණ මාදිලිය';
+
+  @override
+  String get adminInspectionModeDesc =>
+      'පරිපාලන ප්‍රවේශය මගින් සේවා සපයන්නාගේ වැඩබිම නිරීක්ෂණය කෙරේ.';
+
+  @override
+  String get setStandardRatesSubtitle => 'මූලික පැමිණීමේ සහ පැයක ගාස්තු සකසන්න';
+
+  @override
+  String get quoteAcceptedTitle => 'මිල ගණන් පිළිගන්නා ලදී!';
+
+  @override
+  String get customerConfirmedBooking =>
+      'පාරිභෝගිකයා මෙම වෙන්කරවා ගැනීම තහවුරු කළේය';
+
+  @override
+  String get enterProjectTitle => 'කරුණාකර ව්‍යාපෘතියේ මාතෘකාව ඇතුළත් කරන්න';
+
+  @override
+  String get selectPhotoForShowcase =>
+      'කරුණාකර මෙම අයිතමය සඳහා ඡායාරූපයක් තෝරන්න';
+
+  @override
+  String failedToSaveShowcase(String error) {
+    return 'අයිතමය සුරැකීමට නොහැකි විය: $error';
+  }
+
+  @override
+  String get quoteType => 'මිල ගණන් වර්ගය';
+
+  @override
+  String get inspectionQuoteNotice =>
+      'පරීක්ෂණ මිල ගණන් වලට පැමිණීමේ ගාස්තුව සහ ගමන් වියදම් ඇතුළත් වේ. මුළු කාර්යයේ මිල පැමිණි පසු තීරණය කරනු ලැබේ.';
+
+  @override
+  String get materialsEstimateOptional => 'ද්‍රව්‍ය ඇස්තමේන්තුව (විකල්ප)';
+
+  @override
+  String get estDistanceKm => 'ඇස්තමේන්තුගත දුර (කි.මී.)';
+
+  @override
+  String get travelRateLkrKm => 'ගමන් ගාස්තුව (රු./කි.මී.)';
+
+  @override
+  String get totalQuotedPrice => 'මුළු මිල ගණන්';
+
+  @override
+  String get travelFee => 'ගමන් ගාස්තුව';
+
+  @override
+  String get statusSelected => 'තෝරාගෙන ඇත';
+
+  @override
+  String get providerBaseLocationRequired =>
+      'සේවා සපයන්නාගේ මූලික ස්ථානය අවශ්‍යයි. කරුණාකර GPS ස්ථානය සහ ලිපිනය සකසන්න.';
+
+  @override
+  String get baseWorkshopLocation => 'මූලික වැඩපොළ / සේවා ස්ථානය *';
+
+  @override
+  String get baseLocationDispatchNotice =>
+      'ළඟම ඇති සේවා සපයන්නා යොමු කිරීමේ ගණනය කිරීම් සඳහා අවශ්‍ය වේ';
+
+  @override
+  String get suspensionReasonLabel => 'අත්හිටුවීමට හේතුව:';
+
+  @override
+  String get registerBannerSubtitle =>
+      'ශ්‍රී ලංකාව පුරා තහවුරු කළ මාර්ගස්ථ හා ගෘහස්ථ සේවා විශේෂඥයින් ලබා ගැනීමට තත්පර කිහිපයකින් ලියාපදිංචි වන්න.';
+
+  @override
+  String get sortOrder => 'අනුපිළිවෙල';
+
+  @override
+  String get isLive => 'සජීවීව පවතී';
+
+  @override
+  String get editCategory => 'ප්‍රවර්ගය සංස්කරණය කරන්න';
+
+  @override
+  String get priceHistoryAudit => 'මිල ඉතිහාසය සහ විගණනය';
+
+  @override
+  String get finalChargedAmount => 'අවසාන අය කළ මුදල:';
+
+  @override
+  String suspendCustomerConfirmPrompt(String name) {
+    return '\"$name\" පාරිභෝගිකයා අත්හිටුවීමට ඔබට විශ්වාසද? ඔවුන්ගේ ගිණුම අගුලු දමනු ලබන අතර ඉල්ලීම් සෑදීමෙන් හෝ වේදිකාවට පිවිසීමෙන් වළක්වනු ඇත.';
+  }
+
+  @override
+  String get unableToLoadPhoto => 'ඡායාරූපය පූරණය කළ නොහැක';
+
+  @override
+  String get newTimeLabel => 'නව වේලාව:';
+
+  @override
+  String get noteLabel => 'සටහන:';
+
+  @override
+  String get resetPinAttempts => 'PIN උත්සාහයන් නැවත සකසන්න';
+
+  @override
+  String get noServiceHistoryYet => 'තවමත් සේවා ඉතිහාසයක් නොමැත';
+
+  @override
+  String get noServiceHistorySubtitle =>
+      'සම්පූර්ණ කරන ලද සහ පසුගිය වෙන්කිරීම් මෙහි පෙන්වනු ඇත.';
+
+  @override
+  String get yourRatingReview => 'ඔබගේ ශ්‍රේණිගත කිරීම සහ සමාලෝචනය';
+
+  @override
+  String get signInToViewBookings =>
+      'ඔබගේ වෙන්කිරීම් බැලීමට කරුණාකර ප්‍රවිෂ්ට වන්න';
+
+  @override
+  String get pendingAdminApprovalUnavailable =>
+      'පරිපාලක අනුමැතිය අපේක්ෂාවෙන් · සේවාවට ලබා ගත නොහැක';
+
+  @override
+  String get directContactFastQuotes => 'සෘජු සම්බන්ධතාව සහ ක්ෂණික මිල ගණන්';
+
+  @override
+  String get verifiedPhoneAvailable => 'තහවුරු කළ දුරකථන අංකය පවතී';
+
+  @override
+  String get officialSupport => 'නිල සහාය';
+
+  @override
+  String get failedToSaveSchedule => 'කාලසටහන සුරැකීමට නොහැකි විය';
+
+  @override
+  String get statusConfirmed => 'තහවුරු කර ඇත';
+
+  @override
+  String get statusEnRoute => 'පැමිණෙමින්';
+
+  @override
+  String get statusDeclined => 'ප්‍රතික්ෂේපිතයි';
+
+  @override
+  String get statusAssigned => 'පවරා ඇත';
+
+  @override
+  String get statusScheduled => 'නියමිතයි';
+
+  @override
+  String get completionPinLabel => 'සම්පූර්ණ කිරීමේ PIN:';
+
+  @override
+  String get chatPhotoMessage => 'ඡායාරූපය';
+
+  @override
+  String get hintFullName => 'ඔබගේ සම්පූර්ණ නම';
+
+  @override
+  String get hintEmail => 'විද්‍යුත් තැපැල් ලිපිනය';
+
+  @override
+  String get hintPhone => 'ජංගම දුරකථන අංකය';
+
+  @override
+  String get hintCategorySearch => 'උදා: විදුලි කාර්මික, ජලනල කාර්මික';
+
+  @override
+  String get hintAmount => 'උදා: 3500';
+
+  @override
+  String get hintNicFormat => 'ඉලක්කම් 12, හෝ ඉලක්කම් 9 + V';
+
+  @override
+  String get hintCustomerName => 'උදා: සඳුනි පෙරේරා';
+
+  @override
+  String get hintProviderEmail => 'විද්‍යුත් තැපැල් ලිපිනය';
+
+  @override
+  String get hintAdminName => 'උදා: රුවන් ජයසුන්දර';
+
+  @override
+  String get priceStatusLabel => 'මිල තත්ත්වය:';
+
+  @override
+  String get proposedLabel => 'යෝජිත:';
+
+  @override
+  String get roleServiceProvider => 'සේවා සපයන්නා';
+
+  @override
+  String get roleSuperAdmin => 'ප්‍රධාන පරිපාලක';
+
+  @override
+  String get roleSupportAdmin => 'සහාය පරිපාලක';
+
+  @override
+  String get roleOperationsAdmin => 'මෙහෙයුම් පරිපාලක';
+
+  @override
+  String get generalDispute => 'සාමාන්‍ය ආරවුලක්';
+
+  @override
+  String get nicApprovedMessage =>
+      'ඔබගේ NIC අනන්‍යතාවය පරිපාලක විසින් අනුමත කර ඇත. ඔබට සියලුම සේවා ඉල්ලීම් ලැබිය හැකිය.';
+
+  @override
+  String get nicUnderReviewMessage =>
+      'ඔබගේ සත්‍යාපන ඉල්ලීම HelaService පරිපාලනය විසින් සමාලෝචනය කරමින් පවතී.';
+
+  @override
+  String amountLkrLabel(Object amount) {
+    return 'මුදල: LKR $amount';
+  }
+
+  @override
+  String get searchCategoryHint => 'වර්ගය සොයන්න...';
+
+  @override
+  String get searchDistrictHint => 'දිස්ත්‍රික්කය සොයන්න...';
+
+  @override
+  String get visitFeeOnlyDescription =>
+      'පැමිණීමේ / පරීක්ෂණ ගාස්තුව පමණක් අය කරන්න. සම්පූර්ණ සේවාවකින් තොරව සේවාව නිම වේ.';
+
+  @override
+  String get providerVerificationPending => 'සේවා සපයන්නා සත්‍යාපනය අපේක්ෂිතයි';
+
+  @override
+  String sendQuoteLkr(Object amount) {
+    return 'මිල ගණන් යවන්න · LKR $amount';
+  }
+
+  @override
+  String get customQuote => 'අභිරුචි මිල ගණන';
+
+  @override
+  String get pastService => 'පෙර සේවාව';
+
+  @override
+  String get youEnRouteLabel => 'ඔබ (පැමිණෙමින්)';
+
+  @override
+  String get hintJobAddress => 'නිවසේ අංකය, වීදිය, නගරය';
+
+  @override
+  String get hintCategoryName => 'ප්‍රවර්ගයේ නම';
+
+  @override
+  String get hintAmountLkr => 'LKR වලින් මුදල';
+
+  @override
+  String complaintInvestigationSuspended(String reason) {
+    return 'පැමිණිලි පරීක්ෂණයෙන් පසු අත්හිටුවන ලදී: \"$reason\"';
+  }
+
+  @override
+  String get adminSuspensionViolations =>
+      'ප්‍රතිපත්ති උල්ලංඝනය කිරීම් හේතුවෙන් පරිපාලන අත්හිටුවීම';
+
+  @override
+  String categoryCreatedWithSortOrder(String name, int order) {
+    return '$order අනුපිළිවෙල සමඟ $name ප්‍රවර්ගය සාදන ලදී';
+  }
+
+  @override
+  String categoryUpdatedWithSortOrder(String name, int order, bool status) {
+    return '$name ප්‍රවර්ගය යාවත්කාලීන කරන ලදී (අනුපිළිවෙල: $order, සක්‍රිය: $status)';
+  }
+
+  @override
+  String categoryDeletedName(String name) {
+    return '$name ප්‍රවර්ගය මකා දමන ලදී';
+  }
+
+  @override
+  String categoryDescriptionDefault(String service) {
+    return 'ශ්‍රී ලංකාව පුරා සහතික ලත් ගෘහස්ථ $service සේවාවන්.';
+  }
+
+  @override
+  String get zeroRegistered => '0 ක් ලියාපදිංචි වී ඇත';
+
+  @override
+  String get zeroOnlineNow => '0 ක් සබැඳිව ඇත';
+
+  @override
+  String get marketRate => 'වෙළඳපල මිල';
+
+  @override
+  String categoryUpdatedSuccess(String name) {
+    return '\"$name\" ප්‍රවර්ගය සාර්ථකව යාවත්කාලීන කරන ලදී.';
+  }
+
+  @override
+  String get manualDispatchAssigned => 'අතින් යොමු කිරීම පවරන ලදී';
+
+  @override
+  String get dispatchTitle => 'යොමු කරන්න';
+
+  @override
+  String get reassignTitle => 'නැවත පවරන්න';
+
+  @override
+  String manualDispatchAssignedDesc(
+      String provider, String job, String address) {
+    return '$provider මහතා \"$job\" ($address) වෙත යොමු කරන ලදී';
+  }
+
+  @override
+  String ledgerPriceStatus(String status) {
+    return 'මිල තත්ත්වය: $status';
+  }
+
+  @override
+  String ledgerProposedLkr(String amount) {
+    return 'යෝජිත: LKR $amount';
+  }
+
+  @override
+  String get ledgerCustomer => 'පාරිභෝගිකයා';
+
+  @override
+  String get verificationFlagged => 'සැක සහිතයි';
+
+  @override
+  String get verificationMatch => 'ගැළපේ';
+
+  @override
+  String get verificationValid => 'වලංගුයි';
+
+  @override
+  String get profileTrustPhotoRationale =>
+      'පැහැදිලි ඡායාරූපයක් පාරිභෝගික විශ්වාසය ගොඩනඟයි.';
+
+  @override
+  String get profileChooseGalleryPhoto => 'ඔබගේ ගැලරියෙන් ඡායාරූපයක් තෝරන්න.';
+
+  @override
+  String get captureNicFront => 'ජා.හැ. ඉදිරිපස ඡායාරූපයක් ගන්න';
+
+  @override
+  String get captureNicBack => 'ජා.හැ. පසුපස ඡායාරූපයක් ගන්න';
+
+  @override
+  String get captureNicPrompt =>
+      'ඔබගේ ජාතික හැඳුනුම්පතේ පැහැදිලි ඡායාරූපයක් ගන්න.';
+
+  @override
+  String get selectNicFront => 'ජා.හැ. ඉදිරිපස තෝරන්න';
+
+  @override
+  String get selectNicBack => 'ජා.හැ. පසුපස තෝරන්න';
+
+  @override
+  String get selectNicGalleryPrompt =>
+      'ගැලරියෙන් ඔබගේ ජාතික හැඳුනුම්පත් ඡායාරූපය තෝරන්න.';
+
+  @override
+  String get completeProviderProfileTitle =>
+      'සේවා සපයන්නාගේ ගිණුම සම්පූර්ණ කරන්න';
+
+  @override
+  String get providingServicesAcrossSriLanka =>
+      'ශ්‍රී ලංකාව පුරා සේවාවන් සැපයීම';
+
+  @override
+  String get requestingDomesticServices => 'නිවාස හා ගෘහස්ථ සේවා ඉල්ලුම් කිරීම';
+
+  @override
+  String get phonePlaceholderPattern => '7X XXXXXXX';
+
+  @override
+  String get selectServiceCategory => 'සේවා ප්‍රවර්ගය තෝරන්න';
+
+  @override
+  String get updatePinButton => 'ස්ථානය යාවත්කාලීන කරන්න';
+
+  @override
+  String get pickOnMapButton => 'සිතියමෙන් තෝරන්න';
+
+  @override
+  String get workshopAddressRequiredLabel => 'වැඩබිම / ක්‍රියාත්මක ලිපිනය *';
+
+  @override
+  String get operatingAddressRequiredError => 'ක්‍රියාත්මක ලිපිනය අවශ්‍ය වේ';
+
+  @override
+  String get completeProviderRegistration =>
+      'සේවා සපයන්නා ලියාපදිංචිය සම්පූර්ණ කරන්න';
+
+  @override
+  String get saveProfile => 'පැතිකඩ සුරකින්න';
+
+  @override
+  String get phoneNotSet => 'දුරකථන අංකය සකසා නැත';
+
+  @override
+  String get addressLabelHome => 'නිවස';
+
+  @override
+  String get addressLabelWork => 'කාර්යාලය';
+
+  @override
+  String get addressLabelOther => 'වෙනත්';
+
+  @override
+  String get videoExceedsMax120s =>
+      'වීඩියෝව උපරිම අවසර ලත් තත්පර 120 (මිනිත්තු 2) ඉක්මවයි';
+
+  @override
+  String failedToProcessVideo(String error) {
+    return 'වීඩියෝව සැකසීමට නොහැකි විය: $error';
+  }
+
+  @override
+  String get jobLocationLabel => 'කාර්ය ස්ථානය';
+
+  @override
+  String get selectJobLocationSubtitle =>
+      'GPS, සිතියම හෝ සුරකින ලද ලිපින මඟින් තෝරන්න';
+
+  @override
+  String get changeButton => 'වෙනස් කරන්න';
+
+  @override
+  String get setPinButton => 'ස්ථානය සලකුණු කරන්න';
+
+  @override
+  String get setPinHereButton => 'ස්ථානය මෙහි සලකුණු කරන්න';
+
+  @override
+  String get uploadFailedAttempts =>
+      'උත්සාහයන් 3 කට පසුව උඩුගත කිරීම අසාර්ථක විය.';
+
+  @override
+  String get bookingPastService => 'පසුගිය සේවාව';
+
+  @override
+  String get bookingStatusCompleted => 'සම්පූර්ණයි';
+
+  @override
+  String get bookingNotSpecified => 'සඳහන් කර නැත';
+
+  @override
+  String get bookingStatusScheduled => 'නියමිතයි';
+
+  @override
+  String quantityUnitLabel(String unit) {
+    return 'ප්‍රමාණය ($unit)';
+  }
+
+  @override
+  String get rateHourlyUnit => 'LKR / පැය';
+
+  @override
+  String get rateDailyUnit => 'LKR / දින';
+
+  @override
+  String get rateTravelUnit => 'LKR / කි.මී.';
+
+  @override
+  String get pickerTabForm => 'පෝරමය';
+
+  @override
+  String get pickerTabMapPin => 'සිතියම් සලකුණ';
+
+  @override
+  String get cameraPermissionRationale =>
+      'පැතිකඩ ඡායාරූපයක් ගැනීමට කැමරා අවසරය අවශ්‍ය වේ.';
+
+  @override
+  String get photoLibraryPermissionRationale =>
+      'පැතිකඩ ඡායාරූපයක් තෝරා ගැනීමට ඡායාරූප එකතුවට අවසර අවශ්‍ය වේ.';
+
+  @override
+  String get privacyDataCollectionPoints =>
+      '• පැතිකඩ නම, දුරකථන අංකය සහ ගිණුම් විස්තර\n• කාර්ය විස්තර, ලිපින සහ සේවා ස්ථාන\n• සත්‍යාපන ලේඛන (ජාතික හැඳුනුම්පත, ව්‍යාපාර බලපත්‍ර)\n• වේදිකාව හරහා පණිවිඩ සහ සන්නිවේදන';
+
+  @override
+  String get timelineBookingCreated => 'සේවාව නිර්මාණය කරන ලදී';
+
+  @override
+  String get timelineBookingAccepted => 'පිළිගන්නා ලදී';
+
+  @override
+  String get timelineArrivalClaimed => 'පැමිණි බව ප්‍රකාශිතයි';
+
+  @override
+  String get timelineArrivalDenied => 'පැමිණීම ප්‍රතික්ෂේපිතයි';
+
+  @override
+  String get timelineAutoStarted => 'ස්වයංක්‍රීයව අරඹන ලදී';
+
+  @override
+  String get timelineVisitFeeOnly => 'පැමිණීමේ ගාස්තුව පමණි';
+
+  @override
+  String get timelinePriceProposed => 'මිල යෝජනා කරන ලදී';
+
+  @override
+  String get timelinePriceApproved => 'මිල අනුමතයි';
+
+  @override
+  String get timelinePriceRejected => 'මිල ප්‍රතික්ෂේපිතයි';
+
+  @override
+  String get timelineExtraRequested => 'අමතර මුදලක් ඉල්ලා ඇත';
+
+  @override
+  String get timelineExtraApproved => 'අමතර මුදල අනුමතයි';
+
+  @override
+  String get timelineExtraRejected => 'අමතර මුදල ප්‍රතික්ෂේපිතයි';
+
+  @override
+  String get timelinePaymentConfirmed => 'ගෙවීම් තහවුරුයි';
+
+  @override
+  String get timelinePaymentDisputed => 'ගෙවීම් ආරවුලක්';
+
+  @override
+  String get timelineNoShowReported => 'නොපැමිණීම වාර්තා විය';
+
+  @override
+  String get timelineBeforePhotoAdded => 'ආරම්භක ඡායාරූපය එක් කරන ලදී';
+
+  @override
+  String get timelineAfterPhotoAdded => 'අවසාන ඡායාරූපය එක් කරන ලදී';
+
+  @override
+  String get statusOpen => 'මිල කැඳවීම් සඳහා විවෘතයි';
+
+  @override
+  String get statusDispatched => 'පිටත්ව ඇත';
+
+  @override
+  String get selectJobLocation => 'සේවා ස්ථානය තෝරන්න';
+
+  @override
+  String get tapToPickLocationDesc =>
+      'GPS, සිතියම හෝ සුරකින ලද ලිපින මඟින් තෝරාගැනීමට ස්පර්ශ කරන්න';
+
+  @override
+  String get setPin => 'ස්ථානය සලකුණු කරන්න';
+
+  @override
+  String rateCardSummary(Object visitFee, Object hourlyRate) {
+    return 'පැමිණීමේ ගාස්තුව: LKR $visitFee · පැයකට: LKR $hourlyRate';
+  }
+
+  @override
+  String get standardVisitFeeWithCurrency => 'සම්මත පැමිණීමේ ගාස්තුව (LKR)';
+
+  @override
+  String get hourlyRateWithUnit => 'පැයක ගාස්තුව (LKR / පැය)';
+
+  @override
+  String get dailyRateWithUnit => 'දෛනික ගාස්තුව (LKR / දින)';
+
+  @override
+  String get travelRateWithUnit => 'ගමන් ගාස්තුව (LKR / කි.මී.)';
+
+  @override
+  String priceMatchesQuoteAmount(Object amount) {
+    return 'මිල එකඟ වූ ගණනට සමානද? (LKR $amount)';
+  }
+
+  @override
+  String quantityWithUnit(String unit) {
+    return 'ප්‍රමාණය ($unit)';
+  }
+
+  @override
+  String get unitHours => 'පැය';
+
+  @override
+  String get unitDays => 'දින';
+
+  @override
+  String get unitJobs => 'සේවා';
+
+  @override
+  String get languageEnglish => 'ඉංග්‍රීසි';
+
+  @override
+  String get languageSinhala => 'සිංහල';
+
+  @override
+  String get languageTamil => 'දෙමළ';
+
+  @override
+  String get locationPermissionRequired =>
+      'පාරිභෝගිකයාගේ ස්ථානයට පැමිණීම තහවුරු කිරීමට ස්ථාන ප්‍රවේශය අවශ්‍ය වේ.';
+
+  @override
+  String get none => 'නැත';
+
+  @override
+  String get optional => 'විකල්ප';
+
+  @override
+  String get errorProviderCategoryMissing =>
+      'මෙම සේවා සපයන්නාට සක්‍රීය සේවා කාණ්ඩයක් නොමැත.';
+
+  @override
+  String get permManageUsersLabel => 'පරිශීලකයින් කළමනාකරණය';
+
+  @override
+  String get permManageUsersDesc =>
+      'පාරිභෝගිකයින් සහ ශිල්පීන් අත්හිටුවීම හෝ නැවත සක්‍රිය කිරීම.';
+
+  @override
+  String get permHandleSupportLabel => 'සහාය සහ පැමිණිලි';
+
+  @override
+  String get permHandleSupportDesc =>
+      'පාරිභෝගික සහ ශිල්පී සහාය ඉල්ලීම් සමාලෝචනය කර පිළිතුරු දීම.';
+
+  @override
+  String get noPermissionForAction => 'මෙය සිදු කිරීමට ඔබට අවසර නොමැත.';
+
+  @override
+  String get helpAndSupport => 'සහාය සහ උපකාර';
+
+  @override
+  String get myTickets => 'මගේ ඉල්ලීම්';
+
+  @override
+  String get reportAProblem => 'ගැටලුවක් වාර්තා කරන්න';
+
+  @override
+  String get ticketReplyPrompt =>
+      'අපි සාමාන්‍යයෙන් පැය 24ක් ඇතුළත පිළිතුරු දෙන්නෙමු';
+
+  @override
+  String get ticketStatusOpen => 'විවෘත';
+
+  @override
+  String get ticketStatusInProgress => 'ක්‍රියාත්මකයි';
+
+  @override
+  String get ticketStatusWaitingUser => 'ඔබගේ පිළිතුර බලාපොරොත්තුවෙන්';
+
+  @override
+  String get ticketStatusResolved => 'විසඳන ලදී';
+
+  @override
+  String get ticketStatusClosed => 'වසන ලදී';
+
+  @override
+  String get typeHelp => 'සහාය';
+
+  @override
+  String get typeReportUser => 'පරිශීලකයා වාර්තා කරන්න';
+
+  @override
+  String get typeBookingProblem => 'වෙන්කිරීමේ ගැටලුවක්';
+
+  @override
+  String get typePaymentDispute => 'ගෙවීම් ආරවුලක්';
+
+  @override
+  String get typeAccount => 'ගිණුම';
+
+  @override
+  String get typeAppProblem => 'යෙදුමේ දෝෂයක්';
+
+  @override
+  String get typeFeedback => 'ප්‍රතිපෝෂණ සහ යෝජනා';
+
+  @override
+  String get ticketSubject => 'මාතෘකාව';
+
+  @override
+  String get ticketDescription => 'විස්තරය';
+
+  @override
+  String get ticketSend => 'ඉල්ලීම යොමු කරන්න';
+
+  @override
+  String get ticketAttachPhoto => 'ඡායාරූපයක් එක් කරන්න';
+
+  @override
+  String get ticketReplyHint => 'පණිවිඩයක් ලියන්න...';
+
+  @override
+  String get ticketCloseConfirm => 'ඉල්ලීම අවසන් කරන්න';
+
+  @override
+  String get ticketResolvedNote => 'විසඳුම් සටහන';
+
+  @override
+  String get ticketAssignToMe => 'මට පවරන්න';
+
+  @override
+  String get warnUser => 'අවවාද කරන්න';
+
+  @override
+  String get banUser => 'අත්හිටුවන්න';
+
+  @override
+  String get supportPhone => 'සහාය දුරකථන අංකය';
+
+  @override
+  String get supportEmail => 'සහාය විද්‍යුත් තැපෑල';
+
+  @override
+  String get callSupport => 'සහාය අමතන්න';
+
+  @override
+  String get emailSupport => 'විද්‍යුත් තැපෑල යොමු කරන්න';
+
+  @override
+  String get noTicketsYet => 'තවමත් සහාය ඉල්ලීම් නොමැත';
+
+  @override
+  String get ticketCreatedSuccess => 'සහාය ඉල්ලීම සාර්ථකව යොමු කරන ලදී';
+
+  @override
+  String get helpSupportTitle => 'සහාය සහ උපකාර';
+
+  @override
+  String get helpSupportSubtitle => 'සහාය ලබා ගන්න හෝ ගැටලුවක් යොමු කරන්න';
+
+  @override
+  String get reportProblemTitle => 'ගැටලුවක් වාර්තා කරන්න';
 }

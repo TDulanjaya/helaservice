@@ -284,7 +284,7 @@ ArtisanRosterRow _technicianToRosterRow(BuildContext context, Technician t) {
     payoutToday: 'LKR ${t.baseRateLkr}',
     rating: t.rating ?? 0.0,
     reviews: t.reviewCount,
-    actionLabel: t.online ? 'Dispatch' : 'Re-assign',
+    actionLabel: t.online ? l10n.dispatchTitle : l10n.reassignTitle,
   );
 }
 
@@ -362,14 +362,17 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                           ),
                           onPressed: () async {
                             Navigator.pop(ctx);
+                            final addr = req.address.isNotEmpty
+                                ? req.address
+                                : CategoryService.instance
+                                    .nameOf(req.category, context: context);
                             await FirebaseFirestore.instance
                                 .collection(FirestorePaths.dispatchEvents)
                                 .add({
-                              'title': 'Manual Dispatch Assigned',
-                              'detail':
-                                  '${r.name} dispatched to "${req.title}" (${req.address.isNotEmpty ? req.address : CategoryService.instance.nameOf(req.category, context: context)})',
+                              'title': 'MANUAL_DISPATCH_ASSIGNED',
+                              'detail': context.l10n.manualDispatchAssignedDesc(r.name, req.title, addr),
                               'tagLabel': 'DISPATCHED',
-                              'timeAgo': 'Just now',
+                              'timeAgo': '',
                               'iconKey': 'bolt',
                               'colorValue': 0xFFD6900F,
                               'timestamp': FieldValue.serverTimestamp(),

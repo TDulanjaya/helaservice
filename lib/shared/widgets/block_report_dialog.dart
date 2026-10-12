@@ -145,23 +145,25 @@ class _ReportUserSheetState extends State<_ReportUserSheet> {
 
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final currentUser = FirebaseAuth.instance.currentUser;
-    final currentName = currentUser?.displayName ?? 'User';
-    final currentPhone = currentUser?.phoneNumber ?? '';
+    final reporterRole = widget.targetRole == 'provider' ? 'customer' : 'provider';
+    final currentName = (currentUser?.displayName != null && currentUser!.displayName!.isNotEmpty)
+        ? currentUser.displayName!
+        : (reporterRole == 'customer' ? context.l10n.roleCustomer : context.l10n.roleServiceProvider);
 
     setState(() => _isSubmitting = true);
     try {
       final complaint = Complaint(
-        customerId: currentUid,
-        customerName: currentName,
-        customerPhone: currentPhone,
-        providerId: widget.targetUid,
-        providerName: widget.targetName,
-        providerTrade: widget.tradeCategory ?? 'General',
+        type: 'report_user',
+        reporterUid: currentUid,
+        reporterRole: reporterRole,
+        reporterName: currentName,
+        reportedUid: widget.targetUid,
+        reportedRole: widget.targetRole,
+        reportedName: widget.targetName,
         bookingId: widget.bookingId,
-        reason: _reasonLabel(_selectedReason, context),
+        subject: _reasonLabel(_selectedReason, context),
         description: desc,
-        reporterRole: widget.targetRole == 'provider' ? 'customer' : 'provider',
-        accusedRole: widget.targetRole,
+        status: 'open',
         createdAt: DateTime.now(),
       );
 
@@ -189,7 +191,7 @@ class _ReportUserSheetState extends State<_ReportUserSheet> {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit report: $e'),
+            content: Text('${context.l10n.failedToSubmitReport}: $e'),
             backgroundColor: AppColors.error,
           ),
         );

@@ -6,11 +6,13 @@ import '../constants/app_config.dart';
 class OtpVerificationResult {
   final bool isValid;
   final String? errorMessage;
+  final String? errorCode;
   final String? customToken;
 
   const OtpVerificationResult({
     required this.isValid,
     this.errorMessage,
+    this.errorCode,
     this.customToken,
   });
 }
@@ -99,7 +101,7 @@ class OtpService {
     if (code.length != 6) {
       return const OtpVerificationResult(
         isValid: false,
-        errorMessage: 'Please enter the complete 6-digit verification code.',
+        errorCode: 'OTP_CODE_INCOMPLETE',
       );
     }
 
@@ -127,36 +129,36 @@ class OtpService {
       if (response.statusCode == 401) {
         return OtpVerificationResult(
           isValid: false,
-          errorMessage:
-              data['error'] as String? ?? 'Incorrect verification code.',
+          errorCode: 'OTP_INCORRECT',
+          errorMessage: data['error'] as String?,
         );
       }
 
       if (response.statusCode == 403) {
         return OtpVerificationResult(
           isValid: false,
-          errorMessage: data['error'] as String? ??
-              'Maximum attempts exceeded. Please request a new verification code.',
+          errorCode: 'OTP_MAX_ATTEMPTS',
+          errorMessage: data['error'] as String?,
         );
       }
 
       if (response.statusCode == 400) {
         return OtpVerificationResult(
           isValid: false,
-          errorMessage: data['error'] as String? ??
-              'Verification code has expired. Please request a new one.',
+          errorCode: 'OTP_EXPIRED',
+          errorMessage: data['error'] as String?,
         );
       }
 
       return OtpVerificationResult(
         isValid: false,
-        errorMessage: data['error'] as String? ??
-            'Verification failed (Status ${response.statusCode}).',
+        errorCode: 'OTP_FAILED',
+        errorMessage: data['error'] as String?,
       );
     } catch (e) {
-      return OtpVerificationResult(
+      return const OtpVerificationResult(
         isValid: false,
-        errorMessage: 'Network error connecting to verification service: $e',
+        errorCode: 'OTP_NETWORK_ERROR',
       );
     }
   }
@@ -223,7 +225,7 @@ class OtpService {
     if (code.length != 6) {
       return const OtpVerificationResult(
         isValid: false,
-        errorMessage: 'Please enter the complete 6-digit verification code.',
+        errorCode: 'OTP_CODE_INCOMPLETE',
       );
     }
 
@@ -253,13 +255,13 @@ class OtpService {
 
       return OtpVerificationResult(
         isValid: false,
-        errorMessage: data['error'] as String? ??
-            'Verification failed (Status ${response.statusCode}).',
+        errorCode: 'OTP_FAILED',
+        errorMessage: data['error'] as String?,
       );
     } catch (e) {
-      return OtpVerificationResult(
+      return const OtpVerificationResult(
         isValid: false,
-        errorMessage: 'Network error connecting to verification service: $e',
+        errorCode: 'OTP_NETWORK_ERROR',
       );
     }
   }

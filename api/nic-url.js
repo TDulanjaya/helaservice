@@ -63,12 +63,22 @@ module.exports = async function handler(req, res) {
     if (!isAuthorizedAdmin) {
       const adminDoc = await db.collection('admins').doc(callerUid).get();
       if (adminDoc.exists && adminDoc.data() && adminDoc.data().status === 'active') {
-        isAuthorizedAdmin = true;
+        const perms = Array.isArray(adminDoc.data().permissions) ? adminDoc.data().permissions : [];
+        if (perms.includes('verify_nic')) {
+          isAuthorizedAdmin = true;
+        }
       }
     }
 
     if (!isAuthorizedAdmin) {
-      return res.status(403).json({ error: 'Admin access required' });
+      await db.collection('adminLogs').add({
+        action: 'nic_view_denied',
+        adminUid: callerUid,
+        reason: 'missing_verify_nic_permission',
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: Date.now(),
+      }).catch(() => {});
+      return res.status(403).json({ error: 'Permission verify_nic required' });
     }
 
     const payload = req.method === 'POST' ? (req.body || {}) : (req.query || {});

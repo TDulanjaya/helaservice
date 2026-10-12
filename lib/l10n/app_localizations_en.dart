@@ -867,7 +867,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile => 'Edit Profile';
 
   @override
-  String get contactSupport => 'Help & Support Hotline';
+  String get contactSupport => 'Contact Support';
 
   @override
   String get appSettings => 'Preferences & Settings';
@@ -2887,7 +2887,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permManageCategoriesDesc =>
-      'Configure trade categories, base rates, and provincial hub thresholds.';
+      'Configure trade categories and provincial hub thresholds.';
 
   @override
   String get permBroadcastAlertsDesc =>
@@ -3691,7 +3691,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presetPolicyViolation => 'Policy violation';
 
   @override
-  String get reasonLabel => 'Reason';
+  String get reasonLabel => 'Reason:';
 
   @override
   String get suspendedByAdmin => 'Suspended by Administrator';
@@ -4708,7 +4708,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try selecting a different trade category or post an urgent job request.';
 
   @override
-  String get emergencyCalloutRate => 'Emergency Callout';
+  String get emergencyCalloutRate => 'Emergency / Callout Rate';
 
   @override
   String emergencyEtaApprox(int mins) {
@@ -4762,4 +4762,1195 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get urgentHelpBannerAction => 'Get Urgent Help';
+
+  @override
+  String get myRates => 'My Rates';
+
+  @override
+  String get rateCardTitle => 'Standard Service Rates';
+
+  @override
+  String get dailyRate => 'Daily Rate';
+
+  @override
+  String get perKmTravelRate => 'Per Km Travel Rate';
+
+  @override
+  String get standardVisitFee => 'Inspection / Visit Fee';
+
+  @override
+  String get quoteTypeFirm => 'Firm Price';
+
+  @override
+  String get quoteTypeEstimate => 'Estimated Range';
+
+  @override
+  String get quoteTypeInspect => 'Inspection / Visit Only';
+
+  @override
+  String get priceRevisionProposed => 'Price Revision Proposed';
+
+  @override
+  String get extraWorkRequested => 'Extra Work / Materials';
+
+  @override
+  String get visitOnlyCompletedNote =>
+      'This booking was completed as an Inspection / Visit only. Standard reviews are disabled.';
+
+  @override
+  String get completionTypeNormal => 'Normal Job Completion';
+
+  @override
+  String get completionTypeVisitOnly => 'Inspection / Visit Only';
+
+  @override
+  String get hourlyRate => 'Hourly Rate';
+
+  @override
+  String get yourUsualRates => 'Your Usual Rates';
+
+  @override
+  String get yourUsualRatesSubtitle =>
+      'At least one rate is required. Used when customers request quotes.';
+
+  @override
+  String get dailyRateHint => 'e.g. 3500 (1 - 100,000)';
+
+  @override
+  String get hourlyRateHint => 'e.g. 500 (1 - 20,000)';
+
+  @override
+  String get perKmRateHint => 'e.g. 80 (1 - 1,000)';
+
+  @override
+  String get visitFeeOptionalHint => 'Optional, e.g. 1000 (0 - 20,000)';
+
+  @override
+  String get atLeastOneRateRequired =>
+      'At least one rate (daily, hourly, or per km) is required.';
+
+  @override
+  String get dailyRateRangeError =>
+      'Daily rate must be between LKR 1 and 100,000';
+
+  @override
+  String get hourlyRateRangeError =>
+      'Hourly rate must be between LKR 1 and 20,000';
+
+  @override
+  String get perKmRateRangeError =>
+      'Per km rate must be between LKR 1 and 1,000';
+
+  @override
+  String get visitFeeRangeError => 'Visit fee must be between LKR 0 and 20,000';
+
+  @override
+  String get withinAgreedPrice => 'Within agreed price';
+
+  @override
+  String get visitFeeOnly => 'Visit fee only';
+
+  @override
+  String get approvedExtrasBreakdown => 'Approved Extras';
+
+  @override
+  String get initialEstimateLabel => 'Initial Quoted / Estimated Price';
+
+  @override
+  String get revisedAgreedPrice => 'Agreed Price';
+
+  @override
+  String get finalAmountToPay => 'Final Amount to Pay';
+
+  @override
+  String get priceMatchesQuote => 'Price Matches Quote';
+
+  @override
+  String get proposeNewPrice => 'Propose New Price';
+
+  @override
+  String get proposeRevisedPrice => 'Propose Revised Price';
+
+  @override
+  String get billingUnit => 'Billing Unit';
+
+  @override
+  String get billingUnitFixed => 'Fixed Job';
+
+  @override
+  String get billingUnitHour => 'Hourly';
+
+  @override
+  String get billingUnitDay => 'Daily';
+
+  @override
+  String get unitRateLkr => 'Unit Rate (LKR)';
+
+  @override
+  String get quantityLabel => 'Quantity';
+
+  @override
+  String get priceChangeReason => 'Reason for Price Change';
+
+  @override
+  String get priceChangeReasonHint =>
+      'e.g. Additional concealed pipeline damage discovered';
+
+  @override
+  String get totalRevisedPrice => 'Total Revised Price';
+
+  @override
+  String get submitProposal => 'Submit Proposal';
+
+  @override
+  String get addExtraWorkItem => 'Add Extra Work / Item';
+
+  @override
+  String get extraDescription => 'Description';
+
+  @override
+  String get extraDescriptionHint => 'e.g. Extra 2m PVC pipe & joint fitting';
+
+  @override
+  String get extraAmountLkr => 'Amount (LKR)';
+
+  @override
+  String get proposeExtra => 'Propose Extra';
+
+  @override
+  String get awaitingCustomerApproval => 'Waiting for customer approval';
+
+  @override
+  String get priceProposalSent =>
+      'Price proposal sent to customer for approval';
+
+  @override
+  String get extraProposalSent => 'Extra work proposal sent to customer';
+
+  @override
+  String get priceConfirmedMatches => 'Price confirmed matches original quote';
+
+  @override
+  String get priceProposalRejected => 'Price proposal rejected';
+
+  @override
+  String get priceProposalApproved => 'Price proposal approved';
+
+  @override
+  String get myRateCard => 'My Rate Card';
+
+  @override
+  String get rateCardSubtitle =>
+      'Configure your standard rates shown to customers and used in quotes.';
+
+  @override
+  String get saveRates => 'Save Rates';
+
+  @override
+  String get rateCardUpdatedSuccess => 'Rate card updated successfully';
+
+  @override
+  String get travelRate => 'Travel Rate';
+
+  @override
+  String get pricingStandardRates => 'Pricing & Standard Rates';
+
+  @override
+  String get uploadRetry => 'Retry Upload';
+
+  @override
+  String get largeMediaWarningTitle => 'Large File Warning';
+
+  @override
+  String get largeMediaWarningMessage =>
+      'File is large (>20MB). Uploading over mobile data may take time and consume data. Proceed?';
+
+  @override
+  String get proceed => 'Proceed';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong. Please try again.';
+
+  @override
+  String customerDidNotAgreeVisitOnly(String amount) {
+    return 'Customer did not agree. Collect only the visit fee: LKR $amount';
+  }
+
+  @override
+  String get completeVisitOnly => 'Complete Visit Only';
+
+  @override
+  String get priceRevisionReasonRequired =>
+      'Please enter a reason for the price revision';
+
+  @override
+  String get checkRateAndQuantity => 'Please check rate and quantity values';
+
+  @override
+  String get extraDescriptionLimit =>
+      'Please enter a description (max 300 characters)';
+
+  @override
+  String get extraAmountLimit =>
+      'Please enter an amount between LKR 1 and 1,000,000';
+
+  @override
+  String get notesLimit500 => 'Notes must be 500 characters or less';
+
+  @override
+  String get validVisitFeePrompt =>
+      'Please enter a valid visit fee (LKR 1 - 20,000)';
+
+  @override
+  String get validUnitRatePrompt =>
+      'Please enter a valid unit rate (minimum LKR 1)';
+
+  @override
+  String get validQuantityPrompt => 'Please enter a valid quantity (0.5 to 60)';
+
+  @override
+  String get materialsEstimateLimit =>
+      'Materials estimate must be between LKR 0 and 1,000,000';
+
+  @override
+  String get visitInspectionFee => 'Visit / Inspection Fee:';
+
+  @override
+  String get materialsEstimateColon => 'Materials Estimate:';
+
+  @override
+  String get addIssueVideoMax => 'Add Issue Video (Max 120s)';
+
+  @override
+  String get recordVideo => 'Record Video';
+
+  @override
+  String get errorPickingVideo => 'Failed to pick video. Please try again.';
+
+  @override
+  String get videoOfIssueOptional => 'Video of Issue (Optional)';
+
+  @override
+  String get jobVideo => 'Job Video';
+
+  @override
+  String get videoClip => 'Video Clip';
+
+  @override
+  String get failedToPlayVideo => 'Failed to play video';
+
+  @override
+  String get failedToUpdateRates => 'Failed to update rates. Please try again.';
+
+  @override
+  String get quoteOutdatedDeclined =>
+      'This quote is outdated, ask the provider to send a new one';
+
+  @override
+  String youAreMetersAway(String distance) {
+    return 'You are about $distance m away from the job location.';
+  }
+
+  @override
+  String get imHereGpsWrong => 'I\'m here, but GPS is wrong';
+
+  @override
+  String get slideToClaimArrival => 'Slide to claim arrival';
+
+  @override
+  String get waitingCustomerConfirmation =>
+      'Arrival claimed. Waiting for customer confirmation...';
+
+  @override
+  String get arrivalDeniedProviderNotice =>
+      'Customer says you have not arrived. Please check the location or call the customer.';
+
+  @override
+  String get claimAgainArrival => 'Claim Arrival Again';
+
+  @override
+  String get maxClaimsReached => 'Maximum arrival claims reached (3/3).';
+
+  @override
+  String get customerDidNotAnswer =>
+      'Customer has not responded after 10 minutes.';
+
+  @override
+  String get startJobVerifiedGps => 'Start Job (GPS Verified)';
+
+  @override
+  String get callCustomerToConfirm => 'Call customer to confirm arrival';
+
+  @override
+  String providerSaysArrived(String providerName) {
+    return '$providerName says they have arrived. Are they with you?';
+  }
+
+  @override
+  String providerGpsShowsAway(String distance) {
+    return 'Their GPS shows $distance m away.';
+  }
+
+  @override
+  String get yesTheyAreHere => 'Yes, they\'re here';
+
+  @override
+  String get noNotHere => 'No, not here';
+
+  @override
+  String get providerDidNotCome => 'Provider didn\'t come';
+
+  @override
+  String get confirmNoShowTitle => 'Report Provider No-Show?';
+
+  @override
+  String get confirmNoShowMessage =>
+      'This will cancel the booking because the service provider did not arrive.';
+
+  @override
+  String get locationRequiredToBook =>
+      'Please select a location with GPS coordinates to book this service.';
+
+  @override
+  String get arrivalMockedFlag => 'Mocked GPS Detected';
+
+  @override
+  String get arrivalOutsideZoneFlag => 'Claimed Outside Zone';
+
+  @override
+  String get arrivalDeniedFlag => 'Customer Denied Arrival';
+
+  @override
+  String get noShowFlag => 'Provider No-Show';
+
+  @override
+  String gpsOutsideZoneAlert(String distance) {
+    return 'GPS indicates you are outside the job zone ($distance m away). Do you want to submit an arrival claim anyway?';
+  }
+
+  @override
+  String get proceedAnyway => 'Proceed Anyway';
+
+  @override
+  String get claimSuccessNotified =>
+      'Arrival claim submitted. The customer has been notified.';
+
+  @override
+  String get completeJobEnterPin => 'Complete Job (Enter Customer PIN)';
+
+  @override
+  String get noShowReportedSuccess =>
+      'Provider no-show reported. Booking cancelled.';
+
+  @override
+  String get providerReliability90Days =>
+      '90-Day Reliability & Arrival Verification';
+
+  @override
+  String get providerNoShowsCount => 'No-Shows';
+
+  @override
+  String get providerArrivalDenialsCount => 'Arrival Denials';
+
+  @override
+  String get providerMockedGpsCount => 'Mocked GPS';
+
+  @override
+  String get providerOutsideZoneCount => 'Outside Zone';
+
+  @override
+  String get scheduledTimePassedPrompt =>
+      'The scheduled time has passed. Please choose a new date and time.';
+
+  @override
+  String get chooseNewScheduleTitle => 'Update Scheduled Time';
+
+  @override
+  String get revisedEstimateDefault => 'Revised on-site estimate';
+
+  @override
+  String get pleaseEnterSixDigits => 'Please enter 6 digits';
+
+  @override
+  String get customerLocationNotAvailableTitle =>
+      'Customer location not available';
+
+  @override
+  String get customerLocationNotAvailableDesc =>
+      'Exact GPS coordinates were not provided for this job. Contact the customer below to coordinate arrival.';
+
+  @override
+  String get locationRequiredTitle => 'Location Required';
+
+  @override
+  String get jobNoLocationRepost =>
+      'This job has no location. Please set the location and repost.';
+
+  @override
+  String quoteAcceptedChatMessage(String providerName, String price) {
+    return 'Hello $providerName, I have accepted your quote (LKR $price). Let\'s coordinate the job details!';
+  }
+
+  @override
+  String get pleaseEnterServiceLocation =>
+      'Please enter service location address';
+
+  @override
+  String get optimizingVideoNotice => 'Optimizing video (max 120s)...';
+
+  @override
+  String get addShortVideo => 'Add Short Video';
+
+  @override
+  String get addShortVideoSubtitle =>
+      'Up to 120s explaining the repair or issue';
+
+  @override
+  String get noServicesAvailableYet => 'No services available yet';
+
+  @override
+  String get editSavedAddress => 'Edit Saved Address';
+
+  @override
+  String get signInToManageSavedAddresses =>
+      'Sign in to manage saved addresses.';
+
+  @override
+  String get noSavedAddressesSubtitle =>
+      'No saved addresses yet. Add home or work addresses for one-tap booking.';
+
+  @override
+  String get becomeProviderSubtitle =>
+      'Offer your trade skills, receive jobs, and earn more';
+
+  @override
+  String get switchToProvider => 'Switch to Provider Mode';
+
+  @override
+  String get switchToProviderSubtitle =>
+      'Switch back to your Service Provider workspace';
+
+  @override
+  String get adminInspectionMode => 'Admin Inspection Mode';
+
+  @override
+  String get adminInspectionModeDesc =>
+      'Viewing provider workspace with administrative bypass.';
+
+  @override
+  String get setStandardRatesSubtitle => 'Set standard visit and hourly rates';
+
+  @override
+  String get quoteAcceptedTitle => 'Quote Accepted!';
+
+  @override
+  String get customerConfirmedBooking => 'Customer confirmed this booking';
+
+  @override
+  String get enterProjectTitle => 'Please enter a project title';
+
+  @override
+  String get selectPhotoForShowcase =>
+      'Please select a photo for this showcase item';
+
+  @override
+  String failedToSaveShowcase(String error) {
+    return 'Failed to save showcase item: $error';
+  }
+
+  @override
+  String get quoteType => 'Quote Type';
+
+  @override
+  String get inspectionQuoteNotice =>
+      'Inspection quote includes on-site visit fee and travel cost. Total job price will be agreed upon arrival.';
+
+  @override
+  String get materialsEstimateOptional => 'Materials Estimate (Optional)';
+
+  @override
+  String get estDistanceKm => 'Est. Distance (km)';
+
+  @override
+  String get travelRateLkrKm => 'Travel Rate (LKR/km)';
+
+  @override
+  String get totalQuotedPrice => 'Total Quoted Price';
+
+  @override
+  String get travelFee => 'Travel Fee';
+
+  @override
+  String get statusSelected => 'Selected';
+
+  @override
+  String get providerBaseLocationRequired =>
+      'Provider base location is required. Please set GPS/Map pin and address.';
+
+  @override
+  String get baseWorkshopLocation => 'Base Workshop / Service Location *';
+
+  @override
+  String get baseLocationDispatchNotice =>
+      'Required for nearest provider dispatch calculations';
+
+  @override
+  String get suspensionReasonLabel => 'Suspension Reason:';
+
+  @override
+  String get registerBannerSubtitle =>
+      'Sign up in seconds to access verified roadside and home service experts across Sri Lanka.';
+
+  @override
+  String get sortOrder => 'Sort Order';
+
+  @override
+  String get isLive => 'Is Live';
+
+  @override
+  String get editCategory => 'Edit Category';
+
+  @override
+  String get priceHistoryAudit => 'Price History & Audit';
+
+  @override
+  String get finalChargedAmount => 'Final Charged Amount:';
+
+  @override
+  String suspendCustomerConfirmPrompt(String name) {
+    return 'Are you sure you want to suspend customer \"$name\"? Their account will be locked and they will be barred from creating requests or accessing the platform.';
+  }
+
+  @override
+  String get unableToLoadPhoto => 'Unable to load photo';
+
+  @override
+  String get newTimeLabel => 'New Time:';
+
+  @override
+  String get noteLabel => 'Note:';
+
+  @override
+  String get resetPinAttempts => 'Reset PIN attempts';
+
+  @override
+  String get noServiceHistoryYet => 'No Service History Yet';
+
+  @override
+  String get noServiceHistorySubtitle =>
+      'Completed and past bookings will appear here.';
+
+  @override
+  String get yourRatingReview => 'Your Rating & Review';
+
+  @override
+  String get signInToViewBookings => 'Please sign in to view your bookings';
+
+  @override
+  String get pendingAdminApprovalUnavailable =>
+      'Pending Admin Approval · Unavailable for hire';
+
+  @override
+  String get directContactFastQuotes => 'Direct Contact & Fast Quotes';
+
+  @override
+  String get verifiedPhoneAvailable => 'Verified phone available';
+
+  @override
+  String get officialSupport => 'Official Support';
+
+  @override
+  String get failedToSaveSchedule => 'Failed to save schedule';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusEnRoute => 'En Route';
+
+  @override
+  String get statusDeclined => 'Declined';
+
+  @override
+  String get statusAssigned => 'Assigned';
+
+  @override
+  String get statusScheduled => 'Scheduled';
+
+  @override
+  String get completionPinLabel => 'Completion PIN:';
+
+  @override
+  String get chatPhotoMessage => 'Photo';
+
+  @override
+  String get hintFullName => 'Your full name';
+
+  @override
+  String get hintEmail => 'Email address';
+
+  @override
+  String get hintPhone => 'Mobile number';
+
+  @override
+  String get hintCategorySearch => 'e.g. Electrician, Plumber';
+
+  @override
+  String get hintAmount => 'e.g. 3500';
+
+  @override
+  String get hintNicFormat => '12 digits, or 9 digits + V';
+
+  @override
+  String get hintCustomerName => 'e.g. Sanduni Perera';
+
+  @override
+  String get hintProviderEmail => 'Email address';
+
+  @override
+  String get hintAdminName => 'e.g. Ruwan Jayasundara';
+
+  @override
+  String get priceStatusLabel => 'Price Status:';
+
+  @override
+  String get proposedLabel => 'Proposed:';
+
+  @override
+  String get roleServiceProvider => 'Service Provider';
+
+  @override
+  String get roleSuperAdmin => 'Super Admin';
+
+  @override
+  String get roleSupportAdmin => 'Support Admin';
+
+  @override
+  String get roleOperationsAdmin => 'Operations Admin';
+
+  @override
+  String get generalDispute => 'General Dispute';
+
+  @override
+  String get nicApprovedMessage =>
+      'Your NIC identity has been approved by admin. You can receive all job bids.';
+
+  @override
+  String get nicUnderReviewMessage =>
+      'Your verification submission is being reviewed by HelaService administration.';
+
+  @override
+  String amountLkrLabel(Object amount) {
+    return 'Amount: LKR $amount';
+  }
+
+  @override
+  String get searchCategoryHint => 'Search category...';
+
+  @override
+  String get searchDistrictHint => 'Search district...';
+
+  @override
+  String get visitFeeOnlyDescription =>
+      'Charge visit / inspection fee only. Job will be completed without full service.';
+
+  @override
+  String get providerVerificationPending => 'Provider Verification Pending';
+
+  @override
+  String sendQuoteLkr(Object amount) {
+    return 'Send Quote · LKR $amount';
+  }
+
+  @override
+  String get customQuote => 'Custom Quote';
+
+  @override
+  String get pastService => 'Past service';
+
+  @override
+  String get youEnRouteLabel => 'You (En Route)';
+
+  @override
+  String get hintJobAddress => 'House no., street, town';
+
+  @override
+  String get hintCategoryName => 'Category name';
+
+  @override
+  String get hintAmountLkr => 'Amount in LKR';
+
+  @override
+  String complaintInvestigationSuspended(String reason) {
+    return 'Suspended following complaint investigation: \"$reason\"';
+  }
+
+  @override
+  String get adminSuspensionViolations =>
+      'Administrative suspension due to policy violations';
+
+  @override
+  String categoryCreatedWithSortOrder(String name, int order) {
+    return 'Created category $name with sort order $order';
+  }
+
+  @override
+  String categoryUpdatedWithSortOrder(String name, int order, bool status) {
+    return 'Updated category $name (sort order: $order, isLive: $status)';
+  }
+
+  @override
+  String categoryDeletedName(String name) {
+    return 'Deleted category $name';
+  }
+
+  @override
+  String categoryDescriptionDefault(String service) {
+    return 'Certified domestic $service services across Sri Lanka.';
+  }
+
+  @override
+  String get zeroRegistered => '0 Registered';
+
+  @override
+  String get zeroOnlineNow => '0 Online Now';
+
+  @override
+  String get marketRate => 'Market Rate';
+
+  @override
+  String categoryUpdatedSuccess(String name) {
+    return 'Category \"$name\" updated successfully.';
+  }
+
+  @override
+  String get manualDispatchAssigned => 'Manual Dispatch Assigned';
+
+  @override
+  String get dispatchTitle => 'Dispatch';
+
+  @override
+  String get reassignTitle => 'Re-assign';
+
+  @override
+  String manualDispatchAssignedDesc(
+      String provider, String job, String address) {
+    return '$provider dispatched to \"$job\" ($address)';
+  }
+
+  @override
+  String ledgerPriceStatus(String status) {
+    return 'Price Status: $status';
+  }
+
+  @override
+  String ledgerProposedLkr(String amount) {
+    return 'Proposed: LKR $amount';
+  }
+
+  @override
+  String get ledgerCustomer => 'Customer';
+
+  @override
+  String get verificationFlagged => 'Flagged';
+
+  @override
+  String get verificationMatch => 'Match';
+
+  @override
+  String get verificationValid => 'Valid';
+
+  @override
+  String get profileTrustPhotoRationale =>
+      'A clear photo builds trust with customers.';
+
+  @override
+  String get profileChooseGalleryPhoto => 'Choose a photo from your gallery.';
+
+  @override
+  String get captureNicFront => 'Capture NIC Front';
+
+  @override
+  String get captureNicBack => 'Capture NIC Back';
+
+  @override
+  String get captureNicPrompt =>
+      'Take a clear, well-lit photo of your National ID.';
+
+  @override
+  String get selectNicFront => 'Select NIC Front';
+
+  @override
+  String get selectNicBack => 'Select NIC Back';
+
+  @override
+  String get selectNicGalleryPrompt =>
+      'Select your National Identity Card photo from gallery.';
+
+  @override
+  String get completeProviderProfileTitle => 'Complete Provider Profile';
+
+  @override
+  String get providingServicesAcrossSriLanka =>
+      'Providing services across Sri Lanka';
+
+  @override
+  String get requestingDomesticServices =>
+      'Requesting home & domestic services';
+
+  @override
+  String get phonePlaceholderPattern => '7X XXXXXXX';
+
+  @override
+  String get selectServiceCategory => 'Select Service Category';
+
+  @override
+  String get updatePinButton => 'Update Pin';
+
+  @override
+  String get pickOnMapButton => 'Pick on Map';
+
+  @override
+  String get workshopAddressRequiredLabel => 'Workshop / Operating Address *';
+
+  @override
+  String get operatingAddressRequiredError => 'Operating address is required';
+
+  @override
+  String get completeProviderRegistration => 'Complete Provider Registration';
+
+  @override
+  String get saveProfile => 'Save Profile';
+
+  @override
+  String get phoneNotSet => 'Phone not set';
+
+  @override
+  String get addressLabelHome => 'Home';
+
+  @override
+  String get addressLabelWork => 'Work';
+
+  @override
+  String get addressLabelOther => 'Other';
+
+  @override
+  String get videoExceedsMax120s =>
+      'Video exceeds maximum allowed 120s (2 minutes)';
+
+  @override
+  String failedToProcessVideo(String error) {
+    return 'Failed to process video: $error';
+  }
+
+  @override
+  String get jobLocationLabel => 'Job Location';
+
+  @override
+  String get selectJobLocationSubtitle =>
+      'Tap to pick via GPS, map pin, or saved addresses';
+
+  @override
+  String get changeButton => 'Change';
+
+  @override
+  String get setPinButton => 'Set Pin';
+
+  @override
+  String get setPinHereButton => 'Set Pin Here';
+
+  @override
+  String get uploadFailedAttempts => 'Upload failed after 3 attempts.';
+
+  @override
+  String get bookingPastService => 'Past service';
+
+  @override
+  String get bookingStatusCompleted => 'Completed';
+
+  @override
+  String get bookingNotSpecified => 'Not specified';
+
+  @override
+  String get bookingStatusScheduled => 'Scheduled';
+
+  @override
+  String quantityUnitLabel(String unit) {
+    return 'Quantity ($unit)';
+  }
+
+  @override
+  String get rateHourlyUnit => 'LKR / hr';
+
+  @override
+  String get rateDailyUnit => 'LKR / day';
+
+  @override
+  String get rateTravelUnit => 'LKR / km';
+
+  @override
+  String get pickerTabForm => 'Form';
+
+  @override
+  String get pickerTabMapPin => 'Map Pin';
+
+  @override
+  String get cameraPermissionRationale =>
+      'Camera access is required to take your profile photo.';
+
+  @override
+  String get photoLibraryPermissionRationale =>
+      'Photo library access is required to select your profile photo.';
+
+  @override
+  String get privacyDataCollectionPoints =>
+      '• Profile name, phone number, and account credentials\n• Job descriptions, addresses, and service locations\n• Verification documents (NIC, business licenses)\n• Messages and communications through the platform';
+
+  @override
+  String get timelineBookingCreated => 'Booking Created';
+
+  @override
+  String get timelineBookingAccepted => 'Booking Accepted';
+
+  @override
+  String get timelineArrivalClaimed => 'Arrival Claimed';
+
+  @override
+  String get timelineArrivalDenied => 'Arrival Denied';
+
+  @override
+  String get timelineAutoStarted => 'Auto-Started';
+
+  @override
+  String get timelineVisitFeeOnly => 'Visit Fee Only';
+
+  @override
+  String get timelinePriceProposed => 'Price Proposed';
+
+  @override
+  String get timelinePriceApproved => 'Price Approved';
+
+  @override
+  String get timelinePriceRejected => 'Price Rejected';
+
+  @override
+  String get timelineExtraRequested => 'Extra Requested';
+
+  @override
+  String get timelineExtraApproved => 'Extra Approved';
+
+  @override
+  String get timelineExtraRejected => 'Extra Rejected';
+
+  @override
+  String get timelinePaymentConfirmed => 'Payment Confirmed';
+
+  @override
+  String get timelinePaymentDisputed => 'Payment Disputed';
+
+  @override
+  String get timelineNoShowReported => 'No Show Reported';
+
+  @override
+  String get timelineBeforePhotoAdded => 'Before Photo Added';
+
+  @override
+  String get timelineAfterPhotoAdded => 'After Photo Added';
+
+  @override
+  String get statusOpen => 'Open for Quotes';
+
+  @override
+  String get statusDispatched => 'Dispatched';
+
+  @override
+  String get selectJobLocation => 'Select Job Location';
+
+  @override
+  String get tapToPickLocationDesc =>
+      'Tap to pick via GPS, map pin, or saved addresses';
+
+  @override
+  String get setPin => 'Set Pin';
+
+  @override
+  String rateCardSummary(Object visitFee, Object hourlyRate) {
+    return 'Visit Fee: LKR $visitFee · Hourly: LKR $hourlyRate';
+  }
+
+  @override
+  String get standardVisitFeeWithCurrency => 'Standard Visit Fee (LKR)';
+
+  @override
+  String get hourlyRateWithUnit => 'Hourly Rate (LKR / hr)';
+
+  @override
+  String get dailyRateWithUnit => 'Daily Rate (LKR / day)';
+
+  @override
+  String get travelRateWithUnit => 'Travel Rate (LKR / km)';
+
+  @override
+  String priceMatchesQuoteAmount(Object amount) {
+    return 'Does price match quote? (LKR $amount)';
+  }
+
+  @override
+  String quantityWithUnit(String unit) {
+    return 'Quantity ($unit)';
+  }
+
+  @override
+  String get unitHours => 'hours';
+
+  @override
+  String get unitDays => 'days';
+
+  @override
+  String get unitJobs => 'jobs';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageSinhala => 'Sinhala';
+
+  @override
+  String get languageTamil => 'Tamil';
+
+  @override
+  String get locationPermissionRequired =>
+      'Location access is required to verify arrival at customer location.';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get errorProviderCategoryMissing =>
+      'This service provider does not have an active service category.';
+
+  @override
+  String get permManageUsersLabel => 'Manage Users';
+
+  @override
+  String get permManageUsersDesc =>
+      'Ban or unban users and providers, and handle account security actions.';
+
+  @override
+  String get permHandleSupportLabel => 'Support & Tickets';
+
+  @override
+  String get permHandleSupportDesc =>
+      'Review and respond to customer and provider support tickets.';
+
+  @override
+  String get noPermissionForAction => 'You don\'t have permission for this.';
+
+  @override
+  String get helpAndSupport => 'Help & Support';
+
+  @override
+  String get myTickets => 'My Tickets';
+
+  @override
+  String get reportAProblem => 'Report a problem';
+
+  @override
+  String get ticketReplyPrompt => 'We usually reply within 24 hours';
+
+  @override
+  String get ticketStatusOpen => 'Open';
+
+  @override
+  String get ticketStatusInProgress => 'In Progress';
+
+  @override
+  String get ticketStatusWaitingUser => 'Waiting on You';
+
+  @override
+  String get ticketStatusResolved => 'Resolved';
+
+  @override
+  String get ticketStatusClosed => 'Closed';
+
+  @override
+  String get typeHelp => 'Help';
+
+  @override
+  String get typeReportUser => 'Report User';
+
+  @override
+  String get typeBookingProblem => 'Booking Problem';
+
+  @override
+  String get typePaymentDispute => 'Payment Dispute';
+
+  @override
+  String get typeAccount => 'Account';
+
+  @override
+  String get typeAppProblem => 'App Problem';
+
+  @override
+  String get typeFeedback => 'Feedback & Suggestions';
+
+  @override
+  String get ticketSubject => 'Subject';
+
+  @override
+  String get ticketDescription => 'Description';
+
+  @override
+  String get ticketSend => 'Submit Ticket';
+
+  @override
+  String get ticketAttachPhoto => 'Attach Photo';
+
+  @override
+  String get ticketReplyHint => 'Type a message...';
+
+  @override
+  String get ticketCloseConfirm => 'Close Ticket';
+
+  @override
+  String get ticketResolvedNote => 'Resolution Note';
+
+  @override
+  String get ticketAssignToMe => 'Assign to me';
+
+  @override
+  String get warnUser => 'Warn User';
+
+  @override
+  String get banUser => 'Ban User';
+
+  @override
+  String get supportPhone => 'Support Phone';
+
+  @override
+  String get supportEmail => 'Support Email';
+
+  @override
+  String get callSupport => 'Call Support';
+
+  @override
+  String get emailSupport => 'Email Support';
+
+  @override
+  String get noTicketsYet => 'No support tickets yet';
+
+  @override
+  String get ticketCreatedSuccess => 'Support ticket created successfully';
+
+  @override
+  String get helpSupportTitle => 'Help & Support';
+
+  @override
+  String get helpSupportSubtitle => 'Get assistance, FAQs, or submit a ticket';
+
+  @override
+  String get reportProblemTitle => 'Report a problem';
 }

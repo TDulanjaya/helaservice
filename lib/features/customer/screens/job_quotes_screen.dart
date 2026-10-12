@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/job_request.dart';
@@ -8,6 +6,7 @@ import '../../../models/booking.dart';
 import '../../../constants/firestore_paths.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../repositories/job_request_repository.dart';
+import '../../../models/technician.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../utils/location_utils.dart';
@@ -16,13 +15,14 @@ import '../../../utils/app_localizations_helpers.dart';
 import 'live_tracking_screen.dart';
 import 'direct_chat_screen.dart';
 import '../../../services/chat_service.dart';
-import '../../../shared/widgets/photo_placeholder.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/job_location_picker.dart';
+import '../../../shared/widgets/job_schedule_picker.dart';
 import '../../../services/call_service.dart';
+import '../../shared/widgets/job_media_gallery.dart';
 
 class JobQuotesScreen extends StatelessWidget {
   final String requestId;
@@ -348,15 +348,15 @@ class JobQuotesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () {
+              onPressed: () async {
                 final pId = request.selectedProviderId ??
                     (acceptedQuote.isNotEmpty ? acceptedQuote.first.providerId : '');
                 final pName = acceptedQuote.isNotEmpty
                     ? acceptedQuote.first.providerName
                     : context.l10n.roleProvider;
-                final pPhone = acceptedQuote.isNotEmpty
-                    ? acceptedQuote.first.providerPhone
-                    : null;
+                final tech = await TechnicianRepository().getById(pId);
+                final pPhone = tech?.phone;
+                if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => DirectChatScreen(
@@ -565,9 +565,10 @@ class JobQuotesScreen extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('[JobQuotesScreen] Cancel booking failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
           );
         }
       }
@@ -606,9 +607,10 @@ class JobQuotesScreen extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('[JobQuotesScreen] Repost job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
           );
         }
       }
@@ -648,9 +650,10 @@ class JobQuotesScreen extends StatelessWidget {
           Navigator.of(context).pop();
         }
       } catch (e) {
+        debugPrint('[JobQuotesScreen] Delete job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
           );
         }
       }
@@ -664,20 +667,20 @@ class JobQuotesScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.location_off_rounded, color: AppColors.warning, size: 24),
-            SizedBox(width: 8),
+            const Icon(Icons.location_off_rounded, color: AppColors.warning, size: 24),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Location Required',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                context.l10n.locationRequiredTitle,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
             ),
           ],
         ),
         content: Text(
-          'This job has no location. Please set the location and repost.',
+          context.l10n.jobNoLocationRepost,
           style: TextStyle(fontSize: 13.5, color: ctx.themeTextSecondary),
         ),
         actions: [
@@ -740,6 +743,45 @@ class JobQuotesScreen extends StatelessWidget {
     }
   }
 
+  // pick a new time slot if previous slot passed
+  Future<void> _promptUpdateScheduleAndAccept(
+      BuildContext context, Quote quote, JobRequest request) async {
+    final picked = await JobSchedulePicker.pickSchedule(
+      context,
+      initialDate: request.scheduledDate,
+      initialSlot: request.scheduledSlot,
+      title: context.l10n.chooseNewScheduleTitle,
+    );
+
+    if (picked != null && context.mounted) {
+      try {
+        await JobRequestRepository().updateJobSchedule(
+          requestId: request.id,
+          scheduledDate: picked.date,
+          scheduledSlot: picked.slot,
+        );
+
+        final updatedRequest = request.copyWith(
+          scheduledDate: picked.date,
+          scheduledSlot: picked.slot,
+        );
+
+        if (context.mounted) {
+          await _acceptQuote(context, quote, updatedRequest);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _acceptQuote(
       BuildContext context, Quote quote, JobRequest request) async {
     if (request.latitude == null || request.longitude == null) {
@@ -779,6 +821,7 @@ class JobQuotesScreen extends StatelessWidget {
     );
 
     if (confirm != true) return;
+    if (!context.mounted) return;
 
     try {
       await JobRequestRepository().acceptQuote(
@@ -792,6 +835,7 @@ class JobQuotesScreen extends StatelessWidget {
 
       // open chat
       try {
+        final tech = await TechnicianRepository().getById(quote.providerId);
         final chatRoomId = await ChatService.instance.getOrCreateChatRoom(
           userId1: request.customerId,
           userId2: quote.providerId,
@@ -800,14 +844,15 @@ class JobQuotesScreen extends StatelessWidget {
           user1Role: 'customer',
           user2Role: 'provider',
           user1Phone: request.customerPhone,
-          user2Phone: quote.providerPhone,
+          user2Phone: tech?.phone ?? '',
           jobRequestId: requestId,
         );
         await ChatService.instance.sendMessage(
           chatRoomId: chatRoomId,
           senderId: request.customerId,
           senderName: request.customerName,
-          text: 'Hello ${quote.providerName}, I have accepted your quote (LKR ${quote.quotedPrice.toStringAsFixed(0)}). Let\'s coordinate the job details!',
+          text: quote.quotedPrice.toStringAsFixed(0),
+          type: 'quote_accepted',
         );
       } catch (chatError) {
         debugPrint('Non-fatal chat room pre-creation note: $chatError');
@@ -842,15 +887,18 @@ class JobQuotesScreen extends StatelessWidget {
               child: Text(context.l10n.later),
             ),
             OutlinedButton.icon(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(dialogCtx);
+                final tech =
+                    await TechnicianRepository().getById(quote.providerId);
+                if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => DirectChatScreen(
                       otherPartyId: quote.providerId,
                       otherPartyName: quote.providerName,
                       otherPartyRole: 'provider',
-                      otherPartyPhone: quote.providerPhone,
+                      otherPartyPhone: tech?.phone,
                       jobRequestId: requestId,
                     ),
                   ),
@@ -893,10 +941,34 @@ class JobQuotesScreen extends StatelessWidget {
         }
         return;
       }
+      if (e.toString().contains('QUOTE_OUTDATED')) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.quoteOutdatedDeclined),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+        return;
+      }
+      if (e == 'SCHEDULE_PASSED' || e.toString().contains('SCHEDULE_PASSED')) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.scheduledTimePassedPrompt),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+          await _promptUpdateScheduleAndAccept(context, quote, request);
+        }
+        return;
+      }
+      debugPrint('[JobQuotesScreen] Failed to accept quote: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToAcceptQuote}: $e'),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -968,22 +1040,12 @@ class _JobSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          if (request.photoUrls.isNotEmpty) ...[
+          if (request.photos.isNotEmpty || request.video != null || request.photoUrls.isNotEmpty) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              height: 64,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: request.photoUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final url = request.photoUrls[i];
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _buildPhoto(url, 64, 64),
-                  );
-                },
-              ),
+            JobMediaGallery(
+              photos: request.photos,
+              video: request.video,
+              legacyPhotoUrls: request.photoUrls,
             ),
           ],
         ],
@@ -991,22 +1053,7 @@ class _JobSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoto(String url, double width, double height) {
-    if (url.startsWith('data:image')) {
-      try {
-        final base64Str = url.split(',').last;
-        final bytes = base64Decode(base64Str);
-        return Image.memory(Uint8List.fromList(bytes),
-            width: width, height: height, fit: BoxFit.cover);
-      } catch (_) {
-        return PhotoPlaceholder(width: width, height: height);
-      }
-    }
-    return Image.network(url,
-        width: width, height: height, fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            PhotoPlaceholder(width: width, height: height));
-  }
+
 }
 
 class _QuoteCard extends StatefulWidget {
@@ -1026,34 +1073,31 @@ class _QuoteCard extends StatefulWidget {
 
 class _QuoteCardState extends State<_QuoteCard> {
   String? _fallbackLocation;
-  String? _fallbackPhone;
+  Technician? _technician;
 
   @override
   void initState() {
     super.initState();
-    _resolveProviderDetailsIfNeeded();
+    _loadTechnician();
   }
 
-  void _resolveProviderDetailsIfNeeded() async {
-    if (widget.quote.providerLocation.isEmpty || widget.quote.providerPhone.isEmpty) {
-      final tech = await TechnicianRepository().getById(widget.quote.providerId);
-      if (mounted && tech != null) {
-        setState(() {
-          if (widget.quote.providerLocation.isEmpty && tech.serviceArea.isNotEmpty) {
-            _fallbackLocation = tech.serviceArea;
-          }
-          if (widget.quote.providerPhone.isEmpty && tech.phone.isNotEmpty) {
-            _fallbackPhone = tech.phone;
-          }
-        });
-      }
+  void _loadTechnician() async {
+    final tech = await TechnicianRepository().getById(widget.quote.providerId);
+    if (mounted && tech != null) {
+      setState(() {
+        _technician = tech;
+        if (widget.quote.providerLocation.isEmpty && tech.serviceArea.isNotEmpty) {
+          _fallbackLocation = tech.serviceArea;
+        }
+      });
     }
   }
 
-  void _callProvider() {
-    final phone = widget.quote.providerPhone.isNotEmpty
-        ? widget.quote.providerPhone
-        : (_fallbackPhone ?? '');
+  void _callProvider() async {
+    final phone = _technician?.phone ??
+        (await TechnicianRepository().getById(widget.quote.providerId))?.phone ??
+        '';
+    if (!mounted) return;
     if (phone.isNotEmpty) {
       CallService.instance.startCall(
         context: context,
@@ -1071,10 +1115,10 @@ class _QuoteCardState extends State<_QuoteCard> {
     }
   }
 
-  void _chatProvider() {
-    final phone = widget.quote.providerPhone.isNotEmpty
-        ? widget.quote.providerPhone
-        : _fallbackPhone;
+  void _chatProvider() async {
+    final phone = _technician?.phone ??
+        (await TechnicianRepository().getById(widget.quote.providerId))?.phone;
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DirectChatScreen(
@@ -1090,6 +1134,48 @@ class _QuoteCardState extends State<_QuoteCard> {
     );
   }
 
+  Widget _buildQuoteTypeBadge(String type) {
+    Color color;
+    String text;
+    IconData icon;
+    if (type == 'firm') {
+      color = Colors.green;
+      text = 'Firm Price';
+      icon = Icons.verified_outlined;
+    } else if (type == 'estimate') {
+      color = Colors.blue;
+      text = 'Estimate';
+      icon = Icons.tune_rounded;
+    } else {
+      color = Colors.orange;
+      text = 'Inspection First';
+      icon = Icons.search_rounded;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final quote = widget.quote;
@@ -1097,17 +1183,8 @@ class _QuoteCardState extends State<_QuoteCard> {
     final isAccepted = request.status == 'assigned' && quote.status == 'accepted';
 
     String? distanceLabel;
-    if (request.latitude != null &&
-        request.longitude != null &&
-        quote.providerLatitude != null &&
-        quote.providerLongitude != null) {
-      final km = LocationUtils.calculateDistanceKm(
-        request.latitude!,
-        request.longitude!,
-        quote.providerLatitude!,
-        quote.providerLongitude!,
-      );
-      distanceLabel = LocationUtils.formatDistanceL10n(context, km);
+    if (quote.travelKm > 0) {
+      distanceLabel = LocationUtils.formatDistanceL10n(context, quote.travelKm);
     }
 
     final locationName = quote.providerLocation.isNotEmpty
@@ -1196,6 +1273,8 @@ class _QuoteCardState extends State<_QuoteCard> {
                         ],
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    _buildQuoteTypeBadge(quote.quoteType),
                   ],
                 ),
               ),
@@ -1220,6 +1299,72 @@ class _QuoteCardState extends State<_QuoteCard> {
                 ],
               ),
             ],
+          ),
+          // Price Breakdown Card
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: context.themeSurfaceLow,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: context.themeBorder.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              children: [
+                if (quote.quoteType == 'inspect') ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(context.l10n.visitInspectionFee,
+                          style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary)),
+                      Text('${'LKR'} ${quote.visitFeeLkr}',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ] else ...[
+                  if (quote.unitRateLkr != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${'Base'} (${quote.quantity?.toStringAsFixed(quote.quantity! % 1 == 0 ? 0 : 1) ?? 1} ${quote.priceUnit ?? 'job'} @ ${'LKR'} ${quote.unitRateLkr}):',
+                          style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                        ),
+                        Text(
+                          '${'LKR'} ${((quote.quantity ?? 1.0) * (quote.unitRateLkr ?? 0)).round()}',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  if (quote.materialsEstimateLkr != null && quote.materialsEstimateLkr! > 0) ...[
+                    const SizedBox(height: 3),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(context.l10n.materialsEstimateColon,
+                            style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary)),
+                        Text('${'LKR'} ${quote.materialsEstimateLkr}',
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ],
+                if (quote.travelCostLkr > 0) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${'Travel'} (${quote.travelKm.toStringAsFixed(1)} km @ ${'LKR'} ${quote.travelRateLkr}/km):',
+                        style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                      ),
+                      Text('${'LKR'} ${quote.travelCostLkr}',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
           if (quote.notes.isNotEmpty) ...[
             const SizedBox(height: 12),

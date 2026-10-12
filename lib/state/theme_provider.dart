@@ -63,16 +63,8 @@ class ThemeProvider extends ChangeNotifier {
     }
   }
 
-  String get modeName {
-    switch (_mode) {
-      case ThemeMode.light:
-        return 'Light';
-      case ThemeMode.dark:
-        return 'Dark';
-      case ThemeMode.system:
-        return 'System';
-    }
-  }
+  /// Non-localized theme name for persistence / logging only.
+  String get modeName => _mode.name;
 
   IconData get modeIcon {
     switch (_mode) {
@@ -96,14 +88,6 @@ class ThemeProvider extends ChangeNotifier {
     }
   }
 
-  static String getNameForMode(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'Light';
-      case ThemeMode.dark:
-        return 'Dark';
-      case ThemeMode.system:
-        return 'System';
-    }
-  }
+  /// Non-localized name for persistence / logging only.
+  static String getNameForMode(ThemeMode mode) => mode.name;
 }

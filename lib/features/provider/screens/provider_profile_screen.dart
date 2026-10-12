@@ -9,6 +9,7 @@ import '../../../models/booking.dart';
 import '../../../models/technician.dart';
 import '../widgets/working_hours_sheet.dart';
 import '../widgets/portfolio_management_sheet.dart';
+import '../widgets/rate_card_sheet.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/technician_repository.dart';
@@ -22,6 +23,7 @@ import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/legal_content_sheet.dart';
+import '../../support/screens/help_support_screen.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -671,6 +673,46 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           }
                         },
                       ),
+                      ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.receipt_long_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          context.l10n.myRateCard,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        subtitle: Text(
+                          tech != null
+                              ? context.l10n.rateCardSummary('${tech.effectiveVisitFeeLkr}', '${tech.hourlyRateLkr}')
+                              : context.l10n.setStandardRatesSubtitle,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: context.themeTextSecondary,
+                        ),
+                        onTap: tech != null
+                            ? () => RateCardSheet.show(context, tech)
+                            : null,
+                      ),
                       Divider(height: 1, color: context.themeBorder),
                       ListTile(
                         contentPadding:
@@ -1018,6 +1060,56 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                       color: context.themeTextSecondary,
                     ),
                     onTap: () => LanguageSelectSheet.show(context),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.help_outline_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  context.l10n.helpSupportTitle,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                subtitle: Text(
+                  context.l10n.helpSupportSubtitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: context.themeTextSecondary,
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const HelpSupportScreen(),
+                    ),
                   );
                 },
               ),

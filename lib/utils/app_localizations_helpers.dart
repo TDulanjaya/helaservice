@@ -1,4 +1,5 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
+import 'l10n_extension.dart';
 
 class LocalizedData {
   LocalizedData._();
@@ -21,11 +22,11 @@ class LocalizedData {
     'Kilinochchi': {
       'en': 'Kilinochchi',
       'si': 'කිලිනොච්චිය',
-      'ta': 'கிளிநොச்சி'
+      'ta': 'கிளிநொச்சி'
     },
     'Mannar': {'en': 'Mannar', 'si': 'මන්නාරම', 'ta': 'மன்னார்'},
     'Vavuniya': {'en': 'Vavuniya', 'si': 'වවුනියාව', 'ta': 'வவுனியா'},
-    'Mullaitivu': {'en': 'Mullaitivu', 'si': 'මුලතිව්', 'ta': 'මුல்லைத்தீவு'},
+    'Mullaitivu': {'en': 'Mullaitivu', 'si': 'මුලතිව්', 'ta': 'முல்லைத்தீவு'},
     'Batticaloa': {'en': 'Batticaloa', 'si': 'මඩකලපුව', 'ta': 'மட்டக்களப்பு'},
     'Ampara': {'en': 'Ampara', 'si': 'අම්පාර', 'ta': 'அம்பாறை'},
     'Trincomalee': {
@@ -70,53 +71,32 @@ class LocalizedData {
   }
 
   static String getStatus(BuildContext context, String status) {
-    final lang = Localizations.localeOf(context).languageCode;
     switch (status.toLowerCase()) {
       case 'open':
-        return lang == 'si'
-            ? 'මිල කැඳවීම් සඳහා විවෘතයි'
-            : (lang == 'ta' ? 'விலைப்புள்ளிகளுக்கு திறந்துள்ளது' : 'Open for Quotes');
+        return context.l10n.statusOpen;
       case 'assigned':
-        return lang == 'si'
-            ? 'ශිල්පියෙකු පත් කර ඇත'
-            : (lang == 'ta' ? 'වல்லுநர் நியமிக்கப்பட்டுள்ளார்' : 'Artisan Assigned');
+        return context.l10n.statusAssigned;
       case 'dispatched':
-        return lang == 'si'
-            ? 'පිටත්ව ඇත'
-            : (lang == 'ta' ? 'புறப்பட்டுவிட்டது' : 'Dispatched');
+        return context.l10n.statusDispatched;
       case 'en_route':
       case 'en route':
-        return lang == 'si'
-            ? 'පැමිණෙමින් සිටී'
-            : (lang == 'ta' ? 'வருகை தருகிறார்' : 'En Route');
+        return context.l10n.statusEnRoute;
       case 'pending':
-        return lang == 'si'
-            ? 'තහවුරු කිරීමට ඇත'
-            : (lang == 'ta' ? 'நிலுவையில் உள்ளது' : 'Pending');
+        return context.l10n.statusPending;
       case 'in_progress':
       case 'in progress':
       case 'ongoing':
-        return lang == 'si'
-            ? 'ක්‍රියාත්මකයි'
-            : (lang == 'ta' ? 'செயலில் உள்ளது' : 'In Progress');
+        return context.l10n.statusInProgress;
       case 'completed':
-        return lang == 'si'
-            ? 'සම්පූර්ණයි'
-            : (lang == 'ta' ? 'முடிந்தது' : 'Completed');
+        return context.l10n.statusCompleted;
       case 'cancelled':
       case 'canceled':
-        return lang == 'si'
-            ? 'අවලංගුයි'
-            : (lang == 'ta' ? 'ரத்து செய்யப்பட்டது' : 'Cancelled');
+        return context.l10n.statusCancelled;
       case 'accepted':
-        return lang == 'si'
-            ? 'පිළිගන්නා ලදී'
-            : (lang == 'ta' ? 'ஏற்றுக்கொள்ளப்பட்டது' : 'Accepted');
+        return context.l10n.statusAccepted;
       case 'rejected':
       case 'declined':
-        return lang == 'si'
-            ? 'ප්‍රතික්ෂේපිතයි'
-            : (lang == 'ta' ? 'நිරாகரிக்கப்பட்டது' : 'Declined');
+        return context.l10n.statusDeclined;
       default:
         return status;
     }

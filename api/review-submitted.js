@@ -39,6 +39,10 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Booking is not completed' });
     }
 
+    if (bookingData.completionType === 'visit_only') {
+      return res.status(400).json({ error: 'Reviews are not permitted for visit_only completions' });
+    }
+
     const providerId = bookingData.providerId;
     if (!providerId) {
       return res.status(400).json({ error: 'Provider ID missing from booking' });
@@ -67,14 +71,20 @@ module.exports = async function handler(req, res) {
 
     const averageRating = count > 0 ? Number((sum / count).toFixed(1)) : 5.0;
 
-    // fetch total completed bookings for provider
+    // fetch total completed bookings for provider (excluding visit_only)
     const completedJobsQuery = await db
       .collection('bookings')
       .where('providerId', '==', providerId)
       .where('status', '==', 'completed')
       .get();
 
-    const jobsCount = completedJobsQuery.size;
+    let jobsCount = 0;
+    completedJobsQuery.forEach((doc) => {
+      const bData = doc.data() || {};
+      if (bData.completionType !== 'visit_only') {
+        jobsCount++;
+      }
+    });
 
     // update technician document via Admin SDK
     await db.collection('technicians').doc(providerId).set(

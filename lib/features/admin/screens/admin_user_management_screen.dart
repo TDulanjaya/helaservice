@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/user_profile.dart';
 import '../../../models/admin_user.dart';
@@ -39,6 +40,16 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   }
 
   void _showSuspendDialog(UserProfile user, {bool isSuper = false}) {
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    if (!roleProvider.hasAdminPermission(AdminPermission.manageUsers)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.noPermissionForAction),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     if (isSuper || user.isSuperAdmin) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -220,6 +231,18 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     ),
                   ),
                   onPressed: () async {
+                    final roleProvider =
+                        Provider.of<RoleProvider>(context, listen: false);
+                    if (!roleProvider
+                        .hasAdminPermission(AdminPermission.manageUsers)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.l10n.noPermissionForAction),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                      return;
+                    }
                     final reason = _reasonController.text.trim();
                     if (reason.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -260,6 +283,16 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   }
 
   void _showUnbanDialog(UserProfile user) {
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    if (!roleProvider.hasAdminPermission(AdminPermission.manageUsers)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.noPermissionForAction),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (dialogCtx) {
@@ -328,6 +361,18 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                 ),
               ),
               onPressed: () async {
+                final roleProvider =
+                    Provider.of<RoleProvider>(context, listen: false);
+                if (!roleProvider
+                    .hasAdminPermission(AdminPermission.manageUsers)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.l10n.noPermissionForAction),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
                 final messenger = ScaffoldMessenger.of(context);
                 final snackMsg = context.l10n.userRestoredSnack;
 
@@ -1914,6 +1959,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                 ),
                               ],
                             ),
+                            if (isProvider)
+                              _ProviderArrivalStatsWidget(providerId: user.id),
 
                             // ban reason banner
                             if (isBanned) ...[
@@ -2015,38 +2062,91 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                     ),
                                   )
                                 else if (isBanned)
-                                  ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.success,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                  () {
+                                    final roleProvider =
+                                        Provider.of<RoleProvider>(context, listen: false);
+                                    final canManageUsers = roleProvider
+                                        .hasAdminPermission(AdminPermission.manageUsers);
+                                    return ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: canManageUsers
+                                            ? AppColors.success
+                                            : (context.isDark
+                                                ? Colors.white12
+                                                : Colors.grey.shade300),
+                                        foregroundColor: canManageUsers
+                                            ? Colors.white
+                                            : (context.isDark
+                                                ? Colors.white38
+                                                : Colors.grey.shade600),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
                                       ),
-                                    ),
-                                    onPressed: () => _showUnbanDialog(user),
-                                    icon: const Icon(
-                                      Icons.lock_open_rounded,
-                                      size: 15,
-                                    ),
-                                    label: Text(context.l10n.unbanAccount),
-                                  )
+                                      onPressed: () {
+                                        if (!canManageUsers) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(context.l10n.noPermissionForAction),
+                                              backgroundColor: AppColors.error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        _showUnbanDialog(user);
+                                      },
+                                      icon: Icon(
+                                        canManageUsers
+                                            ? Icons.lock_open_rounded
+                                            : Icons.lock_outline,
+                                        size: 15,
+                                      ),
+                                      label: Text(context.l10n.unbanAccount),
+                                    );
+                                  }()
                                 else
-                                  ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.error,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                  () {
+                                    final roleProvider =
+                                        Provider.of<RoleProvider>(context, listen: false);
+                                    final canManageUsers = roleProvider
+                                        .hasAdminPermission(AdminPermission.manageUsers);
+                                    return ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: canManageUsers
+                                            ? AppColors.error
+                                            : (context.isDark
+                                                ? Colors.white12
+                                                : Colors.grey.shade300),
+                                        foregroundColor: canManageUsers
+                                            ? Colors.white
+                                            : (context.isDark
+                                                ? Colors.white38
+                                                : Colors.grey.shade600),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
                                       ),
-                                    ),
-                                    onPressed: () =>
-                                        _showSuspendDialog(user, isSuper: isSuper),
-                                    icon: const Icon(
-                                      Icons.block_flipped,
-                                      size: 15,
-                                    ),
-                                    label: Text(context.l10n.suspendAccount),
-                                  ),
+                                      onPressed: () {
+                                        if (!canManageUsers) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(context.l10n.noPermissionForAction),
+                                              backgroundColor: AppColors.error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        _showSuspendDialog(user, isSuper: isSuper);
+                                      },
+                                      icon: Icon(
+                                        canManageUsers
+                                            ? Icons.block_flipped
+                                            : Icons.lock_outline,
+                                        size: 15,
+                                      ),
+                                      label: Text(context.l10n.suspendAccount),
+                                    );
+                                  }(),
                               ],
                             ),
                           ],
@@ -2064,3 +2164,213 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
 );
   }
 }
+
+// 90-day provider arrival & reliability counts
+class _ProviderArrivalStatsWidget extends StatefulWidget {
+  final String providerId;
+
+  const _ProviderArrivalStatsWidget({required this.providerId});
+
+  @override
+  State<_ProviderArrivalStatsWidget> createState() =>
+      _ProviderArrivalStatsWidgetState();
+}
+
+class _ProviderArrivalStatsWidgetState
+    extends State<_ProviderArrivalStatsWidget> {
+  late Future<({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
+      _statsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture = _fetchStats();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProviderArrivalStatsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.providerId != widget.providerId) {
+      _statsFuture = _fetchStats();
+    }
+  }
+
+  Future<({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
+      _fetchStats() async {
+    final cutoff = Timestamp.fromDate(
+      DateTime.now().subtract(const Duration(days: 90)),
+    );
+    final bookingsCol = FirebaseFirestore.instance.collection('bookings');
+
+    final results = await Future.wait([
+      bookingsCol
+          .where('providerId', isEqualTo: widget.providerId)
+          .where('noShow', isEqualTo: true)
+          .where('createdAt', isGreaterThanOrEqualTo: cutoff)
+          .count()
+          .get(),
+      bookingsCol
+          .where('providerId', isEqualTo: widget.providerId)
+          .where('arrivalStatus', isEqualTo: 'denied')
+          .where('createdAt', isGreaterThanOrEqualTo: cutoff)
+          .count()
+          .get(),
+      bookingsCol
+          .where('providerId', isEqualTo: widget.providerId)
+          .where('arrivalMocked', isEqualTo: true)
+          .where('createdAt', isGreaterThanOrEqualTo: cutoff)
+          .count()
+          .get(),
+      bookingsCol
+          .where('providerId', isEqualTo: widget.providerId)
+          .where('arrivalOutsideZone', isEqualTo: true)
+          .where('createdAt', isGreaterThanOrEqualTo: cutoff)
+          .count()
+          .get(),
+    ]);
+
+    return (
+      noShows: results[0].count ?? 0,
+      arrivalDenials: results[1].count ?? 0,
+      mockedGps: results[2].count ?? 0,
+      outsideZone: results[3].count ?? 0,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<
+        ({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>(
+      future: _statsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!;
+
+        Widget buildBadge({
+          required String label,
+          required int count,
+          required IconData icon,
+          required Color activeColor,
+        }) {
+          final isFlagged = count > 0;
+          final color = isFlagged ? activeColor : context.themeTextSecondary;
+          final bg = isFlagged
+              ? activeColor.withValues(alpha: 0.12)
+              : (context.isDark
+                  ? context.themeSurfaceLow
+                  : const Color(0xFFF1F3F5));
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isFlagged
+                    ? activeColor.withValues(alpha: 0.35)
+                    : context.themeBorder,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 13, color: color),
+                const SizedBox(width: 5),
+                Text(
+                  '$label: $count',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: isFlagged ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: context.isDark
+                ? context.themeSurfaceLow.withValues(alpha: 0.5)
+                : const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.themeBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.history_toggle_off_rounded,
+                    size: 15,
+                    color: context.themeTextSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.l10n.providerReliability90Days,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  buildBadge(
+                    label: context.l10n.providerNoShowsCount,
+                    count: data.noShows,
+                    icon: Icons.person_off_rounded,
+                    activeColor: AppColors.error,
+                  ),
+                  buildBadge(
+                    label: context.l10n.providerArrivalDenialsCount,
+                    count: data.arrivalDenials,
+                    icon: Icons.cancel_outlined,
+                    activeColor: AppColors.error,
+                  ),
+                  buildBadge(
+                    label: context.l10n.providerMockedGpsCount,
+                    count: data.mockedGps,
+                    icon: Icons.gps_off_rounded,
+                    activeColor: AppColors.error,
+                  ),
+                  buildBadge(
+                    label: context.l10n.providerOutsideZoneCount,
+                    count: data.outsideZone,
+                    icon: Icons.wrong_location_rounded,
+                    activeColor: AppColors.warning,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+

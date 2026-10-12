@@ -100,9 +100,9 @@ class StatusPill extends StatelessWidget {
         return StatusPill.pending(label: customLabel);
       case JobStatus.confirmed:
       case JobRequestStatus.assigned:
-        return StatusPill.confirmed(label: customLabel ?? (status == JobRequestStatus.assigned ? 'Assigned' : 'Confirmed'));
+        return StatusPill.confirmed(label: customLabel);
       case JobStatus.enRoute:
-        return StatusPill.enRoute(label: customLabel ?? 'En Route');
+        return StatusPill.enRoute(label: customLabel);
       case JobStatus.inProgress:
         return StatusPill.inProgress(label: customLabel);
       case JobStatus.completed:
@@ -110,7 +110,7 @@ class StatusPill extends StatelessWidget {
       case JobStatus.cancelled:
         return StatusPill.cancelled(label: customLabel);
       case JobStatus.declined:
-        return StatusPill.declined(label: customLabel ?? 'Declined');
+        return StatusPill.declined(label: customLabel);
       default:
         return StatusPill.pending(label: customLabel ?? status);
     }
@@ -136,12 +136,12 @@ class StatusPill extends StatelessWidget {
       case StatusPillType.confirmed:
         bg = AppColors.primary.withValues(alpha: 0.12);
         fg = AppColors.primary;
-        text = label ?? 'Confirmed';
+        text = label ?? context.l10n.statusConfirmed;
         break;
       case StatusPillType.enRoute:
         bg = const Color(0xFF3B82F6).withValues(alpha: 0.14);
         fg = const Color(0xFF2563EB);
-        text = label ?? 'En Route';
+        text = label ?? context.l10n.statusEnRoute;
         break;
       case StatusPillType.inProgress:
         bg = context.themeInfoTint;
@@ -161,7 +161,7 @@ class StatusPill extends StatelessWidget {
       case StatusPillType.declined:
         bg = context.themeDangerTint;
         fg = context.themeDanger;
-        text = label ?? 'Declined';
+        text = label ?? context.l10n.statusDeclined;
         break;
       case StatusPillType.offline:
         bg = context.themeSoft;

@@ -7,6 +7,9 @@ import 'en_route_navigation_screen.dart';
 import '../../../models/booking.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../shared/widgets/job_media_gallery.dart';
+import '../../../models/job_request.dart';
+import '../../../repositories/job_request_repository.dart';
 
 class JobAlertScreen extends StatefulWidget {
   final Booking? booking;
@@ -350,6 +353,27 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                         ],
                       ),
                     ),
+                    if (booking?.jobRequestId != null &&
+                        booking!.jobRequestId!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      FutureBuilder<JobRequest?>(
+                        future: JobRequestRepository()
+                            .getById(booking.jobRequestId!),
+                        builder: (ctx, snap) {
+                          final jr = snap.data;
+                          if (jr == null ||
+                              (jr.photoUrls.isEmpty &&
+                                  (jr.videoUrl == null ||
+                                      jr.videoUrl!.isEmpty))) {
+                            return const SizedBox.shrink();
+                          }
+                          return JobMediaGallery(
+                            photoUrls: jr.photoUrls,
+                            videoUrl: jr.videoUrl,
+                          );
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     PrimaryButton(
                       label: context.l10n.acceptJob,

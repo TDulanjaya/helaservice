@@ -74,13 +74,36 @@ class BookingTimelineSheet extends StatelessWidget {
       case 'created':
         return Icons.add_circle_outline_rounded;
       case 'accepted':
+      case 'price_approved':
+      case 'extra_approved':
+      case 'price_kept':
         return Icons.check_circle_outline_rounded;
+      case 'price_proposed':
+      case 'extra_requested':
+        return Icons.hourglass_top_rounded;
+      case 'price_rejected':
+      case 'extra_rejected':
       case 'declined':
         return Icons.cancel_outlined;
+      case 'completed_visit_only':
+        return Icons.assignment_turned_in_rounded;
+      case 'before_photo_added':
+      case 'after_photo_added':
+        return Icons.photo_camera_rounded;
       case 'en_route':
         return Icons.directions_car_rounded;
       case 'arrived':
         return Icons.location_on_rounded;
+      case 'arrival_claimed':
+        return Icons.pin_drop_outlined;
+      case 'arrival_confirmed':
+        return Icons.verified_rounded;
+      case 'arrival_denied':
+        return Icons.wrong_location_rounded;
+      case 'arrival_auto_started':
+        return Icons.timer_outlined;
+      case 'no_show_reported':
+        return Icons.person_off_rounded;
       case 'completed':
         return Icons.task_alt_rounded;
       case 'payment_confirmed':
@@ -101,16 +124,85 @@ class BookingTimelineSheet extends StatelessWidget {
       case 'accepted':
       case 'completed':
       case 'payment_confirmed':
+      case 'price_approved':
+      case 'extra_approved':
+      case 'price_kept':
+      case 'arrival_confirmed':
         return AppColors.success;
+      case 'price_proposed':
+      case 'extra_requested':
+      case 'arrival_claimed':
+        return AppColors.warning;
+      case 'price_rejected':
+      case 'extra_rejected':
+      case 'declined':
+      case 'cancelled':
+      case 'payment_disputed':
+      case 'arrival_denied':
+      case 'no_show_reported':
+        return AppColors.error;
+      case 'completed_visit_only':
+      case 'arrival_auto_started':
+        return AppColors.info;
+      case 'before_photo_added':
+      case 'after_photo_added':
       case 'en_route':
       case 'arrived':
         return AppColors.primary;
-      case 'payment_disputed':
-      case 'declined':
-      case 'cancelled':
-        return AppColors.error;
       default:
         return AppColors.muted;
+    }
+  }
+
+  String _titleForAction(BuildContext context, String action, String fallbackTitle) {
+    switch (action) {
+      case 'created':
+        return context.l10n.timelineBookingCreated;
+      case 'accepted':
+        return context.l10n.timelineBookingAccepted;
+      case 'en_route':
+        return context.l10n.statusEnRoute;
+      case 'arrived':
+      case 'arrival_confirmed':
+        return context.l10n.arrivalConfirmed;
+      case 'arrival_claimed':
+        return context.l10n.timelineArrivalClaimed;
+      case 'arrival_denied':
+        return context.l10n.timelineArrivalDenied;
+      case 'arrival_auto_started':
+        return context.l10n.timelineAutoStarted;
+      case 'completed':
+        return context.l10n.statusCompleted;
+      case 'completed_visit_only':
+        return context.l10n.timelineVisitFeeOnly;
+      case 'cancelled':
+        return context.l10n.statusCancelled;
+      case 'declined':
+        return context.l10n.statusDeclined;
+      case 'price_proposed':
+        return context.l10n.timelinePriceProposed;
+      case 'price_approved':
+        return context.l10n.timelinePriceApproved;
+      case 'price_rejected':
+        return context.l10n.timelinePriceRejected;
+      case 'extra_requested':
+        return context.l10n.timelineExtraRequested;
+      case 'extra_approved':
+        return context.l10n.timelineExtraApproved;
+      case 'extra_rejected':
+        return context.l10n.timelineExtraRejected;
+      case 'payment_confirmed':
+        return context.l10n.timelinePaymentConfirmed;
+      case 'payment_disputed':
+        return context.l10n.timelinePaymentDisputed;
+      case 'no_show_reported':
+        return context.l10n.timelineNoShowReported;
+      case 'before_photo_added':
+        return context.l10n.timelineBeforePhotoAdded;
+      case 'after_photo_added':
+        return context.l10n.timelineAfterPhotoAdded;
+      default:
+        return fallbackTitle.isNotEmpty ? fallbackTitle : action;
     }
   }
 
@@ -208,8 +300,9 @@ class BookingTimelineSheet extends StatelessWidget {
                               final isLast = index == events.length - 1;
                               final color = _colorForAction(event.action);
                               final icon = _iconForAction(event.action);
+                              final locale = Localizations.localeOf(context).languageCode;
                               final timeStr = event.timestamp != null
-                                  ? DateFormat('MMM d, hh:mm a').format(event.timestamp!)
+                                  ? DateFormat('MMM d, hh:mm a', locale).format(event.timestamp!)
                                   : '';
 
                               return IntrinsicHeight(
@@ -250,7 +343,7 @@ class BookingTimelineSheet extends StatelessWidget {
                                               children: [
                                                 Expanded(
                                                   child: Text(
-                                                    event.title,
+                                                    _titleForAction(context, event.action, event.title),
                                                     style: TextStyle(
                                                       fontSize: 14,
                                                       fontWeight: FontWeight.w700,
@@ -275,6 +368,31 @@ class BookingTimelineSheet extends StatelessWidget {
                                                 color: context.themeTextSecondary,
                                               ),
                                             ),
+                                            if (event.metadata != null &&
+                                                (event.metadata!['totalLkr'] != null ||
+                                                    event.metadata!['amountLkr'] != null ||
+                                                    event.metadata!['proposedTotalLkr'] != null ||
+                                                    event.metadata!['finalAmountLkr'] != null ||
+                                                    event.metadata!['agreedPrice'] != null ||
+                                                    event.metadata!['amount'] != null)) ...[
+                                              const SizedBox(height: 5),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: color.withValues(alpha: 0.1),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                                                ),
+                                                child: Text(
+                                                  'Amount: LKR ${event.metadata!['totalLkr'] ?? event.metadata!['amountLkr'] ?? event.metadata!['proposedTotalLkr'] ?? event.metadata!['finalAmountLkr'] ?? event.metadata!['agreedPrice'] ?? event.metadata!['amount']}',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: color,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                             const SizedBox(height: 6),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

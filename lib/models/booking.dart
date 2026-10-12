@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/job_status.dart';
+import '../utils/l10n_extension.dart';
 
 class Booking {
   final String id;
@@ -41,7 +42,9 @@ class Booking {
   final bool? paymentDisputed;
   final String? paymentDisputeReason;
   final DateTime? paymentDisputedAt;
-  final String bookingType;
+  final String type;
+  String get bookingType => type;
+  final DateTime? expiresAt;
   final DateTime? scheduledDate;
   final String? scheduledSlot;
   final String? rescheduleRequestedBy;
@@ -54,6 +57,49 @@ class Booking {
   final String? rescheduleDeclinedBy;
   final List<String> beforePhotos;
   final List<String> afterPhotos;
+
+  // price flow and extras
+  final String? quoteId;
+  final String? quoteType;
+  final String? priceStatus; // 'awaiting_confirmation', 'proposed', 'approved', 'rejected'
+  final Map<String, dynamic>? proposedPrice;
+  final int? approvedTotalLkr;
+  final int? approvedExtrasLkr;
+  final String? lastApprovedExtraId;
+  final String? completionType; // 'normal', 'visit_only'
+  final int? visitFeeLkr;
+  final int? travelCostLkr;
+  final double? travelKm;
+  final int? travelRateLkr;
+  final int? estimatedTotalLkr;
+  final int? proposalCount;
+  final String? priceUnit;
+  final int? unitRateLkr;
+  final double? quantity;
+  final int? materialsEstimateLkr;
+  final DateTime? priceProposedAt;
+  final DateTime? priceApprovedAt;
+  final DateTime? priceRejectedAt;
+  final DateTime? priceConfirmedAt;
+
+  // verified arrival and no-show
+  final String? arrivalStatus; // 'claimed', 'confirmed', 'denied', 'auto_started'
+  final DateTime? arrivalClaimedAt;
+  final double? arrivalLat;
+  final double? arrivalLng;
+  final int? arrivalAccuracyM;
+  final int? arrivalDistanceM;
+  final bool arrivalOutsideZone;
+  final bool arrivalMocked;
+  final int arrivalClaimCount;
+  final int arrivalDeniedCount;
+  final String? arrivalConfirmedBy; // 'customer', 'gps_timeout'
+  final DateTime? arrivedAt;
+  final bool noShow;
+  final DateTime? enRouteStartedAt;
+  final DateTime? scheduledStartAt;
+
+  int get agreedPriceLkr => agreedPrice?.round() ?? 0;
 
   const Booking({
     this.id = '',
@@ -93,7 +139,8 @@ class Booking {
     this.paymentDisputed,
     this.paymentDisputeReason,
     this.paymentDisputedAt,
-    this.bookingType = 'asap',
+    this.type = 'standard',
+    this.expiresAt,
     this.scheduledDate,
     this.scheduledSlot,
     this.rescheduleRequestedBy,
@@ -106,7 +153,51 @@ class Booking {
     this.rescheduleDeclinedBy,
     this.beforePhotos = const [],
     this.afterPhotos = const [],
+    this.quoteId,
+    this.quoteType,
+    this.priceStatus,
+    this.proposedPrice,
+    this.approvedTotalLkr,
+    this.approvedExtrasLkr,
+    this.lastApprovedExtraId,
+    this.completionType,
+    this.visitFeeLkr,
+    this.travelCostLkr,
+    this.travelKm,
+    this.travelRateLkr,
+    this.estimatedTotalLkr,
+    this.proposalCount,
+    this.priceUnit,
+    this.unitRateLkr,
+    this.quantity,
+    this.materialsEstimateLkr,
+    this.priceProposedAt,
+    this.priceApprovedAt,
+    this.priceRejectedAt,
+    this.priceConfirmedAt,
+    this.arrivalStatus,
+    this.arrivalClaimedAt,
+    this.arrivalLat,
+    this.arrivalLng,
+    this.arrivalAccuracyM,
+    this.arrivalDistanceM,
+    this.arrivalOutsideZone = false,
+    this.arrivalMocked = false,
+    this.arrivalClaimCount = 0,
+    this.arrivalDeniedCount = 0,
+    this.arrivalConfirmedBy,
+    this.arrivedAt,
+    this.noShow = false,
+    this.enRouteStartedAt,
+    this.scheduledStartAt,
   });
+
+  bool get isAwaitingPriceConfirmation => priceStatus == 'awaiting_confirmation';
+  bool get isPriceProposed => priceStatus == 'proposed';
+  bool get isPriceApproved => priceStatus == 'approved';
+  bool get isPriceRejected => priceStatus == 'rejected';
+  int get currentTotalLkr => approvedTotalLkr ?? agreedPrice?.round() ?? 0;
+
 
   bool get hasPendingReschedule =>
       rescheduleRequestedBy != null && rescheduleRequestedBy!.isNotEmpty;
@@ -153,7 +244,9 @@ class Booking {
         if (paymentDisputeReason != null) 'paymentDisputeReason': paymentDisputeReason,
         if (paymentDisputedAt != null)
           'paymentDisputedAt': Timestamp.fromDate(paymentDisputedAt!),
-        'bookingType': bookingType,
+        'type': type,
+        if (expiresAt != null)
+          'expiresAt': Timestamp.fromDate(expiresAt!),
         if (scheduledDate != null)
           'scheduledDate': Timestamp.fromDate(scheduledDate!),
         if (scheduledSlot != null) 'scheduledSlot': scheduledSlot,
@@ -176,6 +269,43 @@ class Booking {
         'afterPhotos': afterPhotos,
         'location': location,
         'distance': distance,
+        if (quoteId != null) 'quoteId': quoteId,
+        if (quoteType != null) 'quoteType': quoteType,
+        if (priceStatus != null) 'priceStatus': priceStatus,
+        if (proposedPrice != null) 'proposedPrice': proposedPrice,
+        if (approvedTotalLkr != null) 'approvedTotalLkr': approvedTotalLkr,
+        if (approvedExtrasLkr != null) 'approvedExtrasLkr': approvedExtrasLkr,
+        if (lastApprovedExtraId != null) 'lastApprovedExtraId': lastApprovedExtraId,
+        if (completionType != null) 'completionType': completionType,
+        if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
+        if (travelCostLkr != null) 'travelCostLkr': travelCostLkr,
+        if (travelKm != null) 'travelKm': travelKm,
+        if (travelRateLkr != null) 'travelRateLkr': travelRateLkr,
+        if (estimatedTotalLkr != null) 'estimatedTotalLkr': estimatedTotalLkr,
+        if (proposalCount != null) 'proposalCount': proposalCount,
+        if (priceUnit != null) 'priceUnit': priceUnit,
+        if (unitRateLkr != null) 'unitRateLkr': unitRateLkr,
+        if (quantity != null) 'quantity': quantity,
+        if (materialsEstimateLkr != null) 'materialsEstimateLkr': materialsEstimateLkr,
+        if (priceProposedAt != null) 'priceProposedAt': Timestamp.fromDate(priceProposedAt!),
+        if (priceApprovedAt != null) 'priceApprovedAt': Timestamp.fromDate(priceApprovedAt!),
+        if (priceRejectedAt != null) 'priceRejectedAt': Timestamp.fromDate(priceRejectedAt!),
+        if (priceConfirmedAt != null) 'priceConfirmedAt': Timestamp.fromDate(priceConfirmedAt!),
+        if (arrivalStatus != null) 'arrivalStatus': arrivalStatus,
+        if (arrivalClaimedAt != null) 'arrivalClaimedAt': Timestamp.fromDate(arrivalClaimedAt!),
+        if (arrivalLat != null) 'arrivalLat': arrivalLat,
+        if (arrivalLng != null) 'arrivalLng': arrivalLng,
+        if (arrivalAccuracyM != null) 'arrivalAccuracyM': arrivalAccuracyM,
+        if (arrivalDistanceM != null) 'arrivalDistanceM': arrivalDistanceM,
+        if (arrivalOutsideZone) 'arrivalOutsideZone': arrivalOutsideZone,
+        if (arrivalMocked) 'arrivalMocked': arrivalMocked,
+        if (arrivalClaimCount > 0) 'arrivalClaimCount': arrivalClaimCount,
+        if (arrivalDeniedCount > 0) 'arrivalDeniedCount': arrivalDeniedCount,
+        if (arrivalConfirmedBy != null) 'arrivalConfirmedBy': arrivalConfirmedBy,
+        if (arrivedAt != null) 'arrivedAt': Timestamp.fromDate(arrivedAt!),
+        if (noShow) 'noShow': noShow,
+        if (enRouteStartedAt != null) 'enRouteStartedAt': Timestamp.fromDate(enRouteStartedAt!),
+        if (scheduledStartAt != null) 'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
       };
 
   factory Booking.fromMap(String id, Map<String, dynamic> map) {
@@ -190,6 +320,15 @@ class Booking {
     final rra = map['rescheduleRequestedAt'];
     final rda = map['rescheduledAt'];
     final rdec = map['rescheduleDeclinedAt'];
+    final ppa = map['priceProposedAt'];
+    final paa = map['priceApprovedAt'];
+    final pra = map['priceRejectedAt'];
+    final pca = map['priceConfirmedAt'];
+    final expAt = map['expiresAt'];
+    final arrClaimAt = map['arrivalClaimedAt'];
+    final arrAt = map['arrivedAt'];
+    final enRAt = map['enRouteStartedAt'];
+    final schedStartAt = map['scheduledStartAt'];
 
     return Booking(
       id: id,
@@ -227,7 +366,8 @@ class Booking {
       paymentDisputed: map['paymentDisputed'] as bool?,
       paymentDisputeReason: map['paymentDisputeReason'] as String?,
       paymentDisputedAt: pda is Timestamp ? pda.toDate() : null,
-      bookingType: map['bookingType']?.toString() ?? 'asap',
+      type: map['type']?.toString() ?? map['bookingType']?.toString() ?? 'standard',
+      expiresAt: expAt is Timestamp ? expAt.toDate() : null,
       scheduledDate: sdt is Timestamp ? sdt.toDate() : null,
       scheduledSlot: map['scheduledSlot'] as String?,
       rescheduleRequestedBy: map['rescheduleRequestedBy'] as String?,
@@ -246,6 +386,45 @@ class Booking {
           .toList(),
       location: map['location'] ?? '',
       distance: map['distance'] ?? '',
+      quoteId: map['quoteId'] as String?,
+      quoteType: map['quoteType'] as String?,
+      priceStatus: map['priceStatus'] as String?,
+      proposedPrice: map['proposedPrice'] is Map
+          ? Map<String, dynamic>.from(map['proposedPrice'] as Map)
+          : null,
+      approvedTotalLkr: (map['approvedTotalLkr'] as num?)?.toInt(),
+      approvedExtrasLkr: (map['approvedExtrasLkr'] as num?)?.toInt(),
+      lastApprovedExtraId: map['lastApprovedExtraId'] as String?,
+      completionType: map['completionType'] as String?,
+      visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
+      travelCostLkr: (map['travelCostLkr'] as num?)?.toInt(),
+      travelKm: (map['travelKm'] as num?)?.toDouble(),
+      travelRateLkr: (map['travelRateLkr'] as num?)?.toInt(),
+      estimatedTotalLkr: (map['estimatedTotalLkr'] as num?)?.toInt(),
+      proposalCount: (map['proposalCount'] as num?)?.toInt(),
+      priceUnit: map['priceUnit'] as String?,
+      unitRateLkr: (map['unitRateLkr'] as num?)?.toInt(),
+      quantity: (map['quantity'] as num?)?.toDouble(),
+      materialsEstimateLkr: (map['materialsEstimateLkr'] as num?)?.toInt(),
+      priceProposedAt: ppa is Timestamp ? ppa.toDate() : null,
+      priceApprovedAt: paa is Timestamp ? paa.toDate() : null,
+      priceRejectedAt: pra is Timestamp ? pra.toDate() : null,
+      priceConfirmedAt: pca is Timestamp ? pca.toDate() : null,
+      arrivalStatus: map['arrivalStatus'] as String?,
+      arrivalClaimedAt: arrClaimAt is Timestamp ? arrClaimAt.toDate() : null,
+      arrivalLat: (map['arrivalLat'] as num?)?.toDouble(),
+      arrivalLng: (map['arrivalLng'] as num?)?.toDouble(),
+      arrivalAccuracyM: (map['arrivalAccuracyM'] as num?)?.toInt(),
+      arrivalDistanceM: (map['arrivalDistanceM'] as num?)?.toInt(),
+      arrivalOutsideZone: map['arrivalOutsideZone'] as bool? ?? false,
+      arrivalMocked: map['arrivalMocked'] as bool? ?? false,
+      arrivalClaimCount: (map['arrivalClaimCount'] as num?)?.toInt() ?? 0,
+      arrivalDeniedCount: (map['arrivalDeniedCount'] as num?)?.toInt() ?? 0,
+      arrivalConfirmedBy: map['arrivalConfirmedBy'] as String?,
+      arrivedAt: arrAt is Timestamp ? arrAt.toDate() : null,
+      noShow: map['noShow'] as bool? ?? false,
+      enRouteStartedAt: enRAt is Timestamp ? enRAt.toDate() : null,
+      scheduledStartAt: schedStartAt is Timestamp ? schedStartAt.toDate() : null,
     );
   }
 
@@ -287,7 +466,9 @@ class Booking {
     bool? paymentDisputed,
     String? paymentDisputeReason,
     DateTime? paymentDisputedAt,
+    String? type,
     String? bookingType,
+    DateTime? expiresAt,
     DateTime? scheduledDate,
     String? scheduledSlot,
     String? rescheduleRequestedBy,
@@ -300,6 +481,43 @@ class Booking {
     String? rescheduleDeclinedBy,
     List<String>? beforePhotos,
     List<String>? afterPhotos,
+    String? quoteId,
+    String? quoteType,
+    String? priceStatus,
+    Map<String, dynamic>? proposedPrice,
+    int? approvedTotalLkr,
+    int? approvedExtrasLkr,
+    String? lastApprovedExtraId,
+    String? completionType,
+    int? visitFeeLkr,
+    int? travelCostLkr,
+    double? travelKm,
+    int? travelRateLkr,
+    int? estimatedTotalLkr,
+    int? proposalCount,
+    String? priceUnit,
+    int? unitRateLkr,
+    double? quantity,
+    int? materialsEstimateLkr,
+    DateTime? priceProposedAt,
+    DateTime? priceApprovedAt,
+    DateTime? priceRejectedAt,
+    DateTime? priceConfirmedAt,
+    String? arrivalStatus,
+    DateTime? arrivalClaimedAt,
+    double? arrivalLat,
+    double? arrivalLng,
+    int? arrivalAccuracyM,
+    int? arrivalDistanceM,
+    bool? arrivalOutsideZone,
+    bool? arrivalMocked,
+    int? arrivalClaimCount,
+    int? arrivalDeniedCount,
+    String? arrivalConfirmedBy,
+    DateTime? arrivedAt,
+    bool? noShow,
+    DateTime? enRouteStartedAt,
+    DateTime? scheduledStartAt,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -339,7 +557,8 @@ class Booking {
       paymentDisputed: paymentDisputed ?? this.paymentDisputed,
       paymentDisputeReason: paymentDisputeReason ?? this.paymentDisputeReason,
       paymentDisputedAt: paymentDisputedAt ?? this.paymentDisputedAt,
-      bookingType: bookingType ?? this.bookingType,
+      type: type ?? bookingType ?? this.type,
+      expiresAt: expiresAt ?? this.expiresAt,
       scheduledDate: scheduledDate ?? this.scheduledDate,
       scheduledSlot: scheduledSlot ?? this.scheduledSlot,
       rescheduleRequestedBy: rescheduleRequestedBy ?? this.rescheduleRequestedBy,
@@ -352,8 +571,46 @@ class Booking {
       rescheduleDeclinedBy: rescheduleDeclinedBy ?? this.rescheduleDeclinedBy,
       beforePhotos: beforePhotos ?? this.beforePhotos,
       afterPhotos: afterPhotos ?? this.afterPhotos,
+      quoteId: quoteId ?? this.quoteId,
+      quoteType: quoteType ?? this.quoteType,
+      priceStatus: priceStatus ?? this.priceStatus,
+      proposedPrice: proposedPrice ?? this.proposedPrice,
+      approvedTotalLkr: approvedTotalLkr ?? this.approvedTotalLkr,
+      approvedExtrasLkr: approvedExtrasLkr ?? this.approvedExtrasLkr,
+      lastApprovedExtraId: lastApprovedExtraId ?? this.lastApprovedExtraId,
+      completionType: completionType ?? this.completionType,
+      visitFeeLkr: visitFeeLkr ?? this.visitFeeLkr,
+      travelCostLkr: travelCostLkr ?? this.travelCostLkr,
+      travelKm: travelKm ?? this.travelKm,
+      travelRateLkr: travelRateLkr ?? this.travelRateLkr,
+      estimatedTotalLkr: estimatedTotalLkr ?? this.estimatedTotalLkr,
+      proposalCount: proposalCount ?? this.proposalCount,
+      priceUnit: priceUnit ?? this.priceUnit,
+      unitRateLkr: unitRateLkr ?? this.unitRateLkr,
+      quantity: quantity ?? this.quantity,
+      materialsEstimateLkr: materialsEstimateLkr ?? this.materialsEstimateLkr,
+      priceProposedAt: priceProposedAt ?? this.priceProposedAt,
+      priceApprovedAt: priceApprovedAt ?? this.priceApprovedAt,
+      priceRejectedAt: priceRejectedAt ?? this.priceRejectedAt,
+      priceConfirmedAt: priceConfirmedAt ?? this.priceConfirmedAt,
+      arrivalStatus: arrivalStatus ?? this.arrivalStatus,
+      arrivalClaimedAt: arrivalClaimedAt ?? this.arrivalClaimedAt,
+      arrivalLat: arrivalLat ?? this.arrivalLat,
+      arrivalLng: arrivalLng ?? this.arrivalLng,
+      arrivalAccuracyM: arrivalAccuracyM ?? this.arrivalAccuracyM,
+      arrivalDistanceM: arrivalDistanceM ?? this.arrivalDistanceM,
+      arrivalOutsideZone: arrivalOutsideZone ?? this.arrivalOutsideZone,
+      arrivalMocked: arrivalMocked ?? this.arrivalMocked,
+      arrivalClaimCount: arrivalClaimCount ?? this.arrivalClaimCount,
+      arrivalDeniedCount: arrivalDeniedCount ?? this.arrivalDeniedCount,
+      arrivalConfirmedBy: arrivalConfirmedBy ?? this.arrivalConfirmedBy,
+      arrivedAt: arrivedAt ?? this.arrivedAt,
+      noShow: noShow ?? this.noShow,
+      enRouteStartedAt: enRouteStartedAt ?? this.enRouteStartedAt,
+      scheduledStartAt: scheduledStartAt ?? this.scheduledStartAt,
     );
   }
+
 
   String formattedPrice(BuildContext context) {
     if (agreedPrice != null && agreedPrice! > 0) {
@@ -368,6 +625,41 @@ class Booking {
       return DateFormat.yMMMd(locale).add_jm().format(createdAt!);
     }
     return time.isNotEmpty ? time : '';
+  }
+
+  bool get isEligibleForNoShow {
+    if (status != JobStatus.confirmed && status != JobStatus.enRoute) return false;
+    final now = DateTime.now();
+    if (status == JobStatus.enRoute) {
+      if (arrivalStatus == 'denied') return true;
+      if (enRouteStartedAt != null && now.difference(enRouteStartedAt!).inMinutes >= 90) return true;
+      return false;
+    }
+    if (status == JobStatus.confirmed) {
+      if (scheduledStartAt != null) {
+        if (now.difference(scheduledStartAt!).inMinutes >= 60) return true;
+      } else if (scheduledDate != null) {
+        if (now.difference(scheduledDate!).inDays >= 1) return true;
+      }
+    }
+    return false;
+  }
+
+  String formattedScheduledSummary(BuildContext context) {
+    if (scheduledDate == null) return time;
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateStr = DateFormat.yMMMd(locale).format(scheduledDate!);
+    if (scheduledSlot == null || scheduledSlot!.isEmpty) return dateStr;
+    final s = scheduledSlot!.toLowerCase();
+    String slotLabel = scheduledSlot!;
+    if (s.contains('morning') || s.contains('8:00') || s.contains('උදෑසන') || s.contains('காலை')) {
+      slotLabel = context.l10n.slotMorning;
+    } else if (s.contains('afternoon') || s.contains('12:00') || s.contains('දහවල්') || s.contains('மதியம்')) {
+      slotLabel = context.l10n.slotAfternoon;
+    } else if (s.contains('evening') || s.contains('4:00') || s.contains('සවස') || s.contains('மாலை')) {
+      slotLabel = context.l10n.slotEvening;
+    }
+    return '$dateStr • $slotLabel';
   }
 }
 

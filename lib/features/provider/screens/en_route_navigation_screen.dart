@@ -18,6 +18,11 @@ import '../../../shared/widgets/outline_button.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../services/call_service.dart';
+import '../widgets/provider_price_extras_card.dart';
+import '../../shared/widgets/job_media_gallery.dart';
+import '../../../models/job_request.dart';
+import '../../../repositories/job_request_repository.dart';
+import '../../../utils/location_utils.dart';
 
 class EnRouteNavigationScreen extends StatefulWidget {
   final Booking? booking;
@@ -30,13 +35,13 @@ class EnRouteNavigationScreen extends StatefulWidget {
 
 class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   LatLng? _currentGpsPosition;
+  Position? _lastGpsPosition;
+  DateTime? _lastGpsTimestamp;
   String _providerId = '';
-  bool _isArrived = false;
 
   @override
   void initState() {
     super.initState();
-    _isArrived = widget.booking?.status == JobStatus.inProgress;
     if (widget.booking != null &&
         widget.booking!.id.isNotEmpty &&
         widget.booking!.status == JobStatus.confirmed) {
@@ -72,6 +77,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         if (mounted) {
           setState(() {
             _currentGpsPosition = LatLng(pos.latitude, pos.longitude);
+            _lastGpsPosition = pos;
+            _lastGpsTimestamp = DateTime.now();
           });
         }
       }
@@ -216,15 +223,26 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
   }
 
-  Future<void> _promptCompletionPin(BuildContext context) async {
+  Future<void> _promptCompletionPin(BuildContext context, {String? defaultCompletionType}) async {
     final b = widget.booking;
     if (b == null || b.id.isEmpty) return;
 
-    final initialAmount = b.agreedPrice != null && b.agreedPrice! > 0
-        ? b.agreedPrice!.toStringAsFixed(0)
-        : '';
+    final isRejected = b.priceStatus == 'rejected';
+    String completionType = defaultCompletionType ?? (isRejected ? 'visit_only' : 'normal');
+    final normalAmount = b.approvedTotalLkr != null && b.approvedTotalLkr! > 0
+        ? b.approvedTotalLkr!.toStringAsFixed(0)
+        : (b.agreedPrice != null && b.agreedPrice! > 0
+            ? b.agreedPrice!.toStringAsFixed(0)
+            : '');
+    final visitDue = (b.visitFeeLkr ?? 0) + (b.travelCostLkr ?? 0);
+    final visitOnlyAmount = visitDue > 0
+        ? visitDue.toString()
+        : (b.agreedPrice != null && b.agreedPrice! > 0
+            ? b.agreedPrice!.toStringAsFixed(0)
+            : '1500');
+
     final pinController = TextEditingController();
-    final amountController = TextEditingController(text: initialAmount);
+    final amountController = TextEditingController(text: isRejected ? visitOnlyAmount : normalAmount);
     final noteController = TextEditingController();
     bool isSubmitting = false;
     String? errorMessage;
@@ -251,10 +269,48 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ChoiceChip(
+                        label: Text(context.l10n.completionTypeNormal, style: const TextStyle(fontSize: 12)),
+                        selected: completionType == 'normal',
+                        onSelected: isRejected
+                            ? null
+                            : (sel) {
+                                if (sel) {
+                                  setDialogState(() {
+                                    completionType = 'normal';
+                                    amountController.text = normalAmount;
+                                  });
+                                }
+                              },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ChoiceChip(
+                        label: Text(context.l10n.completionTypeVisitOnly, style: const TextStyle(fontSize: 12)),
+                        selected: completionType == 'visit_only',
+                        onSelected: (sel) {
+                          if (sel) {
+                            setDialogState(() {
+                              completionType = 'visit_only';
+                              amountController.text = visitOnlyAmount;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 Text(
-                  context.l10n.payProviderDirectlyTip,
+                  completionType == 'visit_only'
+                      ? context.l10n.visitFeeOnlyDescription
+                      : context.l10n.payProviderDirectlyTip,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12.5,
                     color: ctx.themeTextSecondary,
                     height: 1.4,
                   ),
@@ -349,7 +405,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       final pin = pinController.text.trim();
                       if (pin.length != 6 && pin.length != 4) {
                         setDialogState(() {
-                          errorMessage = 'Please enter 6 digits';
+                          errorMessage = context.l10n.pleaseEnterSixDigits;
                         });
                         return;
                       }
@@ -380,6 +436,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         jobRequestId: b.jobRequestId,
                         finalAmount: enteredAmount > 0 ? enteredAmount : null,
                         paymentNote: noteController.text.trim(),
+                        completionType: completionType,
                       );
 
                       if (result.success) {
@@ -425,9 +482,483 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     );
   }
 
+  void _callCustomer(BuildContext context, Booking booking) {
+    if (booking.customerPhone.isNotEmpty) {
+      CallService.instance.startCall(
+        context: context,
+        calleePhone: booking.customerPhone,
+        calleeName: booking.customerName,
+        bookingId: booking.id,
+        calleeUid: booking.customerId,
+        calleeRole: 'customer',
+      );
+    }
+  }
+
+  Future<void> _showOutsideZoneConfirmDialog(
+    BuildContext context,
+    Booking booking,
+    int distanceM,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.l10n.imHereGpsWrong),
+        content: Text(
+          context.l10n.gpsOutsideZoneAlert(distanceM.toString()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(context.l10n.proceedAnyway),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _handleClaimArrival(booking, outsideZone: true);
+    }
+  }
+
+  Future<void> _handleClaimArrival(Booking booking, {bool outsideZone = false}) async {
+    try {
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {}
+
+      final decision = ArrivalZoneUtils.evaluateArrivalClaim(
+        currentPosition: pos,
+        cachedPosition: _lastGpsPosition,
+        cachedTimestamp: _lastGpsTimestamp,
+        customerLat: booking.customerLatitude,
+        customerLng: booking.customerLongitude,
+        forceOutsideZone: outsideZone,
+      );
+
+      if (!decision.hasRealGps && !outsideZone) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationPermissionRequired),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      await BookingRepository().claimArrival(
+        bookingId: booking.id,
+        latitude: decision.latitude ?? 0.0,
+        longitude: decision.longitude ?? 0.0,
+        accuracyM: decision.accuracyM ?? 0,
+        distanceM: decision.distanceM ?? -1,
+        outsideZone: decision.outsideZone,
+        isMocked: decision.isMocked,
+        currentClaimCount: booking.arrivalClaimCount,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.claimSuccessNotified),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleAutoStart(Booking booking) async {
+    try {
+      await BookingRepository().autoStartArrival(
+        bookingId: booking.id,
+        jobRequestId: booking.jobRequestId,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.arrivalConfirmedNotified),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildArrivalSection(BuildContext context, Booking booking) {
+    final isInProgress = booking.status == JobStatus.inProgress ||
+        booking.status == JobStatus.completed;
+
+    if (isInProgress) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.arrivalRecordedReady,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          ProviderPriceExtrasCard(
+            bookingId: booking.id,
+            onCompleteVisitOnly: () => _promptCompletionPin(
+              context,
+              defaultCompletionType: 'visit_only',
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.primary),
+              foregroundColor: AppColors.primary,
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            icon: const Icon(Icons.photo_library_outlined, size: 20),
+            label: Text(
+              context.l10n.jobPhotos,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            ),
+            onPressed: () {
+              JobPhotosSheet.show(context, booking: booking, isProvider: true);
+            },
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            icon: const Icon(Icons.check_circle_outline, size: 20),
+            label: Text(
+              context.l10n.completeJobEnterPin,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            onPressed: () => _promptCompletionPin(context),
+          ),
+        ],
+      );
+    }
+
+    if (booking.arrivalStatus == 'claimed') {
+      final claimedAt = booking.arrivalClaimedAt;
+      final elapsedMinutes = claimedAt != null
+          ? DateTime.now().difference(claimedAt).inMinutes
+          : 0;
+      final canAutoStart = (booking.arrivalOutsideZone == false) &&
+          (booking.arrivalMocked == false) &&
+          elapsedMinutes >= 10;
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.themeSurfaceLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.themeBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.hourglass_top_rounded, color: AppColors.primary, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    context.l10n.waitingCustomerConfirmation,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (booking.arrivalOutsideZone == true || booking.arrivalMocked == true) ...[
+              Text(
+                context.l10n.callCustomerToConfirm,
+                style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+              ),
+              const SizedBox(height: 10),
+              if (booking.customerPhone.isNotEmpty)
+                ElevatedButton.icon(
+                  onPressed: () => _callCustomer(context, booking),
+                  icon: const Icon(Icons.call, size: 16),
+                  label: Text(context.l10n.callCustomer),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+            ] else if (canAutoStart) ...[
+              Text(
+                context.l10n.customerDidNotAnswer,
+                style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () => _handleAutoStart(booking),
+                icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                label: Text(context.l10n.startJobVerifiedGps),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size.fromHeight(44),
+                ),
+              ),
+            ] else ...[
+              Text(
+                context.l10n.customerWillBeNotified,
+                style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    if (booking.arrivalStatus == 'denied') {
+      final claimCount = booking.arrivalClaimCount;
+      final canReclaim = claimCount < 3;
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.l10n.arrivalDeniedFlag,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.arrivalDeniedProviderNotice,
+              style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (booking.customerPhone.isNotEmpty)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _callCustomer(context, booking),
+                      icon: const Icon(Icons.call, size: 16),
+                      label: Text(context.l10n.callCustomer),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                if (canReclaim) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _handleClaimArrival(booking),
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: Text(context.l10n.claimAgainArrival),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.maxClaimsReached,
+                      style: const TextStyle(fontSize: 11, color: AppColors.error),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Default en_route: check zone
+    int distanceM = 999999;
+    int accuracyM = 15;
+    if (_currentGpsPosition != null &&
+        booking.customerLatitude != null &&
+        booking.customerLongitude != null) {
+      distanceM = Geolocator.distanceBetween(
+        _currentGpsPosition!.latitude,
+        _currentGpsPosition!.longitude,
+        booking.customerLatitude!,
+        booking.customerLongitude!,
+      ).round();
+    }
+
+    final insideZone = ArrivalZoneUtils.isInsideZone(distanceM, accuracyM);
+
+    if (insideZone) {
+      return Column(
+        children: [
+          SlideToConfirm(
+            label: context.l10n.slideToClaimArrival,
+            onConfirmed: () => _handleClaimArrival(booking, outsideZone: false),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              context.l10n.customerWillBeNotified,
+              style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: context.themeSurfaceLow,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.themeBorder),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.navigation_outlined, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    distanceM < 999999
+                        ? context.l10n.youAreMetersAway(distanceM.toString())
+                        : context.l10n.customerLocation,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            icon: const Icon(Icons.wrong_location_outlined, size: 20),
+            label: Text(
+              context.l10n.imHereGpsWrong,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            ),
+            onPressed: () => _showOutsideZoneConfirmDialog(context, booking, distanceM),
+          ),
+        ],
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final booking = widget.booking;
+    if (widget.booking != null && widget.booking!.id.isNotEmpty) {
+      return StreamBuilder<Booking?>(
+        stream: BookingRepository().streamBooking(widget.booking!.id),
+        initialData: widget.booking,
+        builder: (context, snapshot) {
+          final booking = snapshot.data ?? widget.booking;
+          return _buildContent(context, booking);
+        },
+      );
+    }
+    return _buildContent(context, widget.booking);
+  }
+
+  Widget _buildContent(BuildContext context, Booking? booking) {
     final hasCustomerLocation = booking?.customerLatitude != null &&
         booking?.customerLongitude != null;
 
@@ -524,7 +1055,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Customer location not available',
+                            context.l10n.customerLocationNotAvailableTitle,
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 14.5,
@@ -536,7 +1067,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Exact GPS coordinates were not provided for this job. Contact the customer below to coordinate arrival.',
+                      context.l10n.customerLocationNotAvailableDesc,
                       style: TextStyle(
                           fontSize: 12.5, color: context.themeTextSecondary),
                     ),
@@ -577,7 +1108,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                   builder: (_) => DirectChatScreen(
                                     otherPartyId: booking?.customerId ?? '',
                                     otherPartyName:
-                                        booking?.customerName ?? 'Customer',
+                                        booking?.customerName ?? context.l10n.roleCustomer,
                                     otherPartyRole: 'customer',
                                     otherPartyPhone: booking?.customerPhone,
                                     jobRequestId: booking?.jobRequestId,
@@ -703,6 +1234,31 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                 ),
                               ],
                             ),
+                            if (booking?.scheduledDate != null) ...[
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 13,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Expanded(
+                                    child: Text(
+                                      booking!.formattedScheduledSummary(context),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -717,8 +1273,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                 otherPartyName:
                                     booking?.customerName.isNotEmpty == true
                                         ? booking!.customerName
-                                        : 'Customer',
-                                otherPartyRole: 'Customer',
+                                        : context.l10n.roleCustomer,
+                                otherPartyRole: 'customer',
                                 otherPartyPhone: booking?.customerPhone ?? '',
                                 jobRequestId: booking?.jobRequestId,
                               ),
@@ -748,7 +1304,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                             CallService.instance.startCall(
                               context: context,
                               calleePhone: phone,
-                              calleeName: booking?.customerName ?? 'Customer',
+                              calleeName: booking?.customerName ?? context.l10n.roleCustomer,
                               bookingId: booking?.id,
                               calleeUid: booking?.customerId,
                               calleeRole: 'customer',
@@ -829,6 +1385,33 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       ),
                     ],
                   ),
+                  if (booking?.jobRequestId != null &&
+                      booking!.jobRequestId!.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(
+                        height: 1,
+                        color: context.themeBorder,
+                      ),
+                    ),
+                    FutureBuilder<JobRequest?>(
+                      future: JobRequestRepository()
+                          .getById(booking.jobRequestId!),
+                      builder: (ctx, snap) {
+                        final jr = snap.data;
+                        if (jr == null ||
+                            (jr.photoUrls.isEmpty &&
+                                (jr.videoUrl == null ||
+                                    jr.videoUrl!.isEmpty))) {
+                          return const SizedBox.shrink();
+                        }
+                        return JobMediaGallery(
+                          photoUrls: jr.photoUrls,
+                          videoUrl: jr.videoUrl,
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -880,81 +1463,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            SlideToConfirm(
-              label: _isArrived
-                  ? context.l10n.arrivedAtLocation
-                  : context.l10n.slideToConfirmArrival,
-              onConfirmed: () async {
-                setState(() => _isArrived = true);
-                LiveLocationService.instance.stopTracking();
-                if (booking != null && booking.id.isNotEmpty) {
-                  await BookingRepository().confirmArrival(
-                    bookingId: booking.id,
-                    jobRequestId: booking.jobRequestId,
-                  );
-                }
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.l10n.arrivalConfirmedNotified),
-                      backgroundColor: AppColors.primary,
-                    ),
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                _isArrived
-                    ? context.l10n.arrivalRecordedReady
-                    : context.l10n.customerWillBeNotified,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: context.themeTextSecondary,
-                ),
-              ),
-            ),
-            if (_isArrived) ...[
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.primary),
-                  foregroundColor: AppColors.primary,
-                  minimumSize: const Size.fromHeight(46),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                icon: const Icon(Icons.photo_library_outlined, size: 20),
-                label: Text(
-                  context.l10n.jobPhotos,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
-                ),
-                onPressed: () {
-                  if (booking != null) {
-                    JobPhotosSheet.show(context, booking: booking, isProvider: true);
-                  }
-                },
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                icon: const Icon(Icons.check_circle_outline, size: 20),
-                label: const Text(
-                  'Complete Job (Enter Customer PIN)',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                ),
-                onPressed: () => _promptCompletionPin(context),
-              ),
-            ],
+            if (booking != null) _buildArrivalSection(context, booking),
             const SizedBox(height: 16),
             AppOutlineButton(
               label: context.l10n.reportTrafficDelay,
@@ -1104,7 +1613,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
     return [
       AppMapMarker.provider(
         point: widget.techPoint,
-        label: mounted ? context.l10n.youEnRoute : 'You (En Route)',
+        label: mounted ? context.l10n.youEnRoute : '',
         enRoute: true,
       ),
       if (widget.hasCustomerLocation)

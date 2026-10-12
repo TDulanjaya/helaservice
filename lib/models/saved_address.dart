@@ -42,7 +42,7 @@ class SavedAddress {
 
     return SavedAddress(
       id: doc.id,
-      label: data['label'] as String? ?? 'Home',
+      label: data['label'] as String? ?? '',
       latitude: (data['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (data['longitude'] as num?)?.toDouble() ?? 0.0,
       address: data['address'] as String? ?? '',

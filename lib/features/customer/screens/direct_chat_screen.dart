@@ -231,38 +231,29 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                                   currentUser?.role == AppRole.provider;
                               final String reporterRole =
                                   isCurrentProvider ? 'provider' : 'customer';
-                              final String accusedRole =
+                              final String reportedRole =
                                   isCurrentProvider ? 'customer' : 'provider';
+                              final String currentName = (currentUser != null &&
+                                      currentUser.displayName.isNotEmpty)
+                                  ? currentUser.displayName
+                                  : (isCurrentProvider
+                                      ? context.l10n.roleServiceProvider
+                                      : context.l10n.roleCustomer);
 
                               final complaint = Complaint(
-                                customerId: isCurrentProvider
-                                    ? widget.otherPartyId
-                                    : currentUid,
-                                customerName: isCurrentProvider
-                                    ? widget.otherPartyName
-                                    : (currentUser != null && currentUser.displayName.isNotEmpty
-                                        ? currentUser.displayName
-                                        : 'Customer'),
-                                customerPhone: isCurrentProvider
-                                    ? (widget.otherPartyPhone ?? '')
-                                    : (currentUser?.phone ?? ''),
-                                providerId: isCurrentProvider
-                                    ? currentUid
-                                    : widget.otherPartyId,
-                                providerName: isCurrentProvider
-                                    ? (currentUser != null && currentUser.displayName.isNotEmpty
-                                        ? currentUser.displayName
-                                        : 'Provider')
-                                    : widget.otherPartyName,
-                                providerTrade: 'Service Provider',
+                                type: 'report_user',
+                                reporterUid: currentUid,
+                                reporterRole: reporterRole,
+                                reporterName: currentName,
+                                reportedUid: widget.otherPartyId,
+                                reportedRole: reportedRole,
+                                reportedName: widget.otherPartyName,
                                 bookingId: widget.bookingId,
-                                reason: selectedReason,
+                                subject: selectedReason,
                                 description:
                                     '${notesController.text.trim().isNotEmpty ? notesController.text.trim() : selectedReason} (Chat Room: $_chatRoomId)',
-                                status: 'pending',
+                                status: 'open',
                                 createdAt: DateTime.now(),
-                                reporterRole: reporterRole,
-                                accusedRole: accusedRole,
                               );
 
                               await ComplaintRepository()
@@ -283,7 +274,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                               if (ctx.mounted) {
                                 setSheetState(() => isSubmitting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
+                                  SnackBar(content: Text('${context.l10n.somethingWentWrong}: $e')),
                                 );
                               }
                             }
@@ -327,7 +318,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         ? currentUser.displayName
         : (fbUser?.displayName?.isNotEmpty == true
             ? fbUser!.displayName!
-            : 'User');
+            : context.l10n.roleCustomer);
 
     // load cached id
     final ids = [_currentUserId, widget.otherPartyId]..sort();
@@ -349,8 +340,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         user1Role: currentUser?.role == AppRole.provider
             ? (currentUser?.serviceCategory?.isNotEmpty == true
                 ? CategoryService.instance.nameOf(currentUser!.serviceCategory!, context: context)
-                : 'Service Provider')
-            : 'Customer',
+                : context.l10n.roleServiceProvider)
+            : context.l10n.roleCustomer,
         user2Role: widget.otherPartyRole,
         user1Phone: currentUser?.phone,
         user2Phone: widget.otherPartyPhone,
@@ -629,9 +620,9 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Official Support',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.officialSupport,
+                      style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
@@ -763,6 +754,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             return _ChatBubble(
               text: msg.text,
               imageUrl: msg.imageUrl,
+              type: msg.type,
               isMe: isMe,
               senderId: msg.senderId,
               senderName: msg.senderName,
@@ -864,6 +856,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 class _ChatBubble extends StatelessWidget {
   final String text;
   final String? imageUrl;
+  final String type;
   final bool isMe;
   final String senderId;
   final String senderName;
@@ -872,6 +865,7 @@ class _ChatBubble extends StatelessWidget {
   const _ChatBubble({
     required this.text,
     this.imageUrl,
+    this.type = 'text',
     required this.isMe,
     required this.senderId,
     required this.senderName,
@@ -1003,7 +997,12 @@ class _ChatBubble extends StatelessWidget {
                           ? const EdgeInsets.symmetric(horizontal: 6, vertical: 4)
                           : EdgeInsets.zero,
                       child: Text(
-                        text,
+                        type == 'quote_accepted'
+                            ? context.l10n.quoteAcceptedChatMessage(
+                                isMe ? context.l10n.roleServiceProvider : senderName,
+                                text,
+                              )
+                            : text,
                         style: TextStyle(
                           color: isMe ? AppColors.onPrimary : context.themeTextPrimary,
                           fontSize: 13.5,

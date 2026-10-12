@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../constants/firestore_paths.dart';
 import '../constants/job_status.dart';
 import '../models/booking.dart';
+import '../models/booking_extra.dart';
 import '../models/booking_timeline_event.dart';
 import '../services/notification_service.dart';
 
@@ -17,6 +19,28 @@ class PinVerificationResult {
     this.attempts = 0,
     this.errorMessage,
   });
+}
+
+DateTime computeScheduledStartAt(DateTime date, String? slot) {
+  int hour = 8;
+  final s = (slot ?? '').toLowerCase();
+  if (s.contains('morning') || s.contains('උදෑසන') || s.contains('காலை')) {
+    hour = 8;
+  } else if (s.contains('afternoon') || s.contains('දහවල්') || s.contains('மதியம்')) {
+    hour = 12;
+  } else if (s.contains('evening') || s.contains('සවස') || s.contains('மாலை')) {
+    hour = 16;
+  } else {
+    final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(s);
+    if (match != null) {
+      int parsedHour = int.tryParse(match.group(1)!) ?? 8;
+      if (s.contains('pm') && parsedHour < 12) parsedHour += 12;
+      hour = parsedHour;
+    } else if (date.hour != 0) {
+      return date;
+    }
+  }
+  return DateTime(date.year, date.month, date.day, hour, 0);
 }
 
 class BookingRepository {
@@ -98,36 +122,61 @@ class BookingRepository {
         double.tryParse(booking.estRate.replaceAll(RegExp(r'[^0-9.]'), '')) ??
         0.0;
 
+    int? resolvedVisitFee = booking.visitFeeLkr;
+    String? providerCategory;
+    try {
+      final techDoc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(booking.providerId)
+          .get();
+      if (techDoc.exists && techDoc.data() != null) {
+        final data = techDoc.data()!;
+        final cat = (data['category'] as String?) ?? (data['trade'] as String?);
+        if (cat != null && cat.trim().isNotEmpty) {
+          providerCategory = cat.trim();
+        }
+        if (booking.quoteId == null) {
+          if (booking.type == 'urgent') {
+            resolvedVisitFee = (data['emergencyRateLkr'] as num?)?.toInt() ??
+                (data['baseRateLkr'] as num?)?.toInt() ?? 0;
+          } else {
+            resolvedVisitFee = (data['visitFeeLkr'] as num?)?.toInt() ??
+                (data['baseRateLkr'] as num?)?.toInt() ?? 0;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (providerCategory == null || providerCategory.isEmpty) {
+      throw 'PROVIDER_CATEGORY_MISSING';
+    }
+
     String? linkedJobRequestId = booking.jobRequestId;
 
     if (linkedJobRequestId == null || linkedJobRequestId.isEmpty) {
+      if (booking.customerLatitude == null || booking.customerLongitude == null) {
+        throw Exception('LOCATION_REQUIRED');
+      }
+
       // create linked job request for direct booking
       final jobReqRef = FirebaseFirestore.instance.collection(FirestorePaths.jobRequests).doc();
-      final quoteRef = jobReqRef.collection(FirestorePaths.quotes).doc();
       linkedJobRequestId = jobReqRef.id;
 
-      final roundedLat = booking.customerLatitude != null
-          ? double.parse(booking.customerLatitude!.toStringAsFixed(2))
-          : null;
-      final roundedLng = booking.customerLongitude != null
-          ? double.parse(booking.customerLongitude!.toStringAsFixed(2))
-          : null;
+      final roundedLat = double.parse(booking.customerLatitude!.toStringAsFixed(2));
+      final roundedLng = double.parse(booking.customerLongitude!.toStringAsFixed(2));
 
       batch.set(jobReqRef, {
         'customerId': currentUid,
         'customerName': booking.customerName,
         'title': booking.title,
-        'category': 'General',
-        'description': booking.entryInstructions != null && booking.entryInstructions!.isNotEmpty
-            ? 'Direct booking with ${booking.providerName}. Note: ${booking.entryInstructions}'
-            : 'Direct booking with ${booking.providerName}',
-        if (roundedLat != null) 'latitude': roundedLat,
-        if (roundedLng != null) 'longitude': roundedLng,
+        'category': providerCategory,
+        'description': 'Direct booking with ${booking.providerName}',
+        'latitude': roundedLat,
+        'longitude': roundedLng,
         'status': JobRequestStatus.pendingProvider,
         'selectedProviderId': booking.providerId,
-        'acceptedQuoteId': quoteRef.id,
-        'agreedPrice': rateNum,
-        'quoteCount': 1,
+        'agreedPrice': rateNum.round(),
+        'quoteCount': 0,
         'bookingId': bookingRef.id,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -141,24 +190,40 @@ class BookingRepository {
         'longitude': booking.customerLongitude,
         'createdAt': FieldValue.serverTimestamp(),
       });
-
-      batch.set(quoteRef, {
-        'providerId': booking.providerId,
-        'providerName': booking.providerName,
-        'providerPhone': booking.providerPhone,
-        'quotedPrice': rateNum,
-        'etaMinutes': 30,
-        'status': 'pending_provider',
-        'createdBy': currentUid,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
     }
 
     final bookingData = booking.toMap();
     bookingData['customerId'] = currentUid;
     bookingData['jobRequestId'] = linkedJobRequestId;
-    bookingData['agreedPrice'] = rateNum;
     bookingData['status'] = JobStatus.pending;
+    if (booking.type == 'urgent') {
+      bookingData['type'] = 'urgent';
+      bookingData['expiresAt'] = Timestamp.fromDate(
+        booking.expiresAt ?? DateTime.now().add(const Duration(minutes: 3)),
+      );
+    }
+    if (booking.quoteId == null) {
+      final fee = resolvedVisitFee ?? booking.visitFeeLkr ?? 0;
+      bookingData['quoteType'] = 'inspect';
+      bookingData['priceStatus'] = 'awaiting_confirmation';
+      bookingData['visitFeeLkr'] = fee;
+      bookingData['travelCostLkr'] = 0;
+      bookingData['approvedExtrasLkr'] = 0;
+      bookingData['proposalCount'] = 0;
+      bookingData['estimatedTotalLkr'] = fee;
+      bookingData['agreedPrice'] = fee;
+    } else {
+      bookingData['agreedPrice'] = rateNum.round();
+      if (resolvedVisitFee != null) {
+        bookingData['visitFeeLkr'] = resolvedVisitFee;
+      }
+    }
+
+    if (booking.scheduledDate != null) {
+      bookingData['scheduledStartAt'] = Timestamp.fromDate(
+        computeScheduledStartAt(booking.scheduledDate!, booking.scheduledSlot),
+      );
+    }
     bookingData.remove('providerAcceptedAt');
     batch.set(bookingRef, bookingData);
 
@@ -288,16 +353,68 @@ class BookingRepository {
     );
   }
 
-  // provider confirms arrival
-  Future<void> confirmArrival({
+  // provider claims arrival with GPS metrics
+  Future<void> claimArrival({
+    required String bookingId,
+    required double latitude,
+    required double longitude,
+    required int accuracyM,
+    required int distanceM,
+    required bool outsideZone,
+    required bool isMocked,
+    required int currentClaimCount,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+
+    final roundedLat = double.parse(latitude.toStringAsFixed(5));
+    final roundedLng = double.parse(longitude.toStringAsFixed(5));
+
+    batch.update(_col.doc(bookingId), {
+      'arrivalStatus': 'claimed',
+      'arrivalClaimedAt': FieldValue.serverTimestamp(),
+      'arrivalLat': roundedLat,
+      'arrivalLng': roundedLng,
+      'arrivalAccuracyM': accuracyM,
+      'arrivalDistanceM': distanceM,
+      'arrivalOutsideZone': outsideZone,
+      'arrivalMocked': isMocked,
+      'arrivalClaimCount': currentClaimCount + 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'arrival_claimed',
+      title: 'Arrival Claimed',
+      description: 'Provider claimed arrival ($distanceM m away${outsideZone ? ', outside zone' : ''})',
+      actorUid: uid,
+      actorRole: 'provider',
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'arrival_claimed',
+      docId: bookingId,
+    );
+  }
+
+  // customer confirms provider arrival
+  Future<void> confirmCustomerArrival({
     required String bookingId,
     String? jobRequestId,
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final batch = FirebaseFirestore.instance.batch();
+
     batch.update(_col.doc(bookingId), {
       'status': JobStatus.inProgress,
+      'arrivalStatus': 'confirmed',
       'arrivedAt': FieldValue.serverTimestamp(),
+      'arrivalConfirmedBy': 'customer',
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
     if (jobRequestId != null && jobRequestId.isNotEmpty) {
@@ -313,21 +430,144 @@ class BookingRepository {
     addTimelineEventToBatch(
       batch: batch,
       bookingId: bookingId,
-      action: 'arrived',
-      title: 'Provider Arrived',
-      description: 'Provider arrived and started work',
+      action: 'arrival_confirmed',
+      title: 'Arrival Confirmed',
+      description: 'Customer confirmed provider arrival',
+      actorUid: uid,
+      actorRole: 'customer',
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'arrival_confirmed',
+      docId: bookingId,
+    );
+  }
+
+  // customer denies provider arrival
+  Future<void> denyCustomerArrival({
+    required String bookingId,
+    required int currentDeniedCount,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+
+    batch.update(_col.doc(bookingId), {
+      'arrivalStatus': 'denied',
+      'arrivalDeniedCount': currentDeniedCount + 1,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'arrival_denied',
+      title: 'Arrival Denied',
+      description: 'Customer reported provider has not arrived',
+      actorUid: uid,
+      actorRole: 'customer',
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'arrival_denied',
+      docId: bookingId,
+    );
+  }
+
+  // provider auto-starts after 10 min timeout if inside zone and not mocked
+  Future<void> autoStartArrival({
+    required String bookingId,
+    String? jobRequestId,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+
+    batch.update(_col.doc(bookingId), {
+      'status': JobStatus.inProgress,
+      'arrivalStatus': 'auto_started',
+      'arrivedAt': FieldValue.serverTimestamp(),
+      'arrivalConfirmedBy': 'gps_timeout',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    if (jobRequestId != null && jobRequestId.isNotEmpty) {
+      final reqRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc(jobRequestId);
+      batch.update(reqRef, {
+        'status': JobRequestStatus.inProgress,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'arrival_auto_started',
+      title: 'Auto-Started After Verification',
+      description: 'Started after 10m customer timeout with verified GPS',
       actorUid: uid,
       actorRole: 'provider',
     );
 
     await batch.commit();
 
-    // send arrival alert
     NotificationService.instance.sendNotification(
-      event: 'booking_arrived',
+      event: 'arrival_auto_started',
       docId: bookingId,
     );
   }
+
+  // customer reports provider no-show
+  Future<void> reportNoShow({
+    required String bookingId,
+    String? jobRequestId,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+
+    batch.update(_col.doc(bookingId), {
+      'status': JobStatus.cancelled,
+      'cancellationReason': 'provider_no_show',
+      'noShow': true,
+      'cancelledAt': FieldValue.serverTimestamp(),
+      'cancelledBy': uid,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    if (jobRequestId != null && jobRequestId.isNotEmpty) {
+      final reqRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc(jobRequestId);
+      batch.update(reqRef, {
+        'status': JobRequestStatus.cancelled,
+        'cancellationReason': 'provider_no_show',
+        'cancelledBy': uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'no_show_reported',
+      title: 'Provider No-Show',
+      description: 'Customer cancelled due to provider no-show',
+      actorUid: uid,
+      actorRole: 'customer',
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'no_show_reported',
+      docId: bookingId,
+    );
+  }
+
 
   // provider completes job with pin
   Future<PinVerificationResult> verifyAndCompleteJob({
@@ -336,6 +576,7 @@ class BookingRepository {
     String? jobRequestId,
     double? finalAmount,
     String? paymentNote,
+    String completionType = 'normal',
   }) async {
     final cleanPin = enteredPin.trim();
     if (cleanPin.length != 6 && cleanPin.length != 4) {
@@ -373,6 +614,9 @@ class BookingRepository {
       // send completion update
       final batch = FirebaseFirestore.instance.batch();
 
+      final bookingMap = docSnap.data() ?? {};
+      final hasPriceStatus = bookingMap.containsKey('priceStatus');
+
       final updateData = <String, dynamic>{
         'status': JobStatus.completed,
         'enteredPin': cleanPin,
@@ -380,9 +624,26 @@ class BookingRepository {
         'paymentMethod': 'cash',
         'providerMarkedPaidAt': FieldValue.serverTimestamp(),
       };
-      if (finalAmount != null && finalAmount > 0) {
-        updateData['finalAmount'] = finalAmount;
+
+      if (hasPriceStatus) {
+        updateData['completionType'] = completionType;
+        if (completionType == 'visit_only') {
+          final visitFee = (bookingMap['visitFeeLkr'] as num?)?.toDouble() ??
+              (bookingMap['agreedPrice'] as num?)?.toDouble() ??
+              0.0;
+          updateData['finalAmount'] = visitFee;
+        } else {
+          final approvedTotal = (bookingMap['approvedTotalLkr'] as num?)?.toDouble() ??
+              (bookingMap['agreedPrice'] as num?)?.toDouble() ??
+              0.0;
+          updateData['finalAmount'] = approvedTotal;
+        }
+      } else {
+        if (finalAmount != null && finalAmount > 0) {
+          updateData['finalAmount'] = finalAmount;
+        }
       }
+
       if (paymentNote != null && paymentNote.trim().isNotEmpty) {
         updateData['paymentNote'] = paymentNote.trim();
       }
@@ -401,14 +662,21 @@ class BookingRepository {
       }
 
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final action = completionType == 'visit_only' ? 'completed_visit_only' : 'completed';
+      final title = completionType == 'visit_only' ? 'Visit Completed' : 'Job Completed';
+      final description = completionType == 'visit_only'
+          ? (finalAmount != null
+              ? 'Visit fee collected: LKR ${finalAmount.toStringAsFixed(0)}'
+              : 'Visit finished and verified with PIN')
+          : (finalAmount != null
+              ? 'Work finished. Cash collected: LKR ${finalAmount.toStringAsFixed(0)}'
+              : 'Work finished and verified with PIN');
       addTimelineEventToBatch(
         batch: batch,
         bookingId: bookingId,
-        action: 'completed',
-        title: 'Job Completed',
-        description: finalAmount != null
-            ? 'Work finished. Cash collected: LKR ${finalAmount.toStringAsFixed(0)}'
-            : 'Work finished and verified with PIN',
+        action: action,
+        title: title,
+        description: description,
         actorUid: uid,
         actorRole: 'provider',
         metadata: {
@@ -478,11 +746,17 @@ class BookingRepository {
   // customer disputes payment
   Future<void> disputePayment(String bookingId, {required String reason}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final bookingDoc = await _col.doc(bookingId).get();
+    final bookingData = bookingDoc.data();
+    final providerId = (bookingData?['providerId'] as String?) ?? '';
+    final complaintRef = FirebaseFirestore.instance.collection(FirestorePaths.complaints).doc();
+
     final batch = FirebaseFirestore.instance.batch();
     batch.update(_col.doc(bookingId), {
       'paymentDisputed': true,
       'paymentDisputeReason': reason,
       'paymentDisputedAt': FieldValue.serverTimestamp(),
+      'disputeTicketId': complaintRef.id,
     });
     addTimelineEventToBatch(
       batch: batch,
@@ -494,7 +768,26 @@ class BookingRepository {
       actorRole: 'customer',
       metadata: {'reason': reason},
     );
+    batch.set(complaintRef, {
+      'type': 'payment_dispute',
+      'reporterUid': uid,
+      'reporterRole': 'customer',
+      if (providerId.isNotEmpty) 'reportedUid': providerId,
+      if (providerId.isNotEmpty) 'reportedRole': 'provider',
+      'bookingId': bookingId,
+      'subject': 'Payment Dispute: $bookingId',
+      'description': reason,
+      'photos': <String>[],
+      'status': 'open',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'lastMessageAt': FieldValue.serverTimestamp(),
+    });
     await batch.commit();
+    unawaited(NotificationService.instance.sendNotification(
+      event: 'support_ticket_created',
+      docId: complaintRef.id,
+    ));
   }
 
   // reset pin attempt count
@@ -738,6 +1031,9 @@ class BookingRepository {
 
     if (proposedDate != null) {
       updates['scheduledDate'] = Timestamp.fromDate(proposedDate);
+      updates['scheduledStartAt'] = Timestamp.fromDate(
+        computeScheduledStartAt(proposedDate, proposedSlot),
+      );
       updates['time'] = '${proposedDate.year}/${proposedDate.month}/${proposedDate.day} $proposedSlot';
     }
     if (proposedSlot.isNotEmpty) {
@@ -861,6 +1157,250 @@ class BookingRepository {
 
   // stream single booking by id
   Stream<Booking?> streamBookingById(String bookingId) => streamBooking(bookingId);
+
+  // confirm same price
+  Future<void> confirmPriceSame(String bookingId, double agreedPrice) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+    batch.update(_col.doc(bookingId), {
+      'priceStatus': 'approved',
+      'approvedTotalLkr': agreedPrice.round(),
+      'priceConfirmedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'price_kept',
+      title: 'Price Kept',
+      description: 'Provider confirmed initial quoted price of LKR ${agreedPrice.round()}',
+      actorUid: uid,
+      actorRole: 'provider',
+    );
+
+    await batch.commit();
+  }
+
+  // propose new price
+  Future<void> proposeNewPrice(
+    String bookingId,
+    Map<String, dynamic> proposedPrice, {
+    int currentProposalCount = 0,
+  }) async {
+    final snap = await _col.doc(bookingId).get();
+    final data = snap.data();
+    if (data != null) {
+      if (data['priceStatus'] == 'rejected') {
+        throw Exception('Cannot propose new price after customer rejected.');
+      }
+      if (data['quoteType'] == 'firm') {
+        throw Exception('Cannot propose new price on a firm quote.');
+      }
+      final count = (data['proposalCount'] as num?)?.toInt() ?? currentProposalCount;
+      if (count >= 3) {
+        throw Exception('Maximum 3 proposals reached.');
+      }
+    }
+
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+    batch.update(_col.doc(bookingId), {
+      'priceStatus': 'proposed',
+      'proposedPrice': proposedPrice,
+      'proposalCount': FieldValue.increment(1),
+      'priceProposedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'price_proposed',
+      title: 'Price Revised',
+      description: 'Provider proposed updated price of LKR ${proposedPrice['totalLkr']}',
+      actorUid: uid,
+      actorRole: 'provider',
+      metadata: proposedPrice,
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'price_proposed',
+      docId: bookingId,
+    );
+  }
+
+  // customer responds to price proposal
+  Future<void> customerRespondToProposedPrice(
+    String bookingId, {
+    required bool approve,
+    required int totalLkr,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final batch = FirebaseFirestore.instance.batch();
+
+    if (approve) {
+      batch.update(_col.doc(bookingId), {
+        'priceStatus': 'approved',
+        'approvedTotalLkr': totalLkr,
+        'priceApprovedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      addTimelineEventToBatch(
+        batch: batch,
+        bookingId: bookingId,
+        action: 'price_approved',
+        title: 'Price Approved',
+        description: 'Customer approved revised price of LKR $totalLkr',
+        actorUid: uid,
+        actorRole: 'customer',
+      );
+    } else {
+      batch.update(_col.doc(bookingId), {
+        'priceStatus': 'rejected',
+        'priceRejectedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      addTimelineEventToBatch(
+        batch: batch,
+        bookingId: bookingId,
+        action: 'price_rejected',
+        title: 'Price Rejected',
+        description: 'Customer rejected revised price',
+        actorUid: uid,
+        actorRole: 'customer',
+      );
+    }
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'price_responded',
+      docId: bookingId,
+    );
+  }
+
+  // propose extra work
+  Future<String> proposeExtra({
+    required String bookingId,
+    required String customerId,
+    required int amountLkr,
+    required String description,
+    List<String>? photos,
+  }) async {
+    if (amountLkr < 1 || amountLkr > 1000000) {
+      throw Exception('Extra amount must be between LKR 1 and 1,000,000.');
+    }
+    if (description.isEmpty || description.length > 300) {
+      throw Exception('Extra description must be between 1 and 300 characters.');
+    }
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final extraRef = _col.doc(bookingId).collection('extras').doc();
+
+    final batch = FirebaseFirestore.instance.batch();
+    batch.set(extraRef, {
+      'providerId': uid,
+      'customerId': customerId,
+      'amountLkr': amountLkr,
+      'description': description,
+      if (photos != null && photos.isNotEmpty) 'photos': photos,
+      'status': 'proposed',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    addTimelineEventToBatch(
+      batch: batch,
+      bookingId: bookingId,
+      action: 'extra_requested',
+      title: 'Extra Work Requested',
+      description: 'Provider requested extra LKR $amountLkr: $description',
+      actorUid: uid,
+      actorRole: 'provider',
+      metadata: {'amountLkr': amountLkr, 'description': description},
+    );
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'extra_requested',
+      docId: bookingId,
+    );
+
+    return extraRef.id;
+  }
+
+  // customer responds to extra
+  Future<void> customerRespondToExtra({
+    required String bookingId,
+    required String extraId,
+    required int extraAmountLkr,
+    required bool approve,
+    required int currentApprovedExtrasLkr,
+    required int currentApprovedTotalLkr,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final extraRef = _col.doc(bookingId).collection('extras').doc(extraId);
+    final batch = FirebaseFirestore.instance.batch();
+
+    if (approve) {
+      batch.update(extraRef, {
+        'status': 'approved',
+        'approvedAt': FieldValue.serverTimestamp(),
+      });
+      batch.update(_col.doc(bookingId), {
+        'approvedExtrasLkr': currentApprovedExtrasLkr + extraAmountLkr,
+        'approvedTotalLkr': currentApprovedTotalLkr + extraAmountLkr,
+        'lastApprovedExtraId': extraId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      addTimelineEventToBatch(
+        batch: batch,
+        bookingId: bookingId,
+        action: 'extra_approved',
+        title: 'Extra Work Approved',
+        description: 'Customer approved extra LKR $extraAmountLkr',
+        actorUid: uid,
+        actorRole: 'customer',
+      );
+    } else {
+      batch.update(extraRef, {
+        'status': 'rejected',
+        'rejectedAt': FieldValue.serverTimestamp(),
+      });
+      addTimelineEventToBatch(
+        batch: batch,
+        bookingId: bookingId,
+        action: 'extra_rejected',
+        title: 'Extra Work Rejected',
+        description: 'Customer rejected extra work request',
+        actorUid: uid,
+        actorRole: 'customer',
+      );
+    }
+
+    await batch.commit();
+
+    NotificationService.instance.sendNotification(
+      event: 'extra_responded',
+      docId: bookingId,
+    );
+  }
+
+  // stream extras
+  Stream<List<BookingExtra>> streamExtras(String bookingId) {
+    if (bookingId.isEmpty) return Stream.value([]);
+    return _col
+        .doc(bookingId)
+        .collection('extras')
+        .snapshots()
+        .map((snap) {
+          final list = snap.docs.map((d) => BookingExtra.fromMap(d.id, d.data())).toList();
+          list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+          return list;
+        });
+  }
 }
 
 

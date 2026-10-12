@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
@@ -15,7 +13,6 @@ import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../state/role_provider.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
-import '../../../shared/widgets/photo_placeholder.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
@@ -37,6 +34,8 @@ import 'submit_quote_sheet.dart';
 import '../widgets/provider_approval_gate.dart';
 import '../../../shared/widgets/notification_bell_icon.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
+import '../../shared/widgets/job_media_gallery.dart';
+import '../../support/widgets/report_problem_dialog.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -224,7 +223,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Admin Inspection Mode',
+                            context.l10n.adminInspectionMode,
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w700,
@@ -232,7 +231,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             ),
                           ),
                           Text(
-                            'Viewing provider workspace with administrative bypass.',
+                            context.l10n.adminInspectionModeDesc,
                             style: TextStyle(
                               fontSize: 11,
                               color: context.themeTextSecondary,
@@ -854,7 +853,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 BorderRadius.circular(10),
                                           ),
                                           child: Text(
-                                            b.time,
+                                            b.scheduledDate != null
+                                                ? b.formattedScheduledSummary(context)
+                                                : b.time,
                                             style: const TextStyle(
                                               fontSize: 11.5,
                                               fontWeight: FontWeight.w800,
@@ -897,7 +898,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 calleePhone: b.customerPhone,
                                                 calleeName: b.customerName.isNotEmpty
                                                     ? b.customerName
-                                                    : 'Customer',
+                                                    : context.l10n.roleCustomer,
                                                 bookingId: b.id,
                                                 calleeUid: b.customerId,
                                                 calleeRole: 'customer',
@@ -991,6 +992,31 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                                 size: 16, color: AppColors.primary),
                                           ),
                                         ],
+                                        const SizedBox(width: 6),
+                                        IconButton(
+                                          tooltip: context.l10n.reportProblemTitle,
+                                          onPressed: () => ReportProblemDialog.show(
+                                            context,
+                                            bookingId: b.id,
+                                            otherPartyId: b.customerId,
+                                            otherPartyRole: 'customer',
+                                            otherPartyName: b.customerName,
+                                          ),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                context.themeSurfaceLow,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              side: BorderSide(
+                                                  color: context.themeBorder),
+                                            ),
+                                            padding: const EdgeInsets.all(8),
+                                          ),
+                                          icon: const Icon(Icons.flag_outlined,
+                                              size: 16,
+                                              color: AppColors.error),
+                                        ),
                                       ],
                                     ),
                                     if (b.status == JobStatus.pending) ...[
@@ -1423,28 +1449,12 @@ class _JobRequestCard extends StatelessWidget {
               color: context.themeTextSecondary,
             ),
           ),
-          if (request.photoUrls.isNotEmpty) ...[
+          if (request.photos.isNotEmpty || request.video != null || request.photoUrls.isNotEmpty) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              height: 60,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: request.photoUrls.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final url = request.photoUrls[i];
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: context.themeBorder),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: _buildPhoto(url, 60, 60),
-                    ),
-                  );
-                },
-              ),
+            JobMediaGallery(
+              photos: request.photos,
+              video: request.video,
+              legacyPhotoUrls: request.photoUrls,
             ),
           ],
           const SizedBox(height: 12),
@@ -1610,30 +1620,7 @@ class _JobRequestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoto(String url, double width, double height) {
-    if (url.startsWith('data:image')) {
-      try {
-        final base64Str = url.split(',').last;
-        final bytes = base64Decode(base64Str);
-        return Image.memory(
-          Uint8List.fromList(bytes),
-          width: width,
-          height: height,
-          fit: BoxFit.cover,
-        );
-      } catch (_) {
-        return PhotoPlaceholder(width: width, height: height, iconSize: 16);
-      }
-    }
-    return Image.network(
-      url,
-      width: width,
-      height: height,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          PhotoPlaceholder(width: width, height: height, iconSize: 16),
-    );
-  }
+
 }
 
 class _QuoteHistoryTile extends StatelessWidget {
@@ -1769,7 +1756,7 @@ class _QuoteHistoryTile extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
+            SnackBar(content: Text('${context.l10n.somethingWentWrong}: $e')),
           );
         }
       }

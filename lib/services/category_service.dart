@@ -18,9 +18,17 @@ class CategoryService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   Map<String, CategoryRow> get categoriesById => Map.unmodifiable(_categoriesById);
-  List<CategoryRow> get allCategories => _categoriesById.values.toList();
-  List<CategoryRow> get liveCategories =>
-      _categoriesById.values.where((c) => c.isLive).toList();
+  List<CategoryRow> get allCategories {
+    final list = _categoriesById.values.toSet().toList();
+    list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return list;
+  }
+
+  List<CategoryRow> get liveCategories {
+    final list = _categoriesById.values.where((c) => c.isLive).toSet().toList();
+    list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return list;
+  }
 
   // start category listener
   void init() {
@@ -57,8 +65,8 @@ class CategoryService extends ChangeNotifier {
   // get category name by id
   String nameOf(String? id, {BuildContext? context, Locale? locale}) {
     final fallbackLabel = context != null
-        ? AppLocalizations.of(context)?.genericService ?? 'Service'
-        : 'Service';
+        ? (AppLocalizations.of(context)?.genericService ?? '')
+        : (id ?? '');
 
     if (id == null) return fallbackLabel;
     final trimmed = id.trim();
@@ -67,6 +75,22 @@ class CategoryService extends ChangeNotifier {
     final cat = _categoriesById[trimmed] ?? _categoriesById[trimmed.toLowerCase()];
     if (cat == null) {
       return fallbackLabel;
+    }
+
+    String langCode = 'en';
+    if (locale != null) {
+      langCode = locale.languageCode;
+    } else if (context != null) {
+      try {
+        langCode = Localizations.localeOf(context).languageCode;
+      } catch (_) {}
+    }
+
+    if (cat.names != null && cat.names![langCode]?.trim().isNotEmpty == true) {
+      return cat.names![langCode]!.trim();
+    }
+    if (cat.names != null && cat.names!['en']?.trim().isNotEmpty == true) {
+      return cat.names!['en']!.trim();
     }
 
     if (cat.name.trim().isNotEmpty) {

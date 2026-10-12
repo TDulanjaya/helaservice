@@ -17,29 +17,10 @@ enum AdminRole {
     }
   }
 
-  String get label {
-    switch (this) {
-      case AdminRole.superAdmin:
-        return 'Super Admin';
-      case AdminRole.opsAdmin:
-        return 'Operations Admin';
-      case AdminRole.supportAdmin:
-        return 'Support Admin';
-    }
-  }
+  String get label => key;
+  String get description => key;
 
-  String get description {
-    switch (this) {
-      case AdminRole.superAdmin:
-        return 'Root operational lead with team administration & full platform governance.';
-      case AdminRole.opsAdmin:
-        return 'Operational dispatch, artisan verifications, category & district hub management.';
-      case AdminRole.supportAdmin:
-        return 'Support queue handler with KYC review and provider inquiry access.';
-    }
-  }
-
-  static AdminRole fromKey(String? key) {
+  static AdminRole? fromKey(String? key) {
     switch (key) {
       case 'super_admin':
       case 'superAdmin':
@@ -49,8 +30,9 @@ enum AdminRole {
         return AdminRole.supportAdmin;
       case 'ops_admin':
       case 'opsAdmin':
-      default:
         return AdminRole.opsAdmin;
+      default:
+        return null;
     }
   }
 }
@@ -60,7 +42,9 @@ enum AdminPermission {
   verifyNic,
   manageCategories,
   broadcastAlerts,
-  viewFinances;
+  viewFinances,
+  manageUsers,
+  handleSupport;
 
   String get key {
     switch (this) {
@@ -74,38 +58,15 @@ enum AdminPermission {
         return 'broadcast_alerts';
       case AdminPermission.viewFinances:
         return 'view_finances';
+      case AdminPermission.manageUsers:
+        return 'manage_users';
+      case AdminPermission.handleSupport:
+        return 'handle_support';
     }
   }
 
-  String get label {
-    switch (this) {
-      case AdminPermission.manageAdmins:
-        return 'Admin Team Governance';
-      case AdminPermission.verifyNic:
-        return 'Artisan NIC & KYC Verification';
-      case AdminPermission.manageCategories:
-        return 'Categories & District Hubs';
-      case AdminPermission.broadcastAlerts:
-        return 'Island-wide Emergency Alerts';
-      case AdminPermission.viewFinances:
-        return 'Service & Financial Logs';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case AdminPermission.manageAdmins:
-        return 'Invite, configure, demote, and deactivate administrators.';
-      case AdminPermission.verifyNic:
-        return 'Review smart NICs, police reports, and approve/reject artisan registrations.';
-      case AdminPermission.manageCategories:
-        return 'Configure trade categories, base rates, and provincial hub thresholds.';
-      case AdminPermission.broadcastAlerts:
-        return 'Send push alerts and critical warnings to active island artisans.';
-      case AdminPermission.viewFinances:
-        return 'Inspect service metrics, provider earnings, and completed job records.';
-    }
-  }
+  String get label => key;
+  String get description => key;
 
   static AdminPermission? fromKey(String? key) {
     switch (key) {
@@ -124,6 +85,12 @@ enum AdminPermission {
       case 'view_finances':
       case 'viewFinances':
         return AdminPermission.viewFinances;
+      case 'manage_users':
+      case 'manageUsers':
+        return AdminPermission.manageUsers;
+      case 'handle_support':
+      case 'handleSupport':
+        return AdminPermission.handleSupport;
       default:
         return null;
     }
@@ -146,16 +113,7 @@ enum AdminStatus {
     }
   }
 
-  String get label {
-    switch (this) {
-      case AdminStatus.active:
-        return 'Active';
-      case AdminStatus.invited:
-        return 'Invited';
-      case AdminStatus.suspended:
-        return 'Suspended';
-    }
-  }
+  String get label => key;
 
   static AdminStatus fromKey(String? key) {
     switch (key) {
@@ -176,7 +134,7 @@ class AdminUser {
   final String email;
   final String displayName;
   final String? phone;
-  final AdminRole role;
+  final AdminRole? role;
   final AdminStatus status;
   final List<AdminPermission> permissions;
   final String? invitedBy;
@@ -188,7 +146,7 @@ class AdminUser {
     required this.email,
     required this.displayName,
     this.phone,
-    this.role = AdminRole.opsAdmin,
+    this.role,
     this.status = AdminStatus.active,
     this.permissions = const [],
     this.invitedBy,
@@ -211,6 +169,8 @@ class AdminUser {
   bool get canManageCategories => hasPermission(AdminPermission.manageCategories);
   bool get canBroadcastAlerts => hasPermission(AdminPermission.broadcastAlerts);
   bool get canViewFinances => hasPermission(AdminPermission.viewFinances);
+  bool get canManageUsers => hasPermission(AdminPermission.manageUsers);
+  bool get canHandleSupport => hasPermission(AdminPermission.handleSupport);
 
   String get initials {
     final parts = displayName.trim().split(RegExp(r'\s+'));
@@ -227,6 +187,8 @@ class AdminUser {
         return const Color(0xFFD6900F);
       case AdminRole.supportAdmin:
         return const Color(0xFF4A6572);
+      case null:
+        return const Color(0xFF888888);
     }
   }
 
@@ -277,7 +239,7 @@ class AdminUser {
       'email': email.trim().toLowerCase(),
       'displayName': displayName.trim(),
       'phone': phone,
-      'role': role.key,
+      if (role != null) 'role': role!.key,
       'status': status.key,
       'permissions': permissions.map((p) => p.key).toList(),
       if (invitedBy != null) 'invitedBy': invitedBy,

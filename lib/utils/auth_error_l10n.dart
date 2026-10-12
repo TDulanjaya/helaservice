@@ -37,22 +37,32 @@ String authErrorMessage(BuildContext context, Object error) {
 
   // match known exceptions
   switch (readable) {
+    case 'user-not-found':
     case 'No account found with this email. Please check your spelling or register.':
       return l10n.authErrUserNotFound;
+    case 'wrong-password':
+    case 'invalid-credential':
     case 'Incorrect password or email. Please check your credentials.':
       return l10n.authErrWrongCredentials;
+    case 'email-already-in-use':
     case 'An account already exists with this email address.':
       return l10n.authErrEmailInUse;
+    case 'weak-password':
     case 'The password is too weak. Please use at least 6 characters.':
       return l10n.authErrWeakPassword;
+    case 'invalid-email':
     case 'Please enter a valid email address.':
       return l10n.authErrInvalidEmail;
+    case 'user-disabled':
     case 'This account has been disabled. Please contact support.':
       return l10n.authErrUserDisabled;
+    case 'too-many-requests':
     case 'Too many attempts. Please wait a moment before trying again.':
       return l10n.authErrTooManyRequests;
+    case 'network-request-failed':
     case 'Network connection issue. Please check your internet connection.':
       return l10n.authErrNetwork;
+    case 'ERROR_ABORTED_BY_USER':
     case 'Sign-in cancelled by user.':
       return l10n.authErrSignInCancelled;
     case 'Firebase user data is not available.':

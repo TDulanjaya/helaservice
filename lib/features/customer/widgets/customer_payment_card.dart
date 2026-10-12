@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/booking.dart';
+import '../../../models/booking_extra.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
@@ -35,10 +36,11 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
         );
       }
     } catch (e) {
+      debugPrint('confirmPaid error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -126,10 +128,11 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
           );
         }
       } catch (e) {
+        debugPrint('dispute payment error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(context.l10n.somethingWentWrong),
               backgroundColor: AppColors.error,
             ),
           );
@@ -204,6 +207,22 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
     }
 
     // unconfirmed completed job
+    String quoteTypeLabel;
+    switch (b.quoteType) {
+      case 'estimate':
+        quoteTypeLabel = context.l10n.quoteTypeEstimate;
+        break;
+      case 'inspect':
+        quoteTypeLabel = context.l10n.quoteTypeInspect;
+        break;
+      case 'firm':
+      default:
+        quoteTypeLabel = context.l10n.quoteTypeFirm;
+        break;
+    }
+
+    final initialEstimateVal = b.estimatedTotalLkr ?? b.agreedPrice?.round() ?? b.agreedPriceLkr;
+
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(14),
@@ -231,18 +250,124 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            context.l10n.payProviderDirectlyTip,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: context.themeTextSecondary,
+          const SizedBox(height: 10),
+          // price breakdown
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.themeSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.themeBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      quoteTypeLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
+                          const SizedBox(width: 4),
+                          Text(
+                            b.completionType == 'visit_only'
+                                ? context.l10n.visitFeeOnly
+                                : context.l10n.withinAgreedPrice,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 16),
+                _buildBreakdownRow(
+                  context.l10n.initialEstimateLabel,
+                  'LKR $initialEstimateVal',
+                  context,
+                ),
+                if (b.priceStatus == 'approved' && b.approvedTotalLkr != null) ...[
+                  const SizedBox(height: 6),
+                  _buildBreakdownRow(
+                    context.l10n.revisedAgreedPrice,
+                    'LKR ${b.approvedTotalLkr}',
+                    context,
+                  ),
+                ],
+                StreamBuilder<List<BookingExtra>>(
+                  stream: BookingRepository().streamExtras(b.id),
+                  builder: (context, snap) {
+                    final extras = (snap.data ?? []).where((e) => e.status == 'approved').toList();
+                    if (extras.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 6),
+                        ...extras.map((ex) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '+ ${ex.description}',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: context.themeTextSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    'LKR ${ex.amountLkr}',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.themeTextPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      ],
+                    );
+                  },
+                ),
+                const Divider(height: 16),
+                _buildBreakdownRow(
+                  context.l10n.finalAmountToPay,
+                  amountStr,
+                  context,
+                  isBold: true,
+                  color: AppColors.primary,
+                ),
+              ],
             ),
           ),
           if (b.paymentNote != null && b.paymentNote!.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
-              'Note: ${b.paymentNote}',
+              '${context.l10n.noteLabel} ${b.paymentNote}',
               style: TextStyle(
                 fontSize: 11.5,
                 fontStyle: FontStyle.italic,
@@ -305,6 +430,36 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBreakdownRow(
+    String label,
+    String value,
+    BuildContext context, {
+    bool isBold = false,
+    Color? color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
+            color: color ?? (isBold ? context.themeTextPrimary : context.themeTextSecondary),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isBold ? 14 : 12.5,
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w700,
+            color: color ?? context.themeTextPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

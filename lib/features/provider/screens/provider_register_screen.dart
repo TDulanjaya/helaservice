@@ -28,6 +28,10 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nicController = TextEditingController();
+  final _dailyRateController = TextEditingController();
+  final _hourlyRateController = TextEditingController();
+  final _perKmRateController = TextEditingController();
+  final _visitFeeController = TextEditingController();
   String _category = '';
   String _district = 'Colombo';
   bool _agreed = false;
@@ -43,6 +47,10 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
     _passwordController.dispose();
     _phoneController.dispose();
     _nicController.dispose();
+    _dailyRateController.dispose();
+    _hourlyRateController.dispose();
+    _perKmRateController.dispose();
+    _visitFeeController.dispose();
     super.dispose();
   }
 
@@ -92,6 +100,57 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
       return;
     }
 
+    final daily = int.tryParse(_dailyRateController.text.trim());
+    final hourly = int.tryParse(_hourlyRateController.text.trim());
+    final perKm = int.tryParse(_perKmRateController.text.trim());
+    final visitFee = int.tryParse(_visitFeeController.text.trim());
+
+    if (daily == null && hourly == null && perKm == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.atLeastOneRateRequired),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (daily != null && (daily < 1 || daily > 100000)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.dailyRateRangeError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (hourly != null && (hourly < 1 || hourly > 20000)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.hourlyRateRangeError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (perKm != null && (perKm < 1 || perKm > 1000)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.perKmRateRangeError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (visitFee != null && (visitFee < 0 || visitFee > 20000)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.visitFeeRangeError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -117,6 +176,10 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 nic: nic,
                 serviceCategory: _category,
                 district: _district,
+                dailyRateLkr: daily,
+                hourlyRateLkr: hourly,
+                perKmRateLkr: perKm,
+                visitFeeLkr: visitFee,
               );
 
               if (!mounted) return;
@@ -210,7 +273,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
               _Field(
                 label: context.l10n.fullNameNicLabel,
                 controller: _nameController,
-                hint: 'Kasun Perera',
+                hint: context.l10n.hintFullName,
                 prefixIcon: Icons.person_outline,
                 isDarkField: context.isDark,
               ),
@@ -218,7 +281,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
               _Field(
                 label: context.l10n.accountEmailLabel,
                 controller: _emailController,
-                hint: 'kasun.provider@example.com',
+                hint: context.l10n.hintProviderEmail,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.email_outlined,
                 isDarkField: context.isDark,
@@ -310,7 +373,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                         border: Border.all(color: context.themeBorder),
                       ),
                       child: Text(
-                        'No services available yet',
+                        context.l10n.noServicesAvailableYet,
                         style: TextStyle(
                           fontSize: 13,
                           color: context.themeTextSecondary,
@@ -336,7 +399,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                     prefixIcon: Icons.bolt_outlined,
                     isDarkField: context.isDark,
                     modalTitle: context.l10n.category,
-                    searchHint: 'Search category...',
+                    searchHint: context.l10n.searchCategoryHint,
                     items: liveCats.map((c) {
                       return SearchableSelectItem<String>(
                         value: c.id,
@@ -356,7 +419,7 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                 prefixIcon: Icons.map_outlined,
                 isDarkField: context.isDark,
                 modalTitle: context.l10n.district,
-                searchHint: 'Search district...',
+                searchHint: context.l10n.searchDistrictHint,
                 items: _districts.map((d) {
                   final localizedName = LocalizedData.getDistrict(context, d);
                   final sin = LocalizedData.districts[d]?['si'] ?? '';
@@ -370,6 +433,63 @@ class _ProviderRegisterScreenState extends State<ProviderRegisterScreen> {
                   );
                 }).toList(),
                 onSelected: (v) => setState(() => _district = v),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                context.l10n.yourUsualRates,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.yourUsualRatesSubtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.themeTextSecondary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _Field(
+                label: context.l10n.dailyRate,
+                controller: _dailyRateController,
+                hint: context.l10n.dailyRateHint,
+                keyboardType: TextInputType.number,
+                prefixText: 'LKR ',
+                prefixIcon: Icons.calendar_today_outlined,
+                isDarkField: context.isDark,
+              ),
+              const SizedBox(height: 14),
+              _Field(
+                label: context.l10n.hourlyRate,
+                controller: _hourlyRateController,
+                hint: context.l10n.hourlyRateHint,
+                keyboardType: TextInputType.number,
+                prefixText: 'LKR ',
+                prefixIcon: Icons.timer_outlined,
+                isDarkField: context.isDark,
+              ),
+              const SizedBox(height: 14),
+              _Field(
+                label: context.l10n.perKmTravelRate,
+                controller: _perKmRateController,
+                hint: context.l10n.perKmRateHint,
+                keyboardType: TextInputType.number,
+                prefixText: 'LKR ',
+                prefixIcon: Icons.directions_car_outlined,
+                isDarkField: context.isDark,
+              ),
+              const SizedBox(height: 14),
+              _Field(
+                label: context.l10n.standardVisitFee,
+                controller: _visitFeeController,
+                hint: context.l10n.visitFeeOptionalHint,
+                keyboardType: TextInputType.number,
+                prefixText: 'LKR ',
+                prefixIcon: Icons.meeting_room_outlined,
+                isDarkField: context.isDark,
               ),
               const SizedBox(height: 20),
               CheckboxListTile(

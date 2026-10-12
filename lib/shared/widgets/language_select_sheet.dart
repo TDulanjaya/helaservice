@@ -31,19 +31,19 @@ class LanguageSelectSheet extends StatelessWidget {
     final languages = [
       {
         'code': 'en',
-        'name': 'English',
+        'name': context.l10n.languageEnglish,
         'native': 'English',
         'subtitle': context.l10n.custDefaultSystemLanguage,
       },
       {
         'code': 'si',
-        'name': 'Sinhala',
+        'name': context.l10n.languageSinhala,
         'native': 'සිංහල',
         'subtitle': 'ශ්‍රී ලංකා දේශීය භාෂාව',
       },
       {
         'code': 'ta',
-        'name': 'Tamil',
+        'name': context.l10n.languageTamil,
         'native': 'தமிழ்',
         'subtitle': 'இலங்கை தமிழ் மொழி',
       },

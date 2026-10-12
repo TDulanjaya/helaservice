@@ -185,7 +185,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
               _Field(
                 label: context.l10n.fullNameLabel,
                 controller: _nameController,
-                hint: 'Sanduni Perera',
+                hint: context.l10n.hintFullName,
                 prefixIcon: Icons.person_outline,
                 isDarkField: context.isDark,
               ),
@@ -193,7 +193,7 @@ class _CustomerRegisterScreenState extends State<CustomerRegisterScreen> {
               _Field(
                 label: context.l10n.emailAddressLabel,
                 controller: _emailController,
-                hint: 'sanduni@example.com',
+                hint: context.l10n.hintEmail,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.email_outlined,
                 isDarkField: context.isDark,

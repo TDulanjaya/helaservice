@@ -127,13 +127,31 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
       _errorMessage = null;
     });
 
+    final l10n = context.l10n;
     try {
       final result = await OtpService().verifyEmailOtp(widget.email, code);
 
       if (!result.isValid) {
+        String msg;
+        switch (result.errorCode) {
+          case 'OTP_EXPIRED':
+            msg = l10n.codeExpired;
+            break;
+          case 'OTP_INCORRECT':
+            msg = l10n.codeIncorrect;
+            break;
+          case 'OTP_CODE_INCOMPLETE':
+            msg = l10n.enterOtp;
+            break;
+          case 'OTP_NETWORK_ERROR':
+            msg = l10n.authErrNetwork;
+            break;
+          default:
+            msg = result.errorMessage ?? l10n.codeIncorrect;
+        }
         setState(() {
           _isVerifying = false;
-          _errorMessage = result.errorMessage ?? context.l10n.codeIncorrect;
+          _errorMessage = msg;
         });
         return;
       }

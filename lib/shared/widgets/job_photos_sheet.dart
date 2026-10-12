@@ -85,8 +85,9 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
 
     try {
       final bytes = await picked.readAsBytes();
+      final stage = isBefore ? 'before' : 'after';
       final filename =
-          'job_${widget.booking.id}_${isBefore ? 'before' : 'after'}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          'job_${widget.booking.id}_${stage}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final photoUrl = await StorageService.instance
           .uploadBytes(bytes, filename: filename);
 

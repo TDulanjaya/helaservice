@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/booking.dart';
 import '../../repositories/booking_repository.dart';
 import '../../theme/app_theme.dart';
@@ -116,7 +117,7 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed: $e'),
+            content: Text('${context.l10n.somethingWentWrong}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -324,7 +325,7 @@ class RescheduleProposalBanner extends StatelessWidget {
     final isRequester = booking.rescheduleRequestedBy == currentUid;
     final proposedDate = booking.rescheduleProposedDate;
     final dateStr = proposedDate != null
-        ? '${proposedDate.year}/${proposedDate.month.toString().padLeft(2, '0')}/${proposedDate.day.toString().padLeft(2, '0')}'
+        ? DateFormat('yyyy-MM-dd', Localizations.localeOf(context).languageCode).format(proposedDate)
         : '';
     final slotStr = booking.rescheduleProposedSlot ?? '';
     final reasonStr = booking.rescheduleReason ?? '';
@@ -358,7 +359,7 @@ class RescheduleProposalBanner extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'New Time: $dateStr ${slotStr.isNotEmpty ? "($slotStr)" : ""}',
+            '${context.l10n.newTimeLabel} $dateStr ${slotStr.isNotEmpty ? "($slotStr)" : ""}',
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -368,7 +369,7 @@ class RescheduleProposalBanner extends StatelessWidget {
           if (reasonStr.isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
-              'Reason: $reasonStr',
+              '${context.l10n.reasonLabel} $reasonStr',
               style: TextStyle(
                 fontSize: 12,
                 color: context.themeTextSecondary,

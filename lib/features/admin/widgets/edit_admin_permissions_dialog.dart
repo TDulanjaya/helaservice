@@ -35,13 +35,21 @@ class _EditAdminPermissionsDialogState
   }
 
   Set<AdminPermission> _getDefaultPermissionsForRole(AdminRole role) {
+    if (role == AdminRole.superAdmin) {
+      return AdminPermission.values.toSet();
+    }
     if (role == AdminRole.supportAdmin) {
-      return {AdminPermission.verifyNic};
+      return {
+        AdminPermission.verifyNic,
+        AdminPermission.handleSupport,
+      };
     }
     return {
       AdminPermission.verifyNic,
       AdminPermission.manageCategories,
       AdminPermission.broadcastAlerts,
+      AdminPermission.manageUsers,
+      AdminPermission.handleSupport,
     };
   }
 

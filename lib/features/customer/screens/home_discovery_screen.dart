@@ -442,7 +442,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 final rawName = user?.displayName.trim() ?? '';
                 final cleanName = (rawName.isNotEmpty && !rawName.contains('@'))
                     ? rawName.split(' ').first
-                    : 'Customer';
+                    : context.l10n.roleCustomer;
                 return Text(
                   '${context.l10n.greetingAyubowan}, $cleanName!',
                   style: TextStyle(

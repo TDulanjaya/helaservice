@@ -14,6 +14,7 @@ import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../services/admin_log_service.dart';
 
 List<String> get kAllSriLankanDistricts =>
     LocationUtils.districtCoordinates.keys.toList();
@@ -41,7 +42,10 @@ class _CategoryDistrictManagementScreenState
   }
 
   void _openAddCategoryDialog(BuildContext context) {
-    final titleController = TextEditingController();
+    final titleEnController = TextEditingController();
+    final titleSiController = TextEditingController();
+    final titleTaController = TextEditingController();
+    final sortOrderController = TextEditingController(text: '10');
     final descriptionController = TextEditingController();
     String selectedIconKey = 'handyman';
     IconData selectedIcon = Icons.handyman;
@@ -102,47 +106,80 @@ class _CategoryDistrictManagementScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: AppColors.primary, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            context.l10n.cdmPublishedCategoriesInfo,
-                            style: TextStyle(
-                                fontSize: 11.5,
-                                color: context.themeTextPrimary,
-                                height: 1.35),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(context.l10n.categoryTitle,
+                  Text('${context.l10n.categoryTitle} (${context.l10n.english})',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: context.themeTextPrimary)),
                   const SizedBox(height: 6),
                   TextField(
-                    controller: titleController,
+                    controller: titleEnController,
                     style: TextStyle(color: context.themeTextPrimary),
                     decoration: InputDecoration(
-                      hintText: context.l10n.cdmCategoryTitleHint,
-                      hintStyle: TextStyle(color: context.themeTextSecondary),
+                      hintText: context.l10n.hintCategoryName,
                       prefixIcon: Icon(selectedIcon,
                           size: 20, color: AppColors.primary),
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('නම (සිංහල)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleSiController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'උදා: විදුලි කාර්මික, ජලනල',
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('பெயர் (தமிழ்)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleTaController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'எ.கா. மின்சார பணியாளர், பிளம்பர்',
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(context.l10n.sortOrder,
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: sortOrderController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      hintText: '10',
                       filled: true,
                       fillColor: context.themeSurfaceLow,
                       border: OutlineInputBorder(
@@ -230,8 +267,8 @@ class _CategoryDistrictManagementScreenState
             ),
             ElevatedButton.icon(
               onPressed: () async {
-                final title = titleController.text.trim();
-                if (title.isEmpty) {
+                final titleEn = titleEnController.text.trim();
+                if (titleEn.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(context.l10n.cdmEnterCategoryTitle),
@@ -243,42 +280,395 @@ class _CategoryDistrictManagementScreenState
 
                 final desc = descriptionController.text.trim().isNotEmpty
                     ? descriptionController.text.trim()
-                    : 'Certified domestic $title services across Sri Lanka.';
+                    : context.l10n.categoryDescriptionDefault(titleEn);
+
+                final namesMap = <String, String>{
+                  'en': titleEn,
+                  if (titleSiController.text.trim().isNotEmpty)
+                    'si': titleSiController.text.trim(),
+                  if (titleTaController.text.trim().isNotEmpty)
+                    'ta': titleTaController.text.trim(),
+                };
+
+                final sortOrder = int.tryParse(sortOrderController.text.trim()) ?? 10;
+                final slugId = titleEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
 
                 final cat = CategoryRow(
-                  id: title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_'),
+                  id: slugId,
                   icon: selectedIcon,
-                  name: title,
+                  name: titleEn,
+                  names: namesMap,
+                  sortOrder: sortOrder,
                   description: desc,
-                  registered: '0 Registered',
-                  onlineNow: '0 Online Now',
+                  registered: context.l10n.zeroRegistered,
+                  onlineNow: context.l10n.zeroOnlineNow,
                   districts: kAllSriLankanDistricts,
-                  surge: 'Market Rate',
-                  status: 'Active',
+                  surge: context.l10n.marketRate,
+                  status: 'active',
                   isLive: true,
                   iconKey: selectedIconKey,
                 );
 
-                await CategoryRepository().addCategory(cat);
-                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle_outline,
-                              color: Colors.white, size: 18),
-                          const SizedBox(width: 8),
-                          Text(context.l10n.cdmCategorySaved(title)),
-                        ],
-                      ),
-                      backgroundColor: AppColors.primary,
-                    ),
+                final createdDetails = context.l10n.categoryCreatedWithSortOrder(titleEn, sortOrder);
+                try {
+                  await CategoryRepository().addCategory(cat);
+                  await AdminLogService.instance.logAction(
+                    action: 'category_created',
+                    targetType: 'category',
+                    targetId: slugId,
+                    details: createdDetails,
                   );
+                  if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(context.l10n.cdmCategorySaved(titleEn)),
+                          ],
+                        ),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
                 }
               },
               icon: const Icon(Icons.check, size: 16),
               label: Text(context.l10n.savePublishCategory),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openEditCategoryDialog(BuildContext context, CategoryRow c) {
+    final titleEnController = TextEditingController(text: c.names?['en'] ?? c.name);
+    final titleSiController = TextEditingController(text: c.names?['si'] ?? '');
+    final titleTaController = TextEditingController(text: c.names?['ta'] ?? '');
+    final sortOrderController = TextEditingController(text: c.sortOrder.toString());
+    final descriptionController = TextEditingController(text: c.description);
+    bool isLive = c.isLive;
+    String selectedIconKey = c.iconKey.isNotEmpty ? c.iconKey : 'handyman';
+    IconData selectedIcon = c.icon;
+
+    final iconChoices = <String, IconData>{
+      'handyman': Icons.handyman,
+      'electrical_services': Icons.electrical_services,
+      'plumbing': Icons.plumbing,
+      'hvac': Icons.hvac,
+      'carpenter': Icons.carpenter,
+      'microwave': Icons.microwave,
+      'format_paint': Icons.format_paint,
+      'roofing': Icons.roofing,
+      'cleaning_services': Icons.cleaning_services,
+      'pest_control': Icons.pest_control,
+      'yard': Icons.yard,
+      'security': Icons.security,
+      'local_shipping': Icons.local_shipping,
+      'solar_power': Icons.solar_power,
+    };
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: context.themeSurface,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.edit_note_rounded,
+                    color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Edit Category: ${c.name}',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: context.themeTextPrimary,
+                ),
+              ),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 480,
+              maxHeight: MediaQuery.of(dialogCtx).size.height * 0.8,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${context.l10n.categoryTitle} (${context.l10n.english})',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleEnController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('නම (සිංහල)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleSiController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('பெயர் (தமிழ்)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleTaController,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(context.l10n.sortOrder,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.themeTextPrimary)),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: sortOrderController,
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(color: context.themeTextPrimary),
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: context.themeSurfaceLow,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: context.themeBorder),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(context.l10n.isLive,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: context.themeTextPrimary)),
+                          Switch(
+                            value: isLive,
+                            onChanged: (val) => setDialogState(() => isLive = val),
+                            activeTrackColor: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(context.l10n.serviceDescription,
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 2,
+                    style: TextStyle(color: context.themeTextPrimary),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: context.themeSurfaceLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.themeBorder),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(context.l10n.selectTradeIcon,
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: iconChoices.entries.map((entry) {
+                      final isSelected = selectedIconKey == entry.key;
+                      return InkWell(
+                        onTap: () {
+                          setDialogState(() {
+                            selectedIconKey = entry.key;
+                            selectedIcon = entry.value;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : context.themeSurfaceLow,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : context.themeBorder,
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Icon(
+                            entry.value,
+                            color: isSelected
+                                ? AppColors.primary
+                                : context.themeTextSecondary,
+                            size: 22,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text(context.l10n.cancel,
+                  style: TextStyle(color: context.themeTextSecondary)),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final titleEn = titleEnController.text.trim();
+                if (titleEn.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.l10n.cdmEnterCategoryTitle),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+
+                final namesMap = <String, String>{
+                  'en': titleEn,
+                  if (titleSiController.text.trim().isNotEmpty)
+                    'si': titleSiController.text.trim(),
+                  if (titleTaController.text.trim().isNotEmpty)
+                    'ta': titleTaController.text.trim(),
+                };
+
+                final sortOrder = int.tryParse(sortOrderController.text.trim()) ?? c.sortOrder;
+
+                final updatedCat = c.copyWith(
+                  name: titleEn,
+                  names: namesMap,
+                  sortOrder: sortOrder,
+                  isLive: isLive,
+                  status: isLive ? 'active' : 'paused',
+                  description: descriptionController.text.trim(),
+                  icon: selectedIcon,
+                  iconKey: selectedIconKey,
+                );
+
+                final updatedDetails = context.l10n.categoryUpdatedWithSortOrder(titleEn, sortOrder, isLive);
+                try {
+                  await CategoryRepository().updateCategory(updatedCat);
+                  await AdminLogService.instance.logAction(
+                    action: 'category_updated',
+                    targetType: 'category',
+                    targetId: c.id,
+                    details: updatedDetails,
+                  );
+                  if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.l10n.categoryUpdatedSuccess(c.name)),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.check, size: 16),
+              label: Text(context.l10n.saveChanges),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -322,15 +712,35 @@ class _CategoryDistrictManagementScreenState
           ),
           ElevatedButton(
             onPressed: () async {
-              await CategoryRepository().deleteCategory(c.id);
-              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.cdmCategoryDeleted(c.name)),
-                    backgroundColor: AppColors.error,
-                  ),
+              final deletedDetails = context.l10n.categoryDeletedName(c.name);
+              try {
+                await CategoryRepository().deleteCategory(c.id);
+                await AdminLogService.instance.logAction(
+                  action: 'category_deleted',
+                  targetType: 'category',
+                  targetId: c.id,
+                  details: deletedDetails,
                 );
+                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.l10n.cdmCategoryDeleted(c.name)),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      backgroundColor: AppColors.error,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -656,6 +1066,7 @@ class _CategoryDistrictManagementScreenState
                               c: c,
                               registeredCount: registeredCount,
                               onlineCount: onlineCount,
+                              onEdit: () => _openEditCategoryDialog(context, c),
                               onToggleStatus: () async {
                                 await CategoryRepository()
                                     .toggleCategoryStatus(c.id, c.status);
@@ -863,7 +1274,9 @@ class _CategoryDistrictManagementScreenState
                                         size: 18,
                                         color: context.themeTextSecondary),
                                     onSelected: (val) {
-                                      if (val == 'toggle') {
+                                      if (val == 'edit') {
+                                        _openEditCategoryDialog(context, c);
+                                      } else if (val == 'toggle') {
                                         CategoryRepository()
                                             .toggleCategoryStatus(
                                                 c.id, c.status);
@@ -872,6 +1285,17 @@ class _CategoryDistrictManagementScreenState
                                       }
                                     },
                                     itemBuilder: (ctx) => [
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.edit_outlined,
+                                                size: 16),
+                                            const SizedBox(width: 8),
+                                            Text(context.l10n.editCategory),
+                                          ],
+                                        ),
+                                      ),
                                       PopupMenuItem(
                                         value: 'toggle',
                                         child: Row(
@@ -1417,7 +1841,7 @@ class _CategoryDistrictManagementScreenState
 
   void _confirmBanTechnician(BuildContext context, Technician t) {
     final reasonController = TextEditingController(
-      text: 'Administrative suspension due to policy violations',
+      text: context.l10n.adminSuspensionViolations,
     );
 
     showDialog(
@@ -1799,6 +2223,7 @@ class _MobileCategoryCard extends StatelessWidget {
   final int onlineCount;
   final VoidCallback onToggleStatus;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
 
   const _MobileCategoryCard({
     required this.c,
@@ -1806,6 +2231,7 @@ class _MobileCategoryCard extends StatelessWidget {
     this.onlineCount = 0,
     required this.onToggleStatus,
     required this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -1907,10 +2333,21 @@ class _MobileCategoryCard extends StatelessWidget {
                     size: 20, color: context.themeTextSecondary),
                 padding: EdgeInsets.zero,
                 onSelected: (val) {
+                  if (val == 'edit') onEdit?.call();
                   if (val == 'toggle') onToggleStatus();
                   if (val == 'delete') onDelete();
                 },
                 itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_outlined, size: 16),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.editCategory),
+                      ],
+                    ),
+                  ),
                   PopupMenuItem(
                     value: 'toggle',
                     child: Row(

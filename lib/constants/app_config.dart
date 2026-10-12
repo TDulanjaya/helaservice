@@ -62,4 +62,8 @@ class AppConfig {
     }
     return key;
   }
+
+  // support contact details from remote config
+  static String get supportPhone => getString('support_phone', fallback: '');
+  static String get supportEmail => getString('support_email', fallback: '');
 }

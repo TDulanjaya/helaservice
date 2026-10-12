@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
+import '../l10n/app_localizations.dart';
 import 'l10n_extension.dart';
 
 class LocationUtils {
@@ -116,11 +117,17 @@ class LocationUtils {
     return 12742 * math.asin(math.sqrt(a));
   }
 
-  static String formatDistance(double km) {
-    if (km < 1.0) {
-      return '${(km * 1000).round()} m away';
+  static String formatDistance(double km, {AppLocalizations? l10n}) {
+    if (l10n != null) {
+      if (km < 1.0) {
+        return l10n.custMetresAway((km * 1000).round());
+      }
+      return l10n.custKmAwayValue(km.toStringAsFixed(1));
     }
-    return '${km.toStringAsFixed(1)} km away';
+    if (km < 1.0) {
+      return '${(km * 1000).round()} m';
+    }
+    return '${km.toStringAsFixed(1)} km';
   }
 
   // format distance for ui
@@ -175,5 +182,109 @@ class LocationUtils {
     } catch (_) {
       return null;
     }
+  }
+}
+
+class ArrivalClaimDecision {
+  final double? latitude;
+  final double? longitude;
+  final int? accuracyM;
+  final int? distanceM;
+  final bool outsideZone;
+  final bool isMocked;
+  final bool canAutoStart;
+  final bool hasRealGps;
+
+  const ArrivalClaimDecision({
+    this.latitude,
+    this.longitude,
+    this.accuracyM,
+    this.distanceM,
+    required this.outsideZone,
+    required this.isMocked,
+    required this.canAutoStart,
+    required this.hasRealGps,
+  });
+}
+
+class ArrivalZoneUtils {
+  ArrivalZoneUtils._();
+
+  /// Calculates effective distance taking accuracy into account:
+  /// distanceM - min(accuracyM, 100)
+  static int effectiveDistance(int distanceM, int accuracyM) {
+    final clampedAccuracy = accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
+    final diff = distanceM - clampedAccuracy;
+    return diff > 0 ? diff : 0;
+  }
+
+  /// Inside arrival zone if: distanceM - min(accuracyM, 100) <= 200
+  static bool isInsideZone(int distanceM, int accuracyM) {
+    final clampedAccuracy = accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
+    return (distanceM - clampedAccuracy) <= 200;
+  }
+
+  /// Evaluates provider arrival claim using real GPS data.
+  /// If no fresh real GPS is available, enforces outsideZone: true and forbids auto-start.
+  /// Never falls back to customer coordinates or Colombo.
+  static ArrivalClaimDecision evaluateArrivalClaim({
+    Position? currentPosition,
+    Position? cachedPosition,
+    DateTime? cachedTimestamp,
+    DateTime? now,
+    double? customerLat,
+    double? customerLng,
+    bool forceOutsideZone = false,
+    Duration maxFreshness = const Duration(seconds: 60),
+  }) {
+    final currentTime = now ?? DateTime.now();
+    Position? resolvedPosition = currentPosition;
+    if (resolvedPosition == null && cachedPosition != null && cachedTimestamp != null) {
+      if (currentTime.difference(cachedTimestamp) <= maxFreshness) {
+        resolvedPosition = cachedPosition;
+      }
+    }
+
+    if (resolvedPosition == null) {
+      return const ArrivalClaimDecision(
+        latitude: null,
+        longitude: null,
+        accuracyM: null,
+        distanceM: null,
+        outsideZone: true,
+        isMocked: false,
+        canAutoStart: false,
+        hasRealGps: false,
+      );
+    }
+
+    final lat = resolvedPosition.latitude;
+    final lng = resolvedPosition.longitude;
+    final accuracy = resolvedPosition.accuracy.round();
+    final isMocked = resolvedPosition.isMocked;
+
+    int distanceM = 0;
+    if (customerLat != null && customerLng != null) {
+      distanceM = Geolocator.distanceBetween(
+        lat,
+        lng,
+        customerLat,
+        customerLng,
+      ).round();
+    }
+
+    final insideZone = isInsideZone(distanceM, accuracy);
+    final outside = forceOutsideZone || !insideZone;
+
+    return ArrivalClaimDecision(
+      latitude: lat,
+      longitude: lng,
+      accuracyM: accuracy,
+      distanceM: distanceM,
+      outsideZone: outside,
+      isMocked: isMocked,
+      canAutoStart: !outside && !isMocked,
+      hasRealGps: true,
+    );
   }
 }

@@ -42,6 +42,10 @@ String adminPermissionLabel(BuildContext context, AdminPermission p) {
       return l10n.permBroadcastAlertsLabel;
     case AdminPermission.viewFinances:
       return l10n.permViewFinancesLabel;
+    case AdminPermission.manageUsers:
+      return l10n.permManageUsersLabel;
+    case AdminPermission.handleSupport:
+      return l10n.permHandleSupportLabel;
   }
 }
 
@@ -58,6 +62,10 @@ String adminPermissionDescription(BuildContext context, AdminPermission p) {
       return l10n.permBroadcastAlertsDesc;
     case AdminPermission.viewFinances:
       return l10n.permViewFinancesDesc;
+    case AdminPermission.manageUsers:
+      return l10n.permManageUsersDesc;
+    case AdminPermission.handleSupport:
+      return l10n.permHandleSupportDesc;
   }
 }
 

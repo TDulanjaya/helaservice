@@ -85,6 +85,28 @@ class TechnicianRepository {
     await batch.commit();
   }
 
+  // update provider rate card
+  Future<void> updateRates(
+    String id, {
+    int? dailyRateLkr,
+    int? hourlyRateLkr,
+    int? perKmRateLkr,
+    int? visitFeeLkr,
+    int? emergencyRateLkr,
+  }) async {
+    if (id.isEmpty) return;
+    final updates = <String, dynamic>{
+      if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
+      if (hourlyRateLkr != null) 'hourlyRateLkr': hourlyRateLkr,
+      if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
+      if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
+      if (emergencyRateLkr != null) 'emergencyRateLkr': emergencyRateLkr,
+    };
+    if (updates.isNotEmpty) {
+      await _col.doc(id).update(updates);
+    }
+  }
+
   Future<void> deleteTechnician(String id) async {
     if (id.isEmpty) return;
     await _col.doc(id).delete();

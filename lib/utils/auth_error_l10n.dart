@@ -8,6 +8,15 @@ import 'l10n_extension.dart';
 String authErrorMessage(BuildContext context, Object error) {
   final l10n = context.l10n;
 
+  if (error is AuthFlowException) {
+    switch (error.code) {
+      case AuthFlowException.googleNoAccount:
+        return l10n.googleNoAccountMessage;
+      case AuthFlowException.network:
+        return l10n.authErrNetwork;
+    }
+  }
+
   if (error is fb.FirebaseAuthException) {
     switch (error.code) {
       case 'user-not-found':

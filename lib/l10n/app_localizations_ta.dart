@@ -207,6 +207,20 @@ class AppLocalizationsTa extends AppLocalizations {
   String get googleSignIn => 'Google மூலம் தொடரவும்';
 
   @override
+  String get googleSignInExisting => 'Google மூலம் உள்நுழைக';
+
+  @override
+  String get googleNoAccountTitle => 'கணக்கு எதுவும் இல்லை';
+
+  @override
+  String get googleNoAccountMessage =>
+      'இந்த Google மின்னஞ்சலுக்கு HelaService கணக்கு இல்லை. முதலில் ஒரு கணக்கை உருவாக்கவும்.';
+
+  @override
+  String get splashNoConnection =>
+      'உங்கள் கணக்கை ஏற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
   String get exploreAsGuest => 'விருந்தினராக சேவைகளை ஆராயுங்கள்';
 
   @override

@@ -26,9 +26,17 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  // show retry when offline
+  bool _offline = false;
+
   @override
   void initState() {
     super.initState();
+    _resolveDestination();
+  }
+
+  void _retry() {
+    setState(() => _offline = false);
     _resolveDestination();
   }
 
@@ -94,17 +102,33 @@ class _SplashScreenState extends State<SplashScreen> {
     UserProfile? user = roleProvider.currentUser;
     if (user == null) {
       try {
-        user = await AuthService().fetchCurrentUserProfile();
-        if (user != null) {
-          roleProvider.setUser(user);
-        }
+        // load profile
+        user = await AuthService().fetchCurrentUserProfile(throwOnNetwork: true);
+      } on AuthFlowException {
+        await minDelay;
+        if (!mounted) return;
+        setState(() => _offline = true);
+        return;
       } catch (_) {}
+
+      if (user == null) {
+        // no profile so go to login
+        await AuthService().signOut();
+        await minDelay;
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        return;
+      }
+      roleProvider.setUser(user);
     }
+    final UserProfile profile = user;
 
     // start notification listeners and token sync
     NotificationService.instance.initialize();
 
-    if (user != null && user.isBanned) {
+    if (profile.isBanned) {
       await roleProvider.logout();
       await minDelay;
       if (!mounted) return;
@@ -124,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final tokenResult = await fbUser.getIdTokenResult();
       final hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
-      final isEmailOtpVerified = hasEmailOtpClaim || (user?.emailOtpVerified ?? false);
+      final isEmailOtpVerified = hasEmailOtpClaim || profile.emailOtpVerified;
 
       if (!isEmailOtpVerified) {
         await minDelay;
@@ -132,18 +156,9 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => EmailOtpScreen(
-              email: fbUser.email ?? (user?.email ?? ''),
+              email: fbUser.email ?? profile.email,
               purpose: 'signup',
               sendOnOpen: true,
-              onVerified: () async {
-                final refreshed = await AuthService().fetchCurrentUserProfile();
-                if (mounted && refreshed != null) {
-                  roleProvider.setUser(refreshed);
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: refreshed)),
-                  );
-                }
-              },
             ),
           ),
         );
@@ -155,14 +170,12 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     Widget destination = const LoginScreen();
-    if (user == null) {
-      destination = const LoginScreen();
-    } else if (user.role == null) {
-      destination = RoleChoiceScreen(user: user);
+    if (profile.role == null) {
+      destination = RoleChoiceScreen(user: profile);
     } else if (!roleProvider.isProfileCompleted) {
-      destination = CompleteProfileScreen(initialProfile: user);
+      destination = CompleteProfileScreen(initialProfile: profile);
     } else {
-      switch (user.role!) {
+      switch (profile.role!) {
         case AppRole.customer:
         case AppRole.admin:
           destination = const HomeDiscoveryScreen();
@@ -264,17 +277,41 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: const SizedBox(
-                      width: 72,
-                      height: 4,
-                      child: LinearProgressIndicator(
-                        backgroundColor: Color(0xFF232529),
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  if (_offline) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        context.l10n.splashNoConnection,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                          height: 1.45,
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _retry,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: const Color(0xFF17140F),
+                      ),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(context.l10n.retryAction),
+                    ),
+                  ] else
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: const SizedBox(
+                        width: 72,
+                        height: 4,
+                        child: LinearProgressIndicator(
+                          backgroundColor: Color(0xFF232529),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

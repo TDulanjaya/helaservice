@@ -206,6 +206,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleSignIn => 'Continue with Google';
 
   @override
+  String get googleSignInExisting => 'Sign in with Google';
+
+  @override
+  String get googleNoAccountTitle => 'No account found';
+
+  @override
+  String get googleNoAccountMessage =>
+      'There is no HelaService account for this Google email. Create one first.';
+
+  @override
+  String get splashNoConnection =>
+      'Couldn\'t load your account. Check your internet connection and try again.';
+
+  @override
   String get exploreAsGuest => 'Explore Services as Guest';
 
   @override

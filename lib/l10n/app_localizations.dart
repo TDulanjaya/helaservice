@@ -484,6 +484,30 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get googleSignIn;
 
+  /// No description provided for @googleSignInExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get googleSignInExisting;
+
+  /// No description provided for @googleNoAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found'**
+  String get googleNoAccountTitle;
+
+  /// No description provided for @googleNoAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no HelaService account for this Google email. Create one first.'**
+  String get googleNoAccountMessage;
+
+  /// No description provided for @splashNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your account. Check your internet connection and try again.'**
+  String get splashNoConnection;
+
   /// No description provided for @exploreAsGuest.
   ///
   /// In en, this message translates to:

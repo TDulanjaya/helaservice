@@ -10,6 +10,47 @@ import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 
+// sign in errors shown by the ui
+class AuthFlowException implements Exception {
+  // google email has no account
+  static const String googleNoAccount = 'GOOGLE_NO_ACCOUNT';
+
+  // profile could not load
+  static const String network = 'NETWORK';
+
+  final String code;
+  const AuthFlowException(this.code);
+
+  @override
+  String toString() => code;
+}
+
+// what google sign in should do next
+enum GoogleSignInDecision {
+  // has profile, sign in
+  proceed,
+
+  // new account from login page, delete it
+  rejectNewAccount,
+
+  // old account without profile, sign out
+  rejectMissingProfile,
+
+  // register page, create profile
+  createProfile,
+}
+
+GoogleSignInDecision decideGoogleSignIn({
+  required bool allowCreate,
+  required bool isNewUser,
+  required bool profileExists,
+}) {
+  if (!allowCreate && isNewUser) return GoogleSignInDecision.rejectNewAccount;
+  if (profileExists) return GoogleSignInDecision.proceed;
+  if (!allowCreate) return GoogleSignInDecision.rejectMissingProfile;
+  return GoogleSignInDecision.createProfile;
+}
+
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -52,7 +93,7 @@ class AuthService {
     );
 
     if (credential.user != null) {
-      return await _resolveOrCreateProfile(credential.user!);
+      return (await _resolveOrCreateProfile(credential.user!, allowCreate: true))!;
     }
 
     throw Exception('Authentication failed for $cleanEmail');
@@ -122,77 +163,173 @@ class AuthService {
     }
   }
 
-  Future<UserProfile> signInWithGoogle() async {
-    try {
-      fb.UserCredential userCredential;
+  // google sign in, login page cant create accounts
+  Future<UserProfile> signInWithGoogle({required bool allowCreate}) async {
+    fb.UserCredential userCredential;
 
-      if (kIsWeb) {
-        final googleProvider = fb.GoogleAuthProvider();
-        googleProvider.addScope('email');
-        googleProvider.addScope('profile');
-        userCredential = await _auth.signInWithPopup(googleProvider);
-      } else {
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-        if (googleUser == null) {
-          throw fb.FirebaseAuthException(
-            code: 'ERROR_ABORTED_BY_USER',
-            message: 'ERROR_ABORTED_BY_USER',
-          );
-        }
-
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
+    if (kIsWeb) {
+      final googleProvider = fb.GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+      userCredential = await _auth.signInWithPopup(googleProvider);
+    } else {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw fb.FirebaseAuthException(
+          code: 'ERROR_ABORTED_BY_USER',
+          message: 'ERROR_ABORTED_BY_USER',
         );
-
-        userCredential = await _auth.signInWithCredential(credential);
       }
 
-      final fb.User? fbUser = userCredential.user;
-      if (fbUser == null) {
-        throw Exception('Firebase user data is not available.');
-      }
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-      return await _resolveOrCreateProfile(fbUser);
-    } catch (e) {
+      userCredential = await _auth.signInWithCredential(credential);
+    }
+
+    final fb.User? fbUser = userCredential.user;
+    if (fbUser == null) {
+      throw Exception('Firebase user data is not available.');
+    }
+
+    final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+
+    // new account on login page
+    if (decideGoogleSignIn(
+          allowCreate: allowCreate,
+          isNewUser: isNewUser,
+          profileExists: false,
+        ) ==
+        GoogleSignInDecision.rejectNewAccount) {
+      await _discardNewGoogleAccount(fbUser);
+      throw const AuthFlowException(AuthFlowException.googleNoAccount);
+    }
+
+    Map<String, dynamic>? data;
+    try {
+      data = await _readUserData(fbUser.uid);
+    } on AuthFlowException {
+      if (!allowCreate) await signOut();
       rethrow;
+    }
+
+    final decision = decideGoogleSignIn(
+      allowCreate: allowCreate,
+      isNewUser: isNewUser,
+      profileExists: data != null,
+    );
+    if (decision == GoogleSignInDecision.proceed) {
+      return await _profileFromData(fbUser.uid, data!);
+    }
+    if (decision == GoogleSignInDecision.createProfile) {
+      return await _createProfile(fbUser);
+    }
+
+    // no profile on login page
+    await signOut();
+    throw const AuthFlowException(AuthFlowException.googleNoAccount);
+  }
+
+  // delete account made by login page
+  Future<void> _discardNewGoogleAccount(fb.User fbUser) async {
+    try {
+      await fbUser.delete();
+    } catch (e) {
+      debugPrint('[AuthService] Could not delete new Google account: $e');
+    }
+    await signOut();
+  }
+
+  // load current profile, never creates
+  Future<UserProfile?> fetchCurrentUserProfile({
+    bool throwOnNetwork = false,
+  }) async {
+    final fbUser = _auth.currentUser;
+    if (fbUser == null) return null;
+    try {
+      return await _resolveOrCreateProfile(fbUser, allowCreate: false);
+    } on AuthFlowException {
+      if (throwOnNetwork) rethrow;
+      return _cachedProfiles[fbUser.uid];
     }
   }
 
-  Future<UserProfile?> fetchCurrentUserProfile() async {
-    final fbUser = _auth.currentUser;
-    if (fbUser == null) return null;
-    return await _resolveOrCreateProfile(fbUser);
-  }
+  static const Duration _profileReadTimeout = Duration(seconds: 10);
 
-  Future<UserProfile> _resolveOrCreateProfile(fb.User fbUser) async {
-    final uid = fbUser.uid;
-    final userDocRef =
+  // read user doc, null only if server says missing
+  Future<Map<String, dynamic>?> _readUserData(String uid) async {
+    final ref =
         FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
 
+    // normal read
     try {
-      final doc = await userDocRef.get().timeout(const Duration(seconds: 3));
-      if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
-        await _migrateCustomerLocationIfNeeded(uid, data);
-        final profile = UserProfile.fromMap(data);
-        _currentUser = profile;
-        _cachedProfiles[uid] = profile;
-        return profile;
-      }
-    } catch (_) {}
+      final snap = await ref.get().timeout(_profileReadTimeout);
+      final data = snap.data();
+      if (snap.exists && data != null) return data;
+      if (!snap.metadata.isFromCache) return null; // not on server
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') rethrow;
+      debugPrint('[AuthService] Profile read failed: ${e.code}');
+    } catch (e) {
+      debugPrint('[AuthService] Profile read failed: $e');
+    }
 
+    // retry from server
+    try {
+      final snap = await ref
+          .get(const GetOptions(source: Source.server))
+          .timeout(_profileReadTimeout);
+      final data = snap.data();
+      return (snap.exists && data != null) ? data : null;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') rethrow;
+      debugPrint('[AuthService] Profile server read failed: ${e.code}');
+    } catch (e) {
+      debugPrint('[AuthService] Profile server read failed: $e');
+    }
+
+    throw const AuthFlowException(AuthFlowException.network);
+  }
+
+  Future<UserProfile> _profileFromData(
+      String uid, Map<String, dynamic> data) async {
+    await _migrateCustomerLocationIfNeeded(uid, data);
+    final profile = UserProfile.fromMap(data);
+    _currentUser = profile;
+    _cachedProfiles[uid] = profile;
+    return profile;
+  }
+
+  Future<UserProfile> _createProfile(fb.User fbUser) async {
     final newProfile = UserProfile.fromFirebaseUser(fbUser);
     _currentUser = newProfile;
-    _cachedProfiles[uid] = newProfile;
+    _cachedProfiles[fbUser.uid] = newProfile;
 
     try {
-      await userDocRef.set(newProfile.toMap(), SetOptions(merge: true));
-    } catch (_) {}
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.users)
+          .doc(fbUser.uid)
+          .set(newProfile.toMap(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('[AuthService] Profile create failed: $e');
+    }
 
     return newProfile;
+  }
+
+  // load profile or create if allowed
+  Future<UserProfile?> _resolveOrCreateProfile(
+    fb.User fbUser, {
+    required bool allowCreate,
+  }) async {
+    final data = await _readUserData(fbUser.uid);
+    if (data != null) return await _profileFromData(fbUser.uid, data);
+    if (!allowCreate) return null;
+    return await _createProfile(fbUser);
   }
 
   Future<void> _migrateCustomerLocationIfNeeded(

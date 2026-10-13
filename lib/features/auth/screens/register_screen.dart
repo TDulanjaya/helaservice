@@ -94,7 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final profile = await AuthService().signUpWithEmailAndPassword(
+      await AuthService().signUpWithEmailAndPassword(
         email: email,
         password: password,
         displayName: fullName,
@@ -109,21 +109,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           builder: (_) => EmailOtpScreen(
             email: email,
             purpose: 'signup',
-            onVerified: () async {
-              final refreshed = await AuthService().fetchCurrentUserProfile() ?? profile;
-              if (mounted) {
-                final roleProvider =
-                    pv.Provider.of<RoleProvider>(context, listen: false);
-                roleProvider.setUser(refreshed);
-
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (_) => RoleChoiceScreen(user: refreshed),
-                  ),
-                  (route) => false,
-                );
-              }
-            },
           ),
         ),
       );
@@ -187,7 +172,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isGoogleLoading = true);
 
     try {
-      final profile = await AuthService().signInWithGoogle();
+      // register can create account
+      final profile = await AuthService().signInWithGoogle(allowCreate: true);
 
       if (!mounted) return;
 
@@ -208,14 +194,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             builder: (_) => EmailOtpScreen(
               email: profile.email,
               purpose: 'signup',
-              onVerified: () async {
-                final refreshed = await AuthService().fetchCurrentUserProfile() ?? profile;
-                if (!mounted) return;
-                final roleProvider =
-                    pv.Provider.of<RoleProvider>(context, listen: false);
-                roleProvider.setUser(refreshed);
-                _routeAfterOtp(refreshed);
-              },
             ),
           ),
           (route) => false,

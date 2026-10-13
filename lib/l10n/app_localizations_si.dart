@@ -205,6 +205,20 @@ class AppLocalizationsSi extends AppLocalizations {
   String get googleSignIn => 'ගූගල් ගිණුමෙන් ඉදිරියට යන්න';
 
   @override
+  String get googleSignInExisting => 'ගූගල් ගිණුමෙන් පිවිසෙන්න';
+
+  @override
+  String get googleNoAccountTitle => 'ගිණුමක් හමු නොවීය';
+
+  @override
+  String get googleNoAccountMessage =>
+      'මෙම ගූගල් ඊමේල් ලිපිනයට HelaService ගිණුමක් නොමැත. කරුණාකර පළමුව ගිණුමක් සාදන්න.';
+
+  @override
+  String get splashNoConnection =>
+      'ඔබගේ ගිණුම පූරණය කළ නොහැකි විය. අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
   String get exploreAsGuest => 'ලියාපදිංචි නොවී සේවාවන් බලන්න';
 
   @override

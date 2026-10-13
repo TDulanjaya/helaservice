@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../services/otp_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../state/role_provider.dart';
+import '../../../splash_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import 'login_screen.dart';
 
 class EmailOtpScreen extends StatefulWidget {
   final String email;
-  final Future<void> Function() onVerified;
+  // optional step after verify
+  final Future<void> Function()? onVerified;
   final String? title;
   final String? subtitle;
   final String purpose;
@@ -23,7 +27,7 @@ class EmailOtpScreen extends StatefulWidget {
   const EmailOtpScreen({
     super.key,
     required this.email,
-    required this.onVerified,
+    this.onVerified,
     this.title,
     this.subtitle,
     this.purpose = 'signup',
@@ -253,8 +257,22 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         return;
       }
 
-      // submit callback
-      await widget.onVerified();
+      // verified, reload profile and route from splash
+      if (widget.onVerified != null) {
+        await widget.onVerified!();
+      }
+      try {
+        final refreshed = await AuthService().fetchCurrentUserProfile();
+        if (refreshed != null && mounted) {
+          pv.Provider.of<RoleProvider>(context, listen: false)
+              .setUser(refreshed);
+        }
+      } catch (_) {}
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const SplashScreen()),
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         setState(() {

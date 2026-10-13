@@ -99,14 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 builder: (_) => EmailOtpScreen(
                   email: fbUser.email ?? user.email,
                   purpose: 'admin_login',
-                  onVerified: () async {
-                    AdminRepository().touchLastActive(fbUser.uid);
-                    if (!mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const AdminShell()),
-                      (route) => false,
-                    );
-                  },
                 ),
               ),
               (route) => false,
@@ -142,11 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (_) => EmailOtpScreen(
               email: fbUser.email ?? user.email,
               purpose: 'signup',
-              onVerified: () async {
-                final refreshed = await AuthService().fetchCurrentUserProfile() ?? user;
-                if (!mounted) return;
-                _routeUser(refreshed);
-              },
             ),
           ),
           (route) => false,
@@ -198,11 +185,23 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isGoogleLoading = true);
 
     try {
-      final authService = AuthService();
-      final user = await authService.signInWithGoogle();
+      // login only, no new accounts
+      final user = await AuthService().signInWithGoogle(allowCreate: false);
 
       if (!mounted) return;
       await _routeUser(user);
+    } on AuthFlowException catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthFlowException.googleNoAccount) {
+        _showGoogleNoAccountDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.authErrNetwork),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[LoginScreen GoogleSignIn Error] $e');
@@ -215,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                '${context.l10n.googleSignIn}: ${authErrorMessage(context, e)}'),
+                '${context.l10n.googleSignInExisting}: ${authErrorMessage(context, e)}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -225,6 +224,56 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isGoogleLoading = false);
       }
     }
+  }
+
+  void _showGoogleNoAccountDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.themeSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: context.themeBorder, width: 1.5),
+        ),
+        title: Text(
+          ctx.l10n.googleNoAccountTitle,
+          style: TextStyle(
+            color: context.themeInk,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
+        content: Text(
+          ctx.l10n.googleNoAccountMessage,
+          style: TextStyle(
+            color: context.themeTextSecondary,
+            fontSize: 14,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(ctx.l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              );
+            },
+            child: Text(
+              ctx.l10n.createAccount,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleEmailSignIn() async {
@@ -754,6 +803,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 20),
         GoogleSignInButton(
           isLoading: _isGoogleLoading,
+          text: context.l10n.googleSignInExisting,
           onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
         ),
 

@@ -132,6 +132,7 @@ secrets.env
 *.local
 .env.local
 .env.*.local
+.env.vercel*
 !secrets.env.example
 !.env.local.example
 

@@ -71,6 +71,25 @@ String authErrorMessage(BuildContext context, Object error) {
       return l10n.authErrAlreadyAdmin;
   }
 
+  // Google Sign-In PlatformException / ApiException patterns
+  if (readable.contains('ApiException: 10') ||
+      readable.contains('DEVELOPER_ERROR')) {
+    return 'Google Sign-In configuration error. Please try again later.';
+  }
+  if (readable.contains('12501') ||
+      readable.contains('sign_in_canceled') ||
+      readable.contains('ERROR_ABORTED_BY_USER')) {
+    return l10n.authErrSignInCancelled;
+  }
+  if (readable.contains('ApiException: 7') ||
+      readable.contains('NETWORK_ERROR')) {
+    return l10n.authErrNetwork;
+  }
+  if (readable.contains('Valid API key required') ||
+      readable.contains('Server misconfigured')) {
+    return 'Service temporarily unavailable. Please try again.';
+  }
+
   const authFailedPrefix = 'Authentication failed for ';
   if (readable.startsWith(authFailedPrefix)) {
     return l10n.authErrAuthenticationFailed(

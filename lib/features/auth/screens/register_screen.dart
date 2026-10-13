@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -122,6 +123,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[RegisterScreen EmailOtp Error] $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -183,13 +187,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[RegisterScreen GoogleSignIn Error] $e');
+      }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authErrorMessage(context, e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        final rawErr = e.toString();
+        if (!rawErr.contains('cancelled') &&
+            !rawErr.contains('ABORTED') &&
+            !rawErr.contains('12501')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authErrorMessage(context, e)),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {

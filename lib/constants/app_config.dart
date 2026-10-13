@@ -22,12 +22,46 @@ class AppConfig {
           .fetchAndActivate()
           .timeout(const Duration(seconds: 8), onTimeout: () => false);
 
+      // If api_secret_key is empty (e.g. fresh install or cache lag), retry with zero interval
+      if (remoteConfig.getString('api_secret_key').trim().isEmpty) {
+        await remoteConfig.setConfigSettings(
+          RemoteConfigSettings(
+            fetchTimeout: const Duration(seconds: 10),
+            minimumFetchInterval: Duration.zero,
+          ),
+        );
+        await remoteConfig
+            .fetchAndActivate()
+            .timeout(const Duration(seconds: 8), onTimeout: () => false);
+      }
+
       if (kDebugMode) {
         final allKeys = remoteConfig.getAll().keys.toList();
         debugPrint('[AppConfig] Remote Config initialized. Keys present: $allKeys');
       }
     } catch (e) {
       debugPrint('[AppConfig] Firebase Remote Config init warning: $e');
+    }
+  }
+
+  // Force refresh api_secret_key if missing
+  static Future<bool> ensureApiSecretKey() async {
+    if (apiSecretKey.isNotEmpty) return true;
+    try {
+      final remoteConfig = FirebaseRemoteConfig.instance;
+      await remoteConfig.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(seconds: 10),
+          minimumFetchInterval: Duration.zero,
+        ),
+      );
+      await remoteConfig
+          .fetchAndActivate()
+          .timeout(const Duration(seconds: 8), onTimeout: () => false);
+      return apiSecretKey.isNotEmpty;
+    } catch (e) {
+      debugPrint('[AppConfig] ensureApiSecretKey warning: $e');
+      return apiSecretKey.isNotEmpty;
     }
   }
 

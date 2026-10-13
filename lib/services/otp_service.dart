@@ -45,6 +45,10 @@ class OtpService {
     final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.parse('$baseUrl/send-otp');
 
+    if (AppConfig.apiSecretKey.isEmpty) {
+      await AppConfig.ensureApiSecretKey();
+    }
+
     try {
       final response = await http
           .post(
@@ -73,6 +77,16 @@ class OtpService {
 
       if (response.statusCode == 400) {
         throw Exception(data['error'] as String? ?? 'Invalid email address.');
+      }
+
+      if (response.statusCode == 401 || response.statusCode == 500) {
+        final errorMsg = data['error'] as String? ?? '';
+        if (errorMsg.contains('Valid API key required') ||
+            errorMsg.contains('Server misconfigured') ||
+            response.statusCode == 500) {
+          throw Exception('Service temporarily unavailable. Please try again.');
+        }
+        throw Exception(errorMsg.isNotEmpty ? errorMsg : 'Authentication failed.');
       }
 
       throw Exception(
@@ -108,6 +122,10 @@ class OtpService {
     final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.parse('$baseUrl/verify-otp');
 
+    if (AppConfig.apiSecretKey.isEmpty) {
+      await AppConfig.ensureApiSecretKey();
+    }
+
     try {
       final response = await http
           .post(
@@ -127,10 +145,26 @@ class OtpService {
       }
 
       if (response.statusCode == 401) {
+        final errText = data['error'] as String? ?? '';
+        if (errText.contains('Valid API key required')) {
+          return const OtpVerificationResult(
+            isValid: false,
+            errorCode: 'SERVICE_UNAVAILABLE',
+            errorMessage: 'Service temporarily unavailable. Please try again.',
+          );
+        }
         return OtpVerificationResult(
           isValid: false,
           errorCode: 'OTP_INCORRECT',
-          errorMessage: data['error'] as String?,
+          errorMessage: errText.isNotEmpty ? errText : null,
+        );
+      }
+
+      if (response.statusCode == 500) {
+        return const OtpVerificationResult(
+          isValid: false,
+          errorCode: 'SERVICE_UNAVAILABLE',
+          errorMessage: 'Service temporarily unavailable. Please try again.',
         );
       }
 

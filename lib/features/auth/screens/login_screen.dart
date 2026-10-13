@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -136,9 +137,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       await _routeUser(user);
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[LoginScreen GoogleSignIn Error] $e');
+      }
       if (!mounted) return;
       final msg = AuthService.getReadableAuthError(e);
-      if (!msg.contains('cancelled') && !msg.contains('ABORTED')) {
+      if (!msg.contains('cancelled') &&
+          !msg.contains('ABORTED') &&
+          !msg.contains('12501')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

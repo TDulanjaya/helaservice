@@ -12,7 +12,28 @@
           "package_name": "com.helaservice.helaservice"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "289261218124-77gcj7g591gv5nmtf5hu6mo8lb5bgh7i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.helaservice.helaservice",
+            "certificate_hash": "fa37e0b8520647ae59214c7a15248bb14efc3d81"
+          }
+        },
+        {
+          "client_id": "289261218124-p6cr82vl509b91sldlu48g0edvubfmf1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.helaservice.helaservice",
+            "certificate_hash": "7459a314510f98888d9f981f08b1239b33f07098"
+          }
+        },
+        {
+          "client_id": "289261218124-astv8km48b1vtv1qbdu16c4328u5latj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBSAJBX19LtDmDniX4CHLxqKOWpwFOYgNA"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "289261218124-astv8km48b1vtv1qbdu16c4328u5latj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

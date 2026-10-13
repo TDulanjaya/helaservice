@@ -68,6 +68,21 @@ module.exports = async (req, res) => {
   }
   const authUid = decodedToken.uid;
 
+  // Caller must be verified (emailOtp claim) or an admin
+  const isEmailOtpVerified = decodedToken.emailOtp === true;
+  const isAdmin = !!(decodedToken.admin2faUntil || decodedToken.admin || decodedToken.superAdmin);
+  if (!isEmailOtpVerified && !isAdmin) {
+    const superDoc = await db.collection('superAdmins').doc(authUid).get();
+    let adminAuthorized = superDoc.exists;
+    if (!adminAuthorized) {
+      const adminDoc = await db.collection('admins').doc(authUid).get();
+      adminAuthorized = adminDoc.exists && adminDoc.data() && adminDoc.data().status === 'active';
+    }
+    if (!adminAuthorized) {
+      return res.status(403).json({ error: 'email_otp_required', message: 'Email OTP verification is required.' });
+    }
+  }
+
   const purpose = (req.query && req.query.purpose ? req.query.purpose : '').toLowerCase();
   const isNicPurpose = purpose === 'nic';
 

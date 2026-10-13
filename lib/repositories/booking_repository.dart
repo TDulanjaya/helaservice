@@ -9,6 +9,7 @@ import '../models/booking.dart';
 import '../models/booking_extra.dart';
 import '../models/booking_timeline_event.dart';
 import '../services/notification_service.dart';
+import '../utils/schedule_helpers.dart';
 
 class PinVerificationResult {
   final bool success;
@@ -22,25 +23,7 @@ class PinVerificationResult {
 }
 
 DateTime computeScheduledStartAt(DateTime date, String? slot) {
-  int hour = 8;
-  final s = (slot ?? '').toLowerCase();
-  if (s.contains('morning') || s.contains('උදෑසන') || s.contains('காலை')) {
-    hour = 8;
-  } else if (s.contains('afternoon') || s.contains('දහවල්') || s.contains('மதியம்')) {
-    hour = 12;
-  } else if (s.contains('evening') || s.contains('සවස') || s.contains('மாலை')) {
-    hour = 16;
-  } else {
-    final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(s);
-    if (match != null) {
-      int parsedHour = int.tryParse(match.group(1)!) ?? 8;
-      if (s.contains('pm') && parsedHour < 12) parsedHour += 12;
-      hour = parsedHour;
-    } else if (date.hour != 0) {
-      return date;
-    }
-  }
-  return DateTime(date.year, date.month, date.day, hour, 0);
+  return ScheduleHelpers.computeLegacyScheduledStartAt(date, slot);
 }
 
 class BookingRepository {

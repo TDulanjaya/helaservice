@@ -27,6 +27,7 @@ class UserProfile {
   final bool isBanned;
   final String? banReason;
   final bool isVerified;
+  final bool emailOtpVerified;
   final int? dailyRateLkr;
   final int? hourlyRateLkr;
   final int? perKmRateLkr;
@@ -62,6 +63,7 @@ class UserProfile {
     this.isBanned = false,
     this.banReason,
     this.isVerified = false,
+    this.emailOtpVerified = false,
     this.dailyRateLkr,
     this.hourlyRateLkr,
     this.perKmRateLkr,
@@ -133,6 +135,7 @@ class UserProfile {
     bool? isBanned,
     String? banReason,
     bool? isVerified,
+    bool? emailOtpVerified,
     int? dailyRateLkr,
     int? hourlyRateLkr,
     int? perKmRateLkr,
@@ -163,6 +166,7 @@ class UserProfile {
       isBanned: isBanned ?? this.isBanned,
       banReason: banReason ?? this.banReason,
       isVerified: isVerified ?? this.isVerified,
+      emailOtpVerified: emailOtpVerified ?? this.emailOtpVerified,
       dailyRateLkr: dailyRateLkr ?? this.dailyRateLkr,
       hourlyRateLkr: hourlyRateLkr ?? this.hourlyRateLkr,
       perKmRateLkr: perKmRateLkr ?? this.perKmRateLkr,
@@ -253,6 +257,7 @@ class UserProfile {
           map['status'] == 'banned',
       banReason: map['banReason']?.toString(),
       isVerified: (map['isVerified'] == true) || (map['nicVerified'] == true),
+      emailOtpVerified: map['emailOtpVerified'] == true,
       dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
       hourlyRateLkr: (map['hourlyRateLkr'] as num?)?.toInt(),
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),

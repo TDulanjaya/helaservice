@@ -159,10 +159,95 @@ module.exports = async function handler(req, res) {
 
     console.log(`[cleanup-media] Completed: ${processedJobsCount} jobs processed, ${deletedFilesCount} files deleted.`);
 
+    // --- Cleanup unverified accounts (Auth users > 7 days old) ---
+    const isDryRun = process.env.CLEANUP_UNVERIFIED_DRY_RUN !== 'false';
+    let unverifiedCandidatesCount = 0;
+    let deletedUnverifiedCount = 0;
+
+    try {
+      const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      let pageToken;
+
+      do {
+        const listUsersResult = await admin.auth().listUsers(100, pageToken);
+        for (const userRecord of listUsersResult.users) {
+          const creationMs = new Date(userRecord.metadata.creationTime).getTime();
+          if (creationMs > sevenDaysAgoMs) {
+            continue; // Created within last 7 days
+          }
+
+          // If emailOtp claim is already true, skip
+          if (userRecord.customClaims && userRecord.customClaims.emailOtp === true) {
+            continue;
+          }
+
+          const uid = userRecord.uid;
+
+          // Check users collection for emailOtpVerified
+          const userDoc = await db.collection('users').doc(uid).get();
+          if (userDoc.exists && userDoc.data() && userDoc.data().emailOtpVerified === true) {
+            continue;
+          }
+
+          // NEVER delete superAdmins or admins
+          const isSuperAdmin = (await db.collection('superAdmins').doc(uid).get()).exists;
+          if (isSuperAdmin) continue;
+
+          const isAdminDoc = (await db.collection('admins').doc(uid).get()).exists;
+          if (isAdminDoc) continue;
+
+          // NEVER delete technicians
+          const isTech = (await db.collection('technicians').doc(uid).get()).exists;
+          if (isTech) continue;
+
+          // NEVER delete users with bookings
+          const custBooking = await db.collection('bookings').where('customerId', '==', uid).limit(1).get();
+          if (!custBooking.empty) continue;
+          const provBooking = await db.collection('bookings').where('providerId', '==', uid).limit(1).get();
+          if (!provBooking.empty) continue;
+
+          // NEVER delete users with job requests
+          const custJob = await db.collection('jobRequests').where('customerId', '==', uid).limit(1).get();
+          if (!custJob.empty) continue;
+
+          // NEVER delete users with complaints / tickets
+          const custTicket = await db.collection('complaints').where('customerId', '==', uid).limit(1).get();
+          if (!custTicket.empty) continue;
+          const repTicket = await db.collection('complaints').where('reporterUid', '==', uid).limit(1).get();
+          if (!repTicket.empty) continue;
+
+          // NEVER delete users with chat rooms
+          const userChats = await db.collection('chatRooms').where('participants', 'array-contains', uid).limit(1).get();
+          if (!userChats.empty) continue;
+
+          // Candidate identified
+          unverifiedCandidatesCount++;
+
+          if (!isDryRun) {
+            await admin.auth().deleteUser(uid);
+            if (userDoc.exists) {
+              await userDoc.ref.delete();
+            }
+            deletedUnverifiedCount++;
+          }
+        }
+        pageToken = listUsersResult.pageToken;
+      } while (pageToken);
+
+      console.log(`[cleanup-unverified] Finished. DryRun: ${isDryRun}, Candidates: ${unverifiedCandidatesCount}, Deleted: ${deletedUnverifiedCount}`);
+    } catch (unverifiedErr) {
+      console.error('[cleanup-unverified] Error checking unverified accounts:', unverifiedErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       processedJobs: processedJobsCount,
       deletedFiles: deletedFilesCount,
+      unverifiedCleanup: {
+        dryRun: isDryRun,
+        candidatesCount: unverifiedCandidatesCount,
+        deletedCount: deletedUnverifiedCount,
+      },
     });
   } catch (err) {
     console.error('[cleanup-media] Cron execution error:', err.message);

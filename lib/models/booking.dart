@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/job_status.dart';
-import '../utils/l10n_extension.dart';
+import '../utils/schedule_helpers.dart';
 
 class Booking {
   final String id;
@@ -98,6 +98,13 @@ class Booking {
   final bool noShow;
   final DateTime? enRouteStartedAt;
   final DateTime? scheduledStartAt;
+  final DateTime? scheduledEndAt;
+  final String? scheduleMode;
+  final double? accuracyMeters;
+  final String? houseNo;
+  final String? street;
+  final String? city;
+  final String? directions;
 
   int get agreedPriceLkr => agreedPrice?.round() ?? 0;
 
@@ -190,6 +197,13 @@ class Booking {
     this.noShow = false,
     this.enRouteStartedAt,
     this.scheduledStartAt,
+    this.scheduledEndAt,
+    this.scheduleMode,
+    this.accuracyMeters,
+    this.houseNo,
+    this.street,
+    this.city,
+    this.directions,
   });
 
   bool get isAwaitingPriceConfirmation => priceStatus == 'awaiting_confirmation';
@@ -306,6 +320,13 @@ class Booking {
         if (noShow) 'noShow': noShow,
         if (enRouteStartedAt != null) 'enRouteStartedAt': Timestamp.fromDate(enRouteStartedAt!),
         if (scheduledStartAt != null) 'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
+        if (scheduledEndAt != null) 'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
+        if (scheduleMode != null) 'scheduleMode': scheduleMode,
+        if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
+        if (houseNo != null) 'houseNo': houseNo,
+        if (street != null) 'street': street,
+        if (city != null) 'city': city,
+        if (directions != null) 'directions': directions,
       };
 
   factory Booking.fromMap(String id, Map<String, dynamic> map) {
@@ -329,6 +350,7 @@ class Booking {
     final arrAt = map['arrivedAt'];
     final enRAt = map['enRouteStartedAt'];
     final schedStartAt = map['scheduledStartAt'];
+    final schedEndAt = map['scheduledEndAt'];
 
     return Booking(
       id: id,
@@ -425,6 +447,13 @@ class Booking {
       noShow: map['noShow'] as bool? ?? false,
       enRouteStartedAt: enRAt is Timestamp ? enRAt.toDate() : null,
       scheduledStartAt: schedStartAt is Timestamp ? schedStartAt.toDate() : null,
+      scheduledEndAt: schedEndAt is Timestamp ? schedEndAt.toDate() : null,
+      scheduleMode: map['scheduleMode'] as String?,
+      accuracyMeters: (map['accuracyMeters'] as num?)?.toDouble(),
+      houseNo: map['houseNo'] as String?,
+      street: map['street'] as String?,
+      city: map['city'] as String?,
+      directions: map['directions'] as String?,
     );
   }
 
@@ -518,6 +547,13 @@ class Booking {
     bool? noShow,
     DateTime? enRouteStartedAt,
     DateTime? scheduledStartAt,
+    DateTime? scheduledEndAt,
+    String? scheduleMode,
+    double? accuracyMeters,
+    String? houseNo,
+    String? street,
+    String? city,
+    String? directions,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -608,6 +644,13 @@ class Booking {
       noShow: noShow ?? this.noShow,
       enRouteStartedAt: enRouteStartedAt ?? this.enRouteStartedAt,
       scheduledStartAt: scheduledStartAt ?? this.scheduledStartAt,
+      scheduledEndAt: scheduledEndAt ?? this.scheduledEndAt,
+      scheduleMode: scheduleMode ?? this.scheduleMode,
+      accuracyMeters: accuracyMeters ?? this.accuracyMeters,
+      houseNo: houseNo ?? this.houseNo,
+      street: street ?? this.street,
+      city: city ?? this.city,
+      directions: directions ?? this.directions,
     );
   }
 
@@ -636,7 +679,9 @@ class Booking {
       return false;
     }
     if (status == JobStatus.confirmed) {
-      if (scheduledStartAt != null) {
+      if (scheduledEndAt != null) {
+        if (now.difference(scheduledEndAt!).inMinutes >= 30) return true;
+      } else if (scheduledStartAt != null) {
         if (now.difference(scheduledStartAt!).inMinutes >= 60) return true;
       } else if (scheduledDate != null) {
         if (now.difference(scheduledDate!).inDays >= 1) return true;
@@ -646,20 +691,15 @@ class Booking {
   }
 
   String formattedScheduledSummary(BuildContext context) {
-    if (scheduledDate == null) return time;
-    final locale = Localizations.localeOf(context).languageCode;
-    final dateStr = DateFormat.yMMMd(locale).format(scheduledDate!);
-    if (scheduledSlot == null || scheduledSlot!.isEmpty) return dateStr;
-    final s = scheduledSlot!.toLowerCase();
-    String slotLabel = scheduledSlot!;
-    if (s.contains('morning') || s.contains('8:00') || s.contains('උදෑසන') || s.contains('காலை')) {
-      slotLabel = context.l10n.slotMorning;
-    } else if (s.contains('afternoon') || s.contains('12:00') || s.contains('දහවල්') || s.contains('மதியம்')) {
-      slotLabel = context.l10n.slotAfternoon;
-    } else if (s.contains('evening') || s.contains('4:00') || s.contains('සවස') || s.contains('மாலை')) {
-      slotLabel = context.l10n.slotEvening;
-    }
-    return '$dateStr • $slotLabel';
+    return ScheduleHelpers.formatScheduleDisplay(
+      context,
+      scheduleMode: scheduleMode,
+      scheduledDate: scheduledDate,
+      scheduledStartAt: scheduledStartAt,
+      scheduledEndAt: scheduledEndAt,
+      legacySlot: scheduledSlot,
+      fallbackTime: time,
+    );
   }
 }
 

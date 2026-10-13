@@ -38,6 +38,11 @@ class SavedAddressRepository {
     required double longitude,
     required String address,
     String? landmark,
+    double? accuracyMeters,
+    String? houseNo,
+    String? street,
+    String? city,
+    String? directions,
   }) async {
     final ref = await _userAddressesCol(userId).add({
       'label': label,
@@ -45,6 +50,11 @@ class SavedAddressRepository {
       'longitude': longitude,
       'address': address,
       if (landmark != null && landmark.isNotEmpty) 'landmark': landmark,
+      if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
+      if (houseNo != null && houseNo.isNotEmpty) 'houseNo': houseNo,
+      if (street != null && street.isNotEmpty) 'street': street,
+      if (city != null && city.isNotEmpty) 'city': city,
+      if (directions != null && directions.isNotEmpty) 'directions': directions,
       'createdAt': FieldValue.serverTimestamp(),
     });
     return ref.id;

@@ -248,6 +248,7 @@ class AppMapView extends StatefulWidget {
   final bool interactive;
   final MapController? controller;
   final VoidCallback? onMapReady;
+  final void Function(MapCamera camera, bool hasGesture)? onPositionChanged;
   final EdgeInsets? padding;
   final VoidCallback? onExpand;
 
@@ -261,6 +262,7 @@ class AppMapView extends StatefulWidget {
     this.interactive = true,
     this.controller,
     this.onMapReady,
+    this.onPositionChanged,
     this.padding,
     this.onExpand,
   });
@@ -380,7 +382,7 @@ class _AppMapViewState extends State<AppMapView> {
                   initialZoom: widget.initialZoom,
                   initialCameraFit: widget.initialCameraFit,
                   minZoom: 5.0,
-                  maxZoom: 18.0,
+                  maxZoom: 19.0,
                   interactionOptions: InteractionOptions(
                     flags: widget.interactive
                         ? InteractiveFlag.all
@@ -388,6 +390,7 @@ class _AppMapViewState extends State<AppMapView> {
                     scrollWheelVelocity: 0.005,
                   ),
                   onMapReady: widget.onMapReady,
+                  onPositionChanged: widget.onPositionChanged,
                 ),
                 children: [
                   // vector tiles for mobile

@@ -51,6 +51,12 @@ module.exports = async function handler(req, res) {
   }
   const callerUid = decodedToken.uid;
 
+  // Enforce active admin 2FA claim
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!decodedToken.admin2faUntil || typeof decodedToken.admin2faUntil !== 'number' || decodedToken.admin2faUntil <= nowSec) {
+    return res.status(403).json({ error: 'admin_2fa_required', message: 'Admin 2FA verification required or expired.' });
+  }
+
   if (!process.env.B2_PRIVATE_BUCKET || !process.env.B2_PRIVATE_KEY_ID || !process.env.B2_PRIVATE_KEY) {
     return res.status(500).json({ error: 'private_storage_not_configured' });
   }

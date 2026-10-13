@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/google_sign_in_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../models/user_profile.dart';
@@ -13,6 +14,8 @@ import '../../../utils/auth_error_l10n.dart';
 import 'complete_profile_screen.dart';
 import 'role_choice_screen.dart';
 import 'register_screen.dart';
+import 'email_otp_screen.dart';
+import '../../../services/otp_service.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../admin/admin_shell.dart';
@@ -48,6 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _routeUser(UserProfile user) async {
+    final currentLocale = mounted ? context.l10n.localeName : 'en';
+
     // check if user is banned
     if (user.isBanned) {
       await AuthService().signOut();
@@ -56,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    if (!mounted) return;
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     roleProvider.setUser(user);
 
@@ -76,6 +82,38 @@ class _LoginScreenState extends State<LoginScreen> {
             return;
           }
 
+          final tokenResult = await fbUser.getIdTokenResult();
+          final admin2faUntil = (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
+          final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          final is2faValid = admin2faUntil > nowSec;
+
+          if (!is2faValid) {
+            await OtpService().sendEmailOtp(
+              fbUser.email ?? user.email,
+              purpose: 'admin_login',
+              language: currentLocale,
+            );
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => EmailOtpScreen(
+                  email: fbUser.email ?? user.email,
+                  purpose: 'admin_login',
+                  onVerified: () async {
+                    AdminRepository().touchLastActive(fbUser.uid);
+                    if (!mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const AdminShell()),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+
           AdminRepository().touchLastActive(fbUser.uid);
 
           if (!mounted) return;
@@ -86,6 +124,35 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
       } catch (_) {}
+
+      // check if regular user verified email
+      final tokenResult = await fbUser.getIdTokenResult();
+      final hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
+      final isEmailOtpVerified = hasEmailOtpClaim || user.emailOtpVerified;
+
+      if (!isEmailOtpVerified) {
+        await OtpService().sendEmailOtp(
+          fbUser.email ?? user.email,
+          purpose: 'signup',
+          language: currentLocale,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => EmailOtpScreen(
+              email: fbUser.email ?? user.email,
+              purpose: 'signup',
+              onVerified: () async {
+                final refreshed = await AuthService().fetchCurrentUserProfile() ?? user;
+                if (!mounted) return;
+                _routeUser(refreshed);
+              },
+            ),
+          ),
+          (route) => false,
+        );
+        return;
+      }
     }
 
     if (user.role == null) {
@@ -685,43 +752,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
 
         const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: OutlinedButton(
-            onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: isFieldBg,
-              side: BorderSide(color: context.themeBorder, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: _isGoogleLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const _GoogleMark(),
-                      const SizedBox(width: 12),
-                      Text(
-                        context.l10n.googleSignIn,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
-                          color: context.themeTextPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+        GoogleSignInButton(
+          isLoading: _isGoogleLoading,
+          onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
         ),
 
         const SizedBox(height: 32),
@@ -913,44 +946,6 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: _buildFormContent(context, isFieldBg, showHeader: true),
         ),
-      ),
-    );
-  }
-}
-
-class _GoogleMark extends StatelessWidget {
-  const _GoogleMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: Stack(
-        children: [
-          _Dot(color: Color(0xFF4285F4), alignment: Alignment.topLeft),
-          _Dot(color: Color(0xFFEA4335), alignment: Alignment.topRight),
-          _Dot(color: Color(0xFFFBBC05), alignment: Alignment.bottomLeft),
-          _Dot(color: Color(0xFF34A853), alignment: Alignment.bottomRight),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  final Color color;
-  final Alignment alignment;
-  const _Dot({required this.color, required this.alignment});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: 9,
-        height: 9,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }

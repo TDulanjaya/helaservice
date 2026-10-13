@@ -19,6 +19,21 @@ module.exports = async function handler(req, res) {
   if (!decodedUser) return;
   const callerUid = decodedUser.uid;
 
+  // Caller must be verified (emailOtp claim) or an admin
+  const isEmailOtpVerified = decodedUser.emailOtp === true;
+  const isAdmin = !!(decodedUser.admin2faUntil || decodedUser.admin || decodedUser.superAdmin);
+  if (!isEmailOtpVerified && !isAdmin) {
+    const superDoc = await db.collection('superAdmins').doc(callerUid).get();
+    let adminAuthorized = superDoc.exists;
+    if (!adminAuthorized) {
+      const adminDoc = await db.collection('admins').doc(callerUid).get();
+      adminAuthorized = adminDoc.exists && adminDoc.data() && adminDoc.data().status === 'active';
+    }
+    if (!adminAuthorized) {
+      return res.status(403).json({ error: 'email_otp_required', message: 'Email OTP verification is required.' });
+    }
+  }
+
   const { bookingId } = req.body || {};
   if (!bookingId || typeof bookingId !== 'string') {
     return res.status(400).json({ error: 'bookingId is required' });

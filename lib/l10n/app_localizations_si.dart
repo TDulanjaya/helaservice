@@ -5970,4 +5970,112 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get reportProblemTitle => 'ගැටලුවක් වාර්තා කරන්න';
+
+  @override
+  String get exactCurrentLocation => 'මගේ නිවැරදිම ස්ථානය යොදන්න';
+
+  @override
+  String locationAccuracy(int meters) {
+    return 'නිරවද්‍යතාව: ±$meters මී';
+  }
+
+  @override
+  String locationAccuracyLowWarning(int meters) {
+    return 'ස්ථාන නිරවද්‍යතාව අඩුය (±$meters මී). කරුණාකර ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න.';
+  }
+
+  @override
+  String get fineTunePinInstruction =>
+      'ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න';
+
+  @override
+  String get houseAptNo => 'නිවාස / මහල් නිවාස අංකය';
+
+  @override
+  String get streetName => 'වීදිය / පාර';
+
+  @override
+  String get townCity => 'නගරය';
+
+  @override
+  String get landmarkOptional => 'හඳුනාගැනීමේ සලකුණ (උදා: නිල් ගේට්ටුව අසල)';
+
+  @override
+  String get directionsForProvider => 'සේවා සපයන්නාට මාර්ග විස්තර';
+
+  @override
+  String get saveThisAddress => 'මෙම ලිපිනය සුරකින්න';
+
+  @override
+  String get locationRequiredHint =>
+      'ඉල්ලීම පළ කිරීමට පෙර කරුණාකර සිතියමෙන් සේවා ස්ථානය තෝරන්න.';
+
+  @override
+  String get scheduleModeAsap => 'හැකි ඉක්මනින් (ASAP)';
+
+  @override
+  String get scheduleModeDateOnly => 'දිනය පමණක් තෝරන්න';
+
+  @override
+  String get scheduleModeTimeRange => 'දිනය සහ වේලාව තෝරන්න';
+
+  @override
+  String get scheduleAnyTime => 'එදින ඕනෑම වේලාවක';
+
+  @override
+  String get scheduleFrom => 'සිට';
+
+  @override
+  String get scheduleTo => 'දක්වා';
+
+  @override
+  String get scheduleMinDurationError =>
+      'කාල පරාසය අවම වශයෙන් පැය 1ක් විය යුතුය.';
+
+  @override
+  String get scheduleMaxDurationError => 'කාල පරාසය පැය 12 නොඉක්මවිය යුතුය.';
+
+  @override
+  String get scheduleSameDayError => 'කාල පරාසය එකම දිනයේ විය යුතුය.';
+
+  @override
+  String get schedulePastError => 'ආරම්භක වේලාව අතීතයේ විය නොහැක.';
+
+  @override
+  String get scheduleTodayPastCutoff =>
+      'අද රාත්‍රී 8:00ට පෙර පැයකට වඩා අඩු කාලයක් ඉතිරිව ඇත. කරුණාකර වෙනත් දිනයක් තෝරන්න.';
+
+  @override
+  String get outsideWorkingHoursWarning => 'ඔබගේ සේවා වේලාවෙන් බැහැරයි';
+
+  @override
+  String get admin2faTitle => 'පරිපාලක තහවුරු කිරීම';
+
+  @override
+  String get admin2faSubtitle =>
+      'ඔබගේ පරිපාලක විද්‍යුත් තැපෑලට එවන ලද ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.';
+
+  @override
+  String get useDifferentAccount => 'වෙනත් ගිණුමක් භාවිතා කරන්න';
+
+  @override
+  String get continueAsCustomer => 'පාරිභෝගික / ශිල්පී ලෙස ඉදිරියට යන්න';
+
+  @override
+  String get otpNoSession => 'තවමත් කේතයක් යවා නැත — නැවත යවන්න තට්ටු කරන්න';
+
+  @override
+  String get otpExpiredResend => 'කේතය කල් ඉකුත් විය — නැවත යවන්න තට්ටු කරන්න';
+
+  @override
+  String get otpMaxAttemptsResend =>
+      'වැරදි උත්සාහයන් වැඩියි — නැවත යවන්න තට්ටු කරන්න';
+
+  @override
+  String otpIncorrectTriesLeft(int count) {
+    return 'වැරදි කේතයකි. තවත් උත්සාහයන් $countක් ඇත';
+  }
+
+  @override
+  String get codeAlreadySent => 'කේතය දැනටමත් යවා ඇත';
 }

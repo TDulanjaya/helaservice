@@ -2938,5 +2938,52 @@
   "ticketCreatedSuccess": "Support ticket created successfully",
   "helpSupportTitle": "Help & Support",
   "helpSupportSubtitle": "Get assistance, FAQs, or submit a ticket",
-  "reportProblemTitle": "Report a problem"
+  "reportProblemTitle": "Report a problem",
+  "exactCurrentLocation": "Use my exact current location",
+  "locationAccuracy": "Accuracy: ±{meters} m",
+  "@locationAccuracy": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "locationAccuracyLowWarning": "Location accuracy is low (±{meters} m). Please drag the map pin to your exact gate or house.",
+  "@locationAccuracyLowWarning": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "fineTunePinInstruction": "Drag pin to your exact gate or house",
+  "houseAptNo": "House / Apartment No.",
+  "streetName": "Street / Road",
+  "townCity": "Town / City",
+  "landmarkOptional": "Landmark (e.g. near the blue gate)",
+  "directionsForProvider": "Directions for provider",
+  "saveThisAddress": "Save this address",
+  "locationRequiredHint": "Please choose a service location on the map before posting.",
+  "scheduleModeAsap": "As soon as possible",
+  "scheduleModeDateOnly": "Pick a date only",
+  "scheduleModeTimeRange": "Pick a date & my own time range",
+  "scheduleAnyTime": "Any time that day",
+  "scheduleFrom": "From",
+  "scheduleTo": "To",
+  "scheduleMinDurationError": "Time range must be at least 1 hour.",
+  "scheduleMaxDurationError": "Time range cannot exceed 12 hours.",
+  "scheduleSameDayError": "Time range must be on the same day.",
+  "schedulePastError": "Start time cannot be in the past.",
+  "scheduleTodayPastCutoff": "Less than 1 hour remains before 20:00 today. Please select another date.",
+  "outsideWorkingHoursWarning": "Outside your working hours",
+  "admin2faTitle": "Admin Verification",
+  "admin2faSubtitle": "Enter the 6-digit code sent to your admin email to authenticate your session.",
+  "useDifferentAccount": "Use a different account",
+  "continueAsCustomer": "Continue as customer / provider",
+  "otpNoSession": "No code sent yet — tap Resend",
+  "otpExpiredResend": "Code expired — tap Resend",
+  "otpMaxAttemptsResend": "Too many wrong tries — tap Resend",
+  "otpIncorrectTriesLeft": "Incorrect code. {count} tries left",
+  "@otpIncorrectTriesLeft": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "codeAlreadySent": "Code already sent"
 }

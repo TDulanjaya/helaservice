@@ -27,6 +27,11 @@ class JobRequestRepository {
     publicData.remove('customerPhone');
     publicData.remove('address');
     publicData.remove('landmark');
+    publicData.remove('houseNo');
+    publicData.remove('street');
+    publicData.remove('city');
+    publicData.remove('directions');
+    publicData.remove('accuracyMeters');
     if (request.latitude != null) {
       publicData['latitude'] = double.parse(request.latitude!.toStringAsFixed(2));
     }
@@ -44,6 +49,11 @@ class JobRequestRepository {
       'landmark': request.landmark ?? '',
       'latitude': request.latitude,
       'longitude': request.longitude,
+      if (request.accuracyMeters != null) 'accuracyMeters': request.accuracyMeters,
+      if (request.houseNo != null && request.houseNo!.isNotEmpty) 'houseNo': request.houseNo,
+      if (request.street != null && request.street!.isNotEmpty) 'street': request.street,
+      if (request.city != null && request.city!.isNotEmpty) 'city': request.city,
+      if (request.directions != null && request.directions!.isNotEmpty) 'directions': request.directions,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -142,7 +152,11 @@ class JobRequestRepository {
 
     // stop if slot has already passed
     DateTime? scheduledStartAt;
-    if (request.scheduledDate != null) {
+    if (request.scheduledEndAt != null) {
+      if (request.scheduledEndAt!.isBefore(DateTime.now())) {
+        throw 'SCHEDULE_PASSED';
+      }
+    } else if (request.scheduledDate != null) {
       scheduledStartAt = computeScheduledStartAt(
         request.scheduledDate!,
         request.scheduledSlot,
@@ -216,6 +230,11 @@ class JobRequestRepository {
     final exactLandmark = (contactData?['landmark'] as String?) ?? request.landmark ?? '';
     final exactLat = (contactData?['latitude'] as num?)?.toDouble() ?? request.latitude!;
     final exactLng = (contactData?['longitude'] as num?)?.toDouble() ?? request.longitude!;
+    final accuracyMeters = (contactData?['accuracyMeters'] as num?)?.toDouble() ?? request.accuracyMeters;
+    final houseNo = (contactData?['houseNo'] as String?) ?? request.houseNo;
+    final street = (contactData?['street'] as String?) ?? request.street;
+    final city = (contactData?['city'] as String?) ?? request.city;
+    final directions = (contactData?['directions'] as String?) ?? request.directions;
 
     // Read provider phone from technicians/{providerId} (or users/{providerId})
     String providerPhone = '';
@@ -283,12 +302,22 @@ class JobRequestRepository {
       'approvedExtrasLkr': 0,
       'proposalCount': 0,
       'type': request.bookingType,
+      'scheduleMode': request.scheduleMode,
       if (request.scheduledDate != null)
         'scheduledDate': Timestamp.fromDate(request.scheduledDate!),
-      if (scheduledStartAt != null)
+      if (request.scheduledStartAt != null)
+        'scheduledStartAt': Timestamp.fromDate(request.scheduledStartAt!)
+      else if (scheduledStartAt != null)
         'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+      if (request.scheduledEndAt != null)
+        'scheduledEndAt': Timestamp.fromDate(request.scheduledEndAt!),
       if (request.scheduledSlot != null && request.scheduledSlot!.isNotEmpty)
         'scheduledSlot': request.scheduledSlot,
+      if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
+      if (houseNo != null && houseNo.isNotEmpty) 'houseNo': houseNo,
+      if (street != null && street.isNotEmpty) 'street': street,
+      if (city != null && city.isNotEmpty) 'city': city,
+      if (directions != null && directions.isNotEmpty) 'directions': directions,
     };
 
     batch.set(bookingRef, bookingData);
@@ -364,12 +393,18 @@ class JobRequestRepository {
   Future<void> updateJobSchedule({
     required String requestId,
     required DateTime scheduledDate,
-    required String? scheduledSlot,
+    String? scheduledSlot,
+    String? scheduleMode,
+    DateTime? scheduledStartAt,
+    DateTime? scheduledEndAt,
   }) async {
     await _col.doc(requestId).update({
       'scheduledDate': Timestamp.fromDate(scheduledDate),
       if (scheduledSlot != null && scheduledSlot.isNotEmpty)
         'scheduledSlot': scheduledSlot,
+      if (scheduleMode != null) 'scheduleMode': scheduleMode,
+      if (scheduledStartAt != null) 'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+      if (scheduledEndAt != null) 'scheduledEndAt': Timestamp.fromDate(scheduledEndAt),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }

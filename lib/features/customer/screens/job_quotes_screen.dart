@@ -759,11 +759,17 @@ class JobQuotesScreen extends StatelessWidget {
           requestId: request.id,
           scheduledDate: picked.date,
           scheduledSlot: picked.slot,
+          scheduleMode: picked.scheduleMode,
+          scheduledStartAt: picked.scheduledStartAt,
+          scheduledEndAt: picked.scheduledEndAt,
         );
 
         final updatedRequest = request.copyWith(
           scheduledDate: picked.date,
           scheduledSlot: picked.slot,
+          scheduleMode: picked.scheduleMode,
+          scheduledStartAt: picked.scheduledStartAt,
+          scheduledEndAt: picked.scheduledEndAt,
         );
 
         if (context.mounted) {

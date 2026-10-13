@@ -4,11 +4,13 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
+import '../../../shared/widgets/google_sign_in_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/otp_service.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
+import '../../../models/user_profile.dart';
 import 'complete_profile_screen.dart';
 import 'role_choice_screen.dart';
 import 'email_otp_screen.dart';
@@ -88,10 +90,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final currentLocale = mounted ? context.l10n.localeName : 'en';
     setState(() => _isLoading = true);
 
     try {
-      await OtpService().sendEmailOtp(email);
+      final profile = await AuthService().signUpWithEmailAndPassword(
+        email: email,
+        password: password,
+        displayName: fullName,
+      );
+
+      await OtpService().sendEmailOtp(email, purpose: 'signup', language: currentLocale);
 
       if (!mounted) return;
 
@@ -99,21 +108,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(
           builder: (_) => EmailOtpScreen(
             email: email,
+            purpose: 'signup',
             onVerified: () async {
-              final profile = await AuthService().signUpWithEmailAndPassword(
-                email: email,
-                password: password,
-                displayName: fullName,
-              );
-
+              final refreshed = await AuthService().fetchCurrentUserProfile() ?? profile;
               if (mounted) {
                 final roleProvider =
                     pv.Provider.of<RoleProvider>(context, listen: false);
-                roleProvider.setUser(profile);
+                roleProvider.setUser(refreshed);
 
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
-                    builder: (_) => RoleChoiceScreen(user: profile),
+                    builder: (_) => RoleChoiceScreen(user: refreshed),
                   ),
                   (route) => false,
                 );
@@ -145,47 +150,84 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  void _routeAfterOtp(UserProfile user) {
+    if (user.role == null) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => RoleChoiceScreen(user: user),
+        ),
+        (route) => false,
+      );
+    } else if (!user.isProfileComplete) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => CompleteProfileScreen(initialProfile: user),
+        ),
+        (route) => false,
+      );
+    } else if (user.role == AppRole.provider) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const ProviderDashboardScreen(),
+        ),
+        (route) => false,
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const HomeDiscoveryScreen(),
+        ),
+        (route) => false,
+      );
+    }
+  }
+
   Future<void> _handleGoogleSignIn() async {
+    final currentLocale = mounted ? context.l10n.localeName : 'en';
     setState(() => _isGoogleLoading = true);
 
     try {
       final profile = await AuthService().signInWithGoogle();
 
-      if (mounted) {
-        final roleProvider =
-            pv.Provider.of<RoleProvider>(context, listen: false);
-        roleProvider.setUser(profile);
+      if (!mounted) return;
 
-        if (profile.role == null) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => RoleChoiceScreen(user: profile),
-            ),
-            (route) => false,
-          );
-        } else if (!profile.isProfileComplete) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => CompleteProfileScreen(initialProfile: profile),
-            ),
-            (route) => false,
-          );
-        } else if (profile.role == AppRole.provider) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const ProviderDashboardScreen(),
-            ),
-            (route) => false,
-          );
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const HomeDiscoveryScreen(),
-            ),
-            (route) => false,
-          );
-        }
+      final fbUser = AuthService().currentFirebaseUser;
+      bool isVerified = profile.emailOtpVerified;
+      if (fbUser != null && !isVerified) {
+        final tokenRes = await fbUser.getIdTokenResult();
+        isVerified = tokenRes.claims?['emailOtp'] == true;
       }
+
+      if (!isVerified) {
+        await OtpService().sendEmailOtp(profile.email, purpose: 'signup', language: currentLocale);
+
+        if (!mounted) return;
+
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => EmailOtpScreen(
+              email: profile.email,
+              purpose: 'signup',
+              onVerified: () async {
+                final refreshed = await AuthService().fetchCurrentUserProfile() ?? profile;
+                if (!mounted) return;
+                final roleProvider =
+                    pv.Provider.of<RoleProvider>(context, listen: false);
+                roleProvider.setUser(refreshed);
+                _routeAfterOtp(refreshed);
+              },
+            ),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      final roleProvider =
+          pv.Provider.of<RoleProvider>(context, listen: false);
+      roleProvider.setUser(profile);
+      _routeAfterOtp(profile);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[RegisterScreen GoogleSignIn Error] $e');
@@ -497,46 +539,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Divider(color: context.themeBorder, thickness: 1)),
           ],
         ),
-        const SizedBox(height: 18),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: OutlinedButton(
-            onPressed: (_isGoogleLoading || _isLoading)
-                ? null
-                : () => _handleGoogleSignIn(),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: isFieldBg,
-              side: BorderSide(color: context.themeBorder, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: _isGoogleLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const _GoogleMark(),
-                      const SizedBox(width: 12),
-                      Text(
-                        context.l10n.googleSignIn,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.5,
-                          color: context.themeTextPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+        GoogleSignInButton(
+          isLoading: _isGoogleLoading,
+          onPressed: (_isGoogleLoading || _isLoading)
+              ? null
+              : () => _handleGoogleSignIn(),
         ),
         const SizedBox(height: 28),
         Row(
@@ -705,44 +712,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: false),
         ),
-      ),
-    );
-  }
-}
-
-class _GoogleMark extends StatelessWidget {
-  const _GoogleMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: Stack(
-        children: [
-          _Dot(color: Color(0xFF4285F4), alignment: Alignment.topLeft),
-          _Dot(color: Color(0xFFEA4335), alignment: Alignment.topRight),
-          _Dot(color: Color(0xFFFBBC05), alignment: Alignment.bottomLeft),
-          _Dot(color: Color(0xFF34A853), alignment: Alignment.bottomRight),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  final Color color;
-  final Alignment alignment;
-  const _Dot({required this.color, required this.alignment});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: 9,
-        height: 9,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }

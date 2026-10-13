@@ -13,11 +13,13 @@ service cloud.firestore {
 
     function isSuperAdmin() {
       return isAuthenticated() &&
+        request.auth.token.get('admin2faUntil', 0) > request.time.toMillis() / 1000 &&
         exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid));
     }
 
     function isStaffAdmin() {
       return isAuthenticated() &&
+        request.auth.token.get('admin2faUntil', 0) > request.time.toMillis() / 1000 &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active';
     }
@@ -34,17 +36,28 @@ service cloud.firestore {
       return isSuperAdmin() || (isStaffAdmin() && adminDoc().get('permissions', []).hasAny([p]));
     }
 
-    // check if user is active
+    // check if user is active and email OTP verified
     function isUserActive() {
       return isAuthenticated() && (
         isAdmin() ||
-        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
         (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBanned != true &&
           (
-            !("suspendedUntil" in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspendedUntil == null ||
-            request.time > get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspendedUntil
+            request.auth.token.get('emailOtp', false) == true ||
+            (
+              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('emailOtpVerified', false) == true
+            )
+          ) &&
+          (
+            !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+            (
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBanned != true &&
+              (
+                !("suspendedUntil" in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspendedUntil == null ||
+                request.time > get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspendedUntil
+              )
+            )
           )
         )
       );
@@ -198,6 +211,43 @@ service cloud.firestore {
       );
     }
 
+    function validBookingScheduleFromQuote(b, jobDoc) {
+      return b.get('scheduleMode', null) == jobDoc.get('scheduleMode', null) &&
+        b.get('scheduledDate', null) == jobDoc.get('scheduledDate', null) &&
+        b.get('scheduledStartAt', null) == jobDoc.get('scheduledStartAt', null) &&
+        b.get('scheduledEndAt', null) == jobDoc.get('scheduledEndAt', null) &&
+        (
+          'scheduledEndAt' in b
+            ? (b.scheduledEndAt is timestamp && b.scheduledEndAt > request.time)
+            : validScheduledStartAt(b)
+        );
+    }
+
+    function validSchedule(data) {
+      return (!('scheduleMode' in data) || data.scheduleMode in ['asap', 'date_only', 'time_range']) &&
+        (
+          data.get('scheduleMode', '') == 'asap'
+            ? (!('scheduledDate' in data) && !('scheduledStartAt' in data) && !('scheduledEndAt' in data))
+            : (
+                data.get('scheduleMode', '') in ['date_only', 'time_range']
+                  ? (
+                      data.scheduledStartAt is timestamp &&
+                      data.scheduledEndAt is timestamp &&
+                      data.scheduledEndAt >= data.scheduledStartAt + duration.value(1, 'h') &&
+                      data.scheduledEndAt <= data.scheduledStartAt + duration.value(12, 'h') &&
+                      data.scheduledStartAt >= request.time - duration.value(15, 'm') &&
+                      data.scheduledStartAt <= request.time + duration.value(60, 'd') &&
+                      (!('scheduledDate' in data) || (
+                        data.scheduledDate is timestamp &&
+                        data.scheduledStartAt >= data.scheduledDate &&
+                        data.scheduledEndAt <= data.scheduledDate + duration.value(1, 'd')
+                      ))
+                    )
+                  : validScheduledStartAt(data)
+              )
+        );
+    }
+
     // super admin collection
     match /superAdmins/{adminId} {
       allow read: if request.auth.uid == adminId || isAdmin();
@@ -234,6 +284,8 @@ service cloud.firestore {
         request.resource.data.get('isVerified', false) == false &&
         request.resource.data.get('nicVerified', false) == false &&
         request.resource.data.get('phoneVerified', false) == false &&
+        request.resource.data.get('emailOtpVerified', false) == false &&
+        !('emailOtpVerifiedAt' in request.resource.data) &&
         request.resource.data.get('isBanned', false) == false &&
         !request.resource.data.keys().hasAny(['isSuperAdmin', 'isAdmin', 'adminRole']) &&
         (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider'])
@@ -243,7 +295,8 @@ service cloud.firestore {
           !changed().hasAny([
             'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil',
             'nicVerified', 'isVerified', 'certificationsStatus',
-            'isSuperAdmin', 'isAdmin', 'adminRole'
+            'isSuperAdmin', 'isAdmin', 'adminRole',
+            'emailOtpVerified', 'emailOtpVerifiedAt'
           ]) &&
           (!changed().hasAny(['role']) || request.resource.data.role in ['customer', 'provider']) &&
           (
@@ -342,6 +395,15 @@ service cloud.firestore {
 
     // job requests and quotes
     match /jobRequests/{jobId} {
+      function validPrivateContact(data) {
+        return (!('accuracyMeters' in data) || data.accuracyMeters == null || data.accuracyMeters is number) &&
+          (!('houseNo' in data) || data.houseNo == null || (data.houseNo is string && data.houseNo.size() <= 100)) &&
+          (!('street' in data) || data.street == null || (data.street is string && data.street.size() <= 100)) &&
+          (!('city' in data) || data.city == null || (data.city is string && data.city.size() <= 100)) &&
+          (!('landmark' in data) || data.landmark == null || (data.landmark is string && data.landmark.size() <= 100)) &&
+          (!('directions' in data) || data.directions == null || (data.directions is string && data.directions.size() <= 300));
+      }
+
       allow read: if isAuthenticated();
       allow create: if isUserActive() &&
         request.resource.data.customerId == request.auth.uid &&
@@ -350,8 +412,14 @@ service cloud.firestore {
         !('customerPhone' in request.resource.data) &&
         !('address' in request.resource.data) &&
         !('landmark' in request.resource.data) &&
+        !('houseNo' in request.resource.data) &&
+        !('street' in request.resource.data) &&
+        !('city' in request.resource.data) &&
+        !('directions' in request.resource.data) &&
+        !('accuracyMeters' in request.resource.data) &&
         validJobPhotos(request.resource.data, request.auth.uid) &&
-        validJobVideo(request.resource.data, request.auth.uid);
+        validJobVideo(request.resource.data, request.auth.uid) &&
+        validSchedule(request.resource.data);
       allow update: if isAdmin() ||
         (
           isUserActive() && resource.data.customerId == request.auth.uid &&
@@ -359,8 +427,17 @@ service cloud.firestore {
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
           !('landmark' in request.resource.data) &&
+          !('houseNo' in request.resource.data) &&
+          !('street' in request.resource.data) &&
+          !('city' in request.resource.data) &&
+          !('directions' in request.resource.data) &&
+          !('accuracyMeters' in request.resource.data) &&
           validJobPhotos(request.resource.data, resource.data.customerId) &&
-          validJobVideo(request.resource.data, resource.data.customerId)
+          validJobVideo(request.resource.data, resource.data.customerId) &&
+          (
+            !changed().hasAny(['scheduleMode', 'scheduledDate', 'scheduledStartAt', 'scheduledEndAt']) ||
+            validSchedule(request.resource.data)
+          )
         ) ||
         (
           isUserActive() && resource.data.selectedProviderId == request.auth.uid &&
@@ -368,6 +445,11 @@ service cloud.firestore {
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
           !('landmark' in request.resource.data) &&
+          !('houseNo' in request.resource.data) &&
+          !('street' in request.resource.data) &&
+          !('city' in request.resource.data) &&
+          !('directions' in request.resource.data) &&
+          !('accuracyMeters' in request.resource.data) &&
           (
             (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled']) ||
             (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
@@ -391,12 +473,18 @@ service cloud.firestore {
             )
           )
         );
-        allow write: if isAdmin() || (
+        allow create, update: if isAdmin() || (
           isUserActive() &&
           (
             (exists(/databases/$(database)/documents/jobRequests/$(jobId)) && get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid) ||
             (existsAfter(/databases/$(database)/documents/jobRequests/$(jobId)) && getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid)
-          )
+          ) &&
+          validPrivateContact(request.resource.data)
+        );
+        allow delete: if isAdmin() || (
+          isUserActive() &&
+          exists(/databases/$(database)/documents/jobRequests/$(jobId)) &&
+          get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid
         );
       }
 
@@ -468,9 +556,9 @@ service cloud.firestore {
               request.resource.data,
               get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)/quotes/$(request.resource.data.quoteId)).data
             ) &&
-            (
-              !('scheduledDate' in get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data) ||
-              request.resource.data.get('scheduledDate', null) == get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data.scheduledDate
+            validBookingScheduleFromQuote(
+              request.resource.data,
+              get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data
             )
           )
         ) &&
@@ -486,7 +574,10 @@ service cloud.firestore {
             )
           )
         ) &&
-        validScheduledStartAt(request.resource.data)
+        (
+          ('quoteId' in request.resource.data) ||
+          validSchedule(request.resource.data)
+        )
       );
     function validCustomerBookingUpdate(bookingId) {
       return (
@@ -513,9 +604,13 @@ service cloud.firestore {
               (resource.data.status == 'en_route' && resource.data.get('arrivalStatus', '') == 'denied') ||
               (resource.data.status == 'en_route' && 'enRouteStartedAt' in resource.data && request.time >= resource.data.enRouteStartedAt + duration.value(90, 'm')) ||
               (resource.data.status == 'confirmed' && (
-                'scheduledStartAt' in resource.data
-                  ? request.time >= resource.data.scheduledStartAt + duration.value(60, 'm')
-                  : ('scheduledDate' in resource.data && request.time >= resource.data.scheduledDate + duration.value(1, 'd'))
+                'scheduledEndAt' in resource.data
+                  ? request.time >= resource.data.scheduledEndAt + duration.value(30, 'm')
+                  : (
+                    'scheduledStartAt' in resource.data
+                      ? request.time >= resource.data.scheduledStartAt + duration.value(60, 'm')
+                      : ('scheduledDate' in resource.data && request.time >= resource.data.scheduledDate + duration.value(1, 'd'))
+                  )
               ))
             ) &&
             changed().hasOnly(['status', 'cancellationReason', 'noShow', 'cancelledAt', 'cancelledBy', 'updatedAt'])
@@ -594,9 +689,9 @@ service cloud.firestore {
                 request.resource.data.rescheduleReason.size() > 0
               ) ||
               (
-                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledEndAt','scheduleMode','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
                 !('rescheduleRequestedBy' in request.resource.data) &&
-                validScheduledStartAt(request.resource.data)
+                validSchedule(request.resource.data)
               ) ||
               (
                 changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
@@ -777,9 +872,9 @@ service cloud.firestore {
                 request.resource.data.rescheduleReason.size() > 0
               ) ||
               (
-                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
+                changed().hasOnly(['rescheduledAt','scheduledDate','scheduledStartAt','scheduledEndAt','scheduleMode','scheduledSlot','time','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&
                 !('rescheduleRequestedBy' in request.resource.data) &&
-                validScheduledStartAt(request.resource.data)
+                validSchedule(request.resource.data)
               ) ||
               (
                 changed().hasOnly(['rescheduleDeclinedAt','rescheduleDeclinedBy','rescheduleRequestedBy','rescheduleProposedDate','rescheduleProposedSlot','rescheduleReason','rescheduleRequestedAt']) &&

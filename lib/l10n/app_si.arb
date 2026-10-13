@@ -1784,5 +1784,47 @@
   "ticketCreatedSuccess": "සහාය ඉල්ලීම සාර්ථකව යොමු කරන ලදී",
   "helpSupportTitle": "සහාය සහ උපකාර",
   "helpSupportSubtitle": "සහාය ලබා ගන්න හෝ ගැටලුවක් යොමු කරන්න",
-  "reportProblemTitle": "ගැටලුවක් වාර්තා කරන්න"
+  "reportProblemTitle": "ගැටලුවක් වාර්තා කරන්න",
+  "exactCurrentLocation": "මගේ නිවැරදිම ස්ථානය යොදන්න",
+  "locationAccuracy": "නිරවද්‍යතාව: ±{meters} මී",
+  "@locationAccuracy": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "locationAccuracyLowWarning": "ස්ථාන නිරවද්‍යතාව අඩුය (±{meters} මී). කරුණාකර ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න.",
+  "@locationAccuracyLowWarning": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "fineTunePinInstruction": "ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න",
+  "houseAptNo": "නිවාස / මහල් නිවාස අංකය",
+  "streetName": "වීදිය / පාර",
+  "townCity": "නගරය",
+  "landmarkOptional": "හඳුනාගැනීමේ සලකුණ (උදා: නිල් ගේට්ටුව අසල)",
+  "directionsForProvider": "සේවා සපයන්නාට මාර්ග විස්තර",
+  "saveThisAddress": "මෙම ලිපිනය සුරකින්න",
+  "locationRequiredHint": "ඉල්ලීම පළ කිරීමට පෙර කරුණාකර සිතියමෙන් සේවා ස්ථානය තෝරන්න.",
+  "scheduleModeAsap": "හැකි ඉක්මනින් (ASAP)",
+  "scheduleModeDateOnly": "දිනය පමණක් තෝරන්න",
+  "scheduleModeTimeRange": "දිනය සහ වේලාව තෝරන්න",
+  "scheduleAnyTime": "එදින ඕනෑම වේලාවක",
+  "scheduleFrom": "සිට",
+  "scheduleTo": "දක්වා",
+  "scheduleMinDurationError": "කාල පරාසය අවම වශයෙන් පැය 1ක් විය යුතුය.",
+  "scheduleMaxDurationError": "කාල පරාසය පැය 12 නොඉක්මවිය යුතුය.",
+  "scheduleSameDayError": "කාල පරාසය එකම දිනයේ විය යුතුය.",
+  "schedulePastError": "ආරම්භක වේලාව අතීතයේ විය නොහැක.",
+  "scheduleTodayPastCutoff": "අද රාත්‍රී 8:00ට පෙර පැයකට වඩා අඩු කාලයක් ඉතිරිව ඇත. කරුණාකර වෙනත් දිනයක් තෝරන්න.",
+  "outsideWorkingHoursWarning": "ඔබගේ සේවා වේලාවෙන් බැහැරයි",
+  "admin2faTitle": "පරිපාලක තහවුරු කිරීම",
+  "admin2faSubtitle": "ඔබගේ පරිපාලක විද්‍යුත් තැපෑලට එවන ලද ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.",
+  "useDifferentAccount": "වෙනත් ගිණුමක් භාවිතා කරන්න",
+  "continueAsCustomer": "පාරිභෝගික / ශිල්පී ලෙස ඉදිරියට යන්න",
+  "otpNoSession": "තවමත් කේතයක් යවා නැත — නැවත යවන්න තට්ටු කරන්න",
+  "otpExpiredResend": "කේතය කල් ඉකුත් විය — නැවත යවන්න තට්ටු කරන්න",
+  "otpMaxAttemptsResend": "වැරදි උත්සාහයන් වැඩියි — නැවත යවන්න තට්ටු කරන්න",
+  "otpIncorrectTriesLeft": "වැරදි කේතයකි. තවත් උත්සාහයන් {count}ක් ඇත",
+  "codeAlreadySent": "කේතය දැනටමත් යවා ඇත"
 }

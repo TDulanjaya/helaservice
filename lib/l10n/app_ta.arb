@@ -1784,5 +1784,47 @@
   "ticketCreatedSuccess": "ஆதரவு கோரிக்கை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது",
   "helpSupportTitle": "உதவி & ஆதரவு",
   "helpSupportSubtitle": "உதவி பெறவும் அல்லது கோரிக்கையை சமர்ப்பிக்கவும்",
-  "reportProblemTitle": "சிக்கலைப் புகாரளிக்கவும்"
+  "reportProblemTitle": "சிக்கலைப் புகாரளிக்கவும்",
+  "exactCurrentLocation": "எனது சரியான தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்",
+  "locationAccuracy": "துல்லியம்: ±{meters} மீ",
+  "@locationAccuracy": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "locationAccuracyLowWarning": "இருப்பிடத் துல்லியம் குறைவாக உள்ளது (±{meters} மீ). வரைபட ஊசியைச் சரியான வாயில் அல்லது வீட்டிற்கு நகர்த்தவும்.",
+  "@locationAccuracyLowWarning": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "fineTunePinInstruction": "சரியான கேட் அல்லது வீட்டிற்கு ஊசியை இழுக்கவும்",
+  "houseAptNo": "வீடு / அபார்ட்மெண்ட் எண்",
+  "streetName": "தெரு / சாலை",
+  "townCity": "நகரம்",
+  "landmarkOptional": "அடையாளம் (எ.கா. நீல கேட் அருகில்)",
+  "directionsForProvider": "வழங்குநருக்கான வழிகாட்டுதல்கள்",
+  "saveThisAddress": "இந்த முகவரியைச் சேமிக்கவும்",
+  "locationRequiredHint": "பதிவிடுவதற்கு முன் வரைபடத்தில் சேவை இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்.",
+  "scheduleModeAsap": "முடிந்தவரை விரைவில்",
+  "scheduleModeDateOnly": "தேதியை மட்டும் தேர்ந்தெடுக்கவும்",
+  "scheduleModeTimeRange": "தேதி மற்றும் நேர வரம்பைத் தேர்ந்தெடுக்கவும்",
+  "scheduleAnyTime": "அன்று எந்த நேரத்திலும்",
+  "scheduleFrom": "இருந்து",
+  "scheduleTo": "வரை",
+  "scheduleMinDurationError": "நேர வரம்பு குறைந்தது 1 மணிநேரமாக இருக்க வேண்டும்.",
+  "scheduleMaxDurationError": "நேர வரம்பு 12 மணிநேரத்திற்கு மேல் இருக்கக்கூடாது.",
+  "scheduleSameDayError": "நேர வரம்பு ஒரே நாளில் இருக்க வேண்டும்.",
+  "schedulePastError": "தொடக்க நேரம் கடந்த காலத்தில் இருக்க முடியாது.",
+  "scheduleTodayPastCutoff": "இன்று 20:00 க்கு முன் 1 மணிநேரத்திற்கும் குறைவான நேரமே உள்ளது. தயவுசெய்து வேறு தேதியைத் தேர்ந்தெடுக்கவும்.",
+  "outsideWorkingHoursWarning": "உங்கள் வேலை நேரத்திற்கு வெளியே",
+  "admin2faTitle": "நிர்வாகி சரிபார்ப்பு",
+  "admin2faSubtitle": "உங்கள் அமர்வை அங்கீகரிக்க உங்கள் நிர்வாகி மின்னஞ்சலுக்கு அனுப்பப்பட்ட 6 இலக்கக் குறியீட்டை உள்ளிடவும்.",
+  "useDifferentAccount": "வேறு கணக்கைப் பயன்படுத்தவும்",
+  "continueAsCustomer": "வாடிக்கையாளர் / வழங்குநராக தொடரவும்",
+  "otpNoSession": "இன்னும் குறியீடு அனுப்பப்படவில்லை — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
+  "otpExpiredResend": "குறியீடு காலாவதியானது — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
+  "otpMaxAttemptsResend": "தவறான முயற்சிகள் அதிகம் — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
+  "otpIncorrectTriesLeft": "தவறான குறியீடு. இன்னும் {count} முயற்சிகள் உள்ளன",
+  "codeAlreadySent": "குறியீடு ஏற்கனவே அனுப்பப்பட்டது"
 }

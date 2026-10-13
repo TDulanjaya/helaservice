@@ -9,6 +9,7 @@ import '../../../models/admin_models.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/schedule_helpers.dart';
 import 'job_quotes_screen.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
@@ -40,24 +41,12 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   double _uploadProgressFraction = 0.0;
   bool _uploadFailed = false;
   bool _submitting = false;
-  String _bookingType = 'asap';
+  String _scheduleMode = ScheduleHelpers.modeAsap;
   DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
-  String _scheduledSlot = 'morning';
+  TimeOfDay _fromTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _toTime = const TimeOfDay(hour: 12, minute: 0);
 
   static const int _maxPhotos = 10;
-
-  String _getSlotLabel(BuildContext context, String slotKey) {
-    switch (slotKey) {
-      case 'morning':
-        return context.l10n.slotMorning;
-      case 'afternoon':
-        return context.l10n.slotAfternoon;
-      case 'evening':
-        return context.l10n.slotEvening;
-      default:
-        return slotKey;
-    }
-  }
 
   Future<void> _pickScheduledDate(BuildContext context) async {
     final now = DateTime.now();
@@ -65,10 +54,31 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       context: context,
       initialDate: _scheduledDate.isBefore(now) ? now : _scheduledDate,
       firstDate: now,
-      lastDate: now.add(const Duration(days: 30)),
+      lastDate: now.add(const Duration(days: 60)),
     );
     if (picked != null) {
       setState(() => _scheduledDate = picked);
+    }
+  }
+
+  Future<void> _pickScheduledTime(BuildContext context, bool isFrom) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: isFrom ? _fromTime : _toTime,
+    );
+    if (picked != null) {
+      final snappedMinute = (picked.minute / 15).round() * 15;
+      final adjusted = snappedMinute == 60
+          ? TimeOfDay(hour: (picked.hour + 1) % 24, minute: 0)
+          : TimeOfDay(hour: picked.hour, minute: snappedMinute);
+
+      setState(() {
+        if (isFrom) {
+          _fromTime = adjusted;
+        } else {
+          _toTime = adjusted;
+        }
+      });
     }
   }
 
@@ -320,9 +330,24 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       return;
     }
 
-    final scheduledSlotLabel =
-        _bookingType == 'scheduled' ? _getSlotLabel(context, _scheduledSlot) : null;
+    final schedRes = ScheduleHelpers.computeScheduleWindow(
+      mode: _scheduleMode,
+      date: _scheduledDate,
+      fromTime: _fromTime,
+      toTime: _toTime,
+    );
+    if (!schedRes.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(schedRes.errorMessage ?? 'Invalid schedule selection'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final defaultCustomerRole = context.l10n.roleCustomer;
+    final timeRangeSlot = '${_fromTime.format(context)} - ${_toTime.format(context)}';
 
     setState(() {
       _submitting = true;
@@ -464,9 +489,21 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         district: _selectedLocation!.label,
         address: _selectedLocation!.address,
         landmark: _selectedLocation!.landmark,
-        bookingType: _bookingType,
-        scheduledDate: _bookingType == 'scheduled' ? _scheduledDate : null,
-        scheduledSlot: scheduledSlotLabel,
+        accuracyMeters: _selectedLocation!.accuracyMeters,
+        houseNo: _selectedLocation!.houseNo,
+        street: _selectedLocation!.street,
+        city: _selectedLocation!.city,
+        directions: _selectedLocation!.directions,
+        bookingType: _scheduleMode == ScheduleHelpers.modeAsap ? 'asap' : 'scheduled',
+        scheduleMode: _scheduleMode,
+        scheduledDate: schedRes.scheduledDate,
+        scheduledStartAt: schedRes.scheduledStartAt,
+        scheduledEndAt: schedRes.scheduledEndAt,
+        scheduledSlot: _scheduleMode == ScheduleHelpers.modeDateOnly
+            ? 'anytime'
+            : (_scheduleMode == ScheduleHelpers.modeTimeRange
+                ? timeRangeSlot
+                : null),
       );
 
       final requestId = await JobRequestRepository().createJobRequest(request);
@@ -955,98 +992,82 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
+
+              // Mode chips: ASAP, Date Only, Time Range
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _bookingType = 'asap'),
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: _bookingType == 'asap'
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : context.themeSurfaceLow,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: _bookingType == 'asap'
-                                ? AppColors.primary
-                                : context.themeBorder,
-                            width: _bookingType == 'asap' ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.bolt_rounded,
-                              size: 18,
-                              color: _bookingType == 'asap' ? AppColors.primary : context.themeTextSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                context.l10n.bookingTypeAsap,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: _bookingType == 'asap' ? FontWeight.w800 : FontWeight.w600,
-                                  color: _bookingType == 'asap' ? AppColors.primary : context.themeInk,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.bolt_rounded, size: 16),
+                        const SizedBox(width: 4),
+                        Text(context.l10n.scheduleModeAsap),
+                      ],
+                    ),
+                    selected: _scheduleMode == ScheduleHelpers.modeAsap,
+                    onSelected: (sel) {
+                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeAsap);
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _scheduleMode == ScheduleHelpers.modeAsap
+                          ? AppColors.primary
+                          : context.themeTextSecondary,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => setState(() => _bookingType = 'scheduled'),
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: _bookingType == 'scheduled'
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : context.themeSurfaceLow,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: _bookingType == 'scheduled'
-                                ? AppColors.primary
-                                : context.themeBorder,
-                            width: _bookingType == 'scheduled' ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.calendar_month_rounded,
-                              size: 18,
-                              color: _bookingType == 'scheduled' ? AppColors.primary : context.themeTextSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Text(
-                                context.l10n.bookingTypeScheduled,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: _bookingType == 'scheduled' ? FontWeight.w800 : FontWeight.w600,
-                                  color: _bookingType == 'scheduled' ? AppColors.primary : context.themeInk,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 16),
+                        const SizedBox(width: 4),
+                        Text(context.l10n.scheduleModeDateOnly),
+                      ],
+                    ),
+                    selected: _scheduleMode == ScheduleHelpers.modeDateOnly,
+                    onSelected: (sel) {
+                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeDateOnly);
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _scheduleMode == ScheduleHelpers.modeDateOnly
+                          ? AppColors.primary
+                          : context.themeTextSecondary,
+                    ),
+                  ),
+                  ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time_rounded, size: 16),
+                        const SizedBox(width: 4),
+                        Text(context.l10n.scheduleModeTimeRange),
+                      ],
+                    ),
+                    selected: _scheduleMode == ScheduleHelpers.modeTimeRange,
+                    onSelected: (sel) {
+                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeTimeRange);
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _scheduleMode == ScheduleHelpers.modeTimeRange
+                          ? AppColors.primary
+                          : context.themeTextSecondary,
                     ),
                   ),
                 ],
               ),
-              if (_bookingType == 'scheduled') ...[
+
+              if (_scheduleMode != ScheduleHelpers.modeAsap) ...[
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () => _pickScheduledDate(context),
@@ -1076,51 +1097,127 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Column(
-                  children: ['morning', 'afternoon', 'evening'].map((slot) {
-                    final isSel = _scheduledSlot == slot;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: InkWell(
-                        onTap: () => setState(() => _scheduledSlot = slot),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                          decoration: BoxDecoration(
-                            color: isSel
-                                ? AppColors.primary.withValues(alpha: 0.08)
-                                : context.themeSurfaceLow,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSel ? AppColors.primary : context.themeBorder,
-                              width: isSel ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isSel ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                                color: isSel ? AppColors.primary : context.themeTextSecondary,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _getSlotLabel(context, slot),
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSel ? AppColors.primary : context.themeInk,
-                                  ),
-                                ),
-                              ),
-                            ],
+                if (ScheduleHelpers.isToday(_scheduledDate) && !ScheduleHelpers.canChooseTodayForDateOnly()) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            context.l10n.scheduleTodayPastCutoff,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.warning),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+
+              if (_scheduleMode == ScheduleHelpers.modeDateOnly) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.scheduleAnyTime,
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                        ),
                       ),
-                    );
-                  }).toList(),
+                    ],
+                  ),
+                ),
+              ] else if (_scheduleMode == ScheduleHelpers.modeTimeRange) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.scheduleFrom,
+                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          InkWell(
+                            onTap: () => _pickScheduledTime(context, true),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: context.themeSurfaceLow,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _fromTime.format(context),
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                                  ),
+                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.scheduleTo,
+                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          InkWell(
+                            onTap: () => _pickScheduledTime(context, false),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: context.themeSurfaceLow,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _toTime.format(context),
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                                  ),
+                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
               const SizedBox(height: 20),
@@ -1310,13 +1407,42 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 28),
+              if (_selectedLocation == null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_off_rounded, color: AppColors.error, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.locationRequiredHint,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
               SizedBox(
                 height: 54,
                 child: PrimaryButton(
                   label: context.l10n.postJobGetQuotes,
                   loading: _submitting,
-                  onPressed: _submitRequest,
+                  onPressed: (_selectedLocation == null || _submitting)
+                      ? null
+                      : _submitRequest,
                 ),
               ),
             ],

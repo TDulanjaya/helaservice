@@ -160,6 +160,21 @@ module.exports = async function handler(req, res) {
   if (!decodedUser) return;
   const callerUid = decodedUser.uid;
 
+  // Caller must be verified (emailOtp claim) or an admin
+  const isEmailOtpVerified = decodedUser.emailOtp === true;
+  const isAdmin = !!(decodedUser.admin2faUntil || decodedUser.admin || decodedUser.superAdmin);
+  if (!isEmailOtpVerified && !isAdmin) {
+    const superDoc = await db.collection('superAdmins').doc(callerUid).get();
+    let adminAuthorized = superDoc.exists;
+    if (!adminAuthorized) {
+      const adminDoc = await db.collection('admins').doc(callerUid).get();
+      adminAuthorized = adminDoc.exists && adminDoc.data() && adminDoc.data().status === 'active';
+    }
+    if (!adminAuthorized) {
+      return res.status(403).json({ error: 'email_otp_required', message: 'Email OTP verification is required.' });
+    }
+  }
+
   const { event, docId } = req.body || {};
 
   if (!event || !docId || typeof event !== 'string' || typeof docId !== 'string') {
@@ -310,7 +325,12 @@ module.exports = async function handler(req, res) {
       }
       const ticket = ticketSnap.data() || {};
 
-      // verify caller is authorized admin
+      // verify caller is authorized admin with active 2FA
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (!decodedUser.admin2faUntil || typeof decodedUser.admin2faUntil !== 'number' || decodedUser.admin2faUntil <= nowSec) {
+        return res.status(403).json({ error: 'admin_2fa_required', message: 'Admin 2FA verification required or expired.' });
+      }
+
       const isSuper = (await db.collection('superAdmins').doc(callerUid).get()).exists;
       let isAuthorized = isSuper;
       if (!isAuthorized) {

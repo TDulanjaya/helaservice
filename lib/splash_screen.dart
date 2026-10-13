@@ -10,6 +10,7 @@ import 'services/app_version_service.dart';
 import 'services/notification_service.dart';
 import 'repositories/admin_repository.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/email_otp_screen.dart';
 import 'features/auth/screens/role_choice_screen.dart';
 import 'features/auth/screens/complete_profile_screen.dart';
 import 'features/customer/screens/home_discovery_screen.dart';
@@ -64,14 +65,28 @@ class _SplashScreenState extends State<SplashScreen> {
           return;
         }
 
-        AdminRepository().touchLastActive(fbUser.uid);
+        final tokenResult = await fbUser.getIdTokenResult();
+        final admin2faUntil = (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
+        final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final is2faValid = admin2faUntil > nowSec;
 
-        await minDelay;
-        if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AdminShell()),
-        );
-        return;
+        if (is2faValid) {
+          AdminRepository().touchLastActive(fbUser.uid);
+          await minDelay;
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const AdminShell()),
+          );
+          return;
+        } else {
+          // admin code expired so go to login screen
+          await minDelay;
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+          return;
+        }
       }
     } catch (_) {}
 
@@ -104,6 +119,37 @@ class _SplashScreenState extends State<SplashScreen> {
       );
       return;
     }
+
+    // check if user verified email
+    try {
+      final tokenResult = await fbUser.getIdTokenResult();
+      final hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
+      final isEmailOtpVerified = hasEmailOtpClaim || (user?.emailOtpVerified ?? false);
+
+      if (!isEmailOtpVerified) {
+        await minDelay;
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => EmailOtpScreen(
+              email: fbUser.email ?? (user?.email ?? ''),
+              purpose: 'signup',
+              sendOnOpen: true,
+              onVerified: () async {
+                final refreshed = await AuthService().fetchCurrentUserProfile();
+                if (mounted && refreshed != null) {
+                  roleProvider.setUser(refreshed);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: refreshed)),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (_) {}
 
     await minDelay;
     if (!mounted) return;

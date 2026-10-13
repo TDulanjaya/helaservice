@@ -5,13 +5,20 @@ import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../services/otp_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../customer/screens/home_discovery_screen.dart';
+import 'login_screen.dart';
 
 class EmailOtpScreen extends StatefulWidget {
   final String email;
   final Future<void> Function() onVerified;
   final String? title;
   final String? subtitle;
+  final String purpose;
+  final bool allowSignOut;
+  final bool sendOnOpen;
+  final OtpService? otpService;
 
   const EmailOtpScreen({
     super.key,
@@ -19,6 +26,10 @@ class EmailOtpScreen extends StatefulWidget {
     required this.onVerified,
     this.title,
     this.subtitle,
+    this.purpose = 'signup',
+    this.allowSignOut = true,
+    this.sendOnOpen = false,
+    this.otpService,
   });
 
   @override
@@ -38,15 +49,50 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   bool _isResending = false;
   String? _errorMessage;
 
+  OtpService get _effectiveOtpService => widget.otpService ?? OtpService();
+
   @override
   void initState() {
     super.initState();
-    _startCountdown();
+    if (widget.sendOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sendOnOpen();
+      });
+    } else {
+      _startCountdown();
+    }
   }
 
-  void _startCountdown() {
+  Future<void> _sendOnOpen() async {
+    final lang = context.l10n.localeName;
+    try {
+      await _effectiveOtpService.sendEmailOtp(
+        widget.email,
+        purpose: widget.purpose,
+        language: lang,
+      );
+      if (mounted) {
+        _startCountdown(60);
+      }
+    } on OtpCooldownException catch (e) {
+      if (mounted) {
+        _startCountdown(e.retryAfter);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.codeAlreadySent)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  void _startCountdown([int? initialSeconds]) {
     _timer?.cancel();
-    final remaining = OtpService().remainingCooldownSeconds;
+    final remaining = initialSeconds ?? _effectiveOtpService.remainingCooldownSeconds;
     setState(() {
       _secondsRemaining = remaining > 0 ? remaining : 60;
     });
@@ -62,6 +108,15 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         timer.cancel();
       }
     });
+  }
+
+  void _clearCodeBoxes() {
+    for (final c in _controllers) {
+      c.clear();
+    }
+    if (_focusNodes.isNotEmpty) {
+      _focusNodes.first.requestFocus();
+    }
   }
 
   @override
@@ -114,6 +169,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   }
 
   Future<void> _handleVerify() async {
+    if (_isVerifying) return;
+
     final code = _currentCode;
     if (code.length != _codeLength) {
       setState(() {
@@ -129,28 +186,68 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
 
     final l10n = context.l10n;
     try {
-      final result = await OtpService().verifyEmailOtp(widget.email, code);
+      final result = await _effectiveOtpService.verifyOtp(
+        widget.email,
+        code,
+        widget.purpose,
+      );
 
       if (!result.isValid) {
+        if (result.errorCode == 'OTP_NO_SESSION') {
+          _clearCodeBoxes();
+          _timer?.cancel();
+          setState(() {
+            _errorMessage = l10n.otpNoSession;
+            _secondsRemaining = 0;
+          });
+          return;
+        }
+
+        if (result.errorCode == 'OTP_EXPIRED') {
+          _clearCodeBoxes();
+          _timer?.cancel();
+          setState(() {
+            _errorMessage = l10n.otpExpiredResend;
+            _secondsRemaining = 0;
+          });
+          return;
+        }
+
+        if (result.errorCode == 'OTP_MAX_ATTEMPTS') {
+          _clearCodeBoxes();
+          _timer?.cancel();
+          setState(() {
+            _errorMessage = l10n.otpMaxAttemptsResend;
+            _secondsRemaining = 0;
+          });
+          return;
+        }
+
+        if (result.errorCode == 'OTP_INCORRECT') {
+          final remaining = result.attemptsRemaining;
+          setState(() {
+            _errorMessage = remaining != null
+                ? l10n.otpIncorrectTriesLeft(remaining)
+                : (result.errorMessage ?? l10n.codeIncorrect);
+          });
+          return;
+        }
+
         String msg;
         switch (result.errorCode) {
-          case 'OTP_EXPIRED':
-            msg = l10n.codeExpired;
-            break;
-          case 'OTP_INCORRECT':
-            msg = l10n.codeIncorrect;
-            break;
           case 'OTP_CODE_INCOMPLETE':
             msg = l10n.enterOtp;
             break;
           case 'OTP_NETWORK_ERROR':
             msg = l10n.authErrNetwork;
             break;
+          case 'SERVICE_UNAVAILABLE':
+            msg = result.errorMessage ?? l10n.authErrNetwork;
+            break;
           default:
             msg = result.errorMessage ?? l10n.codeIncorrect;
         }
         setState(() {
-          _isVerifying = false;
           _errorMessage = msg;
         });
         return;
@@ -180,15 +277,31 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     });
 
     try {
-      await OtpService().sendEmailOtp(widget.email);
+      final lang = context.l10n.localeName;
+      await _effectiveOtpService.sendEmailOtp(
+        widget.email,
+        purpose: widget.purpose,
+        language: lang,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.verifyEmailSubtitle(widget.email)),
+            content: Text(
+              widget.purpose == 'admin_login'
+                  ? context.l10n.admin2faSubtitle
+                  : context.l10n.verifyEmailSubtitle(widget.email),
+            ),
             backgroundColor: AppColors.primary,
           ),
         );
-        _startCountdown();
+        _startCountdown(60);
+      }
+    } on OtpCooldownException catch (e) {
+      if (mounted) {
+        _startCountdown(e.retryAfter);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.codeAlreadySent)),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -209,8 +322,14 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     final bg = context.themeBg;
     final cardBg = isDark ? context.themeSurfaceLow : Colors.white;
     final borderCol = context.themeBorder;
-    final title = widget.title ?? context.l10n.verifyYourEmail;
-    final subtitle = widget.subtitle ?? context.l10n.verifyEmailSubtitle(widget.email);
+    final title = widget.title ??
+        (widget.purpose == 'admin_login'
+            ? context.l10n.admin2faTitle
+            : context.l10n.verifyYourEmail);
+    final subtitle = widget.subtitle ??
+        (widget.purpose == 'admin_login'
+            ? context.l10n.admin2faSubtitle
+            : context.l10n.verifyEmailSubtitle(widget.email));
 
     return Scaffold(
       backgroundColor: bg,
@@ -460,6 +579,46 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                   ],
                 ),
               ),
+              if (widget.allowSignOut) ...[
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () async {
+                    await AuthService().signOut();
+                    if (!context.mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    context.l10n.useDifferentAccount,
+                    style: TextStyle(
+                      color: context.themeMuted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+              if (widget.purpose == 'admin_login') ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    context.l10n.continueAsCustomer,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

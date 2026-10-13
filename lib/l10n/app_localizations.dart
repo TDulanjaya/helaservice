@@ -10810,6 +10810,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report a problem'**
   String get reportProblemTitle;
+
+  /// No description provided for @exactCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my exact current location'**
+  String get exactCurrentLocation;
+
+  /// No description provided for @locationAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy: ±{meters} m'**
+  String locationAccuracy(int meters);
+
+  /// No description provided for @locationAccuracyLowWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Location accuracy is low (±{meters} m). Please drag the map pin to your exact gate or house.'**
+  String locationAccuracyLowWarning(int meters);
+
+  /// No description provided for @fineTunePinInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag pin to your exact gate or house'**
+  String get fineTunePinInstruction;
+
+  /// No description provided for @houseAptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'House / Apartment No.'**
+  String get houseAptNo;
+
+  /// No description provided for @streetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Street / Road'**
+  String get streetName;
+
+  /// No description provided for @townCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Town / City'**
+  String get townCity;
+
+  /// No description provided for @landmarkOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Landmark (e.g. near the blue gate)'**
+  String get landmarkOptional;
+
+  /// No description provided for @directionsForProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions for provider'**
+  String get directionsForProvider;
+
+  /// No description provided for @saveThisAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this address'**
+  String get saveThisAddress;
+
+  /// No description provided for @locationRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a service location on the map before posting.'**
+  String get locationRequiredHint;
+
+  /// No description provided for @scheduleModeAsap.
+  ///
+  /// In en, this message translates to:
+  /// **'As soon as possible'**
+  String get scheduleModeAsap;
+
+  /// No description provided for @scheduleModeDateOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date only'**
+  String get scheduleModeDateOnly;
+
+  /// No description provided for @scheduleModeTimeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date & my own time range'**
+  String get scheduleModeTimeRange;
+
+  /// No description provided for @scheduleAnyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time that day'**
+  String get scheduleAnyTime;
+
+  /// No description provided for @scheduleFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get scheduleFrom;
+
+  /// No description provided for @scheduleTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get scheduleTo;
+
+  /// No description provided for @scheduleMinDurationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range must be at least 1 hour.'**
+  String get scheduleMinDurationError;
+
+  /// No description provided for @scheduleMaxDurationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range cannot exceed 12 hours.'**
+  String get scheduleMaxDurationError;
+
+  /// No description provided for @scheduleSameDayError.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range must be on the same day.'**
+  String get scheduleSameDayError;
+
+  /// No description provided for @schedulePastError.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time cannot be in the past.'**
+  String get schedulePastError;
+
+  /// No description provided for @scheduleTodayPastCutoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than 1 hour remains before 20:00 today. Please select another date.'**
+  String get scheduleTodayPastCutoff;
+
+  /// No description provided for @outsideWorkingHoursWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside your working hours'**
+  String get outsideWorkingHoursWarning;
+
+  /// No description provided for @admin2faTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Verification'**
+  String get admin2faTitle;
+
+  /// No description provided for @admin2faSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to your admin email to authenticate your session.'**
+  String get admin2faSubtitle;
+
+  /// No description provided for @useDifferentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different account'**
+  String get useDifferentAccount;
+
+  /// No description provided for @continueAsCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as customer / provider'**
+  String get continueAsCustomer;
+
+  /// No description provided for @otpNoSession.
+  ///
+  /// In en, this message translates to:
+  /// **'No code sent yet — tap Resend'**
+  String get otpNoSession;
+
+  /// No description provided for @otpExpiredResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired — tap Resend'**
+  String get otpExpiredResend;
+
+  /// No description provided for @otpMaxAttemptsResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong tries — tap Resend'**
+  String get otpMaxAttemptsResend;
+
+  /// No description provided for @otpIncorrectTriesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code. {count} tries left'**
+  String otpIncorrectTriesLeft(int count);
+
+  /// No description provided for @codeAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code already sent'**
+  String get codeAlreadySent;
 }
 
 class _AppLocalizationsDelegate

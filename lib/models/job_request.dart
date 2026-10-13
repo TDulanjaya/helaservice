@@ -72,8 +72,18 @@ class JobRequest {
   final DateTime? createdAt;
   final DateTime? completedAt;
   final String bookingType;
+  final String scheduleMode;
   final DateTime? scheduledDate;
+  final DateTime? scheduledStartAt;
+  final DateTime? scheduledEndAt;
   final String? scheduledSlot;
+
+  // In-memory address details used during job creation (never serialized to public doc)
+  final double? accuracyMeters;
+  final String? houseNo;
+  final String? street;
+  final String? city;
+  final String? directions;
 
   const JobRequest({
     this.id = '',
@@ -101,8 +111,16 @@ class JobRequest {
     this.createdAt,
     this.completedAt,
     this.bookingType = 'asap',
+    this.scheduleMode = 'asap',
     this.scheduledDate,
+    this.scheduledStartAt,
+    this.scheduledEndAt,
     this.scheduledSlot,
+    this.accuracyMeters,
+    this.houseNo,
+    this.street,
+    this.city,
+    this.directions,
   }) : _legacyPhotoUrls = photoUrls;
 
   List<String> get photoUrls =>
@@ -136,9 +154,14 @@ class JobRequest {
         if (completedAt != null)
           'completedAt': Timestamp.fromDate(completedAt!),
         'bookingType': bookingType,
+        'scheduleMode': scheduleMode,
         if (scheduledDate != null)
           'scheduledDate': Timestamp.fromDate(scheduledDate!),
-        if (scheduledSlot != null) 'scheduledSlot': scheduledSlot,
+        if (scheduledStartAt != null)
+          'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
+        if (scheduledEndAt != null)
+          'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
+        if (scheduledSlot != null && scheduledSlot!.isNotEmpty) 'scheduledSlot': scheduledSlot,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
@@ -148,6 +171,8 @@ class JobRequest {
     final ts = map['createdAt'];
     final cat = map['completedAt'];
     final sdt = map['scheduledDate'];
+    final ssa = map['scheduledStartAt'];
+    final sea = map['scheduledEndAt'];
     DateTime? resolvedCreatedAt;
     if (ts is Timestamp) {
       resolvedCreatedAt = ts.toDate();
@@ -171,6 +196,9 @@ class JobRequest {
     if (map['video'] is Map) {
       parsedVideo = JobVideoItem.fromMap(Map<String, dynamic>.from(map['video'] as Map));
     }
+
+    final mode = map['scheduleMode'] as String? ??
+        (map['bookingType'] == 'scheduled' ? 'date_only' : (map['bookingType']?.toString() ?? 'asap'));
 
     return JobRequest(
       id: id,
@@ -198,7 +226,10 @@ class JobRequest {
       createdAt: resolvedCreatedAt,
       completedAt: cat is Timestamp ? cat.toDate() : null,
       bookingType: map['bookingType']?.toString() ?? 'asap',
+      scheduleMode: mode,
       scheduledDate: sdt is Timestamp ? sdt.toDate() : null,
+      scheduledStartAt: ssa is Timestamp ? ssa.toDate() : null,
+      scheduledEndAt: sea is Timestamp ? sea.toDate() : null,
       scheduledSlot: map['scheduledSlot'] as String?,
     );
   }
@@ -227,8 +258,16 @@ class JobRequest {
     DateTime? createdAt,
     DateTime? completedAt,
     String? bookingType,
+    String? scheduleMode,
     DateTime? scheduledDate,
+    DateTime? scheduledStartAt,
+    DateTime? scheduledEndAt,
     String? scheduledSlot,
+    double? accuracyMeters,
+    String? houseNo,
+    String? street,
+    String? city,
+    String? directions,
   }) {
     return JobRequest(
       id: id ?? this.id,
@@ -254,9 +293,16 @@ class JobRequest {
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
       bookingType: bookingType ?? this.bookingType,
+      scheduleMode: scheduleMode ?? this.scheduleMode,
       scheduledDate: scheduledDate ?? this.scheduledDate,
+      scheduledStartAt: scheduledStartAt ?? this.scheduledStartAt,
+      scheduledEndAt: scheduledEndAt ?? this.scheduledEndAt,
       scheduledSlot: scheduledSlot ?? this.scheduledSlot,
+      accuracyMeters: accuracyMeters ?? this.accuracyMeters,
+      houseNo: houseNo ?? this.houseNo,
+      street: street ?? this.street,
+      city: city ?? this.city,
+      directions: directions ?? this.directions,
     );
   }
 }
-

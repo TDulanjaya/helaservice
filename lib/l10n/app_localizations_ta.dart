@@ -6072,4 +6072,118 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get reportProblemTitle => 'சிக்கலைப் புகாரளிக்கவும்';
+
+  @override
+  String get exactCurrentLocation =>
+      'எனது சரியான தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்';
+
+  @override
+  String locationAccuracy(int meters) {
+    return 'துல்லியம்: ±$meters மீ';
+  }
+
+  @override
+  String locationAccuracyLowWarning(int meters) {
+    return 'இருப்பிடத் துல்லியம் குறைவாக உள்ளது (±$meters மீ). வரைபட ஊசியைச் சரியான வாயில் அல்லது வீட்டிற்கு நகர்த்தவும்.';
+  }
+
+  @override
+  String get fineTunePinInstruction =>
+      'சரியான கேட் அல்லது வீட்டிற்கு ஊசியை இழுக்கவும்';
+
+  @override
+  String get houseAptNo => 'வீடு / அபார்ட்மெண்ட் எண்';
+
+  @override
+  String get streetName => 'தெரு / சாலை';
+
+  @override
+  String get townCity => 'நகரம்';
+
+  @override
+  String get landmarkOptional => 'அடையாளம் (எ.கா. நீல கேட் அருகில்)';
+
+  @override
+  String get directionsForProvider => 'வழங்குநருக்கான வழிகாட்டுதல்கள்';
+
+  @override
+  String get saveThisAddress => 'இந்த முகவரியைச் சேமிக்கவும்';
+
+  @override
+  String get locationRequiredHint =>
+      'பதிவிடுவதற்கு முன் வரைபடத்தில் சேவை இருப்பிடத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get scheduleModeAsap => 'முடிந்தவரை விரைவில்';
+
+  @override
+  String get scheduleModeDateOnly => 'தேதியை மட்டும் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get scheduleModeTimeRange =>
+      'தேதி மற்றும் நேர வரம்பைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get scheduleAnyTime => 'அன்று எந்த நேரத்திலும்';
+
+  @override
+  String get scheduleFrom => 'இருந்து';
+
+  @override
+  String get scheduleTo => 'வரை';
+
+  @override
+  String get scheduleMinDurationError =>
+      'நேர வரம்பு குறைந்தது 1 மணிநேரமாக இருக்க வேண்டும்.';
+
+  @override
+  String get scheduleMaxDurationError =>
+      'நேர வரம்பு 12 மணிநேரத்திற்கு மேல் இருக்கக்கூடாது.';
+
+  @override
+  String get scheduleSameDayError => 'நேர வரம்பு ஒரே நாளில் இருக்க வேண்டும்.';
+
+  @override
+  String get schedulePastError =>
+      'தொடக்க நேரம் கடந்த காலத்தில் இருக்க முடியாது.';
+
+  @override
+  String get scheduleTodayPastCutoff =>
+      'இன்று 20:00 க்கு முன் 1 மணிநேரத்திற்கும் குறைவான நேரமே உள்ளது. தயவுசெய்து வேறு தேதியைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get outsideWorkingHoursWarning => 'உங்கள் வேலை நேரத்திற்கு வெளியே';
+
+  @override
+  String get admin2faTitle => 'நிர்வாகி சரிபார்ப்பு';
+
+  @override
+  String get admin2faSubtitle =>
+      'உங்கள் அமர்வை அங்கீகரிக்க உங்கள் நிர்வாகி மின்னஞ்சலுக்கு அனுப்பப்பட்ட 6 இலக்கக் குறியீட்டை உள்ளிடவும்.';
+
+  @override
+  String get useDifferentAccount => 'வேறு கணக்கைப் பயன்படுத்தவும்';
+
+  @override
+  String get continueAsCustomer => 'வாடிக்கையாளர் / வழங்குநராக தொடரவும்';
+
+  @override
+  String get otpNoSession =>
+      'இன்னும் குறியீடு அனுப்பப்படவில்லை — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+
+  @override
+  String get otpExpiredResend =>
+      'குறியீடு காலாவதியானது — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+
+  @override
+  String get otpMaxAttemptsResend =>
+      'தவறான முயற்சிகள் அதிகம் — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+
+  @override
+  String otpIncorrectTriesLeft(int count) {
+    return 'தவறான குறியீடு. இன்னும் $count முயற்சிகள் உள்ளன';
+  }
+
+  @override
+  String get codeAlreadySent => 'குறியீடு ஏற்கனவே அனுப்பப்பட்டது';
 }

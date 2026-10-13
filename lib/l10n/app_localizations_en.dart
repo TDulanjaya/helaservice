@@ -5953,4 +5953,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportProblemTitle => 'Report a problem';
+
+  @override
+  String get exactCurrentLocation => 'Use my exact current location';
+
+  @override
+  String locationAccuracy(int meters) {
+    return 'Accuracy: ±$meters m';
+  }
+
+  @override
+  String locationAccuracyLowWarning(int meters) {
+    return 'Location accuracy is low (±$meters m). Please drag the map pin to your exact gate or house.';
+  }
+
+  @override
+  String get fineTunePinInstruction => 'Drag pin to your exact gate or house';
+
+  @override
+  String get houseAptNo => 'House / Apartment No.';
+
+  @override
+  String get streetName => 'Street / Road';
+
+  @override
+  String get townCity => 'Town / City';
+
+  @override
+  String get landmarkOptional => 'Landmark (e.g. near the blue gate)';
+
+  @override
+  String get directionsForProvider => 'Directions for provider';
+
+  @override
+  String get saveThisAddress => 'Save this address';
+
+  @override
+  String get locationRequiredHint =>
+      'Please choose a service location on the map before posting.';
+
+  @override
+  String get scheduleModeAsap => 'As soon as possible';
+
+  @override
+  String get scheduleModeDateOnly => 'Pick a date only';
+
+  @override
+  String get scheduleModeTimeRange => 'Pick a date & my own time range';
+
+  @override
+  String get scheduleAnyTime => 'Any time that day';
+
+  @override
+  String get scheduleFrom => 'From';
+
+  @override
+  String get scheduleTo => 'To';
+
+  @override
+  String get scheduleMinDurationError => 'Time range must be at least 1 hour.';
+
+  @override
+  String get scheduleMaxDurationError => 'Time range cannot exceed 12 hours.';
+
+  @override
+  String get scheduleSameDayError => 'Time range must be on the same day.';
+
+  @override
+  String get schedulePastError => 'Start time cannot be in the past.';
+
+  @override
+  String get scheduleTodayPastCutoff =>
+      'Less than 1 hour remains before 20:00 today. Please select another date.';
+
+  @override
+  String get outsideWorkingHoursWarning => 'Outside your working hours';
+
+  @override
+  String get admin2faTitle => 'Admin Verification';
+
+  @override
+  String get admin2faSubtitle =>
+      'Enter the 6-digit code sent to your admin email to authenticate your session.';
+
+  @override
+  String get useDifferentAccount => 'Use a different account';
+
+  @override
+  String get continueAsCustomer => 'Continue as customer / provider';
+
+  @override
+  String get otpNoSession => 'No code sent yet — tap Resend';
+
+  @override
+  String get otpExpiredResend => 'Code expired — tap Resend';
+
+  @override
+  String get otpMaxAttemptsResend => 'Too many wrong tries — tap Resend';
+
+  @override
+  String otpIncorrectTriesLeft(int count) {
+    return 'Incorrect code. $count tries left';
+  }
+
+  @override
+  String get codeAlreadySent => 'Code already sent';
 }

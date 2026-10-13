@@ -401,7 +401,8 @@ service cloud.firestore {
           (!('street' in data) || data.street == null || (data.street is string && data.street.size() <= 100)) &&
           (!('city' in data) || data.city == null || (data.city is string && data.city.size() <= 100)) &&
           (!('landmark' in data) || data.landmark == null || (data.landmark is string && data.landmark.size() <= 100)) &&
-          (!('directions' in data) || data.directions == null || (data.directions is string && data.directions.size() <= 300));
+          (!('directions' in data) || data.directions == null || (data.directions is string && data.directions.size() <= 300)) &&
+          (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 300));
       }
 
       allow read: if isAuthenticated();
@@ -417,6 +418,7 @@ service cloud.firestore {
         !('city' in request.resource.data) &&
         !('directions' in request.resource.data) &&
         !('accuracyMeters' in request.resource.data) &&
+        !('note' in request.resource.data) &&
         validJobPhotos(request.resource.data, request.auth.uid) &&
         validJobVideo(request.resource.data, request.auth.uid) &&
         validSchedule(request.resource.data);
@@ -432,6 +434,7 @@ service cloud.firestore {
           !('city' in request.resource.data) &&
           !('directions' in request.resource.data) &&
           !('accuracyMeters' in request.resource.data) &&
+          !('note' in request.resource.data) &&
           validJobPhotos(request.resource.data, resource.data.customerId) &&
           validJobVideo(request.resource.data, resource.data.customerId) &&
           (
@@ -450,6 +453,7 @@ service cloud.firestore {
           !('city' in request.resource.data) &&
           !('directions' in request.resource.data) &&
           !('accuracyMeters' in request.resource.data) &&
+          !('note' in request.resource.data) &&
           (
             (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled']) ||
             (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||

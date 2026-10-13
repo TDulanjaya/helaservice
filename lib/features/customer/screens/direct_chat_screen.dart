@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../services/chat_service.dart';
+import '../../../services/storage_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/user_avatar.dart';
@@ -13,6 +13,7 @@ import '../../../models/complaint.dart';
 import '../../../repositories/complaint_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../services/call_service.dart';
+import '../../../utils/ticket_error_l10n.dart';
 
 
 // direct chat screen
@@ -271,10 +272,14 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                                 );
                               }
                             } catch (e) {
+                              debugPrint('[DirectChatScreen] submit report error: $e');
                               if (ctx.mounted) {
                                 setSheetState(() => isSubmitting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('${context.l10n.somethingWentWrong}: $e')),
+                                  SnackBar(
+                                    content: Text(ticketErrorMessage(context, e)),
+                                    backgroundColor: AppColors.error,
+                                  ),
                                 );
                               }
                             }
@@ -441,12 +446,12 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
       setState(() => _isUploadingImage = true);
 
-      final file = File(picked.path);
+      final bytes = await picked.readAsBytes();
       await _chatService.sendImageMessage(
         chatRoomId: _chatRoomId!,
         senderId: _currentUserId,
         senderName: _currentUserName,
-        imageInput: file,
+        imageInput: PickedAttachment(file: picked, bytes: bytes),
       );
 
       _scrollToBottom();

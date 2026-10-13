@@ -6200,4 +6200,88 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get codeAlreadySent => 'குறியீடு ஏற்கனவே அனுப்பப்பட்டது';
+
+  @override
+  String get ticketSubmitPermissionDenied =>
+      'உங்கள் கோரிக்கையை அனுப்ப முடியவில்லை. தயவுசெய்து மீண்டும் உள்நுழைந்து முயற்சிக்கவும்.';
+
+  @override
+  String get ticketSubmitErrorGeneral =>
+      'உங்கள் கோரிக்கையை அனுப்ப முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get ticketCategory => 'வகை';
+
+  @override
+  String get pleaseFillRequiredFields =>
+      'தேவையான அனைத்து புலங்களையும் நிரப்பவும்';
+
+  @override
+  String get ticketPhotoUploadFailed =>
+      'புகைப்படத்தை பதிவேற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும் அல்லது புகைப்படம் இல்லாமல் அனுப்பவும்.';
+
+  @override
+  String get videoUploadMobileOnly =>
+      'வீடியோ பதிவேற்றம் மொபைல் செயலியில் செயல்படும்';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'உங்கள் கணக்கு மற்றும் தரவை நிரந்தரமாக நீக்குங்கள்';
+
+  @override
+  String get movePinToGateHint => 'பினை உங்கள் வாயிலுக்கு நகர்த்தவும்';
+
+  @override
+  String get notHereChooseAnother =>
+      'இங்கே இல்லையா? மற்றொரு இடத்தைத் தேர்வுசெய்க';
+
+  @override
+  String get couldNotGetLocationFallback =>
+      'உங்கள் இருப்பிடத்தைப் பெற முடியவில்லை — ஒரு இடத்தைத் தேர்ந்தெடுக்கவும் அல்லது வரைபடத்தில் தேடவும்';
+
+  @override
+  String get tryGpsAgain => 'மீண்டும் GPS முயற்சிக்கவும்';
+
+  @override
+  String get addDetailsForProvider => 'வழங்குநருக்கான விவரங்களைச் சேர்க்கவும்';
+
+  @override
+  String get providerNoteLabel => 'வழங்குநருக்கான குறிப்பு';
+
+  @override
+  String get providerNoteHint =>
+      'எ.கா. நீல வாயில், பேருந்து நிறுத்தம் அருகில் வெள்ளை டொயோட்டா';
+
+  @override
+  String get saveThisPlace => 'இந்த இடத்தை சேமிக்கவும்';
+
+  @override
+  String get searchOnMap => 'வரைபடத்தில் தேடவும்';
+
+  @override
+  String get searchPlaceHint => 'சாலை, பகுதி அல்லது ஊரைத் தேடுங்கள்...';
+
+  @override
+  String accuracyBadge(int meters) {
+    return '±$meters m';
+  }
+
+  @override
+  String get saved => 'சேமிக்கப்பட்டது';
+
+  @override
+  String get mediaUploadFailedRetry =>
+      'புகைப்படம்/வீடியோவை பதிவேற்ற முடியவில்லை — மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get jobPostPermissionDenied =>
+      'உங்கள் பணியைப் பதிவு செய்ய முடியவில்லை. தயவுசெய்து மீண்டும் உள்நுழைந்து முயற்சிக்கவும்.';
+
+  @override
+  String get jobPostErrorGeneral =>
+      'உங்கள் பணியைப் பதிவு செய்ய முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get emergencyRateUnavailable =>
+      'இந்த வழங்குநர் அவசர கட்டணத்தை நிர்ணயிக்கவில்லை.';
 }

@@ -85,6 +85,8 @@ class Technician {
   final int? dailyRateLkr;
   final int? perKmRateLkr;
   final int? visitFeeLkr;
+  final double? latitude;
+  final double? longitude;
 
   int get effectiveVisitFeeLkr => visitFeeLkr ?? (baseRateLkr > 0 ? baseRateLkr : 0);
 
@@ -110,6 +112,8 @@ class Technician {
     this.dailyRateLkr,
     this.perKmRateLkr,
     this.visitFeeLkr,
+    this.latitude,
+    this.longitude,
     required this.about,
     required this.languages,
     required this.serviceArea,
@@ -134,6 +138,8 @@ class Technician {
     String category = '',
     String serviceArea = '',
     double? rating,
+    double? latitude,
+    double? longitude,
   }) =>
       Technician(
         id: id,
@@ -154,6 +160,8 @@ class Technician {
         onTimePercent: '',
         hourlyRateLkr: 0,
         emergencyRateLkr: 0,
+        latitude: latitude,
+        longitude: longitude,
         about: '',
         languages: '',
         serviceArea: serviceArea,
@@ -228,6 +236,8 @@ class Technician {
         if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
         if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
         if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
         'about': about,
         'languages': languages,
         'serviceArea': serviceArea,
@@ -278,6 +288,10 @@ class Technician {
       dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
       visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
+      latitude: (map['latitude'] as num?)?.toDouble() ??
+          (map['lat'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble() ??
+          (map['lng'] as num?)?.toDouble(),
       about: map['about'] ?? '',
       languages: map['languages'] ?? '',
       serviceArea: map['serviceArea'] ?? '',

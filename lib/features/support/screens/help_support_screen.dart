@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +11,10 @@ import '../../../services/storage_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
+import '../../../utils/ticket_error_l10n.dart';
+import '../../../state/role_provider.dart';
+import '../../../services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'support_ticket_detail_screen.dart';
 
 class HelpSupportScreen extends StatefulWidget {
@@ -32,7 +35,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     final subjectController = TextEditingController();
     final descriptionController = TextEditingController();
     String selectedType = 'help';
-    final List<File> selectedPhotos = [];
+    final List<PickedAttachment> selectedPhotos = [];
     bool isSubmitting = false;
 
     showModalBottomSheet(
@@ -83,7 +86,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Category',
+                      context.l10n.ticketCategory,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -147,8 +150,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  selectedPhotos[i],
+                                child: Image.memory(
+                                  selectedPhotos[i].bytes,
                                   width: 70,
                                   height: 70,
                                   fit: BoxFit.cover,
@@ -180,7 +183,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         onPressed: () async {
                           final img = await _picker.pickImage(source: ImageSource.gallery);
                           if (img != null) {
-                            setSheetState(() => selectedPhotos.add(File(img.path)));
+                            final bytes = await img.readAsBytes();
+                            setSheetState(() => selectedPhotos.add(PickedAttachment(file: img, bytes: bytes)));
                           }
                         },
                         icon: const Icon(Icons.add_a_photo_outlined, size: 18),
@@ -202,28 +206,51 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 final desc = descriptionController.text.trim();
                                 if (subj.isEmpty || desc.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Please fill all required fields')),
+                                    SnackBar(content: Text(context.l10n.pleaseFillRequiredFields)),
                                   );
                                   return;
                                 }
 
+                                final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+                                final profile = roleProvider.currentUser ?? AuthService().currentUser;
+                                final String reporterRole = (profile?.role == AppRole.provider) ? 'provider' : 'customer';
+                                final String reporterName = (profile?.displayName.trim().isNotEmpty == true)
+                                    ? profile!.displayName.trim()
+                                    : ((user.displayName != null && user.displayName!.trim().isNotEmpty)
+                                        ? user.displayName!.trim()
+                                        : (user.email ?? ''));
+
                                 setSheetState(() => isSubmitting = true);
+                                final photoUrls = <String>[];
+                                final storageService = StorageService();
                                 try {
-                                  final photoUrls = <String>[];
-                                  final storageService = StorageService();
                                   for (final p in selectedPhotos) {
-                                    final uploadedUrl = await storageService.uploadJobPhoto(
-                                      userId: user.uid,
-                                      imageFile: p,
+                                    final uploadedUrl = await storageService.uploadPickedAttachment(
+                                      p,
+                                      purpose: 'job_photo',
                                     );
                                     photoUrls.add(uploadedUrl);
                                   }
+                                } catch (e) {
+                                  debugPrint('[HelpSupportScreen] Photo upload failed: $e');
+                                  if (context.mounted) {
+                                    setSheetState(() => isSubmitting = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(context.l10n.ticketPhotoUploadFailed),
+                                        backgroundColor: AppColors.error,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
 
+                                try {
                                   final ticket = Complaint(
                                     type: selectedType,
                                     reporterUid: user.uid,
-                                    reporterRole: 'customer',
-                                    reporterName: user.displayName ?? 'Customer',
+                                    reporterRole: reporterRole,
+                                    reporterName: reporterName,
                                     subject: subj,
                                     description: desc,
                                     photos: photoUrls,
@@ -244,11 +271,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                     );
                                   }
                                 } catch (e) {
+                                  debugPrint('[HelpSupportScreen] Failed to submit ticket: $e');
                                   if (context.mounted) {
                                     setSheetState(() => isSubmitting = false);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Failed to submit ticket: $e'),
+                                        content: Text(ticketErrorMessage(context, e)),
                                         backgroundColor: AppColors.error,
                                       ),
                                     );

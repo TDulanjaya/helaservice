@@ -6739,7 +6739,7 @@ abstract class AppLocalizations {
   /// No description provided for @openSettings.
   ///
   /// In en, this message translates to:
-  /// **'Open Settings'**
+  /// **'Open settings'**
   String get openSettings;
 
   /// No description provided for @ok.
@@ -11026,6 +11026,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Code already sent'**
   String get codeAlreadySent;
+
+  /// No description provided for @ticketSubmitPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your request. Please sign in again and try once more.'**
+  String get ticketSubmitPermissionDenied;
+
+  /// No description provided for @ticketSubmitErrorGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your request. Please try again.'**
+  String get ticketSubmitErrorGeneral;
+
+  /// No description provided for @ticketCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get ticketCategory;
+
+  /// No description provided for @pleaseFillRequiredFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill all required fields'**
+  String get pleaseFillRequiredFields;
+
+  /// No description provided for @ticketPhotoUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the photo. Try again or send without a photo.'**
+  String get ticketPhotoUploadFailed;
+
+  /// No description provided for @videoUploadMobileOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Video upload works in the mobile app'**
+  String get videoUploadMobileOnly;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove your account and data'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @movePinToGateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the pin to your gate'**
+  String get movePinToGateHint;
+
+  /// No description provided for @notHereChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Not here? Choose another place'**
+  String get notHereChooseAnother;
+
+  /// No description provided for @couldNotGetLocationFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get your location — choose a place or search the map'**
+  String get couldNotGetLocationFallback;
+
+  /// No description provided for @tryGpsAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try GPS again'**
+  String get tryGpsAgain;
+
+  /// No description provided for @addDetailsForProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details for the provider'**
+  String get addDetailsForProvider;
+
+  /// No description provided for @providerNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for provider'**
+  String get providerNoteLabel;
+
+  /// No description provided for @providerNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. blue gate, white Toyota near the bus stop'**
+  String get providerNoteHint;
+
+  /// No description provided for @saveThisPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this place'**
+  String get saveThisPlace;
+
+  /// No description provided for @searchOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Search on map'**
+  String get searchOnMap;
+
+  /// No description provided for @searchPlaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search road, area or town...'**
+  String get searchPlaceHint;
+
+  /// No description provided for @accuracyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'±{meters} m'**
+  String accuracyBadge(int meters);
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @mediaUploadFailedRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the photo/video — Retry'**
+  String get mediaUploadFailedRetry;
+
+  /// No description provided for @jobPostPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t post your job. Please sign in again and try once more.'**
+  String get jobPostPermissionDenied;
+
+  /// No description provided for @jobPostErrorGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t post your job. Please try again.'**
+  String get jobPostErrorGeneral;
+
+  /// No description provided for @emergencyRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This provider does not have an emergency rate set.'**
+  String get emergencyRateUnavailable;
 }
 
 class _AppLocalizationsDelegate

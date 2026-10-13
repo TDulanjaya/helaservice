@@ -20,6 +20,9 @@ class VideoService {
 
   // compress video <= 120s and make thumbnail
   Future<ProcessedVideoResult> processJobVideo(File rawVideoFile) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Video upload is only available in the mobile app.');
+    }
     try {
       final info = await VideoCompress.getMediaInfo(rawVideoFile.path);
       final rawDurationMs = info.duration ?? 0;
@@ -62,8 +65,9 @@ class VideoService {
     }
   }
 
-  /// Clean up video compression temporary caches.
+  // clean up video cache
   Future<void> cleanCache() async {
+    if (kIsWeb) return;
     try {
       await VideoCompress.deleteAllCache();
     } catch (e) {

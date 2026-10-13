@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -16,6 +17,7 @@ import 'app_map_view.dart';
 import 'primary_button.dart';
 import 'icon_square_button.dart';
 
+// location picker with gps-first flow and map search
 class JobLocationPicker extends StatefulWidget {
   final JobLocation? initialLocation;
   final String? title;
@@ -46,25 +48,34 @@ class JobLocationPicker extends StatefulWidget {
 }
 
 class _JobLocationPickerState extends State<JobLocationPicker> {
-  final _addressController = TextEditingController();
-  final _houseNoController = TextEditingController();
-  final _streetController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _landmarkController = TextEditingController();
-  final _directionsController = TextEditingController();
   final MapController _mapController = MapController();
+  final _houseNoController = TextEditingController();
+  final _noteController = TextEditingController();
+  final _searchController = TextEditingController();
 
   double? _latitude;
   double? _longitude;
   double? _accuracyMeters;
-  bool _isGpsLoading = false;
-  bool _isGeocodingLoading = false;
-  bool _isSavingAddress = false;
-  String _selectedLabel = 'home';
-  bool _saveForFuture = false;
 
-  Timer? _debounceTimer;
-  DateTime _lastGeocodeRequestTime = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _isGpsLoading = false;
+  bool _gpsFailed = false;
+  bool _permissionPermanentlyDenied = false;
+  bool _showAlternativePlaces = false;
+  bool _isGeocodingLoading = false;
+  bool _isDetailsExpanded = false;
+  String? _savedWithLabel;
+
+  String _shortAddress = '';
+  String _fullAddress = '';
+  String _street = '';
+  String _city = '';
+
+  Timer? _geocodeDebounce;
+  Timer? _searchDebounce;
+  DateTime _lastNetworkRequestTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _searchResults = [];
 
   final List<String> _labelOptions = ['home', 'work', 'other'];
 
@@ -75,39 +86,58 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       _latitude = widget.initialLocation!.latitude;
       _longitude = widget.initialLocation!.longitude;
       _accuracyMeters = widget.initialLocation!.accuracyMeters;
-      _addressController.text = widget.initialLocation!.address;
+      _fullAddress = widget.initialLocation!.address;
+      _shortAddress = _formatShortAddress(widget.initialLocation!.address);
+      _street = widget.initialLocation!.street ?? '';
+      _city = widget.initialLocation!.city ?? '';
       _houseNoController.text = widget.initialLocation!.houseNo ?? '';
-      _streetController.text = widget.initialLocation!.street ?? '';
-      _cityController.text = widget.initialLocation!.city ?? '';
-      _landmarkController.text = widget.initialLocation!.landmark ?? '';
-      _directionsController.text = widget.initialLocation!.directions ?? '';
-      _selectedLabel = widget.initialLocation!.label?.toLowerCase() ?? 'home';
+      _noteController.text = widget.initialLocation!.effectiveNote ?? '';
+    } else {
+      // auto start gps on open
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _useCurrentGps();
+      });
     }
   }
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
-    _addressController.dispose();
+    _geocodeDebounce?.cancel();
+    _searchDebounce?.cancel();
     _houseNoController.dispose();
-    _streetController.dispose();
-    _cityController.dispose();
-    _landmarkController.dispose();
-    _directionsController.dispose();
+    _noteController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   bool get _canConfirm => _latitude != null && _longitude != null;
 
-  /// Reverse geocodes using OpenStreetMap Nominatim with debouncing & rate limiting
-  Future<void> _reverseGeocode(double lat, double lon) async {
+  // rate limiter helper for nominatim (1 req per second max)
+  Future<void> _rateLimit() async {
     final now = DateTime.now();
-    final elapsed = now.difference(_lastGeocodeRequestTime);
+    final elapsed = now.difference(_lastNetworkRequestTime);
     if (elapsed.inMilliseconds < 1000) {
       await Future.delayed(Duration(milliseconds: 1000 - elapsed.inMilliseconds));
     }
-    _lastGeocodeRequestTime = DateTime.now();
+    _lastNetworkRequestTime = DateTime.now();
+  }
 
+  // format address to road, area, town (~60 chars max)
+  String _formatShortAddress(String raw) {
+    if (raw.trim().isEmpty) return '';
+    final parts = raw.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+    if (parts.length <= 3) {
+      final joined = parts.join(', ');
+      return joined.length > 60 ? '${joined.substring(0, 57)}...' : joined;
+    }
+    final shortParts = parts.take(3).toList();
+    final candidate = shortParts.join(', ');
+    return candidate.length > 60 ? '${candidate.substring(0, 57)}...' : candidate;
+  }
+
+  // reverse geocode pin using nominatim
+  Future<void> _reverseGeocode(double lat, double lon) async {
+    await _rateLimit();
     if (!mounted) return;
     setState(() => _isGeocodingLoading = true);
 
@@ -117,7 +147,12 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       );
       final response = await http.get(
         url,
-        headers: {'User-Agent': 'HelaService-App/1.0'},
+        headers: kIsWeb
+            ? const <String, String>{}
+            : const <String, String>{
+                'User-Agent': 'HelaService-App/1.0',
+                'Referer': 'https://helaservice.vercel.app',
+              },
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -125,24 +160,27 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
         final displayName = (data['display_name'] as String?) ?? '';
         final addr = data['address'] as Map<String, dynamic>?;
 
+        String road = '';
+        String area = '';
+        String city = '';
+
+        if (addr != null) {
+          road = (addr['road'] ?? addr['street'] ?? '') as String;
+          area = (addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '') as String;
+          city = (addr['city'] ?? addr['town'] ?? addr['municipality'] ?? addr['county'] ?? '') as String;
+        }
+
+        final parts = [road, area, city].where((s) => s.isNotEmpty).toList();
+        final formatted = parts.isNotEmpty ? parts.join(', ') : displayName;
+
         if (mounted) {
           setState(() {
-            if (displayName.isNotEmpty) {
-              _addressController.text = displayName;
-            } else {
-              _addressController.text =
-                  '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
-            }
-            if (addr != null) {
-              if (_streetController.text.trim().isEmpty) {
-                final road = addr['road'] as String?;
-                if (road != null && road.isNotEmpty) _streetController.text = road;
-              }
-              if (_cityController.text.trim().isEmpty) {
-                final city = (addr['city'] ?? addr['town'] ?? addr['suburb'] ?? addr['village']) as String?;
-                if (city != null && city.isNotEmpty) _cityController.text = city;
-              }
-            }
+            _fullAddress = displayName.isNotEmpty ? displayName : formatted;
+            _street = road;
+            _city = city;
+            _shortAddress = formatted.length > 60
+                ? '${formatted.substring(0, 57)}...'
+                : formatted;
           });
         }
       } else {
@@ -159,35 +197,62 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
 
   void _setFallbackCoordinates(double lat, double lon) {
     if (!mounted) return;
+    final fallback = '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
     setState(() {
-      if (_addressController.text.trim().isEmpty) {
-        _addressController.text =
-            '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
-      }
+      _shortAddress = fallback;
+      _fullAddress = fallback;
     });
   }
 
+  // handle map drag
   void _onMapCameraMoved(LatLng center) {
     setState(() {
       _latitude = center.latitude;
       _longitude = center.longitude;
-      // manual drag clears GPS accuracy
+      // manual drag clears gps accuracy badge
       _accuracyMeters = null;
     });
 
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 800), () {
+    _geocodeDebounce?.cancel();
+    _geocodeDebounce = Timer(const Duration(milliseconds: 800), () {
       _reverseGeocode(center.latitude, center.longitude);
     });
   }
 
+  // start high accuracy gps
   Future<void> _useCurrentGps() async {
-    setState(() => _isGpsLoading = true);
+    setState(() {
+      _isGpsLoading = true;
+      _gpsFailed = false;
+      _permissionPermanentlyDenied = false;
+    });
+
     try {
-      final granted =
-          await PermissionUtils.requestLocationWithRationale(context);
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.deniedForever) {
+        if (mounted) {
+          setState(() {
+            _isGpsLoading = false;
+            _gpsFailed = true;
+            _permissionPermanentlyDenied = true;
+            _showAlternativePlaces = true;
+          });
+        }
+        return;
+      }
+
+      if (!mounted) return;
+      final granted = await PermissionUtils.requestLocationWithRationale(context);
       if (!granted) {
-        setState(() => _isGpsLoading = false);
+        final postPerm = await Geolocator.checkPermission();
+        if (mounted) {
+          setState(() {
+            _isGpsLoading = false;
+            _gpsFailed = true;
+            _permissionPermanentlyDenied = postPerm == LocationPermission.deniedForever;
+            _showAlternativePlaces = true;
+          });
+        }
         return;
       }
 
@@ -203,24 +268,82 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
         _latitude = pos.latitude;
         _longitude = pos.longitude;
         _accuracyMeters = pos.accuracy;
+        _isGpsLoading = false;
+        _gpsFailed = false;
       });
 
       _mapController.move(LatLng(pos.latitude, pos.longitude), 18.0);
       _reverseGeocode(pos.latitude, pos.longitude);
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isGpsLoading = false;
+        _gpsFailed = true;
+        _showAlternativePlaces = true;
+      });
+    }
+  }
+
+  // search on map via nominatim
+  Future<void> _searchMap(String query) async {
+    final q = query.trim();
+    if (q.length < 2) return;
+
+    await _rateLimit();
+    if (!mounted) return;
+    setState(() => _isSearching = true);
+
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?format=jsonv2&q=${Uri.encodeComponent(q)}&countrycodes=lk&limit=5',
+      );
+      final response = await http.get(
+        url,
+        headers: kIsWeb
+            ? const <String, String>{}
+            : const <String, String>{
+                'User-Agent': 'HelaService-App/1.0',
+                'Referer': 'https://helaservice.vercel.app',
+              },
+      ).timeout(const Duration(seconds: 6));
+
+      if (response.statusCode == 200 && mounted) {
+        final list = (json.decode(response.body) as List<dynamic>?) ?? [];
+        setState(() {
+          _searchResults = list.map((item) => item as Map<String, dynamic>).toList();
+        });
+      }
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.couldNotDetectLocation(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        setState(() => _searchResults = []);
       }
     } finally {
       if (mounted) {
-        setState(() => _isGpsLoading = false);
+        setState(() => _isSearching = false);
       }
     }
+  }
+
+  void _onSelectSearchResult(Map<String, dynamic> item) {
+    final lat = double.tryParse(item['lat']?.toString() ?? '');
+    final lon = double.tryParse(item['lon']?.toString() ?? '');
+    if (lat == null || lon == null) return;
+
+    final displayName = item['display_name']?.toString() ?? '';
+
+    setState(() {
+      _latitude = lat;
+      _longitude = lon;
+      _accuracyMeters = null;
+      _fullAddress = displayName;
+      _shortAddress = _formatShortAddress(displayName);
+      _searchResults = [];
+      _searchController.clear();
+      FocusScope.of(context).unfocus();
+    });
+
+    _mapController.move(LatLng(lat, lon), 18.0);
+    _reverseGeocode(lat, lon);
   }
 
   void _onSelectSavedAddress(SavedAddress addr) {
@@ -228,79 +351,69 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       _latitude = addr.latitude;
       _longitude = addr.longitude;
       _accuracyMeters = addr.accuracyMeters;
-      _addressController.text = addr.address;
+      _fullAddress = addr.address;
+      _shortAddress = _formatShortAddress(addr.address);
+      _street = addr.street ?? '';
+      _city = addr.city ?? '';
       _houseNoController.text = addr.houseNo ?? '';
-      _streetController.text = addr.street ?? '';
-      _cityController.text = addr.city ?? '';
-      _landmarkController.text = addr.landmark ?? '';
-      _directionsController.text = addr.directions ?? '';
-      _selectedLabel = addr.label;
+      _noteController.text = addr.effectiveNote ?? '';
+      _showAlternativePlaces = false;
     });
+
     _mapController.move(LatLng(addr.latitude, addr.longitude), 18.0);
   }
 
-  Future<void> _confirmLocation() async {
+  // quick save place with label
+  Future<void> _quickSavePlace(String label) async {
+    if (!_canConfirm) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return;
+
+    setState(() => _savedWithLabel = label);
+
+    try {
+      await SavedAddressRepository().addSavedAddress(
+        userId: uid,
+        label: label,
+        latitude: _latitude!,
+        longitude: _longitude!,
+        address: _fullAddress.isNotEmpty ? _fullAddress : _shortAddress,
+        note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+        houseNo: _houseNoController.text.trim().isNotEmpty ? _houseNoController.text.trim() : null,
+        street: _street.isNotEmpty ? _street : null,
+        city: _city.isNotEmpty ? _city : null,
+        accuracyMeters: _accuracyMeters,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${context.l10n.saved}: $label'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[JobLocationPicker] save place error: $e');
+    }
+  }
+
+  void _confirmLocation() {
     if (!_canConfirm) return;
 
-    var addressText = _addressController.text.trim();
-    if (addressText.isEmpty) {
-      final parts = [
-        _houseNoController.text.trim(),
-        _streetController.text.trim(),
-        _cityController.text.trim(),
-      ].where((s) => s.isNotEmpty).toList();
-      if (parts.isNotEmpty) {
-        addressText = parts.join(', ');
-      } else {
-        addressText = '${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)}';
-      }
-    }
-
-    final landmarkText = _landmarkController.text.trim();
+    final noteText = _noteController.text.trim();
     final houseNoText = _houseNoController.text.trim();
-    final streetText = _streetController.text.trim();
-    final cityText = _cityController.text.trim();
-    final directionsText = _directionsController.text.trim();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-
-    if (_saveForFuture && uid != null && uid.isNotEmpty) {
-      setState(() => _isSavingAddress = true);
-      try {
-        await SavedAddressRepository().addSavedAddress(
-          userId: uid,
-          label: _selectedLabel,
-          latitude: _latitude!,
-          longitude: _longitude!,
-          address: addressText,
-          landmark: landmarkText.isNotEmpty ? landmarkText : null,
-          accuracyMeters: _accuracyMeters,
-          houseNo: houseNoText.isNotEmpty ? houseNoText : null,
-          street: streetText.isNotEmpty ? streetText : null,
-          city: cityText.isNotEmpty ? cityText : null,
-          directions: directionsText.isNotEmpty ? directionsText : null,
-        );
-      } catch (e) {
-        debugPrint('[JobLocationPicker] Error saving address: $e');
-      } finally {
-        if (mounted) {
-          setState(() => _isSavingAddress = false);
-        }
-      }
-    }
-
-    if (!mounted) return;
+    final finalAddress = _fullAddress.isNotEmpty ? _fullAddress : _shortAddress;
 
     final location = JobLocation(
       latitude: _latitude!,
       longitude: _longitude!,
-      address: addressText,
-      landmark: landmarkText.isNotEmpty ? landmarkText : null,
-      label: _selectedLabel,
-      accuracyMeters: _accuracyMeters,
+      address: finalAddress,
+      note: noteText.isNotEmpty ? noteText : null,
+      landmark: noteText.isNotEmpty ? noteText : null,
       houseNo: houseNoText.isNotEmpty ? houseNoText : null,
-      street: streetText.isNotEmpty ? streetText : null,
-      city: cityText.isNotEmpty ? cityText : null,
-      directions: directionsText.isNotEmpty ? directionsText : null,
+      street: _street.isNotEmpty ? _street : null,
+      city: _city.isNotEmpty ? _city : null,
+      accuracyMeters: _accuracyMeters,
     );
 
     Navigator.of(context).pop(location);
@@ -341,151 +454,18 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 children: [
-                  // GPS action button with accuracy info
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _isGpsLoading ? null : _useCurrentGps,
-                          icon: _isGpsLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : const Icon(Icons.my_location_rounded,
-                                  color: AppColors.primary, size: 18),
-                          label: Text(
-                            context.l10n.exactCurrentLocation,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: AppColors.primary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            backgroundColor:
-                                AppColors.primary.withValues(alpha: 0.06),
-                          ),
-                        ),
-                      ),
-                      if (_accuracyMeters != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: _accuracyMeters! > 50
-                                ? AppColors.warning.withValues(alpha: 0.15)
-                                : AppColors.success.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: _accuracyMeters! > 50
-                                  ? AppColors.warning
-                                  : AppColors.success,
-                            ),
-                          ),
-                          child: Text(
-                            context.l10n.locationAccuracy(_accuracyMeters!.round()),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _accuracyMeters! > 50
-                                  ? AppColors.warning
-                                  : AppColors.success,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  // Warning if accuracy is worse than 50m
-                  if (_accuracyMeters != null && _accuracyMeters! > 50) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppColors.warning.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.warning_amber_rounded,
-                              color: AppColors.warning, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              context.l10n.locationAccuracyLowWarning(
-                                  _accuracyMeters!.round()),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.warning,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 12),
-
-                  // Fine tune instruction
+                  // map container with center pin
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: context.themeSurfaceLow,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: context.themeBorder),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.touch_app_rounded,
-                            size: 16, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            context.l10n.fineTunePinInstruction,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.themeInk,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Map container with draggable center pin
-                  Container(
-                    height: 240,
+                    height: 260,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: _latitude != null
-                            ? AppColors.primary
-                            : context.themeBorder,
+                        color: _latitude != null ? AppColors.primary : context.themeBorder,
                         width: _latitude != null ? 1.5 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: context.isDark ? 0.3 : 0.05),
+                          color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -498,7 +478,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                         AppMapView(
                           controller: _mapController,
                           initialCenter: centerLatLng,
-                          initialZoom: (_latitude != null && _longitude != null) ? 18.0 : 14.5,
+                          initialZoom: (_latitude != null && _longitude != null) ? 18.0 : 13.0,
                           interactive: true,
                           onPositionChanged: (camera, hasGesture) {
                             if (hasGesture) {
@@ -506,7 +486,8 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                             }
                           },
                         ),
-                        // center pin
+
+                        // draggable center pin
                         IgnorePointer(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -514,7 +495,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
+                                  color: _latitude != null ? AppColors.primary : Colors.grey,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -523,8 +504,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
-                                  border:
-                                      Border.all(color: Colors.white, width: 2),
+                                  border: Border.all(color: Colors.white, width: 2),
                                 ),
                                 child: const Icon(
                                   Icons.location_on_rounded,
@@ -551,444 +531,563 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                             ],
                           ),
                         ),
-                        // update pin button
-                        Positioned(
-                          bottom: 10,
-                          right: 10,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              final center = _mapController.camera.center;
-                              _onMapCameraMoved(center);
-                            },
-                            icon: const Icon(Icons.pin_drop_rounded, size: 16),
-                            label: Text(
-                              _latitude != null
-                                  ? context.l10n.updatePinButton
-                                  : context.l10n.setPinHereButton,
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w700),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 4,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (_latitude != null && _longitude != null)
+
+                        // top badge: accuracy
+                        if (_accuracyMeters != null)
                           Positioned(
                             top: 10,
                             left: 10,
-                            right: 10,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Colors.black87,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (_isGeocodingLoading) ...[
-                                    const SizedBox(
-                                      width: 12,
-                                      height: 12,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                  ],
-                                  Expanded(
-                                    child: Text(
-                                      _addressController.text.isNotEmpty
-                                          ? _addressController.text
-                                          : '${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  Icon(
+                                    Icons.gps_fixed_rounded,
+                                    size: 12,
+                                    color: _accuracyMeters! > 50 ? AppColors.warning : AppColors.success,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    context.l10n.accuracyBadge(_accuracyMeters!.round()),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
+
+                        // top badge: loading gps indicator
+                        if (_isGpsLoading)
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'GPS...',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          // recenter gps button
+                          Positioned(
+                            bottom: 10,
+                            right: 10,
+                            child: Material(
+                              color: context.themeSurface,
+                              elevation: 3,
+                              borderRadius: BorderRadius.circular(10),
+                              child: InkWell(
+                                onTap: _useCurrentGps,
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  child: const Icon(
+                                    Icons.my_location_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  // saved addresses
-                  if (uid.isNotEmpty) ...[
-                    StreamBuilder<List<SavedAddress>>(
-                      stream: SavedAddressRepository().streamSavedAddresses(uid),
-                      builder: (context, snapshot) {
-                        final addresses = snapshot.data ?? [];
-                        if (addresses.isEmpty) return const SizedBox.shrink();
+                  const SizedBox(height: 10),
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.savedAddresses,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                              ),
+                  // read-only address bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        if (_isGeocodingLoading)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
                             ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: 64,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: addresses.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 8),
-                                itemBuilder: (context, index) {
-                                  final item = addresses[index];
-                                  final isCurrent = _latitude != null &&
-                                      _longitude != null &&
-                                      (_latitude! - item.latitude).abs() <
-                                          0.0001 &&
-                                      (_longitude! - item.longitude).abs() <
-                                          0.0001;
-
-                                  return InkWell(
-                                    onTap: () => _onSelectSavedAddress(item),
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      width: 170,
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isCurrent
-                                            ? AppColors.primary
-                                                .withValues(alpha: 0.12)
-                                            : context.themeSurfaceLow,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: isCurrent
-                                              ? AppColors.primary
-                                              : context.themeBorder,
-                                          width: isCurrent ? 1.5 : 1,
-                                        ),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Builder(
-                                            builder: (ctx) {
-                                              final isHome = item.label.toLowerCase() == 'home';
-                                              final isWork = item.label.toLowerCase() == 'work';
-                                              final itemDisplayLabel = isHome
-                                                  ? ctx.l10n.addressLabelHome
-                                                  : (isWork
-                                                      ? ctx.l10n.addressLabelWork
-                                                      : (item.label.toLowerCase() == 'other'
-                                                          ? ctx.l10n.addressLabelOther
-                                                          : item.label));
-                                              return Row(
-                                                children: [
-                                                  Icon(
-                                                    isHome
-                                                        ? Icons.home_rounded
-                                                        : (isWork
-                                                            ? Icons.work_rounded
-                                                            : Icons.location_on_rounded),
-                                                    size: 14,
-                                                    color: isCurrent
-                                                        ? AppColors.primary
-                                                        : ctx.themeTextSecondary,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    itemDisplayLabel,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w800,
-                                                      color: isCurrent
-                                                          ? AppColors.primary
-                                                          : ctx.themeInk,
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            item.address,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: context.themeTextSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                          )
+                        else
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _shortAddress.isNotEmpty
+                                ? _shortAddress
+                                : (_latitude != null
+                                    ? '${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)}'
+                                    : context.l10n.selectPinOnMap),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _shortAddress.isNotEmpty ? context.themeInk : context.themeTextSecondary,
                             ),
-                            const SizedBox(height: 16),
-                          ],
-                        );
-                      },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // inline hint: move pin to your gate (when accuracy > 50m)
+                  if (_accuracyMeters != null && _accuracyMeters! > 50) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.touch_app_outlined,
+                          size: 15,
+                          color: AppColors.warning,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            context.l10n.movePinToGateHint,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
 
-                  // Address Details Fields
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.houseAptNo,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              controller: _houseNoController,
-                              maxLength: 100,
-                              decoration: InputDecoration(
-                                counterText: '',
-                                hintText: 'e.g. 12/B',
-                                prefixIcon: const Icon(Icons.home_outlined),
-                                filled: true,
-                                fillColor: context.themeSurfaceLow,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.themeBorder),
-                                ),
-                              ),
-                            ),
-                          ],
+                  // gps failure state
+                  if (_gpsFailed) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.25),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.streetName,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_off_rounded,
+                                color: AppColors.error,
+                                size: 18,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              controller: _streetController,
-                              maxLength: 100,
-                              decoration: InputDecoration(
-                                counterText: '',
-                                hintText: 'e.g. Main Street',
-                                prefixIcon: const Icon(Icons.edit_road_outlined),
-                                filled: true,
-                                fillColor: context.themeSurfaceLow,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.themeBorder),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  context.l10n.couldNotGetLocationFallback,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.error,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: _useCurrentGps,
+                                icon: const Icon(Icons.refresh_rounded, size: 16),
+                                label: Text(context.l10n.tryGpsAgain),
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  foregroundColor: AppColors.error,
+                                  side: const BorderSide(color: AppColors.error),
+                                ),
+                              ),
+                              if (_permissionPermanentlyDenied)
+                                OutlinedButton.icon(
+                                  onPressed: () => Geolocator.openAppSettings(),
+                                  icon: const Icon(Icons.settings_outlined, size: 16),
+                                  label: Text(context.l10n.openSettings),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // alternative places section (search on map + saved addresses)
+                  if (_showAlternativePlaces || _gpsFailed) ...[
+                    const SizedBox(height: 14),
+
+                    // search input
+                    TextField(
+                      controller: _searchController,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (q) => _searchMap(q),
+                      onChanged: (q) {
+                        _searchDebounce?.cancel();
+                        if (q.trim().length < 3) {
+                          setState(() => _searchResults = []);
+                          return;
+                        }
+                        _searchDebounce = Timer(const Duration(milliseconds: 1000), () {
+                          _searchMap(q);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: context.l10n.searchPlaceHint,
+                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                        suffixIcon: _isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                                onPressed: () => _searchMap(_searchController.text),
+                              ),
+                        filled: true,
+                        fillColor: context.themeSurfaceLow,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: context.themeBorder),
+                        ),
+                      ),
+                    ),
+
+                    // search results list
+                    if (_searchResults.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: context.themeSurface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: context.themeBorder),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _searchResults.length,
+                          separatorBuilder: (_, __) => Divider(height: 1, color: context.themeBorder),
+                          itemBuilder: (context, i) {
+                            final item = _searchResults[i];
+                            final name = item['display_name']?.toString() ?? '';
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.place_outlined, size: 18),
+                              title: Text(
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onTap: () => _onSelectSearchResult(item),
+                            );
+                          },
                         ),
                       ),
                     ],
-                  ),
+
+                    // saved addresses chips
+                    if (uid.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      StreamBuilder<List<SavedAddress>>(
+                        stream: SavedAddressRepository().streamSavedAddresses(uid),
+                        builder: (context, snapshot) {
+                          final addresses = snapshot.data ?? [];
+                          if (addresses.isEmpty) return const SizedBox.shrink();
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.savedAddresses,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                height: 58,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: addresses.length,
+                                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                  itemBuilder: (context, index) {
+                                    final item = addresses[index];
+                                    final isHome = item.label.toLowerCase() == 'home';
+                                    final isWork = item.label.toLowerCase() == 'work';
+                                    final itemDisplayLabel = isHome
+                                        ? context.l10n.addressLabelHome
+                                        : (isWork
+                                            ? context.l10n.addressLabelWork
+                                            : (item.label.toLowerCase() == 'other'
+                                                ? context.l10n.addressLabelOther
+                                                : item.label));
+
+                                    return InkWell(
+                                      onTap: () => _onSelectSavedAddress(item),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        width: 150,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: context.themeSurfaceLow,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: context.themeBorder),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  isHome
+                                                      ? Icons.home_rounded
+                                                      : (isWork
+                                                          ? Icons.work_rounded
+                                                          : Icons.location_on_rounded),
+                                                  size: 13,
+                                                  color: AppColors.primary,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  itemDisplayLabel,
+                                                  style: const TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              item.address,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 10.5,
+                                                color: context.themeTextSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+
                   const SizedBox(height: 12),
 
-                  Text(
-                    context.l10n.townCity,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                  // collapsible: add details for the provider
+                  Container(
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _cityController,
-                    maxLength: 100,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: 'e.g. Colombo 03',
-                      prefixIcon: const Icon(Icons.location_city_outlined),
-                      filled: true,
-                      fillColor: context.themeSurfaceLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.themeBorder),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Full / formatted address input field
-                  Text(
-                    '${context.l10n.serviceAddressLabel} *',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _addressController,
-                    onChanged: (_) => setState(() {}),
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.serviceAddressHint,
-                      prefixIcon: const Icon(Icons.location_on_outlined),
-                      filled: true,
-                      fillColor: context.themeSurfaceLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.themeBorder),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Landmark
-                  Text(
-                    context.l10n.landmarkOptional,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _landmarkController,
-                    maxLength: 100,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: context.l10n.landmarkHint,
-                      prefixIcon: const Icon(Icons.flag_outlined),
-                      filled: true,
-                      fillColor: context.themeSurfaceLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.themeBorder),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Directions for provider
-                  Text(
-                    context.l10n.directionsForProvider,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _directionsController,
-                    maxLength: 300,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: 'e.g. Call at gate 2, ring the bell on the right',
-                      prefixIcon: const Icon(Icons.directions_outlined),
-                      filled: true,
-                      fillColor: context.themeSurfaceLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: context.themeBorder),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // save address option
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    value: _saveForFuture,
-                    onChanged: (val) =>
-                        setState(() => _saveForFuture = val ?? false),
-                    title: Text(
-                      context.l10n.saveThisAddress,
-                      style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: AppColors.primary,
-                  ),
-
-                  if (_saveForFuture) ...[
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      children: _labelOptions.map((labelKey) {
-                        final isSel = _selectedLabel == labelKey;
-                        final chipText = labelKey == 'home'
-                            ? context.l10n.addressLabelHome
-                            : (labelKey == 'work'
-                                ? context.l10n.addressLabelWork
-                                : context.l10n.addressLabelOther);
-                        return ChoiceChip(
-                          label: Text(chipText),
-                          selected: isSel,
-                          onSelected: (_) =>
-                              setState(() => _selectedLabel = labelKey),
-                          selectedColor:
-                              AppColors.primary.withValues(alpha: 0.15),
-                          labelStyle: TextStyle(
-                            fontSize: 12,
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        initiallyExpanded: _isDetailsExpanded,
+                        onExpansionChanged: (exp) => setState(() => _isDetailsExpanded = exp),
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+                        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                        title: Text(
+                          context.l10n.addDetailsForProvider,
+                          style: const TextStyle(
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isSel
-                                ? AppColors.primary
-                                : context.themeTextSecondary,
                           ),
-                        );
-                      }).toList(),
+                        ),
+                        children: [
+                          TextField(
+                            controller: _houseNoController,
+                            maxLength: 100,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: '${context.l10n.houseAptNo} (e.g. 12/B)',
+                              prefixIcon: const Icon(Icons.home_outlined, size: 18),
+                              filled: true,
+                              fillColor: context.themeSurface,
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: context.themeBorder),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _noteController,
+                            maxLength: 300,
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: context.l10n.providerNoteHint,
+                              prefixIcon: const Icon(Icons.note_alt_outlined, size: 18),
+                              filled: true,
+                              fillColor: context.themeSurface,
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: context.themeBorder),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // quick save place chips
+                  if (_canConfirm && uid.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          '${context.l10n.saveThisPlace}:',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Wrap(
+                          spacing: 6,
+                          children: _labelOptions.map((key) {
+                            final isSaved = _savedWithLabel == key;
+                            final labelText = key == 'home'
+                                ? context.l10n.addressLabelHome
+                                : (key == 'work'
+                                    ? context.l10n.addressLabelWork
+                                    : context.l10n.addressLabelOther);
+
+                            return ActionChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isSaved) ...[
+                                    const Icon(Icons.check, size: 12, color: AppColors.success),
+                                    const SizedBox(width: 3),
+                                  ],
+                                  Text(labelText),
+                                ],
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => _quickSavePlace(key),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
                   ],
                 ],
               ),
             ),
 
-            // confirm button
+            // bottom action section
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               decoration: BoxDecoration(
                 color: context.themeSurface,
                 border: Border(top: BorderSide(color: context.themeBorder)),
               ),
-              child: SizedBox(
-                height: 52,
-                child: PrimaryButton(
-                  label: _latitude == null || _longitude == null
-                      ? context.l10n.selectPinOnMap
-                      : context.l10n.confirmLocation,
-                  onPressed: _canConfirm && !_isSavingAddress
-                      ? _confirmLocation
-                      : null,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: PrimaryButton(
+                      label: context.l10n.confirmLocation,
+                      onPressed: _canConfirm ? _confirmLocation : null,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _showAlternativePlaces = !_showAlternativePlaces;
+                      });
+                    },
+                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                    child: Text(
+                      context.l10n.notHereChooseAnother,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

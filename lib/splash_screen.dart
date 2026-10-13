@@ -146,8 +146,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // check if user verified email
     try {
-      final tokenResult = await fbUser.getIdTokenResult();
-      final hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
+      var tokenResult = await fbUser.getIdTokenResult();
+      var hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
+
+      // refresh token if claim is missing
+      if (profile.emailOtpVerified && !hasEmailOtpClaim) {
+        await fbUser.getIdToken(true);
+        tokenResult = await fbUser.getIdTokenResult();
+        hasEmailOtpClaim = tokenResult.claims?['emailOtp'] == true;
+      }
+
       final isEmailOtpVerified = hasEmailOtpClaim || profile.emailOtpVerified;
 
       if (!isEmailOtpVerified) {

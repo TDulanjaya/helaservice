@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 import 'notification_service.dart';
@@ -358,8 +358,10 @@ class ChatService {
     String text = '',
   }) async {
     String? uploadedUrl;
-    if (imageInput is File) {
-      uploadedUrl = await StorageService.instance.uploadFile(imageInput);
+    if (imageInput is PickedAttachment) {
+      uploadedUrl = await StorageService.instance.uploadPickedAttachment(imageInput, purpose: 'chat');
+    } else if (imageInput is XFile) {
+      uploadedUrl = await StorageService.instance.uploadPickedImage(imageInput, purpose: 'chat');
     } else if (imageInput is Uint8List) {
       final chatFilename = 'chat_${DateTime.now().millisecondsSinceEpoch}.jpg';
       uploadedUrl = await StorageService.instance.uploadBytes(
@@ -368,6 +370,8 @@ class ChatService {
       );
     } else if (imageInput is String && imageInput.startsWith('http')) {
       uploadedUrl = imageInput;
+    } else if (imageInput != null) {
+      uploadedUrl = await StorageService.instance.uploadFile(imageInput, purpose: 'chat');
     }
 
     if (uploadedUrl == null || uploadedUrl.isEmpty) {

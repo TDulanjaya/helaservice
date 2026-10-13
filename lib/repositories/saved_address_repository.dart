@@ -38,18 +38,21 @@ class SavedAddressRepository {
     required double longitude,
     required String address,
     String? landmark,
+    String? note,
     double? accuracyMeters,
     String? houseNo,
     String? street,
     String? city,
     String? directions,
   }) async {
+    final noteVal = (note != null && note.isNotEmpty) ? note : landmark;
     final ref = await _userAddressesCol(userId).add({
       'label': label,
       'latitude': latitude,
       'longitude': longitude,
       'address': address,
-      if (landmark != null && landmark.isNotEmpty) 'landmark': landmark,
+      if (noteVal != null && noteVal.isNotEmpty) 'note': noteVal,
+      if (noteVal != null && noteVal.isNotEmpty) 'landmark': noteVal,
       if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
       if (houseNo != null && houseNo.isNotEmpty) 'houseNo': houseNo,
       if (street != null && street.isNotEmpty) 'street': street,
@@ -66,10 +69,15 @@ class SavedAddressRepository {
     required String label,
     String? address,
     String? landmark,
+    String? note,
   }) async {
     final Map<String, dynamic> updates = {'label': label};
     if (address != null) updates['address'] = address;
-    if (landmark != null) updates['landmark'] = landmark;
+    final noteVal = (note != null && note.isNotEmpty) ? note : landmark;
+    if (noteVal != null) {
+      updates['note'] = noteVal;
+      updates['landmark'] = noteVal;
+    }
     await _userAddressesCol(userId).doc(addressId).update(updates);
   }
 

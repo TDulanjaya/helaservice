@@ -32,6 +32,7 @@ class JobRequestRepository {
     publicData.remove('city');
     publicData.remove('directions');
     publicData.remove('accuracyMeters');
+    publicData.remove('note');
     if (request.latitude != null) {
       publicData['latitude'] = double.parse(request.latitude!.toStringAsFixed(2));
     }
@@ -43,10 +44,14 @@ class JobRequestRepository {
 
     // private contact doc
     final contactRef = docRef.collection('private').doc('contact');
+    final noteText = (request.note != null && request.note!.isNotEmpty)
+        ? request.note!
+        : (request.landmark ?? '');
     batch.set(contactRef, {
       'customerPhone': request.customerPhone,
       'address': request.address,
-      'landmark': request.landmark ?? '',
+      if (noteText.isNotEmpty) 'note': noteText,
+      'landmark': noteText,
       'latitude': request.latitude,
       'longitude': request.longitude,
       if (request.accuracyMeters != null) 'accuracyMeters': request.accuracyMeters,
@@ -368,10 +373,12 @@ class JobRequestRepository {
     required double longitude,
     required String address,
     String? landmark,
+    String? note,
     String? district,
   }) async {
     final roundedLat = double.parse(latitude.toStringAsFixed(2));
     final roundedLng = double.parse(longitude.toStringAsFixed(2));
+    final effectiveNote = (note != null && note.isNotEmpty) ? note : landmark;
 
     final batch = FirebaseFirestore.instance.batch();
     batch.update(_col.doc(requestId), {
@@ -384,7 +391,8 @@ class JobRequestRepository {
       'latitude': latitude,
       'longitude': longitude,
       'address': address,
-      if (landmark != null) 'landmark': landmark,
+      if (effectiveNote != null) 'note': effectiveNote,
+      if (effectiveNote != null) 'landmark': effectiveNote,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();

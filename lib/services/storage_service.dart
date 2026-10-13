@@ -1,11 +1,26 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 import '../constants/app_config.dart';
+
+class PickedAttachment {
+  final XFile file;
+  final Uint8List bytes;
+
+  const PickedAttachment({
+    required this.file,
+    required this.bytes,
+  });
+
+  String get name => file.name.isNotEmpty
+      ? file.name.split(RegExp(r'[\\/]')).last
+      : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+  int get sizeBytes => bytes.length;
+}
 
 class JobMediaUploadResult {
   final String url;
@@ -148,22 +163,61 @@ class StorageService {
     return JobMediaUploadResult(url: publicUrl, key: key);
   }
 
+  // upload image picked from image picker
+  Future<String> uploadPickedImage(
+    XFile file, {
+    String purpose = 'job_photo',
+    Uint8List? preloadedBytes,
+  }) async {
+    final bytes = preloadedBytes ?? await file.readAsBytes();
+    final filename = file.name.isNotEmpty
+        ? file.name
+        : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    return uploadBytes(bytes, filename: filename, purpose: purpose);
+  }
+
+  Future<String> uploadPickedAttachment(
+    PickedAttachment attachment, {
+    String purpose = 'job_photo',
+  }) {
+    return uploadPickedImage(
+      attachment.file,
+      purpose: purpose,
+      preloadedBytes: attachment.bytes,
+    );
+  }
+
   Future<String> uploadJobPhoto({
-    File? file,
+    dynamic file,
     String? filename,
     String? userId,
-    File? imageFile,
+    dynamic imageFile,
   }) {
     final target = file ?? imageFile;
     if (target == null) throw ArgumentError('Image file cannot be null');
+    if (target is PickedAttachment) {
+      return uploadPickedAttachment(target, purpose: 'job_photo');
+    }
+    if (target is XFile) {
+      return uploadPickedImage(target, purpose: 'job_photo');
+    }
     return uploadFile(target, filename: filename, purpose: 'job_photo');
   }
 
   // upload file to storage api (legacy multipart)
-  Future<String> uploadFile(File file, {String? filename, String? purpose}) async {
+  Future<String> uploadFile(dynamic file, {String? filename, String? purpose}) async {
     try {
-      final bytes = await file.readAsBytes();
-      final rawName = filename ?? file.path.split(Platform.pathSeparator).last;
+      if (file is PickedAttachment) {
+        return await uploadPickedAttachment(file, purpose: purpose ?? 'job_photo');
+      }
+      if (file is XFile) {
+        return await uploadPickedImage(file, purpose: purpose ?? 'job_photo');
+      }
+      final bytes = await file.readAsBytes() as Uint8List;
+      final rawName = filename ??
+          (file is XFile
+              ? file.name
+              : file.path?.toString().split(RegExp(r'[\\/]')).last ?? 'file.jpg');
       return await uploadBytes(bytes, filename: rawName, purpose: purpose);
     } catch (e) {
       debugPrint('[StorageService] Local read error: $e');

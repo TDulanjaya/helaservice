@@ -165,10 +165,12 @@ class BookingRepository {
       });
 
       final jobReqContactRef = jobReqRef.collection('private').doc('contact');
+      final entryNote = booking.entryInstructions ?? '';
       batch.set(jobReqContactRef, {
         'customerPhone': booking.customerPhone,
         'address': booking.location,
-        'landmark': booking.entryInstructions ?? '',
+        if (entryNote.isNotEmpty) 'note': entryNote,
+        'landmark': entryNote,
         'latitude': booking.customerLatitude,
         'longitude': booking.customerLongitude,
         'createdAt': FieldValue.serverTimestamp(),
@@ -751,10 +753,16 @@ class BookingRepository {
       actorRole: 'customer',
       metadata: {'reason': reason},
     );
-    batch.set(complaintRef, {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final reporterName = currentUser?.displayName?.trim().isNotEmpty == true
+        ? currentUser!.displayName!.trim()
+        : (currentUser?.email ?? '');
+
+    final complaintData = {
       'type': 'payment_dispute',
       'reporterUid': uid,
       'reporterRole': 'customer',
+      if (reporterName.isNotEmpty) 'reporterName': reporterName,
       if (providerId.isNotEmpty) 'reportedUid': providerId,
       if (providerId.isNotEmpty) 'reportedRole': 'provider',
       'bookingId': bookingId,
@@ -765,7 +773,11 @@ class BookingRepository {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'lastMessageAt': FieldValue.serverTimestamp(),
-    });
+    };
+    if (kDebugMode) {
+      debugPrint('[BookingRepository] disputePayment keys: ${complaintData.keys.toList()}');
+    }
+    batch.set(complaintRef, complaintData);
     await batch.commit();
     unawaited(NotificationService.instance.sendNotification(
       event: 'support_ticket_created',

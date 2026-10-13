@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,8 +5,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../../models/complaint.dart';
 import '../../../repositories/complaint_repository.dart';
 import '../../../services/storage_service.dart';
+import '../../../services/auth_service.dart';
+import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/ticket_error_l10n.dart';
+import 'package:provider/provider.dart';
 
 class ReportProblemDialog extends StatefulWidget {
   final String bookingId;
@@ -55,7 +58,7 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _picker = ImagePicker();
-  final List<File> _photos = [];
+  final List<PickedAttachment> _photos = [];
   bool _isSubmitting = false;
 
   @override
@@ -134,7 +137,7 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Image.file(_photos[i], width: 60, height: 60, fit: BoxFit.cover),
+                        child: Image.memory(_photos[i].bytes, width: 60, height: 60, fit: BoxFit.cover),
                       ),
                       Positioned(
                         top: 2,
@@ -158,7 +161,10 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
               OutlinedButton.icon(
                 onPressed: () async {
                   final img = await _picker.pickImage(source: ImageSource.gallery);
-                  if (img != null) setState(() => _photos.add(File(img.path)));
+                  if (img != null) {
+                    final bytes = await img.readAsBytes();
+                    setState(() => _photos.add(PickedAttachment(file: img, bytes: bytes)));
+                  }
                 },
                 icon: const Icon(Icons.add_a_photo_outlined, size: 16),
                 label: Text(context.l10n.ticketAttachPhoto),
@@ -185,27 +191,53 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
 
                   final messenger = ScaffoldMessenger.of(context);
                   final successMsg = context.l10n.ticketCreatedSuccess;
+                  final photoUploadFailedMsg = context.l10n.ticketPhotoUploadFailed;
                   final nav = Navigator.of(context);
 
                   final user = FirebaseAuth.instance.currentUser;
                   if (user == null) return;
 
+                  final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+                  final profile = roleProvider.currentUser ?? AuthService().currentUser;
+                  final myRole = (profile?.role == AppRole.provider)
+                      ? 'provider'
+                      : ((profile?.role == AppRole.customer)
+                          ? 'customer'
+                          : (widget.otherPartyRole == 'provider' ? 'customer' : 'provider'));
+                  final myName = (profile?.displayName.trim().isNotEmpty == true)
+                      ? profile!.displayName.trim()
+                      : ((user.displayName != null && user.displayName!.trim().isNotEmpty)
+                          ? user.displayName!.trim()
+                          : (user.email ?? ''));
+
                   setState(() => _isSubmitting = true);
+                  final photoUrls = <String>[];
+                  final storage = StorageService();
                   try {
-                    final photoUrls = <String>[];
-                    final storage = StorageService();
                     for (final p in _photos) {
-                      final url = await storage.uploadJobPhoto(userId: user.uid, imageFile: p);
+                      final url = await storage.uploadPickedAttachment(p, purpose: 'job_photo');
                       photoUrls.add(url);
                     }
+                  } catch (e) {
+                    debugPrint('[ReportProblemDialog] Photo upload failed: $e');
+                    if (mounted) {
+                      setState(() => _isSubmitting = false);
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(photoUploadFailedMsg),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                    return;
+                  }
 
-                    final myRole = widget.otherPartyRole == 'provider' ? 'customer' : 'provider';
-
+                  try {
                     final ticket = Complaint(
                       type: 'booking_problem',
                       reporterUid: user.uid,
                       reporterRole: myRole,
-                      reporterName: user.displayName ?? 'User',
+                      reporterName: myName,
                       reportedUid: widget.otherPartyId,
                       reportedRole: widget.otherPartyRole,
                       reportedName: widget.otherPartyName,
@@ -220,7 +252,7 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                     );
 
                     await ComplaintRepository().submitComplaint(ticket);
-                    if (mounted) {
+                    if (context.mounted) {
                       nav.pop();
                       messenger.showSnackBar(
                         SnackBar(
@@ -230,10 +262,11 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                       );
                     }
                   } catch (e) {
-                    if (mounted) {
+                    debugPrint('[ReportProblemDialog] submit error: $e');
+                    if (context.mounted) {
                       setState(() => _isSubmitting = false);
                       messenger.showSnackBar(
-                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                        SnackBar(content: Text(ticketErrorMessage(context, e)), backgroundColor: AppColors.error),
                       );
                     }
                   }

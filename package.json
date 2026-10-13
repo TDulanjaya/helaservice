@@ -4,8 +4,7 @@
   "description": "Vercel Serverless OTP API for HelaService",
   "main": "api/send-otp.js",
   "scripts": {
-    "start": "vercel dev",
-    "test:rules": "firebase emulators:exec --only firestore \"npx jest test/firestore_rules\""
+    "start": "vercel dev"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",

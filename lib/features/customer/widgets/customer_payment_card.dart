@@ -4,6 +4,7 @@ import '../../../models/booking_extra.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/ticket_error_l10n.dart';
 
 class CustomerPaymentCard extends StatefulWidget {
   final Booking booking;
@@ -128,11 +129,11 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
           );
         }
       } catch (e) {
-        debugPrint('dispute payment error: $e');
+        debugPrint('[CustomerPaymentCard] dispute payment error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.somethingWentWrong),
+              content: Text(ticketErrorMessage(context, e)),
               backgroundColor: AppColors.error,
             ),
           );

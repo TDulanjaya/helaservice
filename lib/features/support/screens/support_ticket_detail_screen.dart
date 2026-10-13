@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +9,7 @@ import '../../../services/storage_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
+import '../../../utils/ticket_error_l10n.dart';
 
 class SupportTicketDetailScreen extends StatefulWidget {
   final String ticketId;
@@ -25,7 +25,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
   final _textController = TextEditingController();
   final _picker = ImagePicker();
   bool _isSending = false;
-  File? _selectedPhoto;
+  PickedAttachment? _selectedPhoto;
 
   @override
   void dispose() {
@@ -78,12 +78,26 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     try {
       final photoUrls = <String>[];
       if (_selectedPhoto != null) {
-        final storage = StorageService();
-        final url = await storage.uploadJobPhoto(
-          userId: user.uid,
-          imageFile: _selectedPhoto!,
-        );
-        photoUrls.add(url);
+        try {
+          final storage = StorageService();
+          final url = await storage.uploadPickedAttachment(
+            _selectedPhoto!,
+            purpose: 'job_photo',
+          );
+          photoUrls.add(url);
+        } catch (e) {
+          debugPrint('[SupportTicketDetailScreen] Photo upload failed: $e');
+          setState(() => _isSending = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.ticketPhotoUploadFailed),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          return;
+        }
       }
 
       final msg = SupportMessage(
@@ -101,10 +115,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
         _isSending = false;
       });
     } catch (e) {
+      debugPrint('[SupportTicketDetailScreen] Failed to send message: $e');
       setState(() => _isSending = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send message: $e')),
+          SnackBar(
+            content: Text(ticketErrorMessage(context, e)),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -399,7 +417,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
-                                child: Image.file(_selectedPhoto!, width: 44, height: 44, fit: BoxFit.cover),
+                                child: Image.memory(_selectedPhoto!.bytes, width: 44, height: 44, fit: BoxFit.cover),
                               ),
                               const SizedBox(width: 8),
                               IconButton(
@@ -416,7 +434,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                             onPressed: () async {
                               final img = await _picker.pickImage(source: ImageSource.gallery);
                               if (img != null) {
-                                setState(() => _selectedPhoto = File(img.path));
+                                final bytes = await img.readAsBytes();
+                                setState(() => _selectedPhoto = PickedAttachment(file: img, bytes: bytes));
                               }
                             },
                           ),

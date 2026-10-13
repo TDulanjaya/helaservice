@@ -2989,5 +2989,34 @@
       "count": { "type": "int" }
     }
   },
-  "codeAlreadySent": "Code already sent"
+  "codeAlreadySent": "Code already sent",
+  "ticketSubmitPermissionDenied": "Couldn't send your request. Please sign in again and try once more.",
+  "ticketSubmitErrorGeneral": "Couldn't send your request. Please try again.",
+  "ticketCategory": "Category",
+  "pleaseFillRequiredFields": "Please fill all required fields",
+  "ticketPhotoUploadFailed": "Couldn't upload the photo. Try again or send without a photo.",
+  "videoUploadMobileOnly": "Video upload works in the mobile app",
+  "deleteAccountSubtitle": "Permanently remove your account and data",
+  "movePinToGateHint": "Move the pin to your gate",
+  "notHereChooseAnother": "Not here? Choose another place",
+  "couldNotGetLocationFallback": "Couldn't get your location — choose a place or search the map",
+  "tryGpsAgain": "Try GPS again",
+  "openSettings": "Open settings",
+  "addDetailsForProvider": "Add details for the provider",
+  "providerNoteLabel": "Note for provider",
+  "providerNoteHint": "e.g. blue gate, white Toyota near the bus stop",
+  "saveThisPlace": "Save this place",
+  "searchOnMap": "Search on map",
+  "searchPlaceHint": "Search road, area or town...",
+  "accuracyBadge": "±{meters} m",
+  "@accuracyBadge": {
+    "placeholders": {
+      "meters": { "type": "int" }
+    }
+  },
+  "saved": "Saved",
+  "mediaUploadFailedRetry": "Couldn't upload the photo/video — Retry",
+  "jobPostPermissionDenied": "Couldn't post your job. Please sign in again and try once more.",
+  "jobPostErrorGeneral": "Couldn't post your job. Please try again.",
+  "emergencyRateUnavailable": "This provider does not have an emergency rate set."
 }

@@ -3730,7 +3730,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'ප්‍රධාන පරිපාලක ගිණුම් අත්හිටුවිය නොහැක.';
 
   @override
-  String get openSettings => 'සැකසීම් විවෘත කරන්න';
+  String get openSettings => 'සැකසුම් විවෘත කරන්න';
 
   @override
   String get ok => 'හරි';
@@ -6092,4 +6092,86 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get codeAlreadySent => 'කේතය දැනටමත් යවා ඇත';
+
+  @override
+  String get ticketSubmitPermissionDenied =>
+      'ඔබගේ ඉල්ලීම යැවීමට නොහැකි විය. කරුණාකර නැවත ලොග් වී උත්සාහ කරන්න.';
+
+  @override
+  String get ticketSubmitErrorGeneral =>
+      'ඔබගේ ඉල්ලීම යැවීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get ticketCategory => 'ප්‍රවර්ගය';
+
+  @override
+  String get pleaseFillRequiredFields =>
+      'කරුණාකර අවශ්‍ය සියලුම ක්ෂේත්‍ර පුරවන්න';
+
+  @override
+  String get ticketPhotoUploadFailed =>
+      'ඡායාරූපය උඩුගත කිරීමට නොහැකි විය. නැවත උත්සාහ කරන්න හෝ ඡායාරූපයක් නොමැතිව යවන්න.';
+
+  @override
+  String get videoUploadMobileOnly =>
+      'වීඩියෝ උඩුගත කිරීම ජංගම යෙදුමෙහි ක්‍රියා කරයි';
+
+  @override
+  String get deleteAccountSubtitle => 'ඔබගේ ගිණුම සහ දත්ත ස්ථිරවම ඉවත් කරන්න';
+
+  @override
+  String get movePinToGateHint => 'පින් එක ඔබේ ගේට්ටුව වෙත ගෙන යන්න';
+
+  @override
+  String get notHereChooseAnother => 'මෙහි නොවේද? වෙනත් ස්ථානයක් තෝරන්න';
+
+  @override
+  String get couldNotGetLocationFallback =>
+      'ඔබගේ ස්ථානය ලබා ගැනීමට නොහැකි විය — ස්ථානයක් තෝරන්න හෝ සිතියම සොයන්න';
+
+  @override
+  String get tryGpsAgain => 'නැවත GPS උත්සාහ කරන්න';
+
+  @override
+  String get addDetailsForProvider => 'සේවා සපයන්නා සඳහා විස්තර එක් කරන්න';
+
+  @override
+  String get providerNoteLabel => 'සේවා සපයන්නා සඳහා සටහන';
+
+  @override
+  String get providerNoteHint =>
+      'උදා: නිල් ගේට්ටුව, බස් නැවතුම අසල සුදු ටොයෝටා';
+
+  @override
+  String get saveThisPlace => 'මෙම ස්ථානය සුරකින්න';
+
+  @override
+  String get searchOnMap => 'සිතියමේ සොයන්න';
+
+  @override
+  String get searchPlaceHint => 'මාර්ගය, ප්‍රදේශය හෝ නගරය සොයන්න...';
+
+  @override
+  String accuracyBadge(int meters) {
+    return '±$meters m';
+  }
+
+  @override
+  String get saved => 'සුරකින ලදි';
+
+  @override
+  String get mediaUploadFailedRetry =>
+      'ඡායාරූපය/වීඩියෝව උඩුගත කිරීමට නොහැකි විය — නැවත උත්සාහ කරන්න';
+
+  @override
+  String get jobPostPermissionDenied =>
+      'ඔබගේ කාර්යය පළ කිරීමට නොහැකි විය. කරුණාකර නැවත ලොග් වී උත්සාහ කරන්න.';
+
+  @override
+  String get jobPostErrorGeneral =>
+      'ඔබගේ කාර්යය පළ කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get emergencyRateUnavailable =>
+      'මෙම සේවා සපයන්නා හදිසි ගාස්තුවක් සකසා නැත.';
 }

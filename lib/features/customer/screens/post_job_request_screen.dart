@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,6 +19,16 @@ import '../../../shared/widgets/job_location_picker.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/video_service.dart';
 import '../../../utils/permission_utils.dart';
+import '../../../utils/ticket_error_l10n.dart';
+
+// custom exception for media upload failure
+class MediaUploadException implements Exception {
+  final String message;
+  const MediaUploadException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class PostJobRequestScreen extends StatefulWidget {
   const PostJobRequestScreen({super.key});
@@ -34,12 +45,17 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
   String? _selectedCategory;
   JobLocation? _selectedLocation;
-  final List<XFile> _photos = [];
+  final List<PickedAttachment> _photos = [];
+  final Map<PickedAttachment, JobMediaItem> _uploadedPhotos = {};
   ProcessedVideoResult? _processedVideo;
+  JobVideoItem? _uploadedVideoItem;
+  JobMediaUploadResult? _uploadedVideoThumb;
+  ProcessedVideoResult? _uploadedVideoSource;
   bool _processingVideo = false;
   String? _uploadProgressText;
   double _uploadProgressFraction = 0.0;
   bool _uploadFailed = false;
+  bool _saveFailed = false;
   bool _submitting = false;
   String _scheduleMode = ScheduleHelpers.modeAsap;
   DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
@@ -89,10 +105,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     super.dispose();
   }
 
-  Future<bool> _confirmLargeFileIfExceeds20Mb(String path) async {
+  Future<bool> _confirmLargeFileIfExceeds20Mb(int sizeBytes) async {
     try {
-      final size = await File(path).length();
-      if (size > 20 * 1024 * 1024) {
+      if (sizeBytes > 20 * 1024 * 1024) {
         if (!mounted) return false;
         final res = await showDialog<bool>(
           context: context,
@@ -153,9 +168,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         imageQuality: 70,
       );
       if (picked != null) {
-        final ok = await _confirmLargeFileIfExceeds20Mb(picked.path);
+        final length = await picked.length();
+        final ok = await _confirmLargeFileIfExceeds20Mb(length);
         if (ok && mounted) {
-          setState(() => _photos.add(picked));
+          final bytes = await picked.readAsBytes();
+          setState(() => _photos.add(PickedAttachment(file: picked, bytes: bytes)));
         }
       }
     } catch (e) {
@@ -260,13 +277,15 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (!allowed) return;
     }
 
+    if (kIsWeb) return;
     try {
       final picked = await _picker.pickVideo(
         source: source,
         maxDuration: const Duration(seconds: 120),
       );
       if (picked == null) return;
-      final ok = await _confirmLargeFileIfExceeds20Mb(picked.path);
+      final length = await picked.length();
+      final ok = await _confirmLargeFileIfExceeds20Mb(length);
       if (!ok) return;
 
       setState(() => _processingVideo = true);
@@ -275,6 +294,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         final processed = await VideoService.instance.processJobVideo(File(picked.path));
         setState(() {
           _processedVideo = processed;
+          _uploadedVideoItem = null;
+          _uploadedVideoThumb = null;
+          _uploadedVideoSource = null;
         });
       } catch (e) {
         if (mounted) {
@@ -352,6 +374,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     setState(() {
       _submitting = true;
       _uploadFailed = false;
+      _saveFailed = false;
       _uploadProgressFraction = 0.0;
       _uploadProgressText = 'Preparing media...';
     });
@@ -364,11 +387,17 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final List<JobMediaItem> photosList = [];
       for (int i = 0; i < _photos.length; i++) {
+        final attachment = _photos[i];
+        if (_uploadedPhotos.containsKey(attachment)) {
+          photosList.add(_uploadedPhotos[attachment]!);
+          continue;
+        }
+
         setState(() {
           _uploadProgressFraction = 0.0;
           _uploadProgressText = 'Uploading photo ${i + 1} of ${_photos.length}...';
         });
-        final rawBytes = await File(_photos[i].path).readAsBytes();
+        final rawBytes = attachment.bytes;
         final stripped = StorageService.instance.stripExifAndCompressImage(rawBytes);
         JobMediaUploadResult? res;
         for (int attempt = 0; attempt < 3; attempt++) {
@@ -391,85 +420,96 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             );
             break;
           } catch (e) {
+            debugPrint('[PostJobRequest] photo $i attempt $attempt error: $e');
             if (attempt == 2) {
-              setState(() => _uploadFailed = true);
-              rethrow;
+              throw MediaUploadException('Photo ${i + 1} upload failed: $e');
             }
             await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
           }
         }
         if (res != null) {
-          photosList.add(JobMediaItem(url: res.url, key: res.key));
+          final item = JobMediaItem(url: res.url, key: res.key);
+          _uploadedPhotos[attachment] = item;
+          photosList.add(item);
         }
       }
 
       JobVideoItem? videoItem;
       if (_processedVideo != null) {
-        setState(() {
-          _uploadProgressFraction = 0.0;
-          _uploadProgressText = 'Uploading video thumbnail...';
-        });
-        final thumbBytes = await _processedVideo!.thumbnailFile.readAsBytes();
-        final thumbStripped = StorageService.instance.stripExifAndCompressImage(thumbBytes);
-        JobMediaUploadResult? thumbRes;
-        for (int attempt = 0; attempt < 3; attempt++) {
-          try {
-            thumbRes = await StorageService.instance.uploadJobMedia(
-              bytes: thumbStripped,
-              filename: 'video_thumb.jpg',
-              contentType: 'image/jpeg',
-            );
-            break;
-          } catch (e) {
-            if (attempt == 2) {
-              setState(() => _uploadFailed = true);
-              rethrow;
-            }
-            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-          }
-        }
-
-        setState(() {
-          _uploadProgressFraction = 0.0;
-          _uploadProgressText = 'Uploading video file...';
-        });
-        final videoBytes = await _processedVideo!.compressedFile.readAsBytes();
-        JobMediaUploadResult? videoRes;
-        for (int attempt = 0; attempt < 3; attempt++) {
-          try {
-            const videoName = 'video.mp4';
-            videoRes = await StorageService.instance.uploadJobMedia(
-              bytes: videoBytes,
-              filename: videoName,
-              contentType: 'video/mp4',
-              onProgress: (sent, total) {
-                if (mounted) {
-                  setState(() {
-                    _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
-                    final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
-                    final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-                    _uploadProgressText = 'Video: $sentMb MB / $totalMb MB';
-                  });
+        if (_uploadedVideoItem != null && _uploadedVideoSource == _processedVideo) {
+          videoItem = _uploadedVideoItem;
+        } else {
+          JobMediaUploadResult? thumbRes = _uploadedVideoThumb;
+          if (thumbRes == null || _uploadedVideoSource != _processedVideo) {
+            setState(() {
+              _uploadProgressFraction = 0.0;
+              _uploadProgressText = 'Uploading video thumbnail...';
+            });
+            final thumbBytes = await _processedVideo!.thumbnailFile.readAsBytes();
+            final thumbStripped = StorageService.instance.stripExifAndCompressImage(thumbBytes);
+            for (int attempt = 0; attempt < 3; attempt++) {
+              try {
+                thumbRes = await StorageService.instance.uploadJobMedia(
+                  bytes: thumbStripped,
+                  filename: 'video_thumb.jpg',
+                  contentType: 'image/jpeg',
+                );
+                _uploadedVideoThumb = thumbRes;
+                break;
+              } catch (e) {
+                debugPrint('[PostJobRequest] video thumb attempt $attempt error: $e');
+                if (attempt == 2) {
+                  throw MediaUploadException('Video thumb upload failed: $e');
                 }
-              },
-            );
-            break;
-          } catch (e) {
-            if (attempt == 2) {
-              setState(() => _uploadFailed = true);
-              rethrow;
+                await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+              }
             }
-            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
           }
-        }
 
-        if (thumbRes != null && videoRes != null) {
-          videoItem = JobVideoItem(
-            url: videoRes.url,
-            key: videoRes.key,
-            thumbUrl: thumbRes.url,
-            durationSec: _processedVideo!.durationSec,
-          );
+          setState(() {
+            _uploadProgressFraction = 0.0;
+            _uploadProgressText = 'Uploading video file...';
+          });
+          final videoBytes = await _processedVideo!.compressedFile.readAsBytes();
+          JobMediaUploadResult? videoRes;
+          for (int attempt = 0; attempt < 3; attempt++) {
+            try {
+              const videoName = 'video.mp4';
+              videoRes = await StorageService.instance.uploadJobMedia(
+                bytes: videoBytes,
+                filename: videoName,
+                contentType: 'video/mp4',
+                onProgress: (sent, total) {
+                  if (mounted) {
+                    setState(() {
+                      _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
+                      final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
+                      final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
+                      _uploadProgressText = 'Video: $sentMb MB / $totalMb MB';
+                    });
+                  }
+                },
+              );
+              break;
+            } catch (e) {
+              debugPrint('[PostJobRequest] video upload attempt $attempt error: $e');
+              if (attempt == 2) {
+                throw MediaUploadException('Video upload failed: $e');
+              }
+              await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+            }
+          }
+
+          if (thumbRes != null && videoRes != null) {
+            videoItem = JobVideoItem(
+              url: videoRes.url,
+              key: videoRes.key,
+              thumbUrl: thumbRes.url,
+              durationSec: _processedVideo!.durationSec,
+            );
+            _uploadedVideoItem = videoItem;
+            _uploadedVideoSource = _processedVideo;
+          }
         }
       }
 
@@ -488,7 +528,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         longitude: _selectedLocation!.longitude,
         district: _selectedLocation!.label,
         address: _selectedLocation!.address,
-        landmark: _selectedLocation!.landmark,
+        note: _selectedLocation!.effectiveNote,
+        landmark: _selectedLocation!.effectiveNote,
         accuracyMeters: _selectedLocation!.accuracyMeters,
         houseNo: _selectedLocation!.houseNo,
         street: _selectedLocation!.street,
@@ -521,15 +562,33 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           ),
         );
       }
-    } catch (e) {
+    } on MediaUploadException catch (e) {
+      debugPrint('[PostJobRequest] media upload failed: $e');
       if (mounted) {
         setState(() {
           _uploadFailed = true;
-          _uploadProgressText = 'Upload failed: $e';
+          _saveFailed = false;
+          _uploadProgressText = context.l10n.mediaUploadFailedRetry;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToSubmitRequest}: $e'),
+            content: Text(context.l10n.mediaUploadFailedRetry),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[PostJobRequest] create job error: $e');
+      if (mounted) {
+        final friendlyMsg = jobPostErrorMessage(context, e);
+        setState(() {
+          _uploadFailed = false;
+          _saveFailed = true;
+          _uploadProgressText = friendlyMsg;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(friendlyMsg),
             backgroundColor: AppColors.error,
           ),
         );
@@ -538,7 +597,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (mounted) {
         setState(() {
           _submitting = false;
-          if (!_uploadFailed) {
+          if (!_uploadFailed && !_saveFailed) {
             _uploadProgressText = null;
           }
         });
@@ -766,8 +825,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                File(entry.value.path),
+                              child: Image.memory(
+                                entry.value.bytes,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
@@ -777,8 +836,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                               top: 4,
                               right: 4,
                               child: GestureDetector(
-                                onTap: () =>
-                                    setState(() => _photos.removeAt(entry.key)),
+                                onTap: () => setState(() {
+                                  final removed = _photos.removeAt(entry.key);
+                                  _uploadedPhotos.remove(removed);
+                                }),
                                 child: Container(
                                   padding: const EdgeInsets.all(3),
                                   decoration: const BoxDecoration(
@@ -919,6 +980,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           child: GestureDetector(
                             onTap: () => setState(() {
                               _processedVideo = null;
+                              _uploadedVideoItem = null;
+                              _uploadedVideoThumb = null;
+                              _uploadedVideoSource = null;
                             }),
                             child: Container(
                               padding: const EdgeInsets.all(3),
@@ -933,6 +997,42 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       ],
                     ),
                   ],
+                )
+              else if (kIsWeb)
+                Container(
+                  height: 64,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.themeBorder,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: context.themeBorder.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.videocam_off_outlined,
+                            color: context.themeTextSecondary, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          context.l10n.videoUploadMobileOnly,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 )
               else
                 InkWell(
@@ -1304,11 +1404,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                                 color: context.themeTextSecondary,
                               ),
                             ),
-                            if (_selectedLocation?.landmark != null &&
-                                _selectedLocation!.landmark!.isNotEmpty) ...[
+                            if (_selectedLocation?.effectiveNote != null &&
+                                _selectedLocation!.effectiveNote!.isNotEmpty) ...[
                               const SizedBox(height: 2),
                               Text(
-                                'Note: ${_selectedLocation!.landmark}',
+                                '${context.l10n.providerNoteLabel}: ${_selectedLocation!.effectiveNote}',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontStyle: FontStyle.italic,
@@ -1335,17 +1435,17 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
 
-              if (_uploadProgressText != null || _uploadFailed) ...[
+              if (_uploadProgressText != null || _uploadFailed || _saveFailed) ...[
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: _uploadFailed
+                    color: (_uploadFailed || _saveFailed)
                         ? AppColors.error.withValues(alpha: 0.1)
                         : AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _uploadFailed
+                      color: (_uploadFailed || _saveFailed)
                           ? AppColors.error.withValues(alpha: 0.3)
                           : AppColors.primary.withValues(alpha: 0.2),
                     ),
@@ -1362,7 +1462,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                             const SizedBox(width: 12),
-                          ] else if (_uploadFailed) ...[
+                          ] else if (_uploadFailed || _saveFailed) ...[
                             const Icon(Icons.error_outline_rounded, size: 18, color: AppColors.error),
                             const SizedBox(width: 8),
                           ],
@@ -1372,7 +1472,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: _uploadFailed ? AppColors.error : AppColors.primary,
+                                color: (_uploadFailed || _saveFailed) ? AppColors.error : AppColors.primary,
                               ),
                             ),
                           ),

@@ -717,14 +717,16 @@ class JobQuotesScreen extends StatelessWidget {
           latitude: picked.latitude,
           longitude: picked.longitude,
           address: picked.address,
-          landmark: picked.landmark,
+          note: picked.effectiveNote,
+          landmark: picked.effectiveNote,
         );
 
         final updatedRequest = request.copyWith(
           latitude: picked.latitude,
           longitude: picked.longitude,
           address: picked.address,
-          landmark: picked.landmark,
+          note: picked.effectiveNote,
+          landmark: picked.effectiveNote,
         );
 
         if (context.mounted) {

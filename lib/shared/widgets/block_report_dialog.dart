@@ -3,14 +3,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/complaint.dart';
 import '../../repositories/block_repository.dart';
 import '../../repositories/complaint_repository.dart';
+import '../../services/auth_service.dart';
+import '../../state/role_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
+import '../../utils/ticket_error_l10n.dart';
+import 'package:provider/provider.dart';
 import 'primary_button.dart';
 
 class BlockReportHelper {
   BlockReportHelper._();
 
-  // show confirmation dialog to block a user
+  // block user dialog
   static Future<void> showBlockConfirmation(
     BuildContext context, {
     required String targetUid,
@@ -62,7 +66,7 @@ class BlockReportHelper {
     }
   }
 
-  // show bottom sheet modal to report a user or provider
+  // report user sheet
   static Future<void> showReportSheet(
     BuildContext context, {
     required String targetUid,
@@ -145,10 +149,18 @@ class _ReportUserSheetState extends State<_ReportUserSheet> {
 
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final currentUser = FirebaseAuth.instance.currentUser;
-    final reporterRole = widget.targetRole == 'provider' ? 'customer' : 'provider';
-    final currentName = (currentUser?.displayName != null && currentUser!.displayName!.isNotEmpty)
-        ? currentUser.displayName!
-        : (reporterRole == 'customer' ? context.l10n.roleCustomer : context.l10n.roleServiceProvider);
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    final profile = roleProvider.currentUser ?? AuthService().currentUser;
+    final reporterRole = (profile?.role == AppRole.provider)
+        ? 'provider'
+        : ((profile?.role == AppRole.customer)
+            ? 'customer'
+            : (widget.targetRole == 'provider' ? 'customer' : 'provider'));
+    final currentName = (profile?.displayName.trim().isNotEmpty == true)
+        ? profile!.displayName.trim()
+        : ((currentUser?.displayName != null && currentUser!.displayName!.trim().isNotEmpty)
+            ? currentUser.displayName!.trim()
+            : (currentUser?.email ?? ''));
 
     setState(() => _isSubmitting = true);
     try {
@@ -187,11 +199,12 @@ class _ReportUserSheetState extends State<_ReportUserSheet> {
         );
       }
     } catch (e) {
+      debugPrint('[BlockReportDialog] submit error: $e');
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToSubmitReport}: $e'),
+            content: Text(ticketErrorMessage(context, e)),
             backgroundColor: AppColors.error,
           ),
         );

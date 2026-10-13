@@ -133,7 +133,7 @@ class CustomerProfileScreen extends StatelessWidget {
   void _showEditAddressDialog(BuildContext context, String uid, SavedAddress addr) {
     final labelController = TextEditingController(text: addr.label);
     final addressController = TextEditingController(text: addr.address);
-    final landmarkController = TextEditingController(text: addr.landmark ?? '');
+    final landmarkController = TextEditingController(text: addr.effectiveNote ?? '');
 
     showDialog(
       context: context,
@@ -189,6 +189,7 @@ class CustomerProfileScreen extends StatelessWidget {
                   addressId: addr.id,
                   label: newLabel,
                   address: newAddr,
+                  note: newLandmark,
                   landmark: newLandmark,
                 );
               }
@@ -293,7 +294,7 @@ class CustomerProfileScreen extends StatelessWidget {
     );
   }
 
-  // delete account dialog and execution
+  // delete account
   void _deleteAccount(BuildContext context) {
     showDialog(
       context: context,
@@ -518,7 +519,8 @@ class CustomerProfileScreen extends StatelessWidget {
                               latitude: picked.latitude,
                               longitude: picked.longitude,
                               address: picked.address,
-                              landmark: picked.landmark,
+                              note: picked.effectiveNote,
+                              landmark: picked.effectiveNote,
                             );
                           }
                         },
@@ -622,11 +624,11 @@ class CustomerProfileScreen extends StatelessWidget {
                                           color: context.themeTextSecondary,
                                         ),
                                       ),
-                                      if (item.landmark != null &&
-                                          item.landmark!.isNotEmpty) ...[
+                                      if (item.effectiveNote != null &&
+                                          item.effectiveNote!.isNotEmpty) ...[
                                         const SizedBox(height: 1),
                                         Text(
-                                          'Note: ${item.landmark!}',
+                                          '${context.l10n.providerNoteLabel}: ${item.effectiveNote!}',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
@@ -779,6 +781,15 @@ class CustomerProfileScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
                 );
               },
+            ),
+            _SettingsTile(
+              icon: Icons.person_remove_outlined,
+              iconColor: AppColors.error,
+              iconBgColor: AppColors.error.withValues(alpha: 0.12),
+              titleColor: AppColors.error,
+              title: context.l10n.deleteAccountTitle,
+              subtitle: context.l10n.deleteAccountSubtitle,
+              onTap: () => _deleteAccount(context),
             ),
             const SizedBox(height: 12),
 
@@ -935,6 +946,13 @@ class CustomerProfileScreen extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 16),
+            AppOutlineButton(
+              label: context.l10n.logout,
+              icon: Icons.logout,
+              color: AppColors.error,
+              onPressed: () => _logout(context),
+            ),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -955,25 +973,6 @@ class CustomerProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            AppOutlineButton(
-              label: context.l10n.logout,
-              icon: Icons.logout,
-              color: AppColors.error,
-              onPressed: () => _logout(context),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => _deleteAccount(context),
-              child: Text(
-                context.l10n.deleteAccountTitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.themeTextSecondary,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -986,16 +985,26 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Color? iconColor;
+  final Color? iconBgColor;
+  final Color? titleColor;
 
   const _SettingsTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.iconColor,
+    this.iconBgColor,
+    this.titleColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveIconColor = iconColor ?? AppColors.primary;
+    final effectiveIconBgColor =
+        iconBgColor ?? AppColors.primary.withValues(alpha: 0.12);
+
     return AppCard(
       onTap: onTap,
       margin: const EdgeInsets.only(bottom: 8),
@@ -1006,10 +1015,10 @@ class _SettingsTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: effectiveIconBgColor,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
+            child: Icon(icon, color: effectiveIconColor, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1018,8 +1027,11 @@ class _SettingsTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                      fontSize: 13.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: titleColor ?? context.themeTextPrimary,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(

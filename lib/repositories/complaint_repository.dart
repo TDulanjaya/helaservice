@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 import '../models/complaint.dart';
@@ -24,7 +25,11 @@ class ComplaintRepository {
         senderId == 'admin_support') {
       throw ArgumentError('Admins cannot be reported.');
     }
-    final docRef = await _col.add(complaint.toMap());
+    final map = complaint.toMap();
+    if (kDebugMode) {
+      debugPrint('[ComplaintRepository] submitComplaint keys: ${map.keys.toList()}');
+    }
+    final docRef = await _col.add(map);
     unawaited(NotificationService.instance.sendNotification(
       event: 'support_ticket_created',
       docId: docRef.id,

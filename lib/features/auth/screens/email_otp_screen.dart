@@ -257,6 +257,14 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         return;
       }
 
+      // refresh token to pick up new claims
+      try {
+        final fbUser = AuthService().currentFirebaseUser;
+        if (fbUser != null) {
+          await fbUser.getIdToken(true);
+        }
+      } catch (_) {}
+
       // verified, reload profile and route from splash
       if (widget.onVerified != null) {
         await widget.onVerified!();

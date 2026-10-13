@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
@@ -10,13 +14,17 @@ import '../../../constants/job_status.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../repositories/category_repository.dart';
+import '../../../repositories/saved_address_repository.dart';
+import '../../../models/saved_address.dart';
 import '../../../services/analytics_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/location_utils.dart';
+import '../../../utils/permission_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/icon_square_button.dart';
+import '../../../models/job_location.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import 'live_tracking_screen.dart';
 
@@ -49,6 +57,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   double? _userLng;
   String _userAddress = '';
 
+  bool _isGpsLoading = false;
+  bool _gpsFailed = false;
+  bool _permissionPermanentlyDenied = false;
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _searchResults = [];
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+  DateTime _lastNetworkRequestTime = DateTime.fromMillisecondsSinceEpoch(0);
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +83,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   void dispose() {
     _pulseController.dispose();
     _countdownTimer?.cancel();
+    _searchDebounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -82,28 +101,185 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     });
   }
 
-  Future<void> _resolveUserLocation() async {
-    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    final user = roleProvider.currentUser;
-
-    if (user?.latitude != null && user?.longitude != null) {
-      setState(() {
-        _userLat = user!.latitude;
-        _userLng = user.longitude;
-        _userAddress = user.address ?? '';
-      });
-      return;
+  Future<void> _rateLimit() async {
+    final now = DateTime.now();
+    final elapsed = now.difference(_lastNetworkRequestTime);
+    if (elapsed.inMilliseconds < 1000) {
+      await Future.delayed(Duration(milliseconds: 1000 - elapsed.inMilliseconds));
     }
+    _lastNetworkRequestTime = DateTime.now();
+  }
+
+  Future<void> _reverseGeocode(double lat, double lon) async {
+    await _rateLimit();
+    if (!mounted) return;
 
     try {
-      final pos = await LocationUtils.getCurrentPosition();
-      if (pos != null && mounted) {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lon',
+      );
+      final response = await http.get(
+        url,
+        headers: kIsWeb
+            ? const <String, String>{}
+            : const <String, String>{
+                'User-Agent': 'HelaService-App/1.0',
+                'Referer': 'https://helaservice.vercel.app',
+              },
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final displayName = (data['display_name'] as String?) ?? '';
+        final addr = data['address'] as Map<String, dynamic>?;
+
+        String road = '';
+        String area = '';
+        String city = '';
+
+        if (addr != null) {
+          road = (addr['road'] ?? addr['street'] ?? '') as String;
+          area = (addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '') as String;
+          city = (addr['city'] ?? addr['town'] ?? addr['municipality'] ?? addr['county'] ?? '') as String;
+        }
+
+        final parts = [road, area, city].where((s) => s.isNotEmpty).toList();
+        final formatted = parts.isNotEmpty ? parts.join(', ') : displayName;
+
+        if (mounted) {
+          setState(() {
+            _userAddress = formatted.isNotEmpty ? formatted : displayName;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _resolveUserLocation() async {
+    setState(() {
+      _isGpsLoading = true;
+      _gpsFailed = false;
+      _permissionPermanentlyDenied = false;
+    });
+
+    try {
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.deniedForever) {
+        if (mounted) {
+          setState(() {
+            _isGpsLoading = false;
+            _gpsFailed = true;
+            _permissionPermanentlyDenied = true;
+          });
+        }
+        return;
+      }
+
+      if (!mounted) return;
+      final granted = await PermissionUtils.requestLocationWithRationale(context);
+      if (!granted) {
+        final postPerm = await Geolocator.checkPermission();
+        if (mounted) {
+          setState(() {
+            _isGpsLoading = false;
+            _gpsFailed = true;
+            _permissionPermanentlyDenied =
+                postPerm == LocationPermission.deniedForever;
+          });
+        }
+        return;
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      if (mounted) {
         setState(() {
           _userLat = pos.latitude;
           _userLng = pos.longitude;
+          _isGpsLoading = false;
+          _gpsFailed = false;
+        });
+        unawaited(_reverseGeocode(pos.latitude, pos.longitude));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isGpsLoading = false;
+          _gpsFailed = true;
         });
       }
-    } catch (_) {}
+    }
+  }
+
+  Future<void> _searchMap(String query) async {
+    final q = query.trim();
+    if (q.length < 2) return;
+
+    await _rateLimit();
+    if (!mounted) return;
+    setState(() => _isSearching = true);
+
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?format=jsonv2&q=${Uri.encodeComponent(q)}&countrycodes=lk&limit=5',
+      );
+      final response = await http.get(
+        url,
+        headers: kIsWeb
+            ? const <String, String>{}
+            : const <String, String>{
+                'User-Agent': 'HelaService-App/1.0',
+                'Referer': 'https://helaservice.vercel.app',
+              },
+      ).timeout(const Duration(seconds: 6));
+
+      if (response.statusCode == 200 && mounted) {
+        final list = (json.decode(response.body) as List<dynamic>?) ?? [];
+        setState(() {
+          _searchResults = list.map((item) => item as Map<String, dynamic>).toList();
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _searchResults = []);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSearching = false);
+      }
+    }
+  }
+
+  void _onSelectSearchResult(Map<String, dynamic> item) {
+    final lat = double.tryParse(item['lat']?.toString() ?? '');
+    final lon = double.tryParse(item['lon']?.toString() ?? '');
+    if (lat == null || lon == null) return;
+
+    final displayName = item['display_name']?.toString() ?? '';
+
+    setState(() {
+      _userLat = lat;
+      _userLng = lon;
+      _userAddress = displayName;
+      _searchResults = [];
+      _searchController.clear();
+      _gpsFailed = false;
+      FocusScope.of(context).unfocus();
+    });
+  }
+
+  void _onSelectSavedAddress(SavedAddress addr) {
+    setState(() {
+      _userLat = addr.latitude;
+      _userLng = addr.longitude;
+      _userAddress = addr.address;
+      _gpsFailed = false;
+    });
   }
 
   // format seconds to mm ss
@@ -115,10 +291,16 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     return '$mm:$ss';
   }
 
-  // calculate distance in kilometers between customer and provider
-  double _getDistanceKm(Technician tech) {
-    if (_userLat == null || _userLng == null) return 5.0;
-    return 3.5;
+  // calculate real distance in kilometers between customer pin and provider location
+  double? _getDistanceKm(Technician tech) {
+    if (_userLat == null || _userLng == null) return null;
+    if (tech.latitude == null || tech.longitude == null) return null;
+    return LocationUtils.calculateDistanceKm(
+      _userLat!,
+      _userLng!,
+      tech.latitude!,
+      tech.longitude!,
+    );
   }
 
   // estimated minutes for emergency arrival
@@ -127,8 +309,43 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     return mins.clamp(10, 45);
   }
 
-  void _confirmEmergencyCallout(BuildContext context, Technician tech) {
-    final rateLkr = tech.emergencyRateLkr > 0 ? tech.emergencyRateLkr : 3500;
+  void _confirmEmergencyCallout(BuildContext context, Technician tech) async {
+    if (tech.emergencyRateLkr <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.emergencyRateUnavailable),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_userLat == null || _userLng == null) {
+      final picked = await JobLocationPicker.pickLocation(
+        context,
+        title: context.l10n.selectPinOnMap,
+      );
+      if (picked == null || !context.mounted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationRequiredToBook),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+      setState(() {
+        _userLat = picked.latitude;
+        _userLng = picked.longitude;
+        _userAddress = picked.address;
+        _gpsFailed = false;
+      });
+    }
+
+    if (!context.mounted) return;
+    final rateLkr = tech.emergencyRateLkr;
     final addressController = TextEditingController(text: _userAddress);
     final notesController = TextEditingController();
 
@@ -229,6 +446,31 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                   decoration: InputDecoration(
                     hintText: context.l10n.serviceAddressHint,
                     prefixIcon: const Icon(Icons.location_on_rounded, size: 18),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      tooltip: context.l10n.selectPinOnMap,
+                      onPressed: () async {
+                        final picked = await JobLocationPicker.pickLocation(
+                          context,
+                          initialLocation: _userLat != null && _userLng != null
+                              ? JobLocation(
+                                  latitude: _userLat!,
+                                  longitude: _userLng!,
+                                  address: addressController.text,
+                                )
+                              : null,
+                        );
+                        if (picked != null) {
+                          setSheetState(() {
+                            _userLat = picked.latitude;
+                            _userLng = picked.longitude;
+                            _userAddress = picked.address;
+                            addressController.text = picked.address;
+                          });
+                          setState(() {});
+                        }
+                      },
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -268,6 +510,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(context.l10n.pleaseEnterServiceLocation),
+                                ),
+                              );
+                              return;
+                            }
+                            if (_userLat == null || _userLng == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(context.l10n.locationRequiredToBook),
+                                  backgroundColor: AppColors.error,
                                 ),
                               );
                               return;
@@ -318,29 +569,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     try {
       if (_userLat == null || _userLng == null) {
         setState(() => _isCreatingBooking = false);
-        final picked = await JobLocationPicker.pickLocation(
-          context,
-          title: context.l10n.selectJobLocation,
-        );
-        if (picked == null ||
-            picked.latitude == 0.0 ||
-            picked.longitude == 0.0) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(context.l10n.locationPermissionRequired),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-          return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationRequiredToBook),
+              backgroundColor: AppColors.error,
+            ),
+          );
         }
-        _userLat = picked.latitude;
-        _userLng = picked.longitude;
-        if (picked.address.isNotEmpty) {
-          _userAddress = picked.address;
-        }
-        setState(() => _isCreatingBooking = true);
+        return;
       }
 
       final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
@@ -520,6 +757,337 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
               ),
             ),
 
+            // customer location badge when pin is set, or GPS fallback UI if pin/GPS failed
+            if (_userLat != null && _userLng != null) ...[
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _userAddress.isNotEmpty
+                            ? _userAddress
+                            : '${_userLat!.toStringAsFixed(4)}, ${_userLng!.toStringAsFixed(4)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await JobLocationPicker.pickLocation(
+                          context,
+                          initialLocation: JobLocation(
+                            latitude: _userLat!,
+                            longitude: _userLng!,
+                            address: _userAddress,
+                          ),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _userLat = picked.latitude;
+                            _userLng = picked.longitude;
+                            _userAddress = picked.address;
+                          });
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.edit_location_alt_outlined, size: 14, color: AppColors.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.l10n.searchOnMap,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_gpsFailed || _userLat == null) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_off_rounded,
+                                color: AppColors.error,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  context.l10n.couldNotGetLocationFallback,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: _isGpsLoading ? null : _resolveUserLocation,
+                                icon: _isGpsLoading
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.refresh_rounded, size: 16),
+                                label: Text(context.l10n.tryGpsAgain),
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  foregroundColor: AppColors.error,
+                                  side: const BorderSide(color: AppColors.error),
+                                ),
+                              ),
+                              if (_permissionPermanentlyDenied)
+                                OutlinedButton.icon(
+                                  onPressed: () => Geolocator.openAppSettings(),
+                                  icon: const Icon(Icons.settings_outlined, size: 16),
+                                  label: Text(context.l10n.openSettings),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  final picked = await JobLocationPicker.pickLocation(context);
+                                  if (picked != null) {
+                                    setState(() {
+                                      _userLat = picked.latitude;
+                                      _userLng = picked.longitude;
+                                      _userAddress = picked.address;
+                                      _gpsFailed = false;
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.map_outlined, size: 16),
+                                label: Text(context.l10n.searchOnMap),
+                                style: OutlinedButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _searchController,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (q) => _searchMap(q),
+                      onChanged: (q) {
+                        _searchDebounce?.cancel();
+                        if (q.trim().length < 3) {
+                          setState(() => _searchResults = []);
+                          return;
+                        }
+                        _searchDebounce = Timer(const Duration(milliseconds: 1000), () {
+                          _searchMap(q);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: context.l10n.searchPlaceHint,
+                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                        suffixIcon: _isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                                onPressed: () => _searchMap(_searchController.text),
+                              ),
+                        filled: true,
+                        fillColor: context.themeSurfaceLow,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: context.themeBorder),
+                        ),
+                      ),
+                    ),
+                    if (_searchResults.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 140),
+                        decoration: BoxDecoration(
+                          color: context.themeSurface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: context.themeBorder),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: _searchResults.length,
+                          separatorBuilder: (_, __) =>
+                              Divider(height: 1, color: context.themeBorder),
+                          itemBuilder: (context, i) {
+                            final item = _searchResults[i];
+                            final name = item['display_name']?.toString() ?? '';
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.place_outlined, size: 18),
+                              title: Text(
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              onTap: () => _onSelectSearchResult(item),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    if (FirebaseAuth.instance.currentUser?.uid != null &&
+                        FirebaseAuth.instance.currentUser!.uid.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      StreamBuilder<List<SavedAddress>>(
+                        stream: SavedAddressRepository().streamSavedAddresses(
+                          FirebaseAuth.instance.currentUser!.uid,
+                        ),
+                        builder: (context, snapshot) {
+                          final addresses = snapshot.data ?? [];
+                          if (addresses.isEmpty) return const SizedBox.shrink();
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.savedAddresses,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                height: 54,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: addresses.length,
+                                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                  itemBuilder: (context, index) {
+                                    final item = addresses[index];
+                                    final isHome = item.label.toLowerCase() == 'home';
+                                    final isWork = item.label.toLowerCase() == 'work';
+                                    final itemDisplayLabel = isHome
+                                        ? context.l10n.addressLabelHome
+                                        : (isWork
+                                            ? context.l10n.addressLabelWork
+                                            : (item.label.toLowerCase() == 'other'
+                                                ? context.l10n.addressLabelOther
+                                                : item.label));
+
+                                    return InkWell(
+                                      onTap: () => _onSelectSavedAddress(item),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        width: 140,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: context.themeSurface,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: context.themeBorder),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  isHome
+                                                      ? Icons.home_rounded
+                                                      : (isWork
+                                                          ? Icons.work_rounded
+                                                          : Icons.place_rounded),
+                                                  size: 13,
+                                                  color: AppColors.primary,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  itemDisplayLabel,
+                                                  style: const TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              item.address,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 10.5,
+                                                color: context.themeTextSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+
             // trade category filter pills
             StreamBuilder<List<CategoryRow>>(
               stream: _categoryRepo.streamLiveCategories(),
@@ -661,10 +1229,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                     itemBuilder: (context, idx) {
                       final tech = filtered[idx];
                       final distKm = _getDistanceKm(tech);
-                      final etaMins = _calculateEtaMinutes(distKm);
-                      final rateLkr = tech.emergencyRateLkr > 0
-                          ? tech.emergencyRateLkr
-                          : 3500;
+                      final etaMins = distKm != null ? _calculateEtaMinutes(distKm) : null;
+                      final rateLkr = tech.emergencyRateLkr;
 
                       return Container(
                         padding: const EdgeInsets.all(16),
@@ -770,29 +1336,31 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                               ),
                                             ),
                                           ],
-                                          const SizedBox(width: 10),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              context.l10n.distanceKmAway(
-                                                distKm.toStringAsFixed(1),
+                                          if (distKm != null) ...[
+                                            const SizedBox(width: 10),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 6,
+                                                vertical: 2,
                                               ),
-                                              style: const TextStyle(
-                                                fontSize: 10.5,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.primary,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                context.l10n.distanceKmAway(
+                                                  distKm.toStringAsFixed(1),
+                                                ),
+                                                style: const TextStyle(
+                                                  fontSize: 10.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.primary,
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ],
                                       ),
                                     ],
@@ -818,37 +1386,38 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'LKR $rateLkr',
-                                      style: const TextStyle(
+                                      rateLkr > 0 ? 'LKR $rateLkr' : '—',
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.error,
+                                        color: rateLkr > 0 ? AppColors.error : context.themeMuted,
                                       ),
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.timer_outlined,
-                                          size: 14,
-                                          color: AppColors.primary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          context.l10n.emergencyEtaApprox(etaMins),
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
+                                if (etaMins != null)
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.timer_outlined,
+                                            size: 14,
+                                            color: AppColors.primary,
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            context.l10n.emergencyEtaApprox(etaMins),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 14),

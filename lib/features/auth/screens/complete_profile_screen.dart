@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart' as pv;
@@ -60,8 +60,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   double? _longitude;
 
   XFile? _profileImage;
+  Uint8List? _profileImageBytes;
   XFile? _nicFrontImage;
+  Uint8List? _nicFrontImageBytes;
   XFile? _nicBackImage;
+  Uint8List? _nicBackImageBytes;
   final ImagePicker _picker = ImagePicker();
 
   static List<String> get _districts =>
@@ -217,7 +220,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         imageQuality: 85,
       );
       if (picked != null) {
-        setState(() => _profileImage = picked);
+        final bytes = await picked.readAsBytes();
+        setState(() {
+          _profileImage = picked;
+          _profileImageBytes = bytes;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -256,11 +263,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         imageQuality: 85,
       );
       if (picked != null) {
+        final bytes = await picked.readAsBytes();
         setState(() {
           if (isFront) {
             _nicFrontImage = picked;
+            _nicFrontImageBytes = bytes;
           } else {
             _nicBackImage = picked;
+            _nicBackImageBytes = bytes;
           }
         });
       }
@@ -503,19 +513,28 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     try {
       String? photoUploadedUrl;
       if (_profileImage != null) {
-        photoUploadedUrl = await StorageService.instance
-            .uploadFile(File(_profileImage!.path));
+        photoUploadedUrl = await StorageService.instance.uploadPickedImage(
+          _profileImage!,
+          purpose: 'profile_photo',
+          preloadedBytes: _profileImageBytes,
+        );
       }
 
       String? nicFrontKey;
       String? nicBackKey;
       if (_nicFrontImage != null) {
-        nicFrontKey = await StorageService.instance
-            .uploadFile(File(_nicFrontImage!.path), purpose: 'nic');
+        nicFrontKey = await StorageService.instance.uploadPickedImage(
+          _nicFrontImage!,
+          purpose: 'nic',
+          preloadedBytes: _nicFrontImageBytes,
+        );
       }
       if (_nicBackImage != null) {
-        nicBackKey = await StorageService.instance
-            .uploadFile(File(_nicBackImage!.path), purpose: 'nic');
+        nicBackKey = await StorageService.instance.uploadPickedImage(
+          _nicBackImage!,
+          purpose: 'nic',
+          preloadedBytes: _nicBackImageBytes,
+        );
       }
 
       final uid = current?.id ??
@@ -957,9 +976,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                     ),
                                   ),
                                   child: ClipOval(
-                                    child: _profileImage != null
-                                        ? Image.file(
-                                            File(_profileImage!.path),
+                                    child: _profileImageBytes != null
+                                        ? Image.memory(
+                                            _profileImageBytes!,
                                             fit: BoxFit.cover,
                                           )
                                         : (profile?.photoUrl != null &&
@@ -1352,6 +1371,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             child: _DocUploadBox(
                               label: context.l10n.nicFront,
                               file: _nicFrontImage,
+                              bytes: _nicFrontImageBytes,
                               networkUrl: profile?.nicFrontUrl,
                               onTap: () => _showNicSourceSheet(true),
                               isDark: context.isDark,
@@ -1362,6 +1382,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             child: _DocUploadBox(
                               label: context.l10n.nicBack,
                               file: _nicBackImage,
+                              bytes: _nicBackImageBytes,
                               networkUrl: profile?.nicBackUrl,
                               onTap: () => _showNicSourceSheet(false),
                               isDark: context.isDark,
@@ -1488,6 +1509,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 class _DocUploadBox extends StatelessWidget {
   final String label;
   final XFile? file;
+  final Uint8List? bytes;
   final String? networkUrl;
   final VoidCallback onTap;
   final bool isDark;
@@ -1495,6 +1517,7 @@ class _DocUploadBox extends StatelessWidget {
   const _DocUploadBox({
     required this.label,
     this.file,
+    this.bytes,
     this.networkUrl,
     required this.onTap,
     required this.isDark,
@@ -1502,7 +1525,7 @@ class _DocUploadBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = file != null || (networkUrl != null && networkUrl!.isNotEmpty);
+    final hasImage = bytes != null || file != null || (networkUrl != null && networkUrl!.isNotEmpty);
 
     return InkWell(
       onTap: onTap,
@@ -1524,9 +1547,11 @@ class _DocUploadBox extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: file != null
-                        ? Image.file(File(file!.path), fit: BoxFit.cover)
-                        : Image.network(networkUrl!, fit: BoxFit.cover),
+                    child: bytes != null
+                        ? Image.memory(bytes!, fit: BoxFit.cover)
+                        : (networkUrl != null && networkUrl!.isNotEmpty
+                            ? Image.network(networkUrl!, fit: BoxFit.cover)
+                            : const SizedBox.shrink()),
                   ),
                   Positioned(
                     top: 4,

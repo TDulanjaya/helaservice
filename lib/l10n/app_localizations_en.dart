@@ -3724,7 +3724,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Super Admin accounts cannot be suspended.';
 
   @override
-  String get openSettings => 'Open Settings';
+  String get openSettings => 'Open settings';
 
   @override
   String get ok => 'OK';
@@ -6072,4 +6072,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get codeAlreadySent => 'Code already sent';
+
+  @override
+  String get ticketSubmitPermissionDenied =>
+      'Couldn\'t send your request. Please sign in again and try once more.';
+
+  @override
+  String get ticketSubmitErrorGeneral =>
+      'Couldn\'t send your request. Please try again.';
+
+  @override
+  String get ticketCategory => 'Category';
+
+  @override
+  String get pleaseFillRequiredFields => 'Please fill all required fields';
+
+  @override
+  String get ticketPhotoUploadFailed =>
+      'Couldn\'t upload the photo. Try again or send without a photo.';
+
+  @override
+  String get videoUploadMobileOnly => 'Video upload works in the mobile app';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Permanently remove your account and data';
+
+  @override
+  String get movePinToGateHint => 'Move the pin to your gate';
+
+  @override
+  String get notHereChooseAnother => 'Not here? Choose another place';
+
+  @override
+  String get couldNotGetLocationFallback =>
+      'Couldn\'t get your location — choose a place or search the map';
+
+  @override
+  String get tryGpsAgain => 'Try GPS again';
+
+  @override
+  String get addDetailsForProvider => 'Add details for the provider';
+
+  @override
+  String get providerNoteLabel => 'Note for provider';
+
+  @override
+  String get providerNoteHint =>
+      'e.g. blue gate, white Toyota near the bus stop';
+
+  @override
+  String get saveThisPlace => 'Save this place';
+
+  @override
+  String get searchOnMap => 'Search on map';
+
+  @override
+  String get searchPlaceHint => 'Search road, area or town...';
+
+  @override
+  String accuracyBadge(int meters) {
+    return '±$meters m';
+  }
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get mediaUploadFailedRetry =>
+      'Couldn\'t upload the photo/video — Retry';
+
+  @override
+  String get jobPostPermissionDenied =>
+      'Couldn\'t post your job. Please sign in again and try once more.';
+
+  @override
+  String get jobPostErrorGeneral =>
+      'Couldn\'t post your job. Please try again.';
+
+  @override
+  String get emergencyRateUnavailable =>
+      'This provider does not have an emergency rate set.';
 }

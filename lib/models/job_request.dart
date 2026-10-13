@@ -78,12 +78,13 @@ class JobRequest {
   final DateTime? scheduledEndAt;
   final String? scheduledSlot;
 
-  // In-memory address details used during job creation (never serialized to public doc)
+  // in-memory address details (never serialized to public doc)
   final double? accuracyMeters;
   final String? houseNo;
   final String? street;
   final String? city;
   final String? directions;
+  final String? note;
 
   const JobRequest({
     this.id = '',
@@ -121,6 +122,7 @@ class JobRequest {
     this.street,
     this.city,
     this.directions,
+    this.note,
   }) : _legacyPhotoUrls = photoUrls;
 
   List<String> get photoUrls =>
@@ -200,6 +202,20 @@ class JobRequest {
     final mode = map['scheduleMode'] as String? ??
         (map['bookingType'] == 'scheduled' ? 'date_only' : (map['bookingType']?.toString() ?? 'asap'));
 
+    final noteRaw = map['note'] as String?;
+    final landmarkRaw = map['landmark'] as String?;
+    final directionsRaw = map['directions'] as String?;
+    String? resolvedNote = noteRaw?.trim();
+    if (resolvedNote == null || resolvedNote.isEmpty) {
+      final parts = [
+        if (landmarkRaw != null && landmarkRaw.trim().isNotEmpty) landmarkRaw.trim(),
+        if (directionsRaw != null && directionsRaw.trim().isNotEmpty) directionsRaw.trim(),
+      ];
+      if (parts.isNotEmpty) {
+        resolvedNote = parts.join(' · ');
+      }
+    }
+
     return JobRequest(
       id: id,
       customerId: map['customerId'] ?? '',
@@ -215,7 +231,8 @@ class JobRequest {
       longitude: (map['longitude'] as num?)?.toDouble(),
       district: map['district'] as String?,
       address: map['address'] ?? '',
-      landmark: map['landmark'] as String?,
+      landmark: landmarkRaw,
+      note: resolvedNote,
       status: map['status'] ?? JobRequestStatus.open,
       quoteCount: map['quoteCount'] ?? 0,
       selectedProviderId: map['selectedProviderId'],
@@ -268,6 +285,7 @@ class JobRequest {
     String? street,
     String? city,
     String? directions,
+    String? note,
   }) {
     return JobRequest(
       id: id ?? this.id,
@@ -303,6 +321,7 @@ class JobRequest {
       street: street ?? this.street,
       city: city ?? this.city,
       directions: directions ?? this.directions,
+      note: note ?? this.note,
     );
   }
 }

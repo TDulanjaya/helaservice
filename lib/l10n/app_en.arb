@@ -3018,5 +3018,9 @@
   "mediaUploadFailedRetry": "Couldn't upload the photo/video — Retry",
   "jobPostPermissionDenied": "Couldn't post your job. Please sign in again and try once more.",
   "jobPostErrorGeneral": "Couldn't post your job. Please try again.",
-  "emergencyRateUnavailable": "This provider does not have an emergency rate set."
+  "emergencyRateUnavailable": "This provider does not have an emergency rate set.",
+  "nicUploadErrorRetry": "We couldn't upload your NIC right now. Please try again later.",
+  "emailOtpRequiredError": "Please verify your email first.",
+  "profileCompletionError": "Couldn't complete your profile. Please try again.",
+  "invalidNicFormatError": "Invalid NIC format. Use 9 digits with V/X or 12 digits."
 }

@@ -21,6 +21,7 @@ import '../../../shared/widgets/job_location_picker.dart';
 import '../../../shared/widgets/searchable_select_picker.dart';
 import '../../../models/admin_models.dart';
 import '../../../repositories/category_repository.dart';
+import '../../../utils/nic_validator.dart';
 import 'role_choice_screen.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -65,6 +66,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Uint8List? _nicFrontImageBytes;
   XFile? _nicBackImage;
   Uint8List? _nicBackImageBytes;
+  String? _uploadedPhotoUrl;
+  String? _uploadedNicFrontKey;
+  String? _uploadedNicBackKey;
   final ImagePicker _picker = ImagePicker();
 
   static List<String> get _districts =>
@@ -107,6 +111,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       }
       if (profile?.visitFeeLkr != null) {
         _visitFeeController.text = profile!.visitFeeLkr.toString();
+      }
+      final existingNic = profile?.nic;
+      if (existingNic != null && existingNic.isNotEmpty) {
+        _nicController.text = NicValidator.cleanNic(existingNic);
       }
     }
   }
@@ -224,6 +232,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         setState(() {
           _profileImage = picked;
           _profileImageBytes = bytes;
+          _uploadedPhotoUrl = null;
         });
       }
     } catch (e) {
@@ -268,9 +277,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           if (isFront) {
             _nicFrontImage = picked;
             _nicFrontImageBytes = bytes;
+            _uploadedNicFrontKey = null;
           } else {
             _nicBackImage = picked;
             _nicBackImageBytes = bytes;
+            _uploadedNicBackKey = null;
           }
         });
       }
@@ -415,7 +426,26 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       return;
     }
 
+    final rawNic = _nicController.text;
+    final cleanedNic = NicValidator.cleanNic(rawNic);
+    if (cleanedNic != rawNic) {
+      _nicController.value = _nicController.value.copyWith(
+        text: cleanedNic,
+        selection: TextSelection.collapsed(offset: cleanedNic.length),
+      );
+    }
+
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedRole == AppRole.provider && !NicValidator.isValidNic(cleanedNic)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.invalidNicFormatError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     final localeProvider =
@@ -511,30 +541,33 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      String? photoUploadedUrl;
-      if (_profileImage != null) {
+      String? photoUploadedUrl = _uploadedPhotoUrl;
+      if (photoUploadedUrl == null && _profileImage != null) {
         photoUploadedUrl = await StorageService.instance.uploadPickedImage(
           _profileImage!,
           purpose: 'profile_photo',
           preloadedBytes: _profileImageBytes,
         );
+        _uploadedPhotoUrl = photoUploadedUrl;
       }
 
-      String? nicFrontKey;
-      String? nicBackKey;
-      if (_nicFrontImage != null) {
+      String? nicFrontKey = _uploadedNicFrontKey;
+      String? nicBackKey = _uploadedNicBackKey;
+      if (nicFrontKey == null && _nicFrontImage != null) {
         nicFrontKey = await StorageService.instance.uploadPickedImage(
           _nicFrontImage!,
           purpose: 'nic',
           preloadedBytes: _nicFrontImageBytes,
         );
+        _uploadedNicFrontKey = nicFrontKey;
       }
-      if (_nicBackImage != null) {
+      if (nicBackKey == null && _nicBackImage != null) {
         nicBackKey = await StorageService.instance.uploadPickedImage(
           _nicBackImage!,
           purpose: 'nic',
           preloadedBytes: _nicBackImageBytes,
         );
+        _uploadedNicBackKey = nicBackKey;
       }
 
       final uid = current?.id ??
@@ -587,7 +620,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           address: _addressController.text.trim(),
           latitude: _latitude,
           longitude: _longitude,
-          nic: _nicController.text.trim(),
+          nic: cleanedNic,
           nicFrontKey: nicFrontKey ?? current?.nicFrontKey,
           nicBackKey: nicBackKey ?? current?.nicBackKey,
           certificationUrls: current?.certificationUrls ?? const [],
@@ -617,10 +650,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
       }
     } catch (e) {
+      debugPrint('[CompleteProfileScreen] Failed to complete profile: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToCompleteProfile(e.toString())),
+            content: Text(NicValidator.mapProfileError(e, context.l10n)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1348,6 +1382,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         style: TextStyle(
                             color: context.themeTextPrimary,
                             fontSize: 14.5),
+                        textCapitalization: TextCapitalization.characters,
                         decoration: _inputDecoration(
                           context,
                           hint: 'e.g. 199012345678 or 901234567V',
@@ -1355,9 +1390,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           isDark: context.isDark,
                         ),
                         validator: (val) {
-                          if (_selectedRole == AppRole.provider &&
-                              (val == null || val.trim().isEmpty)) {
-                            return context.l10n.enterNicError;
+                          if (_selectedRole == AppRole.provider) {
+                            return NicValidator.validateNic(val, context.l10n);
                           }
                           return null;
                         },

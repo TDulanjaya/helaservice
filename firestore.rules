@@ -83,6 +83,10 @@ service cloud.firestore {
         (!('visitFeeLkr' in data) || data.visitFeeLkr == null || (data.visitFeeLkr is int && data.visitFeeLkr >= 0 && data.visitFeeLkr <= 20000));
     }
 
+    function isValidNic(nic) {
+      return nic is string && nic.matches('^([0-9]{9}[VX]|[0-9]{12})$');
+    }
+
     function validPhotoAt(photos, i, customerId) {
       return i >= photos.size() || (
         photos[i] is map &&
@@ -376,8 +380,17 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
 
       // private verification details
-      match /private/{document=**} {
-        allow read, write: if isOwner(techId) || hasPerm('verify_nic');
+      match /private/kyc {
+        allow read: if isOwner(techId) || hasPerm('verify_nic');
+        allow write: if hasPerm('verify_nic') || (
+          isOwner(techId) &&
+          (!('nic' in request.resource.data) || isValidNic(request.resource.data.nic))
+        );
+      }
+
+      match /private/{document} {
+        allow read: if isOwner(techId) || hasPerm('verify_nic');
+        allow write: if document != 'kyc' && (isOwner(techId) || hasPerm('verify_nic'));
       }
 
       // portfolio showcase subcollection
@@ -1285,7 +1298,9 @@ service cloud.firestore {
         ) &&
         request.resource.data.status == 'pending' &&
         !('reviewedBy' in request.resource.data) &&
-        !('reviewedAt' in request.resource.data)
+        !('reviewedAt' in request.resource.data) &&
+        (!('nic' in request.resource.data) || isValidNic(request.resource.data.nic)) &&
+        (!('nicNumber' in request.resource.data) || request.resource.data.nicNumber == '' || isValidNic(request.resource.data.nicNumber))
       );
       allow update: if hasPerm('verify_nic') || (
         isAuthenticated() && (
@@ -1293,6 +1308,8 @@ service cloud.firestore {
           resource.data.providerId == request.auth.uid
         ) &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedBy', 'reviewedAt']) &&
+        (!('nic' in request.resource.data) || isValidNic(request.resource.data.nic)) &&
+        (!('nicNumber' in request.resource.data) || request.resource.data.nicNumber == '' || isValidNic(request.resource.data.nicNumber)) &&
         (
           (
             resource.data.status == 'rejected' &&

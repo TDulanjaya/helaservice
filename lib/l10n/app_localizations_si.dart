@@ -6174,4 +6174,20 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get emergencyRateUnavailable =>
       'මෙම සේවා සපයන්නා හදිසි ගාස්තුවක් සකසා නැත.';
+
+  @override
+  String get nicUploadErrorRetry =>
+      'මේ මොහොතේ ඔබේ හැඳුනුම්පත උඩුගත කිරීමට නොහැකි විය. කරුණාකර පසුව නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get emailOtpRequiredError =>
+      'කරුණාකර පළමුව ඔබේ විද්‍යුත් තැපෑල තහවුරු කරන්න.';
+
+  @override
+  String get profileCompletionError =>
+      'ඔබේ ගිණුම සම්පූර්ණ කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get invalidNicFormatError =>
+      'වලංගු නොවන හැඳුනුම්පත් අංකයකි. ඉලක්කම් 9ක් සමග V/X හෝ ඉලක්කම් 12ක් ඇතුළත් කරන්න.';
 }

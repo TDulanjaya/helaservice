@@ -6284,4 +6284,20 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get emergencyRateUnavailable =>
       'இந்த வழங்குநர் அவசர கட்டணத்தை நிர்ணயிக்கவில்லை.';
+
+  @override
+  String get nicUploadErrorRetry =>
+      'தற்போது உங்கள் அடையாள அட்டையைப் பதிவேற்ற முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get emailOtpRequiredError =>
+      'முதலில் உங்கள் மின்னஞ்சலைச் சரிபார்க்கவும்.';
+
+  @override
+  String get profileCompletionError =>
+      'உங்கள் சுயவிவரத்தை பூர்த்தி செய்ய முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get invalidNicFormatError =>
+      'செல்லுபடியாகாத அடையாள அட்டை வடிவம். V/X உடன் 9 இலக்கங்கள் அல்லது 12 இலக்கங்களைப் பயன்படுத்தவும்.';
 }

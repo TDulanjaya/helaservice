@@ -6153,4 +6153,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emergencyRateUnavailable =>
       'This provider does not have an emergency rate set.';
+
+  @override
+  String get nicUploadErrorRetry =>
+      'We couldn\'t upload your NIC right now. Please try again later.';
+
+  @override
+  String get emailOtpRequiredError => 'Please verify your email first.';
+
+  @override
+  String get profileCompletionError =>
+      'Couldn\'t complete your profile. Please try again.';
+
+  @override
+  String get invalidNicFormatError =>
+      'Invalid NIC format. Use 9 digits with V/X or 12 digits.';
 }

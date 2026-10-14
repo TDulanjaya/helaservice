@@ -15,6 +15,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../services/storage_service.dart';
+import '../../../utils/nic_validator.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 
 // compress identity photo
@@ -105,23 +106,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     } catch (_) {}
   }
 
-  // translate upload error message
-  String _localizedUploadError(Object e, int? tooLargeKb) {
-    final raw = e.toString();
-    if (tooLargeKb != null && raw.contains('Image size is too large')) {
-      return context.l10n.provNicImageTooLarge(tooLargeKb);
-    }
-    if (raw.contains('Failed to decode the captured document')) {
-      return context.l10n.provNicDecodeFailed;
-    }
-    if (raw.contains('NIC image is too large even after compression')) {
-      return context.l10n.provNicTooLargeAfterCompression;
-    }
-    if (raw.contains('User not authenticated')) {
-      return context.l10n.provUserNotAuthenticated;
-    }
-    return raw;
-  }
 
   Future<void> _handleUpload(String docType) async {
     final allowed = await PermissionUtils.requestCameraWithRationale(
@@ -133,7 +117,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     );
     if (!allowed) return;
 
-    int? tooLargeKb;
     setState(() {
       if (docType == 'front') _isUploadingFront = true;
       if (docType == 'back') _isUploadingBack = true;
@@ -163,7 +146,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       final Uint8List rawBytes = await photo.readAsBytes();
       final Uint8List imageBytes = await compute(_compressNicImage, rawBytes);
       if (imageBytes.lengthInBytes > 600 * 1024) {
-        tooLargeKb = (imageBytes.lengthInBytes / 1024).round();
         throw Exception(
           'Image size is too large (${(imageBytes.lengthInBytes / 1024).round()} KB). '
           'Maximum allowed size is 600 KB. Please choose or capture a compressed photo.',
@@ -194,12 +176,12 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         });
       }
     } catch (e) {
+      debugPrint('[NicVerificationScreen] Upload failed for $docType: $e');
       if (mounted) {
+        final friendlyMsg = NicValidator.mapProfileError(e, context.l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(context.l10n.failedToUploadPhoto(
-                    _localizedUploadError(e, tooLargeKb))),
+            content: Text(friendlyMsg),
             backgroundColor: AppColors.error,
           ),
         );
@@ -223,6 +205,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       final profile = roleProvider.currentUser;
       final uid = authUser?.uid ?? (profile?.id ?? '');
 
+      final cleanNic = NicValidator.cleanNic(profile?.nic);
+
       await FirebaseFirestore.instance
           .collection(FirestorePaths.verificationQueue)
           .doc(uid)
@@ -241,8 +225,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         'location': profile?.district?.isNotEmpty == true
             ? profile!.district!
             : '',
-        'nicNumber':
-            profile?.nic?.isNotEmpty == true ? profile!.nic! : '',
+        'nicNumber': cleanNic,
+        if (cleanNic.isNotEmpty) 'nic': cleanNic,
         'phone': profile?.phone?.isNotEmpty == true
             ? profile!.phone!
             : (authUser?.phoneNumber ?? ''),
@@ -258,7 +242,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           .collection('private')
           .doc('kyc')
           .set({
-        'nic': profile?.nic ?? '',
+        if (cleanNic.isNotEmpty) 'nic': cleanNic,
         if (_frontKey != null) 'nicFrontKey': _frontKey,
         if (_backKey != null) 'nicBackKey': _backKey,
         if (_selfieKey != null) 'selfieKey': _selfieKey,
@@ -272,7 +256,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           .collection('private')
           .doc('details')
           .set({
-        'nic': profile?.nic ?? '',
+        if (cleanNic.isNotEmpty) 'nic': cleanNic,
         'phone': profile?.phone ?? authUser?.phoneNumber ?? '',
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -284,10 +268,15 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         });
       }
     } catch (e) {
+      debugPrint('[NicVerificationScreen] Submit failed: $e');
       if (mounted) {
         setState(() => _isSubmitting = false);
+        final friendlyMsg = NicValidator.mapProfileError(e, context.l10n);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.failedToSubmitVerification(e.toString()))),
+          SnackBar(
+            content: Text(friendlyMsg),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }

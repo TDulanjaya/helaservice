@@ -11164,6 +11164,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This provider does not have an emergency rate set.'**
   String get emergencyRateUnavailable;
+
+  /// No description provided for @nicUploadErrorRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t upload your NIC right now. Please try again later.'**
+  String get nicUploadErrorRetry;
+
+  /// No description provided for @emailOtpRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your email first.'**
+  String get emailOtpRequiredError;
+
+  /// No description provided for @profileCompletionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete your profile. Please try again.'**
+  String get profileCompletionError;
+
+  /// No description provided for @invalidNicFormatError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid NIC format. Use 9 digits with V/X or 12 digits.'**
+  String get invalidNicFormatError;
 }
 
 class _AppLocalizationsDelegate

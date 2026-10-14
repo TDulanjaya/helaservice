@@ -15,6 +15,7 @@ import 'features/auth/screens/role_choice_screen.dart';
 import 'features/auth/screens/complete_profile_screen.dart';
 import 'features/customer/screens/home_discovery_screen.dart';
 import 'features/provider/screens/provider_dashboard_screen.dart';
+import 'features/provider/screens/provider_pending_screen.dart';
 import 'features/admin/admin_shell.dart';
 import 'utils/l10n_extension.dart';
 
@@ -189,7 +190,23 @@ class _SplashScreenState extends State<SplashScreen> {
           destination = const HomeDiscoveryScreen();
           break;
         case AppRole.provider:
-          destination = const ProviderDashboardScreen();
+          if (roleProvider.isApprovedProvider || profile.isVerified) {
+            destination = const ProviderDashboardScreen();
+          } else if (profile.initialRole == 'customer') {
+            destination = const HomeDiscoveryScreen();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(context.l10n.providerPendingCustomerToast),
+                    backgroundColor: AppColors.primary,
+                  ),
+                );
+              }
+            });
+          } else {
+            destination = const ProviderPendingScreen(isExistingCustomer: false);
+          }
           break;
       }
     }

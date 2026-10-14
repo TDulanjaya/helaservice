@@ -15,6 +15,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 import '../../../services/storage_service.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../shared/widgets/job_location_picker.dart';
@@ -574,6 +575,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           AuthService().currentFirebaseUser?.uid ??
           'usr_${DateTime.now().millisecondsSinceEpoch}';
 
+      final existingInitialRole = current?.initialRole;
+      final String resolvedInitialRole;
+      if (existingInitialRole != null) {
+        resolvedInitialRole = existingInitialRole;
+      } else if (widget.targetRole == AppRole.provider || current?.role == AppRole.customer) {
+        resolvedInitialRole = 'customer';
+      } else {
+        resolvedInitialRole = _selectedRole == AppRole.provider ? 'provider' : 'customer';
+      }
+
       final UserProfile updatedProfile;
 
       if (_selectedRole == AppRole.customer) {
@@ -587,6 +598,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             .copyWith(
           displayName: _nameController.text.trim(),
           role: AppRole.customer,
+          initialRole: resolvedInitialRole,
           isProfileComplete: true,
           photoUrl: photoUploadedUrl ?? current?.photoUrl,
           photoStatus:
@@ -608,6 +620,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             .copyWith(
           displayName: _nameController.text.trim(),
           role: AppRole.provider,
+          initialRole: resolvedInitialRole,
           isProfileComplete: true,
           photoUrl: photoUploadedUrl ?? current?.photoUrl,
           photoStatus:
@@ -644,10 +657,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           (route) => false,
         );
       } else {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
-          (route) => false,
-        );
+        if (roleProvider.isApprovedProvider) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+            (route) => false,
+          );
+        } else {
+          final isExistingCustomer = resolvedInitialRole == 'customer';
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => ProviderPendingScreen(
+                isExistingCustomer: isExistingCustomer,
+              ),
+            ),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       debugPrint('[CompleteProfileScreen] Failed to complete profile: $e');

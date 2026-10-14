@@ -18,6 +18,7 @@ import 'email_otp_screen.dart';
 import '../../../services/otp_service.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 import '../../admin/admin_shell.dart';
 import '../../../utils/map_launcher.dart';
 
@@ -164,10 +165,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (user.role == AppRole.provider) {
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
-        (route) => false,
-      );
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+      if (roleProvider.isApprovedProvider || user.isVerified) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+          (route) => false,
+        );
+      } else {
+        final isExistingCustomer = user.initialRole == 'customer';
+        if (isExistingCustomer) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+            (route) => false,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.providerPendingCustomerToast),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const ProviderPendingScreen(
+                isExistingCustomer: false,
+              ),
+            ),
+            (route) => false,
+          );
+        }
+      }
       return;
     }
 

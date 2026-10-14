@@ -3022,5 +3022,21 @@
   "nicUploadErrorRetry": "We couldn't upload your NIC right now. Please try again later.",
   "emailOtpRequiredError": "Please verify your email first.",
   "profileCompletionError": "Couldn't complete your profile. Please try again.",
-  "invalidNicFormatError": "Invalid NIC format. Use 9 digits with V/X or 12 digits."
+  "invalidNicFormatError": "Invalid NIC format. Use 9 digits with V/X or 12 digits.",
+  "providerPendingTitle": "Application Under Review",
+  "providerPendingSubtitle": "We're reviewing your provider registration and NIC documents. You'll be notified once approved.",
+  "providerRejectedTitle": "Application Needs Attention",
+  "providerRejectedSubtitle": "Your provider application was not approved. Please review the reason below and submit updated details.",
+  "rejectionReasonLabel": "Reason",
+  "submittedDetailsTitle": "Submitted Details",
+  "submittedDateLabel": "Submitted Date",
+  "serviceCategoryLabel": "Service Category",
+  "applicantNameLabel": "Applicant Name",
+  "fixAndResubmit": "Fix & Resubmit",
+  "continueAsCustomer": "Continue as Customer",
+  "providerPendingCustomerToast": "Your provider application is under review. You can continue using customer features in the meantime.",
+  "providerApprovedCelebration": "Congratulations! Your provider account is now approved and active.",
+  "providerApplicationStatusBadge": "Provider Application",
+  "providerApplicationUnderReview": "Under Review",
+  "providerApplicationActionNeeded": "Action Needed"
 }

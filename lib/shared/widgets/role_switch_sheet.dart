@@ -4,6 +4,7 @@ import '../../theme/app_theme.dart';
 import '../../state/role_provider.dart';
 import '../../features/customer/screens/home_discovery_screen.dart';
 import '../../features/provider/screens/provider_dashboard_screen.dart';
+import '../../features/provider/screens/provider_pending_screen.dart';
 import '../../features/admin/admin_shell.dart';
 import '../../utils/l10n_extension.dart';
 
@@ -59,12 +60,14 @@ void showRoleSwitchSheet(BuildContext context) {
             AppRole.customer,
           ),
         ),
-        if (isAuthorizedAdmin || isApprovedProvider) ...[
+        if (isAuthorizedAdmin || isApprovedProvider || roleProvider.isRegisteredProvider) ...[
           const SizedBox(height: 10),
           _RoleTile(
             icon: Icons.build_outlined,
             title: context.l10n.roleProvider,
-            subtitle: context.l10n.roleProviderSubtitle,
+            subtitle: !isApprovedProvider && !isAuthorizedAdmin
+                ? context.l10n.providerPendingTitle
+                : context.l10n.roleProviderSubtitle,
             selected: roleProvider.role == AppRole.provider,
             onTap: () => _switchTo(
               popContext,
@@ -151,10 +154,13 @@ void _switchTo(
       !roleProvider.isAuthorizedAdmin &&
       !roleProvider.isApprovedProvider) {
     Navigator.of(sheetContext).pop();
-    ScaffoldMessenger.of(rootContext).showSnackBar(
-      SnackBar(
-        content: Text(rootContext.l10n.unauthorizedRoleSwitch),
-        backgroundColor: AppColors.error,
+    final isExistingCustomer =
+        roleProvider.currentUser?.initialRole == 'customer';
+    Navigator.of(rootContext).push(
+      MaterialPageRoute(
+        builder: (_) => ProviderPendingScreen(
+          isExistingCustomer: isExistingCustomer,
+        ),
       ),
     );
     return;

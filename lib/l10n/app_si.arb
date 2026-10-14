@@ -1858,5 +1858,21 @@
   "nicUploadErrorRetry": "මේ මොහොතේ ඔබේ හැඳුනුම්පත උඩුගත කිරීමට නොහැකි විය. කරුණාකර පසුව නැවත උත්සාහ කරන්න.",
   "emailOtpRequiredError": "කරුණාකර පළමුව ඔබේ විද්‍යුත් තැපෑල තහවුරු කරන්න.",
   "profileCompletionError": "ඔබේ ගිණුම සම්පූර්ණ කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.",
-  "invalidNicFormatError": "වලංගු නොවන හැඳුනුම්පත් අංකයකි. ඉලක්කම් 9ක් සමග V/X හෝ ඉලක්කම් 12ක් ඇතුළත් කරන්න."
+  "invalidNicFormatError": "වලංගු නොවන හැඳුනුම්පත් අංකයකි. ඉලක්කම් 9ක් සමග V/X හෝ ඉලක්කම් 12ක් ඇතුළත් කරන්න.",
+  "providerPendingTitle": "අයදුම්පත සමාලෝචනය වෙමින් පවතී",
+  "providerPendingSubtitle": "අපි ඔබගේ ලියාපදිංචිය සහ හැඳුනුම්පත් ලේඛන සමාලෝචනය කරමින් සිටිමු. අනුමත වූ පසු ඔබට දැනුම් දෙනු ලැබේ.",
+  "providerRejectedTitle": "අයදුම්පත සඳහා අවධානය අවශ්‍යයි",
+  "providerRejectedSubtitle": "ඔබගේ අයදුම්පත අනුමත නොවීය. කරුණාකර පහත හේතුව පරීක්ෂා කර යාවත්කාලීන තොරතුරු ඉදිරිපත් කරන්න.",
+  "rejectionReasonLabel": "හේතුව",
+  "submittedDetailsTitle": "ඉදිරිපත් කළ තොරතුරු",
+  "submittedDateLabel": "ඉදිරිපත් කළ දිනය",
+  "serviceCategoryLabel": "සේවා කාණ්ඩය",
+  "applicantNameLabel": "අයදුම්කරුගේ නම",
+  "fixAndResubmit": "නිවැරදි කර නැවත ඉදිරිපත් කරන්න",
+  "continueAsCustomer": "පාරිභෝගිකයෙකු ලෙස ඉදිරියට යන්න",
+  "providerPendingCustomerToast": "ඔබගේ සැපයුම්කරු අයදුම්පත සමාලෝචනය වෙමින් පවතී. මේ අතර ඔබට පාරිභෝගික විශේෂාංග භාවිතා කළ හැක.",
+  "providerApprovedCelebration": "සුභ පැතුම්! ඔබගේ සේවා සපයන්නා ගිණුම දැන් අනුමත වී සක්‍රීයයි.",
+  "providerApplicationStatusBadge": "සේවා අයදුම්පත",
+  "providerApplicationUnderReview": "සමාලෝචනය වෙමින්",
+  "providerApplicationActionNeeded": "අවධානය අවශ්‍යයි"
 }

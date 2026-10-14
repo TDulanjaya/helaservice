@@ -9,6 +9,7 @@ class UserProfile {
   final String? photoUrl;
   final String? photoStatus; // pending or approved or rejected
   final AppRole? role;
+  final String? initialRole;
   final bool isProfileComplete;
   final String? phone;
   final String? district;
@@ -43,6 +44,7 @@ class UserProfile {
     this.photoUrl,
     this.photoStatus,
     this.role,
+    this.initialRole,
     this.isProfileComplete = false,
     this.phone,
     this.district,
@@ -99,6 +101,9 @@ class UserProfile {
       photoUrl: null,
       phone: phone,
       role: role,
+      initialRole: role != null
+          ? (role == AppRole.provider ? 'provider' : 'customer')
+          : null,
       isProfileComplete: isComplete,
       adminRole: adminRole,
       permissions: permissions,
@@ -115,6 +120,7 @@ class UserProfile {
     String? photoUrl,
     String? photoStatus,
     AppRole? role,
+    String? initialRole,
     bool? isProfileComplete,
     String? phone,
     String? district,
@@ -148,6 +154,7 @@ class UserProfile {
       photoUrl: photoUrl ?? this.photoUrl,
       photoStatus: photoStatus ?? this.photoStatus,
       role: role ?? this.role,
+      initialRole: initialRole ?? this.initialRole,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
       phone: phone ?? this.phone,
       district: district ?? this.district,
@@ -185,6 +192,7 @@ class UserProfile {
       if (photoUrl != null) 'photoUrl': photoUrl,
       if (photoStatus != null) 'photoStatus': photoStatus,
       if (safeRole != null) 'role': safeRole,
+      if (initialRole != null) 'initialRole': initialRole,
       'isProfileComplete': isProfileComplete,
       'phone': phone,
       'district': district,
@@ -234,6 +242,7 @@ class UserProfile {
       photoUrl: map['photoUrl'],
       photoStatus: map['photoStatus'],
       role: parsedRole,
+      initialRole: map['initialRole']?.toString(),
       isProfileComplete: map['isProfileComplete'] ?? false,
       phone: map['phone'],
       district: map['district'],

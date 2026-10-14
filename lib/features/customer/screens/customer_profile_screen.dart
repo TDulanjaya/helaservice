@@ -20,6 +20,7 @@ import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/legal_content_sheet.dart';
 import '../../auth/screens/complete_profile_screen.dart';
 import '../../support/screens/help_support_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
@@ -836,6 +837,62 @@ class CustomerProfileScreen extends StatelessWidget {
                           ),
                           Text(
                             context.l10n.becomeProviderSubtitle,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: AppColors.outline),
+                  ],
+                ),
+              ),
+
+            // provider application status badge for applicants
+            if (roleProvider.isRegisteredProvider && !roleProvider.isApprovedProvider)
+              AppCard(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ProviderPendingScreen(
+                        isExistingCustomer: true,
+                      ),
+                    ),
+                  );
+                },
+                color: const Color(0xFFD6900F).withValues(alpha: 0.1),
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD6900F).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.hourglass_top_rounded,
+                        color: Color(0xFFD6900F),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.providerApplicationStatusBadge,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            context.l10n.providerApplicationUnderReview,
                             style: TextStyle(
                               fontSize: 11.5,
                               color: context.themeTextSecondary,

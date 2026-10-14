@@ -16,6 +16,7 @@ import 'role_choice_screen.dart';
 import 'email_otp_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -151,12 +152,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         (route) => false,
       );
     } else if (user.role == AppRole.provider) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const ProviderDashboardScreen(),
-        ),
-        (route) => false,
-      );
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+      if (roleProvider.isApprovedProvider || user.isVerified) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const ProviderDashboardScreen(),
+          ),
+          (route) => false,
+        );
+      } else {
+        final isExistingCustomer = user.initialRole == 'customer';
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => ProviderPendingScreen(
+              isExistingCustomer: isExistingCustomer,
+            ),
+          ),
+          (route) => false,
+        );
+      }
     } else {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(

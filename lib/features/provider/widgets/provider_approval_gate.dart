@@ -187,25 +187,27 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Center(
             child: SingleChildScrollView(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 420),
-                padding: const EdgeInsets.all(26),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark ? context.themeBorder : Colors.white24,
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
+              child: Material(
+                type: MaterialType.transparency,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  padding: const EdgeInsets.all(26),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark ? context.themeBorder : Colors.white24,
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: Column(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Align(
@@ -347,6 +349,7 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

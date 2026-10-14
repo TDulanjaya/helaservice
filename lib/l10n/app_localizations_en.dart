@@ -6054,7 +6054,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useDifferentAccount => 'Use a different account';
 
   @override
-  String get continueAsCustomer => 'Continue as customer / provider';
+  String get continueAsCustomer => 'Continue as Customer';
 
   @override
   String get otpNoSession => 'No code sent yet — tap Resend';
@@ -6168,4 +6168,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invalidNicFormatError =>
       'Invalid NIC format. Use 9 digits with V/X or 12 digits.';
+
+  @override
+  String get providerPendingTitle => 'Application Under Review';
+
+  @override
+  String get providerPendingSubtitle =>
+      'We\'re reviewing your provider registration and NIC documents. You\'ll be notified once approved.';
+
+  @override
+  String get providerRejectedTitle => 'Application Needs Attention';
+
+  @override
+  String get providerRejectedSubtitle =>
+      'Your provider application was not approved. Please review the reason below and submit updated details.';
+
+  @override
+  String get rejectionReasonLabel => 'Reason';
+
+  @override
+  String get submittedDetailsTitle => 'Submitted Details';
+
+  @override
+  String get submittedDateLabel => 'Submitted Date';
+
+  @override
+  String get serviceCategoryLabel => 'Service Category';
+
+  @override
+  String get applicantNameLabel => 'Applicant Name';
+
+  @override
+  String get fixAndResubmit => 'Fix & Resubmit';
+
+  @override
+  String get providerPendingCustomerToast =>
+      'Your provider application is under review. You can continue using customer features in the meantime.';
+
+  @override
+  String get providerApprovedCelebration =>
+      'Congratulations! Your provider account is now approved and active.';
+
+  @override
+  String get providerApplicationStatusBadge => 'Provider Application';
+
+  @override
+  String get providerApplicationUnderReview => 'Under Review';
+
+  @override
+  String get providerApplicationActionNeeded => 'Action Needed';
 }

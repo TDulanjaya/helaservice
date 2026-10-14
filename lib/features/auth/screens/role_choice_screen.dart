@@ -37,18 +37,33 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
       final roleString = role == AppRole.provider ? 'provider' : 'customer';
 
       if (uid.isNotEmpty) {
-        await AuthService().updateUserField(uid, {
+        final updateMap = <String, dynamic>{
           'role': roleString,
-        });
+        };
+        if (current?.initialRole == null) {
+          updateMap['initialRole'] = roleString;
+        }
+        await AuthService().updateUserField(uid, updateMap);
       }
 
+      final effectiveInitialRole = current?.initialRole ?? roleString;
       UserProfile updatedProfile;
       if (current != null) {
-        updatedProfile = current.copyWith(role: role);
+        updatedProfile = current.copyWith(
+          role: role,
+          initialRole: effectiveInitialRole,
+        );
       } else if (fbUser != null) {
-        updatedProfile = UserProfile.fromFirebaseUser(fbUser, role: role);
+        updatedProfile = UserProfile.fromFirebaseUser(
+          fbUser,
+          role: role,
+        ).copyWith(initialRole: effectiveInitialRole);
       } else {
-        updatedProfile = UserProfile(id: uid, role: role);
+        updatedProfile = UserProfile(
+          id: uid,
+          role: role,
+          initialRole: effectiveInitialRole,
+        );
       }
 
       roleProvider.setUser(updatedProfile);

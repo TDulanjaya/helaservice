@@ -10994,7 +10994,7 @@ abstract class AppLocalizations {
   /// No description provided for @continueAsCustomer.
   ///
   /// In en, this message translates to:
-  /// **'Continue as customer / provider'**
+  /// **'Continue as Customer'**
   String get continueAsCustomer;
 
   /// No description provided for @otpNoSession.
@@ -11188,6 +11188,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid NIC format. Use 9 digits with V/X or 12 digits.'**
   String get invalidNicFormatError;
+
+  /// No description provided for @providerPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Under Review'**
+  String get providerPendingTitle;
+
+  /// No description provided for @providerPendingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re reviewing your provider registration and NIC documents. You\'ll be notified once approved.'**
+  String get providerPendingSubtitle;
+
+  /// No description provided for @providerRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Needs Attention'**
+  String get providerRejectedTitle;
+
+  /// No description provided for @providerRejectedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your provider application was not approved. Please review the reason below and submit updated details.'**
+  String get providerRejectedSubtitle;
+
+  /// No description provided for @rejectionReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get rejectionReasonLabel;
+
+  /// No description provided for @submittedDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted Details'**
+  String get submittedDetailsTitle;
+
+  /// No description provided for @submittedDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted Date'**
+  String get submittedDateLabel;
+
+  /// No description provided for @serviceCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Category'**
+  String get serviceCategoryLabel;
+
+  /// No description provided for @applicantNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Applicant Name'**
+  String get applicantNameLabel;
+
+  /// No description provided for @fixAndResubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix & Resubmit'**
+  String get fixAndResubmit;
+
+  /// No description provided for @providerPendingCustomerToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Your provider application is under review. You can continue using customer features in the meantime.'**
+  String get providerPendingCustomerToast;
+
+  /// No description provided for @providerApprovedCelebration.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! Your provider account is now approved and active.'**
+  String get providerApprovedCelebration;
+
+  /// No description provided for @providerApplicationStatusBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider Application'**
+  String get providerApplicationStatusBadge;
+
+  /// No description provided for @providerApplicationUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Under Review'**
+  String get providerApplicationUnderReview;
+
+  /// No description provided for @providerApplicationActionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Action Needed'**
+  String get providerApplicationActionNeeded;
 }
 
 class _AppLocalizationsDelegate

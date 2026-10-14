@@ -6179,7 +6179,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get useDifferentAccount => 'வேறு கணக்கைப் பயன்படுத்தவும்';
 
   @override
-  String get continueAsCustomer => 'வாடிக்கையாளர் / வழங்குநராக தொடரவும்';
+  String get continueAsCustomer => 'வாடிக்கையாளராக தொடரவும்';
 
   @override
   String get otpNoSession =>
@@ -6300,4 +6300,53 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get invalidNicFormatError =>
       'செல்லுபடியாகாத அடையாள அட்டை வடிவம். V/X உடன் 9 இலக்கங்கள் அல்லது 12 இலக்கங்களைப் பயன்படுத்தவும்.';
+
+  @override
+  String get providerPendingTitle => 'விண்ணப்பம் பரிசீலனையில் உள்ளது';
+
+  @override
+  String get providerPendingSubtitle =>
+      'நாங்கள் உங்கள் பதிவு மற்றும் ஆவணங்களை மதிப்பாய்வு செய்கிறோம். அங்கீகரிக்கப்பட்டதும் அறிவிக்கப்படுவீர்கள்.';
+
+  @override
+  String get providerRejectedTitle => 'விண்ணப்பத்திற்கு கவனம் தேவை';
+
+  @override
+  String get providerRejectedSubtitle =>
+      'உங்கள் விண்ணப்பம் அங்கீகரிக்கப்படவில்லை. தயவுசெய்து காரணத்தை சரிபார்த்து மீண்டும் சமர்ப்பிக்கவும்.';
+
+  @override
+  String get rejectionReasonLabel => 'காரணம்';
+
+  @override
+  String get submittedDetailsTitle => 'சமர்ப்பிக்கப்பட்ட விவரங்கள்';
+
+  @override
+  String get submittedDateLabel => 'சமர்ப்பிக்கப்பட்ட தேதி';
+
+  @override
+  String get serviceCategoryLabel => 'சேவை வகை';
+
+  @override
+  String get applicantNameLabel => 'விண்ணப்பதாரர் பெயர்';
+
+  @override
+  String get fixAndResubmit => 'சரிசெய்து மீண்டும் சமர்ப்பிக்கவும்';
+
+  @override
+  String get providerPendingCustomerToast =>
+      'உங்கள் சேவை வழங்குநர் விண்ணப்பம் பரிசீலனையில் உள்ளது. இதற்கிடையில் நீங்கள் வாடிக்கையாளர் அம்சங்களைப் பயன்படுத்தலாம்.';
+
+  @override
+  String get providerApprovedCelebration =>
+      'வாழ்த்துக்கள்! உங்கள் சேவை வழங்குநர் கணக்கு அங்கீகரிக்கப்பட்டு செயலில் உள்ளது.';
+
+  @override
+  String get providerApplicationStatusBadge => 'வழங்குநர் விண்ணப்பம்';
+
+  @override
+  String get providerApplicationUnderReview => 'பரிசீலனையில்';
+
+  @override
+  String get providerApplicationActionNeeded => 'கவனம் தேவை';
 }

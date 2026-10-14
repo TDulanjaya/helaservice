@@ -63,6 +63,21 @@ service cloud.firestore {
       );
     }
 
+    // unapproved tech application
+    function isPendingProvider() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/technicians/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.get('isVerified', false) != true &&
+        get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.get('nicVerified', false) != true;
+    }
+
+    // new provider without customer history
+    function isLockedNewProvider() {
+      return isPendingProvider() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('initialRole', 'provider') != 'customer';
+    }
+
     function changed() {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
@@ -292,7 +307,8 @@ service cloud.firestore {
         !('emailOtpVerifiedAt' in request.resource.data) &&
         request.resource.data.get('isBanned', false) == false &&
         !request.resource.data.keys().hasAny(['isSuperAdmin', 'isAdmin', 'adminRole']) &&
-        (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider'])
+        (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider']) &&
+        (!('initialRole' in request.resource.data) || request.resource.data.initialRole in ['customer', 'provider'])
       );
       allow update: if hasPerm('manage_users') || (
         isOwner(userId) && (
@@ -302,6 +318,14 @@ service cloud.firestore {
             'isSuperAdmin', 'isAdmin', 'adminRole',
             'emailOtpVerified', 'emailOtpVerifiedAt'
           ]) &&
+          (
+            // set initial role once, never change
+            !changed().hasAny(['initialRole']) ||
+            (
+              (!('initialRole' in resource.data) || resource.data.initialRole == null) &&
+              request.resource.data.initialRole in ['customer', 'provider']
+            )
+          ) &&
           (!changed().hasAny(['role']) || request.resource.data.role in ['customer', 'provider']) &&
           (
             !changed().hasAny(['phoneVerified']) ||
@@ -418,8 +442,13 @@ service cloud.firestore {
           (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 300));
       }
 
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        isAdmin() ||
+        !isPendingProvider()
+      );
       allow create: if isUserActive() &&
+        !isLockedNewProvider() &&
         request.resource.data.customerId == request.auth.uid &&
         request.resource.data.latitude is number &&
         request.resource.data.longitude is number &&
@@ -509,6 +538,7 @@ service cloud.firestore {
       match /quotes/{quoteId} {
         allow read: if isAuthenticated();
         allow create: if isUserActive() &&
+          !isPendingProvider() &&
           quoteId == request.auth.uid &&
           exists(/databases/$(database)/documents/technicians/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/technicians/$(request.auth.uid)).data.nicVerified == true &&
@@ -528,6 +558,7 @@ service cloud.firestore {
           ) ||
           (
             resource.data.providerId == request.auth.uid &&
+            !isPendingProvider() &&
             resource.data.status == 'pending' &&
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'providerId', 'requestId', 'jobRequestId', 'createdBy', 'createdAt']) &&
             validQuoteFields(request.resource.data)
@@ -548,6 +579,7 @@ service cloud.firestore {
       );
       allow create: if isAdmin() || (
         isUserActive() &&
+        !isLockedNewProvider() &&
         request.resource.data.customerId == request.auth.uid &&
         request.resource.data.providerId != request.auth.uid &&
         request.resource.data.status in ['pending','confirmed'] &&
@@ -941,7 +973,7 @@ service cloud.firestore {
         lockedFieldsUnchanged() &&
         (
           (resource.data.customerId == request.auth.uid && validCustomerBookingUpdate(bookingId)) ||
-          (resource.data.providerId == request.auth.uid && validProviderBookingUpdate(bookingId))
+          (resource.data.providerId == request.auth.uid && !isPendingProvider() && validProviderBookingUpdate(bookingId))
         )
       );
       allow delete: if hasPerm('manage_users');
@@ -983,6 +1015,7 @@ service cloud.firestore {
         );
         allow create: if isUserActive() && (
           hasPerm('manage_users') || (
+            !isPendingProvider() &&
             exists(/databases/$(database)/documents/bookings/$(bookingId)) &&
             get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId == request.auth.uid &&
             get(/databases/$(database)/documents/bookings/$(bookingId)).data.status == 'in_progress' &&
@@ -1095,6 +1128,7 @@ service cloud.firestore {
         isAdmin()
       );
       allow create: if isUserActive() &&
+        !isLockedNewProvider() &&
         request.resource.data.participants is list &&
         request.resource.data.participants.size() == 2 &&
         request.auth.uid in request.resource.data.participants &&
@@ -1116,6 +1150,7 @@ service cloud.firestore {
         );
         allow create: if isUserActive() && (
           isAdmin() || (
+            !isLockedNewProvider() &&
             request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants &&
             request.resource.data.senderId == request.auth.uid &&
             request.resource.data.text is string &&
@@ -1141,6 +1176,7 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isUserActive() &&
+        !isLockedNewProvider() &&
         exists(/databases/$(database)/documents/bookings/$(reviewId)) &&
         get(/databases/$(database)/documents/bookings/$(reviewId)).data.customerId == request.auth.uid &&
         get(/databases/$(database)/documents/bookings/$(reviewId)).data.status == 'completed' &&

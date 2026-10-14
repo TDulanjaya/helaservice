@@ -6073,7 +6073,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get useDifferentAccount => 'වෙනත් ගිණුමක් භාවිතා කරන්න';
 
   @override
-  String get continueAsCustomer => 'පාරිභෝගික / ශිල්පී ලෙස ඉදිරියට යන්න';
+  String get continueAsCustomer => 'පාරිභෝගිකයෙකු ලෙස ඉදිරියට යන්න';
 
   @override
   String get otpNoSession => 'තවමත් කේතයක් යවා නැත — නැවත යවන්න තට්ටු කරන්න';
@@ -6190,4 +6190,53 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get invalidNicFormatError =>
       'වලංගු නොවන හැඳුනුම්පත් අංකයකි. ඉලක්කම් 9ක් සමග V/X හෝ ඉලක්කම් 12ක් ඇතුළත් කරන්න.';
+
+  @override
+  String get providerPendingTitle => 'අයදුම්පත සමාලෝචනය වෙමින් පවතී';
+
+  @override
+  String get providerPendingSubtitle =>
+      'අපි ඔබගේ ලියාපදිංචිය සහ හැඳුනුම්පත් ලේඛන සමාලෝචනය කරමින් සිටිමු. අනුමත වූ පසු ඔබට දැනුම් දෙනු ලැබේ.';
+
+  @override
+  String get providerRejectedTitle => 'අයදුම්පත සඳහා අවධානය අවශ්‍යයි';
+
+  @override
+  String get providerRejectedSubtitle =>
+      'ඔබගේ අයදුම්පත අනුමත නොවීය. කරුණාකර පහත හේතුව පරීක්ෂා කර යාවත්කාලීන තොරතුරු ඉදිරිපත් කරන්න.';
+
+  @override
+  String get rejectionReasonLabel => 'හේතුව';
+
+  @override
+  String get submittedDetailsTitle => 'ඉදිරිපත් කළ තොරතුරු';
+
+  @override
+  String get submittedDateLabel => 'ඉදිරිපත් කළ දිනය';
+
+  @override
+  String get serviceCategoryLabel => 'සේවා කාණ්ඩය';
+
+  @override
+  String get applicantNameLabel => 'අයදුම්කරුගේ නම';
+
+  @override
+  String get fixAndResubmit => 'නිවැරදි කර නැවත ඉදිරිපත් කරන්න';
+
+  @override
+  String get providerPendingCustomerToast =>
+      'ඔබගේ සැපයුම්කරු අයදුම්පත සමාලෝචනය වෙමින් පවතී. මේ අතර ඔබට පාරිභෝගික විශේෂාංග භාවිතා කළ හැක.';
+
+  @override
+  String get providerApprovedCelebration =>
+      'සුභ පැතුම්! ඔබගේ සේවා සපයන්නා ගිණුම දැන් අනුමත වී සක්‍රීයයි.';
+
+  @override
+  String get providerApplicationStatusBadge => 'සේවා අයදුම්පත';
+
+  @override
+  String get providerApplicationUnderReview => 'සමාලෝචනය වෙමින්';
+
+  @override
+  String get providerApplicationActionNeeded => 'අවධානය අවශ්‍යයි';
 }

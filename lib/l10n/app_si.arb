@@ -1918,5 +1918,9 @@
   "zoomHint": "විශාලනය කිරීමට ඇඟිලි දෙකෙන් අදින්න",
   "notProvided": "සපයා නැත",
   "auditHistoryTitle": "සමාලෝචන සහ ඉදිරිපත් කිරීමේ ඉතිහාසය",
-  "submissionAttempt": "ඉදිරිපත් කිරීම #{number}"
+  "submissionAttempt": "ඉදිරිපත් කිරීම #{number}",
+  "noSearchResults": "ප්‍රතිඵල කිසිවක් හමු නොවීය",
+  "searchUnavailableFallback": "සෙවීම ලබාගත නොහැක, සිතියම ගෙන යන්න",
+  "recentPlaces": "මෑත ස්ථාන",
+  "useMyCurrentLocation": "මගේ වත්මන් ස්ථානය භාවිත කරන්න"
 }

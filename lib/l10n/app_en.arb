@@ -3089,5 +3089,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "noSearchResults": "No results found",
+  "searchUnavailableFallback": "Search not available, move the map instead",
+  "recentPlaces": "Recent places",
+  "useMyCurrentLocation": "Use my current location"
 }

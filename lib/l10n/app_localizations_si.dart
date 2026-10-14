@@ -6370,4 +6370,17 @@ class AppLocalizationsSi extends AppLocalizations {
   String submissionAttempt(String number) {
     return 'ඉදිරිපත් කිරීම #$number';
   }
+
+  @override
+  String get noSearchResults => 'ප්‍රතිඵල කිසිවක් හමු නොවීය';
+
+  @override
+  String get searchUnavailableFallback =>
+      'සෙවීම ලබාගත නොහැක, සිතියම ගෙන යන්න';
+
+  @override
+  String get recentPlaces => 'මෑත ස්ථාන';
+
+  @override
+  String get useMyCurrentLocation => 'මගේ වත්මන් ස්ථානය භාවිත කරන්න';
 }

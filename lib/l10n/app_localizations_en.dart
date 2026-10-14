@@ -6348,4 +6348,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String submissionAttempt(String number) {
     return 'Submission #$number';
   }
+
+  @override
+  String get noSearchResults => 'No results found';
+
+  @override
+  String get searchUnavailableFallback =>
+      'Search not available, move the map instead';
+
+  @override
+  String get recentPlaces => 'Recent places';
+
+  @override
+  String get useMyCurrentLocation => 'Use my current location';
 }

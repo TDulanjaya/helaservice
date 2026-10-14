@@ -1918,5 +1918,9 @@
   "zoomHint": "பெரிதாக்க விரல்களால் இழுக்கவும்",
   "notProvided": "வழங்கப்படவில்லை",
   "auditHistoryTitle": "மதிப்பாய்வு மற்றும் சமர்ப்பிப்பு வரலாறு",
-  "submissionAttempt": "சமர்ப்பிப்பு #{number}"
+  "submissionAttempt": "சமர்ப்பிப்பு #{number}",
+  "noSearchResults": "முடிவுகள் எதுவும் கிடைக்கவில்லை",
+  "searchUnavailableFallback": "தேடல் கிடைக்கவில்லை, வரைபடத்தை நகர்த்தவும்",
+  "recentPlaces": "சமீபத்திய இடங்கள்",
+  "useMyCurrentLocation": "எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்"
 }

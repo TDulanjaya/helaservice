@@ -172,7 +172,7 @@ class AppMapMarker {
   }) {
     final isZero = count == 0;
     final size = isZero ? 24.0 : (isLarge ? 42.0 : 32.0);
-    final totalHeight = size + 18.0; // total height with label and spacing
+    final totalHeight = size + 18.0; // height with label
     final markerColor = color ?? (isZero ? const Color(0xFF9E9E9E) : AppColors.primary);
 
     return AppMapMarker(
@@ -249,6 +249,7 @@ class AppMapView extends StatefulWidget {
   final MapController? controller;
   final VoidCallback? onMapReady;
   final void Function(MapCamera camera, bool hasGesture)? onPositionChanged;
+  final void Function(TapPosition tapPosition, LatLng point)? onTap;
   final EdgeInsets? padding;
   final VoidCallback? onExpand;
 
@@ -263,6 +264,7 @@ class AppMapView extends StatefulWidget {
     this.controller,
     this.onMapReady,
     this.onPositionChanged,
+    this.onTap,
     this.padding,
     this.onExpand,
   });
@@ -391,6 +393,7 @@ class _AppMapViewState extends State<AppMapView> {
                   ),
                   onMapReady: widget.onMapReady,
                   onPositionChanged: widget.onPositionChanged,
+                  onTap: widget.onTap,
                 ),
                 children: [
                   // vector tiles for mobile

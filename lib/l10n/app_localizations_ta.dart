@@ -6490,4 +6490,17 @@ class AppLocalizationsTa extends AppLocalizations {
   String submissionAttempt(String number) {
     return 'சமர்ப்பிப்பு #$number';
   }
+
+  @override
+  String get noSearchResults => 'முடிவுகள் எதுவும் கிடைக்கவில்லை';
+
+  @override
+  String get searchUnavailableFallback =>
+      'தேடல் கிடைக்கவில்லை, வரைபடத்தை நகர்த்தவும்';
+
+  @override
+  String get recentPlaces => 'சமீபத்திய இடங்கள்';
+
+  @override
+  String get useMyCurrentLocation => 'எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்';
 }

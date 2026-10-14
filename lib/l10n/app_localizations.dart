@@ -11530,6 +11530,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submission #{number}'**
   String submissionAttempt(String number);
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noSearchResults;
+
+  /// No description provided for @searchUnavailableFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Search not available, move the map instead'**
+  String get searchUnavailableFallback;
+
+  /// No description provided for @recentPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent places'**
+  String get recentPlaces;
+
+  /// No description provided for @useMyCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get useMyCurrentLocation;
 }
 
 class _AppLocalizationsDelegate

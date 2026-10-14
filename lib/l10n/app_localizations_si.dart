@@ -1348,7 +1348,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get ocrAuditFlagged => 'OCR විගණනය — නොගැලපීමක් සලකුණු කර ඇත';
 
   @override
-  String get notProvided => 'ලබා දී නොමැත';
+  String get notProvided => 'සපයා නැත';
 
   @override
   String get notSpecified => 'සඳහන් කර නොමැත';
@@ -6239,4 +6239,135 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get providerApplicationActionNeeded => 'අවධානය අවශ්‍යයි';
+
+  @override
+  String get providerResubmitTitle => 'නැවත ඉදිරිපත් කිරීම අවශ්‍යයි';
+
+  @override
+  String get providerResubmitSubtitle =>
+      'ඔබගේ අයදුම්පත සඳහා වඩාත් පැහැදිලි ලේඛනයක් අවශ්‍ය වේ. කරුණාකර පහත හේතුව පරීක්ෂා කර නැවත ඉදිරිපත් කරන්න.';
+
+  @override
+  String get autoChecksTitle => 'ස්වයංක්‍රීය ආරක්ෂණ සහ වලංගුතා පරීක්ෂාවන්';
+
+  @override
+  String get nicFormatValid => 'ජ.හැ. අංක ආකෘතිය වලංගුයි';
+
+  @override
+  String get nicFormatInvalid => 'වලංගු නොවන ජ.හැ. අංක ආකෘතියක්';
+
+  @override
+  String get nicDecodedBirthAndGender => 'තහවුරු කරගත් තොරතුරු';
+
+  @override
+  String get ageCheckValid => 'වයස අවුරුදු 18ට වැඩි (සුදුසුයි)';
+
+  @override
+  String get ageCheckUnder18 => 'අවුරුදු 18ට අඩු අනතුරු ඇඟවීම';
+
+  @override
+  String get duplicateNicDetected => 'අනුපිටපත් ජ.හැ. අංකයක් හමුවිය';
+
+  @override
+  String get duplicatePhoneDetected => 'අනුපිටපත් දුරකථන අංකයක් හමුවිය';
+
+  @override
+  String get noDuplicatesFound => 'අනුපිටපත් ජ.හැ. හෝ දුරකථන අංක හමු නොවීය';
+
+  @override
+  String get duplicateWarningBanner =>
+      'අනතුරු ඇඟවීමයි: අනුපිටපත් ගිණුමක් හමුවිය';
+
+  @override
+  String get approvalChecklistTitle => 'අනුමැතියට පෙර තහවුරු කිරීමේ ලැයිස්තුව';
+
+  @override
+  String get chkPhotoClear => 'ජ.හැ. ඡායාරූප පැහැදිලිව කියවිය හැකිය';
+
+  @override
+  String get chkNameMatches => 'අයදුම්කරුගේ නම ජාතික හැඳුනුම්පතට ගැලපේ';
+
+  @override
+  String get chkNicMatches => 'ජ.හැ. අංකය හැඳුනුම්පතට ගැලපේ';
+
+  @override
+  String get chkFaceMatches => 'පැතිකඩ ඡායාරූපය හැඳුනුම්පත් ඡායාරූපයට ගැලපේ';
+
+  @override
+  String get chkCardNotEdited => 'හැඳුනුම්පත සංස්කරණය හෝ වෙනස් කර නොමැත';
+
+  @override
+  String get allChecksRequired =>
+      'සේවා සපයන්නා සක්‍රිය කිරීමට පරීක්ෂණ 5ම සම්පූර්ණ කළ යුතුය';
+
+  @override
+  String get requestResubmission => 'නැවත ඉදිරිපත් කිරීම ඉල්ලන්න';
+
+  @override
+  String get rejectApplication => 'අයදුම්පත ප්‍රතික්ෂේප කරන්න';
+
+  @override
+  String get rejectionReasonDialogTitle => 'සමාලෝචන තීරණය ලබාදෙන්න';
+
+  @override
+  String get selectPresetReason => 'හේතුව තෝරන්න';
+
+  @override
+  String get reasonBlurryPhoto => 'ඡායාරූපය අපැහැදිලිය';
+
+  @override
+  String get reasonNameMismatch => 'නම ජ.හැ. පතට නොගැලපේ';
+
+  @override
+  String get reasonNicMismatch => 'ජ.හැ. අංකය නොගැලපේ';
+
+  @override
+  String get reasonWrongSide => 'වැරදි පැත්ත හෝ පිටුපස පැත්ත නොමැත';
+
+  @override
+  String get reasonFaceMismatch => 'මුහුණ ජ.හැ. ඡායාරූපයට නොගැලපේ';
+
+  @override
+  String get reasonOther => 'වෙනත් හේතුවක්';
+
+  @override
+  String get optionalReviewerNote => 'අමතර උපදෙස් (විකල්ප, උපරිම අකුරු 300)';
+
+  @override
+  String get filterPending => 'සමාලෝචනයේ';
+
+  @override
+  String get filterResubmitted => 'නැවත ඉදිරිපත් කළ';
+
+  @override
+  String get filterRejected => 'ප්‍රතික්ෂේප කළ';
+
+  @override
+  String get filterApproved => 'අනුමත කළ';
+
+  @override
+  String get faceComparisonTitle => 'මුහුණු සංසන්දනය';
+
+  @override
+  String get profilePhotoLabel => 'පැතිකඩ ඡායාරූපය';
+
+  @override
+  String get nicFrontLabel => 'ජ.හැ. ඉදිරිපස';
+
+  @override
+  String get nicBackLabel => 'ජ.හැ. පසුපස';
+
+  @override
+  String get rotatePhoto => '90° කරකවන්න';
+
+  @override
+  String get zoomHint => 'විශාලනය කිරීමට ඇඟිලි දෙකෙන් අදින්න';
+
+  @override
+  String get auditHistoryTitle => 'සමාලෝචන සහ ඉදිරිපත් කිරීමේ ඉතිහාසය';
+
+  @override
+  String submissionAttempt(String number) {
+    return 'ඉදිරිපත් කිරීම #$number';
+  }
 }

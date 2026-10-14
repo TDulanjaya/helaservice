@@ -1335,6 +1335,7 @@ service cloud.firestore {
         request.resource.data.status == 'pending' &&
         !('reviewedBy' in request.resource.data) &&
         !('reviewedAt' in request.resource.data) &&
+        !('nicHash' in request.resource.data) &&
         (!('nic' in request.resource.data) || isValidNic(request.resource.data.nic)) &&
         (!('nicNumber' in request.resource.data) || request.resource.data.nicNumber == '' || isValidNic(request.resource.data.nicNumber))
       );
@@ -1343,12 +1344,12 @@ service cloud.firestore {
           item == request.auth.uid ||
           resource.data.providerId == request.auth.uid
         ) &&
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedBy', 'reviewedAt']) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedBy', 'reviewedAt', 'nicHash']) &&
         (!('nic' in request.resource.data) || isValidNic(request.resource.data.nic)) &&
         (!('nicNumber' in request.resource.data) || request.resource.data.nicNumber == '' || isValidNic(request.resource.data.nicNumber)) &&
         (
           (
-            resource.data.status == 'rejected' &&
+            resource.data.status in ['rejected', 'resubmit'] &&
             request.resource.data.status == 'pending'
           ) ||
           (
@@ -1358,6 +1359,10 @@ service cloud.firestore {
         )
       );
       allow delete: if hasPerm('verify_nic');
+
+      match /private/{doc} {
+        allow read, write: if hasPerm('verify_nic');
+      }
     }
 
     match /dispatchEvents/{event} {

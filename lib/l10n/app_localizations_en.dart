@@ -6217,4 +6217,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerApplicationActionNeeded => 'Action Needed';
+
+  @override
+  String get providerResubmitTitle => 'Resubmission Requested';
+
+  @override
+  String get providerResubmitSubtitle =>
+      'Your application needs an updated document or clearer photo. Please review the note below and resubmit.';
+
+  @override
+  String get autoChecksTitle => 'Automated Security & Validity Checks';
+
+  @override
+  String get nicFormatValid => 'NIC Format Valid';
+
+  @override
+  String get nicFormatInvalid => 'Invalid NIC Format';
+
+  @override
+  String get nicDecodedBirthAndGender => 'Decoded Details';
+
+  @override
+  String get ageCheckValid => 'Age 18+ (Eligible)';
+
+  @override
+  String get ageCheckUnder18 => 'Under 18 Warning';
+
+  @override
+  String get duplicateNicDetected => 'Duplicate NIC Detected';
+
+  @override
+  String get duplicatePhoneDetected => 'Duplicate Phone Detected';
+
+  @override
+  String get noDuplicatesFound => 'No duplicate NIC or phone detected';
+
+  @override
+  String get duplicateWarningBanner => 'Warning: duplicate account detected';
+
+  @override
+  String get approvalChecklistTitle => 'Pre-Approval Verification Checklist';
+
+  @override
+  String get chkPhotoClear => 'NIC photos are clear, legible, and uncropped';
+
+  @override
+  String get chkNameMatches => 'Applicant name matches identity card exactly';
+
+  @override
+  String get chkNicMatches => 'NIC number matches identity card exactly';
+
+  @override
+  String get chkFaceMatches => 'Profile photo face matches NIC photo';
+
+  @override
+  String get chkCardNotEdited =>
+      'Identity card has no signs of digital editing or tampering';
+
+  @override
+  String get allChecksRequired => 'All 5 checks required to activate provider';
+
+  @override
+  String get requestResubmission => 'Request Resubmission';
+
+  @override
+  String get rejectApplication => 'Reject Application';
+
+  @override
+  String get rejectionReasonDialogTitle => 'Provide Review Decision';
+
+  @override
+  String get selectPresetReason => 'Select Reason';
+
+  @override
+  String get reasonBlurryPhoto => 'Blurry or unreadable photo';
+
+  @override
+  String get reasonNameMismatch => 'Name does not match identity card';
+
+  @override
+  String get reasonNicMismatch => 'NIC number does not match card';
+
+  @override
+  String get reasonWrongSide => 'Wrong side or missing back side';
+
+  @override
+  String get reasonFaceMismatch => 'Profile photo does not match NIC face';
+
+  @override
+  String get reasonOther => 'Other reason';
+
+  @override
+  String get optionalReviewerNote =>
+      'Additional instructions (optional, max 300 chars)';
+
+  @override
+  String get filterPending => 'Pending';
+
+  @override
+  String get filterResubmitted => 'Resubmitted';
+
+  @override
+  String get filterRejected => 'Rejected';
+
+  @override
+  String get filterApproved => 'Approved';
+
+  @override
+  String get faceComparisonTitle => 'Face Comparison';
+
+  @override
+  String get profilePhotoLabel => 'Profile Photo';
+
+  @override
+  String get nicFrontLabel => 'NIC Front';
+
+  @override
+  String get nicBackLabel => 'NIC Back';
+
+  @override
+  String get rotatePhoto => 'Rotate 90°';
+
+  @override
+  String get zoomHint => 'Pinch or double tap to zoom';
+
+  @override
+  String get auditHistoryTitle => 'Review & Submission History';
+
+  @override
+  String submissionAttempt(String number) {
+    return 'Submission #$number';
+  }
 }

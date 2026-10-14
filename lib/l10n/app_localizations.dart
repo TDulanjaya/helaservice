@@ -11278,6 +11278,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Action Needed'**
   String get providerApplicationActionNeeded;
+
+  /// No description provided for @providerResubmitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resubmission Requested'**
+  String get providerResubmitTitle;
+
+  /// No description provided for @providerResubmitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your application needs an updated document or clearer photo. Please review the note below and resubmit.'**
+  String get providerResubmitSubtitle;
+
+  /// No description provided for @autoChecksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automated Security & Validity Checks'**
+  String get autoChecksTitle;
+
+  /// No description provided for @nicFormatValid.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC Format Valid'**
+  String get nicFormatValid;
+
+  /// No description provided for @nicFormatInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid NIC Format'**
+  String get nicFormatInvalid;
+
+  /// No description provided for @nicDecodedBirthAndGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded Details'**
+  String get nicDecodedBirthAndGender;
+
+  /// No description provided for @ageCheckValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Age 18+ (Eligible)'**
+  String get ageCheckValid;
+
+  /// No description provided for @ageCheckUnder18.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 18 Warning'**
+  String get ageCheckUnder18;
+
+  /// No description provided for @duplicateNicDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate NIC Detected'**
+  String get duplicateNicDetected;
+
+  /// No description provided for @duplicatePhoneDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Phone Detected'**
+  String get duplicatePhoneDetected;
+
+  /// No description provided for @noDuplicatesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicate NIC or phone detected'**
+  String get noDuplicatesFound;
+
+  /// No description provided for @duplicateWarningBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: duplicate account detected'**
+  String get duplicateWarningBanner;
+
+  /// No description provided for @approvalChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-Approval Verification Checklist'**
+  String get approvalChecklistTitle;
+
+  /// No description provided for @chkPhotoClear.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC photos are clear, legible, and uncropped'**
+  String get chkPhotoClear;
+
+  /// No description provided for @chkNameMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Applicant name matches identity card exactly'**
+  String get chkNameMatches;
+
+  /// No description provided for @chkNicMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC number matches identity card exactly'**
+  String get chkNicMatches;
+
+  /// No description provided for @chkFaceMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo face matches NIC photo'**
+  String get chkFaceMatches;
+
+  /// No description provided for @chkCardNotEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity card has no signs of digital editing or tampering'**
+  String get chkCardNotEdited;
+
+  /// No description provided for @allChecksRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'All 5 checks required to activate provider'**
+  String get allChecksRequired;
+
+  /// No description provided for @requestResubmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Resubmission'**
+  String get requestResubmission;
+
+  /// No description provided for @rejectApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Application'**
+  String get rejectApplication;
+
+  /// No description provided for @rejectionReasonDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide Review Decision'**
+  String get rejectionReasonDialogTitle;
+
+  /// No description provided for @selectPresetReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Reason'**
+  String get selectPresetReason;
+
+  /// No description provided for @reasonBlurryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Blurry or unreadable photo'**
+  String get reasonBlurryPhoto;
+
+  /// No description provided for @reasonNameMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Name does not match identity card'**
+  String get reasonNameMismatch;
+
+  /// No description provided for @reasonNicMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC number does not match card'**
+  String get reasonNicMismatch;
+
+  /// No description provided for @reasonWrongSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong side or missing back side'**
+  String get reasonWrongSide;
+
+  /// No description provided for @reasonFaceMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo does not match NIC face'**
+  String get reasonFaceMismatch;
+
+  /// No description provided for @reasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other reason'**
+  String get reasonOther;
+
+  /// No description provided for @optionalReviewerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional instructions (optional, max 300 chars)'**
+  String get optionalReviewerNote;
+
+  /// No description provided for @filterPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get filterPending;
+
+  /// No description provided for @filterResubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Resubmitted'**
+  String get filterResubmitted;
+
+  /// No description provided for @filterRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get filterRejected;
+
+  /// No description provided for @filterApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get filterApproved;
+
+  /// No description provided for @faceComparisonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face Comparison'**
+  String get faceComparisonTitle;
+
+  /// No description provided for @profilePhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Photo'**
+  String get profilePhotoLabel;
+
+  /// No description provided for @nicFrontLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC Front'**
+  String get nicFrontLabel;
+
+  /// No description provided for @nicBackLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NIC Back'**
+  String get nicBackLabel;
+
+  /// No description provided for @rotatePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate 90°'**
+  String get rotatePhoto;
+
+  /// No description provided for @zoomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch or double tap to zoom'**
+  String get zoomHint;
+
+  /// No description provided for @auditHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review & Submission History'**
+  String get auditHistoryTitle;
+
+  /// No description provided for @submissionAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Submission #{number}'**
+  String submissionAttempt(String number);
 }
 
 class _AppLocalizationsDelegate

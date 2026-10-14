@@ -15,6 +15,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../services/storage_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../utils/nic_validator.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 
@@ -260,6 +261,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         'phone': profile?.phone ?? authUser?.phoneNumber ?? '',
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // request server-side nic hash (failure must not block submit)
+      await AuthService().requestNicHash();
 
       if (mounted) {
         setState(() {

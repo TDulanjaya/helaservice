@@ -155,3 +155,6 @@ scratch/
 *.jks
 *.keystore
 **/key.properties
+
+# Local tests
+test/

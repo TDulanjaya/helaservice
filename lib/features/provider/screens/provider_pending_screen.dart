@@ -114,14 +114,17 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
 
     final queueStatus = _queueData?['status'] as String?;
     final techStatus = _techData?['status'] as String?;
-    final isRejected = queueStatus == 'rejected' ||
-        queueStatus == 'resubmit' ||
-        techStatus == 'rejected';
+    final isResubmit = queueStatus == 'resubmit';
+    final isRejected = queueStatus == 'rejected' || techStatus == 'rejected';
+    final hasIssue = isResubmit || isRejected;
 
     final rejectionReason = (_queueData?['rejectionReason'] ??
         _queueData?['reason'] ??
         _techData?['rejectionReason'] ??
         _techData?['reason']) as String?;
+    final rejectionNote = (_queueData?['rejectionNote'] ??
+        _queueData?['note'] ??
+        _techData?['rejectionNote']) as String?;
 
     final submittedTs = (_queueData?['submittedAt'] as Timestamp?) ??
         (_techData?['createdAt'] as Timestamp?);
@@ -139,6 +142,25 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
         _queueData?['name'] ??
         user?.displayName ??
         '-') as String;
+
+    final statusIconColor = isRejected
+        ? AppColors.error
+        : (isResubmit ? const Color(0xFFD6900F) : const Color(0xFFD6900F));
+    final statusBgColor = isRejected
+        ? AppColors.error.withValues(alpha: 0.12)
+        : const Color(0xFFD6900F).withValues(alpha: 0.12);
+
+    final title = isRejected
+        ? context.l10n.providerRejectedTitle
+        : (isResubmit
+            ? context.l10n.providerResubmitTitle
+            : context.l10n.providerPendingTitle);
+
+    final subtitle = isRejected
+        ? context.l10n.providerRejectedSubtitle
+        : (isResubmit
+            ? context.l10n.providerResubmitSubtitle
+            : context.l10n.providerPendingSubtitle);
 
     return PopScope(
       canPop: widget.isExistingCustomer,
@@ -167,18 +189,14 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: isRejected
-                            ? AppColors.error.withValues(alpha: 0.12)
-                            : const Color(0xFFD6900F).withValues(alpha: 0.12),
+                        color: statusBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         isRejected
                             ? Icons.error_outline_rounded
-                            : Icons.hourglass_top_rounded,
-                        color: isRejected
-                            ? AppColors.error
-                            : const Color(0xFFD6900F),
+                            : (isResubmit ? Icons.update_rounded : Icons.hourglass_top_rounded),
+                        color: statusIconColor,
                         size: 40,
                       ),
                     ),
@@ -186,9 +204,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                   const SizedBox(height: 20),
 
                   Text(
-                    isRejected
-                        ? context.l10n.providerRejectedTitle
-                        : context.l10n.providerPendingTitle,
+                    title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 22,
@@ -199,9 +215,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                   const SizedBox(height: 8),
 
                   Text(
-                    isRejected
-                        ? context.l10n.providerRejectedSubtitle
-                        : context.l10n.providerPendingSubtitle,
+                    subtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -212,40 +226,57 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                   const SizedBox(height: 24),
 
                   // rejection note
-                  if (isRejected && rejectionReason != null && rejectionReason.isNotEmpty) ...[
+                  if (hasIssue && rejectionReason != null && rejectionReason.isNotEmpty) ...[
                     AppCard(
-                      color: AppColors.error.withValues(alpha: 0.08),
+                      color: (isRejected ? AppColors.error : const Color(0xFFD6900F))
+                          .withValues(alpha: 0.08),
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(
-                                Icons.warning_amber_rounded,
-                                color: AppColors.error,
+                              Icon(
+                                isRejected ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
+                                color: isRejected ? AppColors.error : const Color(0xFFD6900F),
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 context.l10n.rejectionReasonLabel,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 13,
-                                  color: AppColors.error,
+                                  color: isRejected ? AppColors.error : const Color(0xFFD6900F),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            rejectionReason,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: context.themeInk,
-                              height: 1.35,
+                          if (rejectionReason.isNotEmpty)
+                            Text(
+                              rejectionReason,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: (rejectionNote != null && rejectionNote.isNotEmpty)
+                                    ? FontWeight.w700
+                                    : FontWeight.normal,
+                                color: context.themeInk,
+                                height: 1.35,
+                              ),
                             ),
-                          ),
+                          if (rejectionNote != null && rejectionNote.isNotEmpty) ...[
+                            if (rejectionReason.isNotEmpty)
+                              const SizedBox(height: 6),
+                            Text(
+                              rejectionNote,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.themeTextSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -299,7 +330,7 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                   const SizedBox(height: 24),
 
                   // resubmit
-                  if (isRejected) ...[
+                  if (hasIssue) ...[
                     PrimaryButton(
                       label: context.l10n.fixAndResubmit,
                       leadingIcon: Icons.refresh_rounded,

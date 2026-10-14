@@ -173,6 +173,9 @@ class VerificationQueueItem {
   final IconData tradeIcon;
   final String location;
   final String nicNumber;
+  final String? nicHash;
+  final String? rejectionReason;
+  final String? rejectionNote;
   final String docNote;
   final int matchPercent;
   final bool flagged;
@@ -205,6 +208,9 @@ class VerificationQueueItem {
     this.tradeIcon = Icons.engineering,
     required this.location,
     required this.nicNumber,
+    this.nicHash,
+    this.rejectionReason,
+    this.rejectionNote,
     this.docNote = 'Front + Back Uploaded',
     this.matchPercent = 0,
     this.flagged = false,
@@ -234,6 +240,9 @@ class VerificationQueueItem {
       'trade': trade,
       'location': location,
       'nicNumber': nicNumber,
+      if (nicHash != null) 'nicHash': nicHash,
+      if (rejectionReason != null) 'rejectionReason': rejectionReason,
+      if (rejectionNote != null) 'rejectionNote': rejectionNote,
       'docNote': docNote,
       'matchPercent': matchPercent,
       'flagged': flagged,
@@ -284,20 +293,41 @@ class VerificationQueueItem {
         ? certsRaw.map((e) => e.toString()).toList()
         : <String>[];
 
+    final resolvedName = (map['providerName'] as String?)?.isNotEmpty == true
+        ? map['providerName'] as String
+        : (map['name'] as String? ?? '');
+
+    final resolvedTrade = (map['serviceCategory'] as String?)?.isNotEmpty == true
+        ? map['serviceCategory'] as String
+        : ((map['category'] as String?)?.isNotEmpty == true
+            ? map['category'] as String
+            : (map['trade'] as String? ?? ''));
+
+    final resolvedLocation = (map['district'] as String?)?.isNotEmpty == true
+        ? map['district'] as String
+        : (map['location'] as String? ?? '');
+
+    final resolvedNic = (map['nic'] as String?)?.isNotEmpty == true
+        ? map['nic'] as String
+        : (map['nicNumber'] as String? ?? '');
+
     return VerificationQueueItem(
       id: id,
-      providerId: map['providerId'] as String? ?? '',
+      providerId: map['providerId'] as String? ?? id,
       fileKey: map['fileKey'] as String? ?? '',
       status: map['status'] as String? ?? 'pending',
       submittedAt: submitted,
       reviewedAt: parseDate(map['reviewedAt']),
       reviewedBy: map['reviewedBy'] as String?,
-      name: map['name'] as String? ?? '',
+      name: resolvedName,
       timeAgo: calcTimeAgo(submitted),
-      trade: map['trade'] as String? ?? '',
-      tradeIcon: resolveTradeIcon(map['trade'] as String? ?? ''),
-      location: map['location'] as String? ?? '',
-      nicNumber: map['nicNumber'] as String? ?? '',
+      trade: resolvedTrade,
+      tradeIcon: resolveTradeIcon(resolvedTrade),
+      location: resolvedLocation,
+      nicNumber: resolvedNic,
+      nicHash: map['nicHash'] as String?,
+      rejectionReason: map['rejectionReason'] as String? ?? map['reason'] as String?,
+      rejectionNote: map['rejectionNote'] as String? ?? map['note'] as String?,
       docNote: map['docNote'] as String? ?? '',
       matchPercent: (map['matchPercent'] as num?)?.toInt() ?? 0,
       flagged: map['flagged'] as bool? ?? false,

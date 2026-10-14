@@ -6349,4 +6349,145 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get providerApplicationActionNeeded => 'கவனம் தேவை';
+
+  @override
+  String get providerResubmitTitle => 'மீண்டும் சமர்ப்பிக்க வேண்டும்';
+
+  @override
+  String get providerResubmitSubtitle =>
+      'உங்கள் விண்ணப்பத்திற்கு தெளிவான ஆவணம் தேவை. தயவுசெய்து கீழே உள்ள காரணத்தை சரிபார்த்து மீண்டும் சமர்ப்பிக்கவும்.';
+
+  @override
+  String get autoChecksTitle =>
+      'தானியங்கி பாதுகாப்பு மற்றும் செல்லுபடித்தன்மை சோதனைகள்';
+
+  @override
+  String get nicFormatValid => 'செல்லுபடியான அடையாள அட்டை வடிவம்';
+
+  @override
+  String get nicFormatInvalid => 'செல்லுபடியற்ற அடையாள அட்டை வடிவம்';
+
+  @override
+  String get nicDecodedBirthAndGender => 'பிரித்தெடுக்கப்பட்ட விவரங்கள்';
+
+  @override
+  String get ageCheckValid => 'வயது 18+ (தகுதியானது)';
+
+  @override
+  String get ageCheckUnder18 => '18 வயதுக்குட்பட்ட எச்சரிக்கை';
+
+  @override
+  String get duplicateNicDetected => 'நகல் அடையாள அட்டை எண் கண்டறியப்பட்டது';
+
+  @override
+  String get duplicatePhoneDetected => 'நகல் தொலைபேசி எண் கண்டறியப்பட்டது';
+
+  @override
+  String get noDuplicatesFound => 'நகல் அடையாள அட்டை அல்லது தொலைபேசி எண் இல்லை';
+
+  @override
+  String get duplicateWarningBanner =>
+      'எச்சரிக்கை: நகல் கணக்கு கண்டறியப்பட்டது';
+
+  @override
+  String get approvalChecklistTitle =>
+      'அங்கீகாரத்திற்கு முந்தைய சரிபார்ப்பு பட்டியல்';
+
+  @override
+  String get chkPhotoClear =>
+      'அடையாள அட்டை புகைப்படங்கள் தெளிவாகவும் படிக்கக்கூடியதாகவும் உள்ளன';
+
+  @override
+  String get chkNameMatches =>
+      'விண்ணப்பதாரர் பெயர் அடையாள அட்டையுடன் சரியாகப் பொருந்துகிறது';
+
+  @override
+  String get chkNicMatches =>
+      'அடையாள அட்டை எண் அட்டையுடன் சரியாகப் பொருந்துகிறது';
+
+  @override
+  String get chkFaceMatches =>
+      'சுயவிவரப் புகைப்படம் அடையாள அட்டை புகைப்படத்துடன் பொருந்துகிறது';
+
+  @override
+  String get chkCardNotEdited =>
+      'அடையாள அட்டை மாற்றப்படவில்லை அல்லது சேதமடையவில்லை';
+
+  @override
+  String get allChecksRequired =>
+      'வழங்குநரைச் செயல்படுத்த அனைத்து 5 சோதனைகளும் தேவை';
+
+  @override
+  String get requestResubmission => 'மீண்டும் சமர்ப்பிக்கக் கோருங்கள்';
+
+  @override
+  String get rejectApplication => 'விண்ணப்பத்தை நிராகரிக்கவும்';
+
+  @override
+  String get rejectionReasonDialogTitle => 'மதிப்பாய்வு முடிவை வழங்கவும்';
+
+  @override
+  String get selectPresetReason => 'காரணத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get reasonBlurryPhoto =>
+      'புகைப்படம் மங்கலாக அல்லது படிக்க முடியாததாக உள்ளது';
+
+  @override
+  String get reasonNameMismatch => 'பெயர் அடையாள அட்டையுடன் பொருந்தவில்லை';
+
+  @override
+  String get reasonNicMismatch => 'அடையாள அட்டை எண் பொருந்தவில்லை';
+
+  @override
+  String get reasonWrongSide => 'தவறான பக்கம் அல்லது பின்புறம் இல்லை';
+
+  @override
+  String get reasonFaceMismatch =>
+      'முகம் அடையாள அட்டை புகைப்படத்துடன் பொருந்தவில்லை';
+
+  @override
+  String get reasonOther => 'வேறு காரணம்';
+
+  @override
+  String get optionalReviewerNote =>
+      'கூடுதல் வழிமுறைகள் (விருப்பத்தேர்வு, அதிகபட்சம் 300 எழுத்துக்கள்)';
+
+  @override
+  String get filterPending => 'பரிசீலனையில்';
+
+  @override
+  String get filterResubmitted => 'மீண்டும் சமர்ப்பிக்கப்பட்டது';
+
+  @override
+  String get filterRejected => 'நிராகரிக்கப்பட்டது';
+
+  @override
+  String get filterApproved => 'அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get faceComparisonTitle => 'முக ஒப்பீடு';
+
+  @override
+  String get profilePhotoLabel => 'சுயவிவரப் புகைப்படம்';
+
+  @override
+  String get nicFrontLabel => 'அடையாள அட்டை முன்பக்கம்';
+
+  @override
+  String get nicBackLabel => 'அடையாள அட்டை பின்பக்கம்';
+
+  @override
+  String get rotatePhoto => '90° சுழற்று';
+
+  @override
+  String get zoomHint => 'பெரிதாக்க விரல்களால் இழுக்கவும்';
+
+  @override
+  String get auditHistoryTitle => 'மதிப்பாய்வு மற்றும் சமர்ப்பிப்பு வரலாறு';
+
+  @override
+  String submissionAttempt(String number) {
+    return 'சமர்ப்பிப்பு #$number';
+  }
 }

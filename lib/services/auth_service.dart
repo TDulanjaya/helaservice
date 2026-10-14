@@ -430,6 +430,7 @@ class AuthService {
 
     if (uid.isNotEmpty) {
       final batch = FirebaseFirestore.instance.batch();
+      bool shouldQueue = false;
 
       final userDoc =
           FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
@@ -502,7 +503,7 @@ class AuthService {
             SetOptions(merge: true),
           );
         }
-
+ 
         if (profileWithId.nicFrontKey != null ||
             profileWithId.nicBackKey != null) {
           final verQueueDoc = FirebaseFirestore.instance
@@ -513,11 +514,12 @@ class AuthService {
           final existingData = verSnap.data();
           final existingStatus = existingData?['status'] as String?;
 
-          // queue review if photo updated
-          bool shouldQueue = false;
+          // queue review if first submit, resubmit, or photo updated
           if (!docExists) {
             shouldQueue = true;
-          } else if (existingStatus == 'rejected') {
+          } else if (existingStatus == 'rejected' || existingStatus == 'resubmit') {
+            shouldQueue = true;
+          } else {
             final oldFront = existingData?['nicFrontKey'] as String? ?? existingData?['nicFrontUrl'] as String?;
             final oldBack = existingData?['nicBackKey'] as String? ?? existingData?['nicBackUrl'] as String?;
             if (profileWithId.nicFrontKey != oldFront ||
@@ -548,6 +550,11 @@ class AuthService {
       }
 
       await batch.commit().timeout(const Duration(seconds: 10));
+
+      if (shouldQueue) {
+        // request server-side nic hash (failure must not block submit)
+        await requestNicHash();
+      }
     }
 
     _currentUser = profileWithId;
@@ -620,6 +627,34 @@ class AuthService {
       'email': cleanEmail,
       'displayName': displayName,
     };
+  }
+
+  // request server-side nic hash calculation
+  Future<void> requestNicHash() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final token = await user.getIdToken();
+      final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+      final uri = Uri.parse('$baseUrl/nic-hash');
+
+      final res = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'x-helaservice-key': AppConfig.apiSecretKey,
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      if (res.statusCode != 200) {
+        debugPrint('[nic-hash] non-200 response: ${res.statusCode} ${res.body}');
+      }
+    } catch (e) {
+      // failures must not block the submit; just log and show nothing
+      debugPrint('[nic-hash] request error: $e');
+    }
   }
 
   // delete account permanently

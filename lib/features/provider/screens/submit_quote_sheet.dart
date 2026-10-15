@@ -16,6 +16,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/provider_pricing_helper.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 
 class SubmitQuoteSheet extends StatefulWidget {
@@ -37,14 +38,15 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   final _unitRateController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
   final _materialsController = TextEditingController(text: '0');
-  final _visitFeeController = TextEditingController(text: '1500');
+  final _visitFeeController = TextEditingController();
   final _travelKmController = TextEditingController(text: '0.0');
-  final _travelRateController = TextEditingController(text: '60');
+  final _travelRateController = TextEditingController();
   final _notesController = TextEditingController();
 
   int _selectedEta = 30;
   bool _submitting = false;
   bool _loadingRates = true;
+  bool _isEstimatedTravelKm = false;
   Technician? _technician;
 
   static const List<int> _etaOptions = [15, 30, 45, 60, 90, 120];
@@ -55,6 +57,18 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
     _loadTechnicianRates();
   }
 
+  void _prefillUnitRate(String unit, Technician tech) {
+    if (unit == 'fixed') {
+      _quantityController.text = '1';
+      final prefill = ProviderPricingHelper.resolveFixedPricePrefill(baseRateLkr: tech.baseRateLkr);
+      _unitRateController.text = prefill != null ? '$prefill' : '';
+    } else if (unit == 'hour') {
+      _unitRateController.text = tech.hourlyRateLkr > 0 ? '${tech.hourlyRateLkr}' : '';
+    } else if (unit == 'day') {
+      _unitRateController.text = (tech.dailyRateLkr != null && tech.dailyRateLkr! > 0) ? '${tech.dailyRateLkr}' : '';
+    }
+  }
+
   Future<void> _loadTechnicianRates() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -62,31 +76,57 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       final profile = await UserRepository().getUserById(user.uid);
       if (mounted && tech != null) {
         _technician = tech;
-        _visitFeeController.text = '${tech.effectiveVisitFeeLkr}';
-        _travelRateController.text = '${tech.perKmRateLkr ?? 60}';
+        final modes = tech.resolvedPricingModes;
 
-        final base = tech.baseRateLkr > 0
-            ? tech.baseRateLkr
-            : (tech.hourlyRateLkr > 0 ? tech.hourlyRateLkr : 1500);
-        _unitRateController.text = '$base';
-
-        // estimate travel km
-        final req = widget.jobRequest;
-        final pLat = profile?.latitude;
-        final pLng = profile?.longitude;
-        if (pLat != null &&
-            pLng != null &&
-            req.latitude != null &&
-            req.longitude != null) {
-          final directKm = LocationUtils.calculateDistanceKm(
-            pLat,
-            pLng,
-            req.latitude!,
-            req.longitude!,
-          );
-          final estKm = (directKm * 1.3).clamp(0.0, 200.0);
-          _travelKmController.text = estKm.toStringAsFixed(1);
+        if (modes.contains(ProviderPricingHelper.modeVisit)) {
+          final fee = tech.effectiveVisitFeeLkr;
+          _visitFeeController.text = fee > 0 ? '$fee' : '';
+        } else {
+          _visitFeeController.text = '';
+          if (_selectedQuoteType == 'inspect') {
+            _selectedQuoteType = 'firm';
+          }
         }
+
+        if (modes.contains(ProviderPricingHelper.modeTravel)) {
+          _travelRateController.text = (tech.perKmRateLkr != null && tech.perKmRateLkr! > 0)
+              ? '${tech.perKmRateLkr}'
+              : '';
+          final req = widget.jobRequest;
+          final eff = tech.effectiveLocation;
+          final pLat = eff.latitude ?? profile?.latitude;
+          final pLng = eff.longitude ?? profile?.longitude;
+          if (pLat != null &&
+              pLng != null &&
+              req.latitude != null &&
+              req.longitude != null) {
+            final directKm = LocationUtils.calculateDistanceKm(
+              pLat,
+              pLng,
+              req.latitude!,
+              req.longitude!,
+            );
+            final estKm = (directKm * 1.3).clamp(0.0, 200.0);
+            _travelKmController.text = estKm.toStringAsFixed(1);
+            _isEstimatedTravelKm = true;
+          }
+        } else {
+          _travelKmController.text = '0.0';
+          _travelRateController.text = '0';
+          _isEstimatedTravelKm = false;
+        }
+
+        final allowedUnits = <String>[];
+        if (modes.contains(ProviderPricingHelper.modeJob)) allowedUnits.add('fixed');
+        if (modes.contains(ProviderPricingHelper.modeHour)) allowedUnits.add('hour');
+        if (modes.contains(ProviderPricingHelper.modeDay)) allowedUnits.add('day');
+        if (allowedUnits.isEmpty) allowedUnits.add('fixed');
+
+        if (!allowedUnits.contains(_selectedPriceUnit)) {
+          _selectedPriceUnit = allowedUnits.first;
+        }
+
+        _prefillUnitRate(_selectedPriceUnit, tech);
       }
     }
     if (mounted) {
@@ -107,6 +147,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   }
 
   int get _travelCostLkr {
+    if (_technician != null && !_technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel)) {
+      return 0;
+    }
     final km = double.tryParse(_travelKmController.text.trim()) ?? 0.0;
     final rate = int.tryParse(_travelRateController.text.trim()) ?? 0;
     return (km * rate).round();
@@ -118,7 +161,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       return visit + _travelCostLkr;
     } else {
       final unit = int.tryParse(_unitRateController.text.trim()) ?? 0;
-      final qty = double.tryParse(_quantityController.text.trim()) ?? 1.0;
+      final qty = _selectedPriceUnit == 'fixed'
+          ? 1.0
+          : (double.tryParse(_quantityController.text.trim()) ?? 1.0);
       final materials = int.tryParse(_materialsController.text.trim()) ?? 0;
       return (unit * qty).round() + materials + _travelCostLkr;
     }
@@ -141,8 +186,14 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       return;
     }
 
-    final travelKm = (double.tryParse(_travelKmController.text.trim()) ?? 0.0).clamp(0.0, 200.0);
-    final travelRate = (int.tryParse(_travelRateController.text.trim()) ?? 0).clamp(0, 1000);
+    final hasTravel = _technician == null ||
+        _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel);
+    final travelKm = hasTravel
+        ? (double.tryParse(_travelKmController.text.trim()) ?? 0.0).clamp(0.0, 200.0)
+        : 0.0;
+    final travelRate = hasTravel
+        ? (int.tryParse(_travelRateController.text.trim()) ?? 0).clamp(0, 1000)
+        : 0;
     final travelCost = (travelKm * travelRate).round();
 
     int? unitRate;
@@ -169,7 +220,12 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         );
         return;
       }
-      final qty = double.tryParse(_quantityController.text.trim());
+      if (_selectedPriceUnit == 'fixed') {
+        _quantityController.text = '1';
+      }
+      final qty = _selectedPriceUnit == 'fixed'
+          ? 1.0
+          : double.tryParse(_quantityController.text.trim());
       if (qty == null || qty < 0.5 || qty > 60) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.validQuantityPrompt)),
@@ -481,8 +537,11 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                   _buildTypeTab('firm', context.l10n.quoteTypeFirm, Icons.verified_rounded),
                   const SizedBox(width: 8),
                   _buildTypeTab('estimate', context.l10n.quoteTypeEstimate, Icons.tune_rounded),
-                  const SizedBox(width: 8),
-                  _buildTypeTab('inspect', context.l10n.quoteTypeInspect, Icons.search_rounded),
+                  if (_technician == null ||
+                      _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
+                    const SizedBox(width: 8),
+                    _buildTypeTab('inspect', context.l10n.quoteTypeInspect, Icons.search_rounded),
+                  ],
                 ],
               ),
 
@@ -524,74 +583,98 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                     controller: _visitFeeController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: '1500'),
+                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: context.l10n.hintAmount),
                   ),
                 ] else ...[
                   // Firm / Estimate Mode
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.billingUnit,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
-                            ),
-                            const SizedBox(height: 6),
-                            DropdownButtonFormField<String>(
-                              initialValue: _selectedPriceUnit,
-                              decoration: _inputDecoration(),
-                              items: [
-                                DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)),
-                                DropdownMenuItem(value: 'hour', child: Text(context.l10n.billingUnitHour)),
-                                DropdownMenuItem(value: 'day', child: Text(context.l10n.billingUnitDay)),
-                              ],
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setState(() {
-                                    _selectedPriceUnit = val;
-                                    if (_technician != null) {
-                                      if (val == 'hour' && _technician!.hourlyRateLkr > 0) {
-                                        _unitRateController.text = '${_technician!.hourlyRateLkr}';
-                                      } else if (val == 'day' && _technician!.dailyRateLkr != null) {
-                                        _unitRateController.text = '${_technician!.dailyRateLkr}';
-                                      }
-                                    }
-                                  });
+                  if (_selectedPriceUnit == 'fixed') ...[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.billingUnit,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                        ),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedPriceUnit,
+                          decoration: _inputDecoration(),
+                          items: _buildUnitDropdownItems(context),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedPriceUnit = val;
+                                if (_selectedPriceUnit == 'fixed') {
+                                  _quantityController.text = '1';
                                 }
-                              },
-                            ),
-                          ],
+                                if (_technician != null) {
+                                  _prefillUnitRate(val, _technician!);
+                                }
+                              });
+                            }
+                          },
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.quantityWithUnit(
-                                _selectedPriceUnit == 'hour'
-                                    ? context.l10n.unitHours
-                                    : (_selectedPriceUnit == 'day'
-                                        ? context.l10n.unitDays
-                                        : context.l10n.unitJobs),
+                      ],
+                    ),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.billingUnit,
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
                               ),
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
-                            ),
-                            const SizedBox(height: 6),
-                            TextFormField(
-                              controller: _quantityController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              onChanged: (_) => setState(() {}),
-                              decoration: _inputDecoration(hintText: '1.0'),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedPriceUnit,
+                                decoration: _inputDecoration(),
+                                items: _buildUnitDropdownItems(context),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() {
+                                      _selectedPriceUnit = val;
+                                      if (_selectedPriceUnit == 'fixed') {
+                                        _quantityController.text = '1';
+                                      }
+                                      if (_technician != null) {
+                                        _prefillUnitRate(val, _technician!);
+                                      }
+                                    });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.quantityWithUnit(
+                                  _selectedPriceUnit == 'hour'
+                                      ? context.l10n.unitHours
+                                      : context.l10n.unitDays,
+                                ),
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _quantityController,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                onChanged: (_) => setState(() {}),
+                                decoration: _inputDecoration(hintText: '1.0'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   Text(
                     context.l10n.unitRateLkr,
@@ -602,7 +685,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                     controller: _unitRateController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: '2500'),
+                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: context.l10n.hintAmount),
                   ),
                   const SizedBox(height: 14),
                   Text(
@@ -618,50 +701,78 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                   ),
                 ],
 
-                const SizedBox(height: 16),
-
-                // Travel distance & cost section
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.estDistanceKm,
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
-                          ),
-                          const SizedBox(height: 6),
-                          TextFormField(
-                            controller: _travelKmController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            onChanged: (_) => setState(() {}),
-                            decoration: _inputDecoration(hintText: '0.0'),
-                          ),
-                        ],
+                if (_technician == null ||
+                    _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  context.l10n.estDistanceKm,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.themeTextPrimary),
+                                ),
+                                if (_isEstimatedTravelKm) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      context.l10n.estimatedLabel,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            TextFormField(
+                              controller: _travelKmController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              onChanged: (_) => setState(() {}),
+                              decoration: _inputDecoration(hintText: '0.0'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.travelRateLkrKm,
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
-                          ),
-                          const SizedBox(height: 6),
-                          TextFormField(
-                            controller: _travelRateController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (_) => setState(() {}),
-                            decoration: _inputDecoration(hintText: '60'),
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.travelRateLkrKm,
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                            ),
+                            const SizedBox(height: 6),
+                            TextFormField(
+                              controller: _travelRateController,
+                              keyboardType: TextInputType.number,
+                              onChanged: (_) => setState(() {}),
+                              decoration: _inputDecoration(hintText: context.l10n.hintAmount),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
 
                 const SizedBox(height: 16),
 
@@ -936,4 +1047,21 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
     );
   }
 
+  List<DropdownMenuItem<String>> _buildUnitDropdownItems(BuildContext context) {
+    final modes = _technician?.resolvedPricingModes ?? ProviderPricingHelper.allModes;
+    final items = <DropdownMenuItem<String>>[];
+    if (modes.contains(ProviderPricingHelper.modeJob)) {
+      items.add(DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)));
+    }
+    if (modes.contains(ProviderPricingHelper.modeHour)) {
+      items.add(DropdownMenuItem(value: 'hour', child: Text(context.l10n.billingUnitHour)));
+    }
+    if (modes.contains(ProviderPricingHelper.modeDay)) {
+      items.add(DropdownMenuItem(value: 'day', child: Text(context.l10n.billingUnitDay)));
+    }
+    if (items.isEmpty) {
+      items.add(DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)));
+    }
+    return items;
+  }
 }

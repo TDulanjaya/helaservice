@@ -33,6 +33,8 @@ class UserProfile {
   final int? hourlyRateLkr;
   final int? perKmRateLkr;
   final int? visitFeeLkr;
+  final int? baseRateLkr;
+  final List<String>? pricingModes;
 
   String? get nicFrontUrl => nicFrontKey;
   String? get nicBackUrl => nicBackKey;
@@ -70,6 +72,8 @@ class UserProfile {
     this.hourlyRateLkr,
     this.perKmRateLkr,
     this.visitFeeLkr,
+    this.baseRateLkr,
+    this.pricingModes,
   }) : nicFrontKey = nicFrontKey ?? nicFrontUrl,
        nicBackKey = nicBackKey ?? nicBackUrl;
 
@@ -146,6 +150,8 @@ class UserProfile {
     int? hourlyRateLkr,
     int? perKmRateLkr,
     int? visitFeeLkr,
+    int? baseRateLkr,
+    List<String>? pricingModes,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -178,6 +184,8 @@ class UserProfile {
       hourlyRateLkr: hourlyRateLkr ?? this.hourlyRateLkr,
       perKmRateLkr: perKmRateLkr ?? this.perKmRateLkr,
       visitFeeLkr: visitFeeLkr ?? this.visitFeeLkr,
+      baseRateLkr: baseRateLkr ?? this.baseRateLkr,
+      pricingModes: pricingModes ?? this.pricingModes,
     );
   }
 
@@ -197,8 +205,6 @@ class UserProfile {
       'phone': phone,
       'district': district,
       'address': address,
-      if (latitude != null) 'latitude': latitude,
-      if (longitude != null) 'longitude': longitude,
       if (certificationUrls.isNotEmpty) 'certificationUrls': certificationUrls,
       if (certificationsStatus != null) 'certificationsStatus': certificationsStatus,
       'serviceCategory': serviceCategory,
@@ -207,10 +213,12 @@ class UserProfile {
       'banned': isBanned,
       if (banReason != null) 'banReason': banReason,
       'isVerified': isVerified,
-      if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
-      if (hourlyRateLkr != null) 'hourlyRateLkr': hourlyRateLkr,
-      if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
-      if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
+      if (dailyRateLkr != null && dailyRateLkr! > 0) 'dailyRateLkr': dailyRateLkr,
+      if (hourlyRateLkr != null && hourlyRateLkr! > 0) 'hourlyRateLkr': hourlyRateLkr,
+      if (perKmRateLkr != null && perKmRateLkr! > 0) 'perKmRateLkr': perKmRateLkr,
+      if (visitFeeLkr != null && visitFeeLkr! > 0) 'visitFeeLkr': visitFeeLkr,
+      if (baseRateLkr != null) 'baseRateLkr': baseRateLkr,
+      if (pricingModes != null) 'pricingModes': pricingModes,
     };
   }
 
@@ -271,6 +279,10 @@ class UserProfile {
       hourlyRateLkr: (map['hourlyRateLkr'] as num?)?.toInt(),
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
       visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
+      baseRateLkr: (map['baseRateLkr'] as num?)?.toInt(),
+      pricingModes: (map['pricingModes'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
     );
   }
 }

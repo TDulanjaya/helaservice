@@ -9,6 +9,8 @@ import '../state/role_provider.dart';
 import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
+import '../utils/provider_location_helper.dart';
+import '../utils/provider_pricing_helper.dart';
 
 // sign in errors shown by the ui
 class AuthFlowException implements Exception {
@@ -298,7 +300,29 @@ class AuthService {
   Future<UserProfile> _profileFromData(
       String uid, Map<String, dynamic> data) async {
     await _migrateCustomerLocationIfNeeded(uid, data);
-    final profile = UserProfile.fromMap(data);
+    var profile = UserProfile.fromMap(data);
+
+    try {
+      final locDoc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.users)
+          .doc(uid)
+          .collection('private')
+          .doc('location')
+          .get()
+          .timeout(const Duration(seconds: 2));
+      if (locDoc.exists && locDoc.data() != null) {
+        final locData = locDoc.data()!;
+        final pLat = (locData['latitude'] as num?)?.toDouble();
+        final pLng = (locData['longitude'] as num?)?.toDouble();
+        if (pLat != null && pLng != null) {
+          profile = profile.copyWith(
+            latitude: pLat,
+            longitude: pLng,
+          );
+        }
+      }
+    } catch (_) {}
+
     _currentUser = profile;
     _cachedProfiles[uid] = profile;
     return profile;
@@ -434,7 +458,50 @@ class AuthService {
 
       final userDoc =
           FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
-      batch.set(userDoc, profileWithId.toMap(), SetOptions(merge: true));
+      final userMap = profileWithId.toMap();
+      if (profileWithId.pricingModes != null) {
+        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeHour) || (profileWithId.hourlyRateLkr ?? 0) <= 0) {
+          userMap['hourlyRateLkr'] = FieldValue.delete();
+        }
+        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeDay) || (profileWithId.dailyRateLkr ?? 0) <= 0) {
+          userMap['dailyRateLkr'] = FieldValue.delete();
+        }
+        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeTravel) || (profileWithId.perKmRateLkr ?? 0) <= 0) {
+          userMap['perKmRateLkr'] = FieldValue.delete();
+        }
+        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeVisit) || (profileWithId.visitFeeLkr ?? 0) <= 0) {
+          userMap['visitFeeLkr'] = FieldValue.delete();
+        }
+      } else {
+        if ((profileWithId.hourlyRateLkr ?? 0) <= 0 && profileWithId.hourlyRateLkr != null) {
+          userMap['hourlyRateLkr'] = FieldValue.delete();
+        }
+        if ((profileWithId.dailyRateLkr ?? 0) <= 0 && profileWithId.dailyRateLkr != null) {
+          userMap['dailyRateLkr'] = FieldValue.delete();
+        }
+        if ((profileWithId.perKmRateLkr ?? 0) <= 0 && profileWithId.perKmRateLkr != null) {
+          userMap['perKmRateLkr'] = FieldValue.delete();
+        }
+        if ((profileWithId.visitFeeLkr ?? 0) <= 0 && profileWithId.visitFeeLkr != null) {
+          userMap['visitFeeLkr'] = FieldValue.delete();
+        }
+      }
+      batch.set(userDoc, userMap, SetOptions(merge: true));
+
+      // save exact coords privately
+      if (profileWithId.latitude != null && profileWithId.longitude != null) {
+        final locDoc = userDoc.collection('private').doc('location');
+        batch.set(
+          locDoc,
+          {
+            'latitude': profileWithId.latitude,
+            'longitude': profileWithId.longitude,
+            if (profileWithId.address != null) 'address': profileWithId.address,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      }
 
       if (profileWithId.role == AppRole.provider) {
         final techDoc = FirebaseFirestore.instance
@@ -467,13 +534,32 @@ class AuthService {
           'yearsExperience': '',
           'serviceArea': profileWithId.district ?? '',
           'district': profileWithId.district,
-          'latitude': profileWithId.latitude,
-          'longitude': profileWithId.longitude,
           'phone': profileWithId.phone,
-          if (profileWithId.dailyRateLkr != null) 'dailyRateLkr': profileWithId.dailyRateLkr,
-          if (profileWithId.hourlyRateLkr != null) 'hourlyRateLkr': profileWithId.hourlyRateLkr,
-          if (profileWithId.perKmRateLkr != null) 'perKmRateLkr': profileWithId.perKmRateLkr,
-          if (profileWithId.visitFeeLkr != null) 'visitFeeLkr': profileWithId.visitFeeLkr,
+          if (profileWithId.pricingModes != null) 'pricingModes': profileWithId.pricingModes,
+          if (profileWithId.latitude != null && profileWithId.longitude != null) ...{
+            'latitude': roundToTwoDecimals(profileWithId.latitude!),
+            'longitude': roundToTwoDecimals(profileWithId.longitude!),
+            'baseLat': roundToTwoDecimals(profileWithId.latitude!),
+            'baseLng': roundToTwoDecimals(profileWithId.longitude!),
+            if (profileWithId.address != null && profileWithId.address!.trim().isNotEmpty)
+              'baseAddress': profileWithId.address!.trim(),
+          },
+          if (profileWithId.dailyRateLkr != null && profileWithId.dailyRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeDay)))
+            'dailyRateLkr': profileWithId.dailyRateLkr
+          else if (!isNewTech)
+            'dailyRateLkr': FieldValue.delete(),
+          if (profileWithId.hourlyRateLkr != null && profileWithId.hourlyRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeHour)))
+            'hourlyRateLkr': profileWithId.hourlyRateLkr
+          else if (!isNewTech)
+            'hourlyRateLkr': FieldValue.delete(),
+          if (profileWithId.perKmRateLkr != null && profileWithId.perKmRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeTravel)))
+            'perKmRateLkr': profileWithId.perKmRateLkr
+          else if (!isNewTech)
+            'perKmRateLkr': FieldValue.delete(),
+          if (profileWithId.visitFeeLkr != null && profileWithId.visitFeeLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeVisit)))
+            'visitFeeLkr': profileWithId.visitFeeLkr
+          else if (!isNewTech)
+            'visitFeeLkr': FieldValue.delete(),
         };
 
         if (isNewTech) {

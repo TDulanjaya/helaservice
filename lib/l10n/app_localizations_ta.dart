@@ -6502,5 +6502,209 @@ class AppLocalizationsTa extends AppLocalizations {
   String get recentPlaces => 'சமீபத்திய இடங்கள்';
 
   @override
-  String get useMyCurrentLocation => 'எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்';
+  String get useMyCurrentLocation =>
+      'எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்';
+
+  @override
+  String get showingJobsNearYouNow =>
+      'இப்போது உங்களுக்கு அருகிலுள்ள பணிகளைக் காட்டுகிறது';
+
+  @override
+  String showingJobsNearBase(String area) {
+    return 'உங்கள் தளத்திற்கு அருகிலுள்ள பணிகளைக் காட்டுகிறது ($area)';
+  }
+
+  @override
+  String get showingJobsNearBaseNoArea =>
+      'உங்கள் தளத்திற்கு அருகிலுள்ள பணிகளைக் காட்டுகிறது';
+
+  @override
+  String get setBaseLocationPrompt =>
+      'அருகிலுள்ள பணிகளைக் காண உங்கள் அடிப்படை இருப்பிடத்தை அமைக்கவும்';
+
+  @override
+  String get setBaseLocationBtn => 'அடிப்படை இருப்பிடத்தை அமைக்கவும்';
+
+  @override
+  String awayNow(String distance) {
+    return 'இப்போது $distance கி.மீ தொலைவில்';
+  }
+
+  @override
+  String basedAway(String distance) {
+    return 'தளத்திலிருந்து $distance கி.மீ தொலைவில்';
+  }
+
+  @override
+  String locationLastUpdatedMinsAgo(String minutes) {
+    return 'இருப்பிடம் கடைசியாக $minutes நிமிடங்களுக்கு முன்பு புதுப்பிக்கப்பட்டது';
+  }
+
+  @override
+  String get estimatedLabel => 'மதிப்பிடப்பட்டது';
+
+  @override
+  String get baseLocationTitle => 'அடிப்படை இருப்பிடம்';
+
+  @override
+  String get baseLocationDesc => 'நீங்கள் வழக்கமாக பணியைத் தொடங்கும் இடம்';
+
+  @override
+  String get howDoYouChargeTitle => 'நீங்கள் எவ்வாறு கட்டணம் வசூலிக்கிறீர்கள்?';
+
+  @override
+  String get howDoYouChargeSubtitle =>
+      'குறைந்தது ஒரு கட்டண முறையைத் தேர்ந்தெடுக்கவும் (மணிநேரத்திற்கு, நாளுக்கு, அல்லது வேலைக்கு).';
+
+  @override
+  String get pricingModePerHour => 'மணிநேரத்திற்கு';
+
+  @override
+  String get pricingModePerDay => 'நாளுக்கு';
+
+  @override
+  String get pricingModePricePerJob =>
+      'வேலைக்கான விலை (ஒவ்வொரு வேலைக்கும் விலை குறிப்பிடவும்)';
+
+  @override
+  String get pricingModeVisitFee => 'வருகை / ஆய்வு கட்டணம்';
+
+  @override
+  String get pricingModeTravelPerKm => 'கி.மீ. பயண கட்டணம்';
+
+  @override
+  String get atLeastOneBasePricingModeRequired =>
+      'மணிநேரத்திற்கு, நாளுக்கு, அல்லது வேலைக்கு என்பவற்றில் குறைந்தது ஒன்றைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get travelIncluded => 'பயணம் சேர்க்கப்பட்டுள்ளது';
+
+  @override
+  String get quoteEachJob => 'வேலைக்கு ஏற்ப விலை';
+
+  @override
+  String get travelTitle => 'பயணம்';
+
+  @override
+  String get couldNotLoadExactLocationRetry =>
+      'வேலையின் துல்லியமான இருப்பிடத்தை ஏற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get gettingYourLocation => 'உங்கள் இருப்பிடத்தைப் பெறுகிறது...';
+
+  @override
+  String get tryAgain => 'மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get customerLocationMissingCallCustomer =>
+      'வாடிக்கையாளர் இருப்பிடம் கிடைக்கவில்லை, வாடிக்கையாளரை அழைக்கவும்';
+
+  @override
+  String get locationSharingNotificationTitle => 'HelaService';
+
+  @override
+  String get locationSharingNotificationText =>
+      'வாடிக்கையாளருடன் உங்கள் இருப்பிடத்தைப் பகிர்கிறது';
+
+  @override
+  String get preparingMedia => 'ஊடகத்தைத் தயார் செய்கிறது...';
+
+  @override
+  String uploadingPhotoProgress(int current, int total) {
+    return 'புகைப்படம் பதிவேற்றப்படுகிறது $current / $total...';
+  }
+
+  @override
+  String uploadPhotoBytesProgress(
+      int current, int total, String sentMb, String totalMb) {
+    return 'புகைப்படம் $current/$total: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get uploadingVideoThumbnail => 'வீடியோ சிறுபடம் பதிவேற்றப்படுகிறது...';
+
+  @override
+  String get uploadingVideoFile => 'வீடியோ கோப்பு பதிவேற்றப்படுகிறது...';
+
+  @override
+  String uploadVideoBytesProgress(String sentMb, String totalMb) {
+    return 'வீடியோ: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get ticketAssignedToYou => 'டிக்கெட் உங்களுக்கு ஒதுக்கப்பட்டது';
+
+  @override
+  String openBookingTimeline(String id) {
+    return 'முன்பதிவு காலவரிசையைத் திற ($id)';
+  }
+
+  @override
+  String get markInReviewAction => 'மதிப்பாய்வில் எனக் குறிக்கவும்';
+
+  @override
+  String get resolveAction => 'தீர்க்கவும்';
+
+  @override
+  String get dismissAction => 'நிராகரி';
+
+  @override
+  String get messageHistoryTitle => 'செய்தி வரலாறு';
+
+  @override
+  String get noRepliesYet => 'இதுவரை பதில்கள் இல்லை.';
+
+  @override
+  String get replyAsSupportAdminHint => 'ஆதரவு நிர்வாகியாக பதிலளிக்கவும்...';
+
+  @override
+  String nicWarningUnder18(int age) {
+    return '18 வயதுக்கு குறைவானவர் ($age ஆண்டுகள்) — அங்கீகரிக்க முடியாது';
+  }
+
+  @override
+  String get nicDuplicateCheckNotAvailable =>
+      'போலி சரிபார்ப்பு இன்னும் கிடைக்கவில்லை';
+
+  @override
+  String nicDuplicateNicApproved(String name, String id) {
+    return 'போலி NIC: $name ($id) க்கு ஏற்கனவே அங்கீகரிக்கப்பட்டது';
+  }
+
+  @override
+  String nicDuplicateNicPending(String name, String id) {
+    return 'போலி NIC: $name ($id) க்கு நிலுவையில் உள்ளது';
+  }
+
+  @override
+  String nicDuplicatePhone(String name) {
+    return 'போலி தொலைபேசி எண்: ஏற்கனவே அங்கீகரிக்கப்பட்ட $name க்கு பதிவு செய்யப்பட்டுள்ளது';
+  }
+
+  @override
+  String get notificationIdentityApprovedTitle =>
+      'அடையாளச் சரிபார்ப்பு அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get notificationIdentityApprovedBody =>
+      'உங்கள் அடையாளச் சரிபார்ப்பு அங்கீகரிக்கப்பட்டது. உங்கள் சுயவிவரம் இப்போது செயலில் உள்ளது.';
+
+  @override
+  String get heroVerifiedArtisans => 'சரிபார்க்கப்பட்ட சேவை கைவினைஞர்கள்';
+
+  @override
+  String get heroLiveTracking =>
+      'உங்கள் சேவை வழங்குநர் வரும்போது நேரலை கண்காணிப்பு';
+
+  @override
+  String get heroTransparentQuotes => 'வெளிப்படையான உள்ளூர் விலைக் குறிப்புகள்';
+
+  @override
+  String get heroDirectQuoteRequests => 'நிமிடங்களில் நேரடி விலைக் கோரிக்கைகள்';
+
+  @override
+  String get heroPrivateSecureChat => 'தனிப்பட்ட, பாதுகாப்பான அரட்டை';
+
+  @override
+  String get heroCommunityRated => 'சமூகத்தால் மதிப்பிடப்பட்ட வல்லுநர்கள்';
 }

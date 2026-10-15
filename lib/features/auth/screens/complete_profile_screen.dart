@@ -23,6 +23,8 @@ import '../../../shared/widgets/searchable_select_picker.dart';
 import '../../../models/admin_models.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../utils/nic_validator.dart';
+import '../../../utils/provider_pricing_helper.dart';
+import '../../../utils/responsive.dart';
 import 'role_choice_screen.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -51,6 +53,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _hourlyRateController = TextEditingController();
   final _perKmRateController = TextEditingController();
   final _visitFeeController = TextEditingController();
+  List<String> _pricingModes = [];
 
   String _district = 'Colombo';
   String _category = '';
@@ -100,6 +103,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (profile?.serviceCategory != null &&
           profile!.serviceCategory!.isNotEmpty) {
         _category = profile.serviceCategory!;
+      }
+      if (profile != null) {
+        _pricingModes = ProviderPricingHelper.resolvePricingModes(
+          pricingModes: profile.pricingModes,
+          hourlyRateLkr: profile.hourlyRateLkr,
+          dailyRateLkr: profile.dailyRateLkr,
+          baseRateLkr: profile.baseRateLkr,
+          visitFeeLkr: profile.visitFeeLkr,
+          perKmRateLkr: profile.perKmRateLkr,
+        );
       }
       if (profile?.dailyRateLkr != null) {
         _dailyRateController.text = profile!.dailyRateLkr.toString();
@@ -487,55 +500,78 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         return;
       }
 
-      final daily = int.tryParse(_dailyRateController.text.trim());
-      final hourly = int.tryParse(_hourlyRateController.text.trim());
-      final perKm = int.tryParse(_perKmRateController.text.trim());
-      final visitFee = int.tryParse(_visitFeeController.text.trim());
+      if (!ProviderPricingHelper.hasBasePricingMode(_pricingModes)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.atLeastOneBasePricingModeRequired),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
 
-      if (daily == null && hourly == null && perKm == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.atLeastOneRateRequired),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
+      int? daily;
+      if (_pricingModes.contains(ProviderPricingHelper.modeDay)) {
+        daily = int.tryParse(_dailyRateController.text.trim());
+        if (daily == null ||
+            daily < ProviderPricingHelper.minDailyRate ||
+            daily > ProviderPricingHelper.maxDailyRate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.dailyRateRangeError),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
       }
-      if (daily != null && (daily < 1 || daily > 100000)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.dailyRateRangeError),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
+
+      int? hourly;
+      if (_pricingModes.contains(ProviderPricingHelper.modeHour)) {
+        hourly = int.tryParse(_hourlyRateController.text.trim());
+        if (hourly == null ||
+            hourly < ProviderPricingHelper.minHourlyRate ||
+            hourly > ProviderPricingHelper.maxHourlyRate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.hourlyRateRangeError),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
       }
-      if (hourly != null && (hourly < 1 || hourly > 20000)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.hourlyRateRangeError),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
+
+      int? perKm;
+      if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) {
+        perKm = int.tryParse(_perKmRateController.text.trim());
+        if (perKm == null ||
+            perKm < ProviderPricingHelper.minPerKmRate ||
+            perKm > ProviderPricingHelper.maxPerKmRate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.perKmRateRangeError),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
       }
-      if (perKm != null && (perKm < 1 || perKm > 1000)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.perKmRateRangeError),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
-      }
-      if (visitFee != null && (visitFee < 0 || visitFee > 20000)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.visitFeeRangeError),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        return;
+
+      int? visitFee;
+      if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) {
+        visitFee = int.tryParse(_visitFeeController.text.trim());
+        if (visitFee == null ||
+            visitFee < ProviderPricingHelper.minVisitFee ||
+            visitFee > ProviderPricingHelper.maxVisitFee) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.visitFeeRangeError),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
       }
     }
 
@@ -639,10 +675,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           certificationUrls: current?.certificationUrls ?? const [],
           certificationsStatus: current?.certificationsStatus,
           serviceCategory: _category,
-          dailyRateLkr: int.tryParse(_dailyRateController.text.trim()),
-          hourlyRateLkr: int.tryParse(_hourlyRateController.text.trim()),
-          perKmRateLkr: int.tryParse(_perKmRateController.text.trim()),
-          visitFeeLkr: int.tryParse(_visitFeeController.text.trim()) ?? 0,
+          pricingModes: _pricingModes,
+          dailyRateLkr: _pricingModes.contains(ProviderPricingHelper.modeDay)
+              ? int.tryParse(_dailyRateController.text.trim())
+              : null,
+          hourlyRateLkr: _pricingModes.contains(ProviderPricingHelper.modeHour)
+              ? int.tryParse(_hourlyRateController.text.trim())
+              : null,
+          perKmRateLkr: _pricingModes.contains(ProviderPricingHelper.modeTravel)
+              ? int.tryParse(_perKmRateController.text.trim())
+              : null,
+          visitFeeLkr: _pricingModes.contains(ProviderPricingHelper.modeVisit)
+              ? int.tryParse(_visitFeeController.text.trim())
+              : null,
           preferredLanguage: localeProvider.languageCode,
         );
       }
@@ -790,7 +835,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 680),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              padding: EdgeInsets.fromLTRB(
+                Responsive.isPhoneLandscape(context) ? 32 : 20,
+                12,
+                Responsive.isPhoneLandscape(context) ? 32 : 20,
+                32,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -867,7 +917,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      height: 48,
+                      constraints: const BoxConstraints(minHeight: 48),
                       padding: const EdgeInsets.all(4),
                       margin: const EdgeInsets.only(bottom: 22),
                       decoration: BoxDecoration(
@@ -941,14 +991,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      _selectedRole == AppRole.provider
-                                          ? context.l10n.roleProvider
-                                          : context.l10n.roleCustomer,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 14,
-                                        color: context.themeTextPrimary,
+                                    Flexible(
+                                      child: Text(
+                                        _selectedRole == AppRole.provider
+                                            ? context.l10n.roleProvider
+                                            : context.l10n.roleCustomer,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                          color: context.themeTextPrimary,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 6),
@@ -1289,55 +1341,86 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               ],
                             ),
                             const SizedBox(height: 14),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: _detectingLocation
-                                        ? null
-                                        : _detectGpsLocation,
-                                    icon: _detectingLocation
-                                        ? const SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                                strokeWidth: 2),
-                                          )
-                                        : const Icon(
-                                            Icons.my_location_rounded,
-                                            size: 16),
-                                    label: Text(context.l10n.useGps),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isNarrow = constraints.maxWidth < 360;
+                                final gpsButton = OutlinedButton.icon(
+                                  onPressed: _detectingLocation
+                                      ? null
+                                      : _detectGpsLocation,
+                                  icon: _detectingLocation
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        )
+                                      : const Icon(
+                                          Icons.my_location_rounded,
+                                          size: 16),
+                                  label: Flexible(
+                                    child: Text(
+                                      context.l10n.useGps,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: _pickOnMap,
-                                    icon: const Icon(
-                                        Icons.pin_drop_rounded,
-                                        size: 16),
-                                    label: Text(_latitude != null
-                                        ? context.l10n.updatePinButton
-                                        : context.l10n.pickOnMapButton),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(44),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10, horizontal: 8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
                                     ),
                                   ),
-                                ),
-                              ],
+                                );
+
+                                final mapButton = OutlinedButton.icon(
+                                  onPressed: _pickOnMap,
+                                  icon: const Icon(
+                                      Icons.pin_drop_rounded,
+                                      size: 16),
+                                  label: Flexible(
+                                    child: Text(
+                                      _latitude != null
+                                          ? context.l10n.updatePinButton
+                                          : context.l10n.pickOnMapButton,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(44),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10, horizontal: 8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                );
+
+                                if (isNarrow) {
+                                  return Column(
+                                    children: [
+                                      gpsButton,
+                                      const SizedBox(height: 8),
+                                      mapButton,
+                                    ],
+                                  );
+                                }
+
+                                return Row(
+                                  children: [
+                                    Expanded(child: gpsButton),
+                                    const SizedBox(width: 10),
+                                    Expanded(child: mapButton),
+                                  ],
+                                );
+                              },
                             ),
                             if (_latitude != null && _longitude != null) ...[
                               const SizedBox(height: 10),
@@ -1451,9 +1534,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // provider usual rates
                       Text(
-                        context.l10n.yourUsualRates,
+                        context.l10n.howDoYouChargeTitle,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
@@ -1462,68 +1544,202 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        context.l10n.yourUsualRatesSubtitle,
+                        context.l10n.howDoYouChargeSubtitle,
                         style: TextStyle(
                           fontSize: 12,
                           color: context.themeTextSecondary,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _dailyRateController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                        decoration: _inputDecoration(
-                          context,
-                          hint: context.l10n.dailyRateHint,
-                          icon: Icons.calendar_today_outlined,
-                          prefixText: 'LKR ',
-                          labelText: context.l10n.dailyRate,
-                          isDark: context.isDark,
+
+                      CheckboxListTile(
+                        value: _pricingModes.contains(ProviderPricingHelper.modeHour),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _pricingModes.add(ProviderPricingHelper.modeHour);
+                            } else {
+                              _pricingModes.remove(ProviderPricingHelper.modeHour);
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.pricingModePerHour,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _hourlyRateController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                        decoration: _inputDecoration(
-                          context,
-                          hint: context.l10n.hourlyRateHint,
-                          icon: Icons.timer_outlined,
-                          prefixText: 'LKR ',
-                          labelText: context.l10n.hourlyRate,
-                          isDark: context.isDark,
+                      if (_pricingModes.contains(ProviderPricingHelper.modeHour)) ...[
+                        const SizedBox(height: 4),
+                        TextFormField(
+                          controller: _hourlyRateController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                          decoration: _inputDecoration(
+                            context,
+                            hint: context.l10n.hourlyRateHint,
+                            icon: Icons.timer_outlined,
+                            prefixText: 'LKR ',
+                            labelText: context.l10n.hourlyRate,
+                            isDark: context.isDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      CheckboxListTile(
+                        value: _pricingModes.contains(ProviderPricingHelper.modeDay),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _pricingModes.add(ProviderPricingHelper.modeDay);
+                            } else {
+                              _pricingModes.remove(ProviderPricingHelper.modeDay);
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.pricingModePerDay,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _perKmRateController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                        decoration: _inputDecoration(
-                          context,
-                          hint: context.l10n.perKmRateHint,
-                          icon: Icons.directions_car_outlined,
-                          prefixText: 'LKR ',
-                          labelText: context.l10n.perKmTravelRate,
-                          isDark: context.isDark,
+                      if (_pricingModes.contains(ProviderPricingHelper.modeDay)) ...[
+                        const SizedBox(height: 4),
+                        TextFormField(
+                          controller: _dailyRateController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                          decoration: _inputDecoration(
+                            context,
+                            hint: context.l10n.dailyRateHint,
+                            icon: Icons.calendar_today_outlined,
+                            prefixText: 'LKR ',
+                            labelText: context.l10n.dailyRate,
+                            isDark: context.isDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      CheckboxListTile(
+                        value: _pricingModes.contains(ProviderPricingHelper.modeJob),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _pricingModes.add(ProviderPricingHelper.modeJob);
+                            } else {
+                              _pricingModes.remove(ProviderPricingHelper.modeJob);
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.pricingModePricePerJob,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _visitFeeController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                        decoration: _inputDecoration(
-                          context,
-                          hint: context.l10n.visitFeeOptionalHint,
-                          icon: Icons.meeting_room_outlined,
-                          prefixText: 'LKR ',
-                          labelText: context.l10n.standardVisitFee,
-                          isDark: context.isDark,
+                      const SizedBox(height: 8),
+
+                      CheckboxListTile(
+                        value: _pricingModes.contains(ProviderPricingHelper.modeVisit),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _pricingModes.add(ProviderPricingHelper.modeVisit);
+                            } else {
+                              _pricingModes.remove(ProviderPricingHelper.modeVisit);
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.pricingModeVisitFee,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
                         ),
                       ),
+                      if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
+                        const SizedBox(height: 4),
+                        TextFormField(
+                          controller: _visitFeeController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                          decoration: _inputDecoration(
+                            context,
+                            hint: context.l10n.visitFeeOptionalHint,
+                            icon: Icons.meeting_room_outlined,
+                            prefixText: 'LKR ',
+                            labelText: context.l10n.standardVisitFee,
+                            isDark: context.isDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      CheckboxListTile(
+                        value: _pricingModes.contains(ProviderPricingHelper.modeTravel),
+                        onChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _pricingModes.add(ProviderPricingHelper.modeTravel);
+                            } else {
+                              _pricingModes.remove(ProviderPricingHelper.modeTravel);
+                            }
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.pricingModeTravelPerKm,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                      ),
+                      if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
+                        const SizedBox(height: 4),
+                        TextFormField(
+                          controller: _perKmRateController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                          decoration: _inputDecoration(
+                            context,
+                            hint: context.l10n.perKmRateHint,
+                            icon: Icons.directions_car_outlined,
+                            prefixText: 'LKR ',
+                            labelText: context.l10n.perKmTravelRate,
+                            isDark: context.isDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ],
 
                     const SizedBox(height: 20),
@@ -1590,7 +1806,7 @@ class _DocUploadBox extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 110,
+        constraints: const BoxConstraints(minHeight: 110),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isDark ? context.themeSurfaceLow : Colors.white,
@@ -1640,6 +1856,8 @@ class _DocUploadBox extends StatelessWidget {
                       color: context.themeTextPrimary,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -1665,6 +1883,7 @@ class _SegmentedLanguageItem extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: selected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
@@ -1677,6 +1896,8 @@ class _SegmentedLanguageItem extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: selected ? Colors.white : context.themeTextSecondary,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),

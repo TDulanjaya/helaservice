@@ -10,6 +10,7 @@ class RouteInfo {
   final int durationMinutes;
   final String formattedDistance;
   final String formattedDuration;
+  final bool isEstimated;
 
   const RouteInfo({
     required this.points,
@@ -17,6 +18,7 @@ class RouteInfo {
     required this.durationMinutes,
     required this.formattedDistance,
     required this.formattedDuration,
+    this.isEstimated = false,
   });
 
   factory RouteInfo.empty() => const RouteInfo(
@@ -25,6 +27,7 @@ class RouteInfo {
         durationMinutes: 0,
         formattedDistance: '',
         formattedDuration: '',
+        isEstimated: false,
       );
 
   factory RouteInfo.fallback(LatLng start, LatLng end) {
@@ -34,10 +37,9 @@ class RouteInfo {
       end.latitude,
       end.longitude,
     );
-    // estimate road distance
-    final roadKm = straightKm * 1.35;
-    // estimate city driving speed
-    final durationMins = ((roadKm / 25.0) * 60).round().clamp(2, 180);
+    // rough road distance (~1.3x)
+    final roadKm = straightKm * 1.30;
+    final durationMins = ((roadKm / 25.0) * 60).round().clamp(1, 180);
 
     // curve line slightly
     final midLat = (start.latitude + end.latitude) / 2;
@@ -47,14 +49,17 @@ class RouteInfo {
       midLng - (end.latitude - start.latitude) * 0.15,
     );
 
+    final distStr = roadKm < 1.0
+        ? '${(roadKm * 1000).round()} m'
+        : '${roadKm.toStringAsFixed(1)} km';
+
     return RouteInfo(
       points: [start, curvePoint, end],
       distanceKm: roadKm,
       durationMinutes: durationMins,
-      formattedDistance: roadKm < 1.0
-          ? '${(roadKm * 1000).round()} m'
-          : '${roadKm.toStringAsFixed(1)} km',
-      formattedDuration: '$durationMins mins',
+      formattedDistance: '$distStr (Estimated)',
+      formattedDuration: '$durationMins mins (Estimated)',
+      isEstimated: true,
     );
   }
 }
@@ -66,16 +71,19 @@ class RoutingService {
 
   final Map<String, RouteInfo> _cache = {};
 
-  // get route and eta
   Future<RouteInfo> getDrivingRoute({
     required LatLng origin,
     required LatLng destination,
+    bool forceRefresh = false,
   }) async {
     final cacheKey =
         '${origin.latitude.toStringAsFixed(4)},${origin.longitude.toStringAsFixed(4)}_${destination.latitude.toStringAsFixed(4)},${destination.longitude.toStringAsFixed(4)}';
 
-    if (_cache.containsKey(cacheKey)) {
-      return _cache[cacheKey]!;
+    if (!forceRefresh && _cache.containsKey(cacheKey)) {
+      final cached = _cache[cacheKey]!;
+      if (!cached.isEstimated) {
+        return cached;
+      }
     }
 
     try {
@@ -136,7 +144,7 @@ class RoutingService {
       debugPrint('RoutingService road calculation notice (using fallback): $e');
     }
 
-    // offline route fallback
+    // fallback straight-line route if osrm is offline or rate-limited
     final fallback = RouteInfo.fallback(origin, destination);
     _cache[cacheKey] = fallback;
     return fallback;

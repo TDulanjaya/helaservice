@@ -23,6 +23,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import '../../../services/call_service.dart';
+import '../../../utils/provider_pricing_helper.dart';
 
 class ProviderDetailScreen extends StatelessWidget {
   final Technician technician;
@@ -532,26 +533,43 @@ class ProviderDetailScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _SectionCard(
             title: context.l10n.pricingStandardRates,
-            child: Column(
-              children: [
-                _buildRateRow(context.l10n.standardVisitFee, 'LKR ${technician.effectiveVisitFeeLkr}'),
-                if (technician.hourlyRateLkr > 0) ...[
-                  const Divider(height: 16),
-                  _buildRateRow(context.l10n.hourlyRate, 'LKR ${technician.hourlyRateLkr} / hr'),
-                ],
-                if (technician.dailyRateLkr != null && technician.dailyRateLkr! > 0) ...[
-                  const Divider(height: 16),
-                  _buildRateRow(context.l10n.dailyRate, 'LKR ${technician.dailyRateLkr} / day'),
-                ],
-                if (technician.perKmRateLkr != null && technician.perKmRateLkr! > 0) ...[
-                  const Divider(height: 16),
-                  _buildRateRow(context.l10n.travelRate, 'LKR ${technician.perKmRateLkr} / km'),
-                ],
-                if (technician.emergencyAvailable && technician.emergencyRateLkr > 0) ...[
-                  const Divider(height: 16),
-                  _buildRateRow(context.l10n.emergencyCalloutRate, 'LKR ${technician.emergencyRateLkr}'),
-                ],
-              ],
+            child: Builder(
+              builder: (context) {
+                final modes = technician.resolvedPricingModes;
+                final rows = <Widget>[];
+
+                if (modes.contains(ProviderPricingHelper.modeHour) && technician.hourlyRateLkr > 0) {
+                  rows.add(_buildRateRow(context.l10n.hourlyRate, 'LKR ${technician.hourlyRateLkr} / hr'));
+                }
+                if (modes.contains(ProviderPricingHelper.modeDay) &&
+                    technician.dailyRateLkr != null &&
+                    technician.dailyRateLkr! > 0) {
+                  rows.add(_buildRateRow(context.l10n.dailyRate, 'LKR ${technician.dailyRateLkr} / day'));
+                }
+                if (modes.contains(ProviderPricingHelper.modeJob)) {
+                  rows.add(_buildRateRow(context.l10n.pricingModePricePerJob, context.l10n.quoteEachJob));
+                }
+                if (modes.contains(ProviderPricingHelper.modeVisit)) {
+                  rows.add(_buildRateRow(context.l10n.standardVisitFee, 'LKR ${technician.effectiveVisitFeeLkr}'));
+                }
+                if (modes.contains(ProviderPricingHelper.modeTravel)) {
+                  if (technician.perKmRateLkr != null && technician.perKmRateLkr! > 0) {
+                    rows.add(_buildRateRow(context.l10n.travelRate, 'LKR ${technician.perKmRateLkr} / km'));
+                  }
+                } else {
+                  rows.add(_buildRateRow(context.l10n.travelTitle, context.l10n.travelIncluded));
+                }
+                if (technician.emergencyAvailable && technician.emergencyRateLkr > 0) {
+                  rows.add(_buildRateRow(context.l10n.emergencyCalloutRate, 'LKR ${technician.emergencyRateLkr}'));
+                }
+
+                final childrenWithDividers = <Widget>[];
+                for (var i = 0; i < rows.length; i++) {
+                  if (i > 0) childrenWithDividers.add(const Divider(height: 16));
+                  childrenWithDividers.add(rows[i]);
+                }
+                return Column(children: childrenWithDividers);
+              },
             ),
           ),
           StreamBuilder<List<PortfolioItem>>(

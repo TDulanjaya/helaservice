@@ -95,7 +95,24 @@ service cloud.firestore {
       return (!('dailyRateLkr' in data) || data.dailyRateLkr == null || (data.dailyRateLkr is int && data.dailyRateLkr >= 1 && data.dailyRateLkr <= 100000)) &&
         (!('hourlyRateLkr' in data) || data.hourlyRateLkr == null || (data.hourlyRateLkr is int && data.hourlyRateLkr >= 1 && data.hourlyRateLkr <= 20000)) &&
         (!('perKmRateLkr' in data) || data.perKmRateLkr == null || (data.perKmRateLkr is int && data.perKmRateLkr >= 1 && data.perKmRateLkr <= 1000)) &&
-        (!('visitFeeLkr' in data) || data.visitFeeLkr == null || (data.visitFeeLkr is int && data.visitFeeLkr >= 0 && data.visitFeeLkr <= 20000));
+        (!('visitFeeLkr' in data) || data.visitFeeLkr == null || (data.visitFeeLkr is int && data.visitFeeLkr >= 0 && data.visitFeeLkr <= 20000)) &&
+        (!('baseRateLkr' in data) || data.baseRateLkr == null || (data.baseRateLkr is int && data.baseRateLkr >= 0)) &&
+        (!('emergencyRateLkr' in data) || data.emergencyRateLkr == null || (data.emergencyRateLkr is int && data.emergencyRateLkr >= 0)) &&
+        (!('pricingModes' in data) || data.pricingModes == null || (
+          data.pricingModes is list &&
+          data.pricingModes.toSet().hasOnly(['hour', 'day', 'job', 'visit', 'travel']) &&
+          data.pricingModes.toSet().hasAny(['hour', 'day', 'job'])
+        ));
+    }
+
+    function validTechnicianLocation(data) {
+      return (!('baseLat' in data) || data.baseLat == null || (data.baseLat is number && data.baseLat >= 5 && data.baseLat <= 10)) &&
+        (!('baseLng' in data) || data.baseLng == null || (data.baseLng is number && data.baseLng >= 79 && data.baseLng <= 82)) &&
+        (!('currentLat' in data) || data.currentLat == null || (data.currentLat is number && data.currentLat >= 5 && data.currentLat <= 10)) &&
+        (!('currentLng' in data) || data.currentLng == null || (data.currentLng is number && data.currentLng >= 79 && data.currentLng <= 82)) &&
+        (!('latitude' in data) || data.latitude == null || (data.latitude is number && data.latitude >= 5 && data.latitude <= 10)) &&
+        (!('longitude' in data) || data.longitude == null || (data.longitude is number && data.longitude >= 79 && data.longitude <= 82)) &&
+        (!('currentLocationAt' in data) || data.currentLocationAt == null || data.currentLocationAt is timestamp);
     }
 
     function isValidNic(nic) {
@@ -298,42 +315,46 @@ service cloud.firestore {
     // user profiles
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin() || (
-        isOwner(userId) &&
-        request.resource.data.get('isVerified', false) == false &&
-        request.resource.data.get('nicVerified', false) == false &&
-        request.resource.data.get('phoneVerified', false) == false &&
-        request.resource.data.get('emailOtpVerified', false) == false &&
-        !('emailOtpVerifiedAt' in request.resource.data) &&
-        request.resource.data.get('isBanned', false) == false &&
-        !request.resource.data.keys().hasAny(['isSuperAdmin', 'isAdmin', 'adminRole']) &&
-        (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider']) &&
-        (!('initialRole' in request.resource.data) || request.resource.data.initialRole in ['customer', 'provider'])
+      allow create: if !request.resource.data.keys().hasAny(['latitude', 'longitude']) && (
+        isAdmin() || (
+          isOwner(userId) &&
+          request.resource.data.get('isVerified', false) == false &&
+          request.resource.data.get('nicVerified', false) == false &&
+          request.resource.data.get('phoneVerified', false) == false &&
+          request.resource.data.get('emailOtpVerified', false) == false &&
+          !('emailOtpVerifiedAt' in request.resource.data) &&
+          request.resource.data.get('isBanned', false) == false &&
+          !request.resource.data.keys().hasAny(['isSuperAdmin', 'isAdmin', 'adminRole']) &&
+          (!('role' in request.resource.data) || request.resource.data.role in ['customer', 'provider']) &&
+          (!('initialRole' in request.resource.data) || request.resource.data.initialRole in ['customer', 'provider'])
+        )
       );
-      allow update: if hasPerm('manage_users') || (
-        isOwner(userId) && (
-          !changed().hasAny([
-            'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil',
-            'nicVerified', 'isVerified', 'certificationsStatus',
-            'isSuperAdmin', 'isAdmin', 'adminRole',
-            'emailOtpVerified', 'emailOtpVerifiedAt'
-          ]) &&
-          (
-            // set initial role once, never change
-            !changed().hasAny(['initialRole']) ||
+      allow update: if !request.resource.data.keys().hasAny(['latitude', 'longitude']) && (
+        hasPerm('manage_users') || (
+          isOwner(userId) && (
+            !changed().hasAny([
+              'isBanned', 'banned', 'bannedAt', 'banReason', 'suspendedUntil',
+              'nicVerified', 'isVerified', 'certificationsStatus',
+              'isSuperAdmin', 'isAdmin', 'adminRole',
+              'emailOtpVerified', 'emailOtpVerifiedAt'
+            ]) &&
             (
-              (!('initialRole' in resource.data) || resource.data.initialRole == null) &&
-              request.resource.data.initialRole in ['customer', 'provider']
+              // set initial role once, never change
+              !changed().hasAny(['initialRole']) ||
+              (
+                (!('initialRole' in resource.data) || resource.data.initialRole == null) &&
+                request.resource.data.initialRole in ['customer', 'provider']
+              )
+            ) &&
+            (!changed().hasAny(['role']) || request.resource.data.role in ['customer', 'provider']) &&
+            (
+              !changed().hasAny(['phoneVerified']) ||
+              request.resource.data.phoneVerified == false
+            ) &&
+            (
+              !changed().hasAny(['phone']) ||
+              request.resource.data.get('phoneVerified', false) == false
             )
-          ) &&
-          (!changed().hasAny(['role']) || request.resource.data.role in ['customer', 'provider']) &&
-          (
-            !changed().hasAny(['phoneVerified']) ||
-            request.resource.data.phoneVerified == false
-          ) &&
-          (
-            !changed().hasAny(['phone']) ||
-            request.resource.data.get('phoneVerified', false) == false
           )
         )
       );
@@ -381,7 +402,8 @@ service cloud.firestore {
         request.resource.data.get('reviewCount', 0) == 0 &&
         request.resource.data.get('jobsCount', 0) == 0 &&
         (!('status' in request.resource.data) || request.resource.data.status == 'pending') &&
-        validTechnicianRates(request.resource.data)
+        validTechnicianRates(request.resource.data) &&
+        validTechnicianLocation(request.resource.data)
       );
       allow update: if (
         isAdmin() &&
@@ -398,7 +420,8 @@ service cloud.firestore {
             resource.data.category == '' ||
             request.resource.data.category == resource.data.category
           ) &&
-          validTechnicianRates(request.resource.data)
+          validTechnicianRates(request.resource.data) &&
+          validTechnicianLocation(request.resource.data)
         )
       );
       allow delete: if isSuperAdmin();

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 import '../models/technician.dart';
+import '../utils/provider_location_helper.dart';
+import '../utils/provider_pricing_helper.dart';
 
 class TechnicianRepository {
   final _col = FirebaseFirestore.instance.collection(FirestorePaths.technicians);
@@ -41,7 +43,47 @@ class TechnicianRepository {
 
   Future<void> updateOnlineStatus(String id, bool online) async {
     if (id.isEmpty) return;
-    await _col.doc(id).update({'online': online}).catchError((_) {});
+    final Map<String, dynamic> updates = {'online': online};
+    if (!online) {
+      // clear current coords when offline
+      updates['currentLat'] = FieldValue.delete();
+      updates['currentLng'] = FieldValue.delete();
+      updates['currentLocationAt'] = FieldValue.delete();
+    }
+    await _col.doc(id).update(updates).catchError((_) {});
+  }
+
+  Future<void> updateCurrentLocation(
+    String id, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    if (id.isEmpty) return;
+    await _col.doc(id).update({
+      'currentLat': roundToTwoDecimals(latitude),
+      'currentLng': roundToTwoDecimals(longitude),
+      'currentLocationAt': FieldValue.serverTimestamp(),
+    }).catchError((_) {});
+  }
+
+  Future<void> updateBaseLocation(
+    String id, {
+    required double latitude,
+    required double longitude,
+    String? address,
+    String? baseArea,
+  }) async {
+    if (id.isEmpty) return;
+    await _col.doc(id).update({
+      'baseLat': roundToTwoDecimals(latitude),
+      'baseLng': roundToTwoDecimals(longitude),
+      'latitude': roundToTwoDecimals(latitude),
+      'longitude': roundToTwoDecimals(longitude),
+      if (address != null && address.trim().isNotEmpty)
+        'baseAddress': address.trim(),
+      if (baseArea != null && baseArea.trim().isNotEmpty)
+        'baseArea': baseArea.trim(),
+    }).catchError((_) {});
   }
 
   Future<void> updateEmergencyStatus(String id, bool emergencyAvailable) async {
@@ -88,6 +130,7 @@ class TechnicianRepository {
   // update provider rate card
   Future<void> updateRates(
     String id, {
+    List<String>? pricingModes,
     int? dailyRateLkr,
     int? hourlyRateLkr,
     int? perKmRateLkr,
@@ -95,15 +138,97 @@ class TechnicianRepository {
     int? emergencyRateLkr,
   }) async {
     if (id.isEmpty) return;
-    final updates = <String, dynamic>{
-      if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
-      if (hourlyRateLkr != null) 'hourlyRateLkr': hourlyRateLkr,
-      if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
-      if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
-      if (emergencyRateLkr != null) 'emergencyRateLkr': emergencyRateLkr,
-    };
-    if (updates.isNotEmpty) {
-      await _col.doc(id).update(updates);
+    final techUpdates = <String, dynamic>{};
+    final userUpdates = <String, dynamic>{};
+
+    if (pricingModes != null) {
+      techUpdates['pricingModes'] = pricingModes;
+      userUpdates['pricingModes'] = pricingModes;
+
+      if (pricingModes.contains(ProviderPricingHelper.modeHour) && hourlyRateLkr != null && hourlyRateLkr > 0) {
+        techUpdates['hourlyRateLkr'] = hourlyRateLkr;
+        userUpdates['hourlyRateLkr'] = hourlyRateLkr;
+      } else {
+        techUpdates['hourlyRateLkr'] = FieldValue.delete();
+        userUpdates['hourlyRateLkr'] = FieldValue.delete();
+      }
+
+      if (pricingModes.contains(ProviderPricingHelper.modeDay) && dailyRateLkr != null && dailyRateLkr > 0) {
+        techUpdates['dailyRateLkr'] = dailyRateLkr;
+        userUpdates['dailyRateLkr'] = dailyRateLkr;
+      } else {
+        techUpdates['dailyRateLkr'] = FieldValue.delete();
+        userUpdates['dailyRateLkr'] = FieldValue.delete();
+      }
+
+      if (pricingModes.contains(ProviderPricingHelper.modeTravel) && perKmRateLkr != null && perKmRateLkr > 0) {
+        techUpdates['perKmRateLkr'] = perKmRateLkr;
+        userUpdates['perKmRateLkr'] = perKmRateLkr;
+      } else {
+        techUpdates['perKmRateLkr'] = FieldValue.delete();
+        userUpdates['perKmRateLkr'] = FieldValue.delete();
+      }
+
+      if (pricingModes.contains(ProviderPricingHelper.modeVisit) && visitFeeLkr != null && visitFeeLkr > 0) {
+        techUpdates['visitFeeLkr'] = visitFeeLkr;
+        userUpdates['visitFeeLkr'] = visitFeeLkr;
+      } else {
+        techUpdates['visitFeeLkr'] = FieldValue.delete();
+        userUpdates['visitFeeLkr'] = FieldValue.delete();
+      }
+    } else {
+      if (dailyRateLkr != null) {
+        if (dailyRateLkr > 0) {
+          techUpdates['dailyRateLkr'] = dailyRateLkr;
+          userUpdates['dailyRateLkr'] = dailyRateLkr;
+        } else {
+          techUpdates['dailyRateLkr'] = FieldValue.delete();
+          userUpdates['dailyRateLkr'] = FieldValue.delete();
+        }
+      }
+      if (hourlyRateLkr != null) {
+        if (hourlyRateLkr > 0) {
+          techUpdates['hourlyRateLkr'] = hourlyRateLkr;
+          userUpdates['hourlyRateLkr'] = hourlyRateLkr;
+        } else {
+          techUpdates['hourlyRateLkr'] = FieldValue.delete();
+          userUpdates['hourlyRateLkr'] = FieldValue.delete();
+        }
+      }
+      if (perKmRateLkr != null) {
+        if (perKmRateLkr > 0) {
+          techUpdates['perKmRateLkr'] = perKmRateLkr;
+          userUpdates['perKmRateLkr'] = perKmRateLkr;
+        } else {
+          techUpdates['perKmRateLkr'] = FieldValue.delete();
+          userUpdates['perKmRateLkr'] = FieldValue.delete();
+        }
+      }
+      if (visitFeeLkr != null) {
+        if (visitFeeLkr > 0) {
+          techUpdates['visitFeeLkr'] = visitFeeLkr;
+          userUpdates['visitFeeLkr'] = visitFeeLkr;
+        } else {
+          techUpdates['visitFeeLkr'] = FieldValue.delete();
+          userUpdates['visitFeeLkr'] = FieldValue.delete();
+        }
+      }
+    }
+
+    if (emergencyRateLkr != null) {
+      techUpdates['emergencyRateLkr'] = emergencyRateLkr;
+    }
+
+    if (techUpdates.isNotEmpty) {
+      final batch = FirebaseFirestore.instance.batch();
+      batch.update(_col.doc(id), techUpdates);
+      if (userUpdates.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance.collection(FirestorePaths.users).doc(id),
+          userUpdates,
+        );
+      }
+      await batch.commit();
     }
   }
 

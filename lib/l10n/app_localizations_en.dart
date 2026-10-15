@@ -6361,4 +6361,204 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useMyCurrentLocation => 'Use my current location';
+
+  @override
+  String get showingJobsNearYouNow => 'Showing jobs near you now';
+
+  @override
+  String showingJobsNearBase(String area) {
+    return 'Showing jobs near your base ($area)';
+  }
+
+  @override
+  String get showingJobsNearBaseNoArea => 'Showing jobs near your base';
+
+  @override
+  String get setBaseLocationPrompt =>
+      'Set your base location to see nearby jobs';
+
+  @override
+  String get setBaseLocationBtn => 'Set Base Location';
+
+  @override
+  String awayNow(String distance) {
+    return '$distance km away now';
+  }
+
+  @override
+  String basedAway(String distance) {
+    return 'Based $distance km away';
+  }
+
+  @override
+  String locationLastUpdatedMinsAgo(String minutes) {
+    return 'Location last updated $minutes min ago';
+  }
+
+  @override
+  String get estimatedLabel => 'Estimated';
+
+  @override
+  String get baseLocationTitle => 'Base Location';
+
+  @override
+  String get baseLocationDesc => 'Where you normally start your workday';
+
+  @override
+  String get howDoYouChargeTitle => 'How do you charge?';
+
+  @override
+  String get howDoYouChargeSubtitle =>
+      'Select at least one billing method (per hour, per day, or per job).';
+
+  @override
+  String get pricingModePerHour => 'Per hour';
+
+  @override
+  String get pricingModePerDay => 'Per day';
+
+  @override
+  String get pricingModePricePerJob => 'Price per job (quote each job)';
+
+  @override
+  String get pricingModeVisitFee => 'Visit / inspection fee';
+
+  @override
+  String get pricingModeTravelPerKm => 'Travel charge per km';
+
+  @override
+  String get atLeastOneBasePricingModeRequired =>
+      'Select at least one: Per hour, Per day, or Price per job.';
+
+  @override
+  String get travelIncluded => 'Travel included';
+
+  @override
+  String get quoteEachJob => 'Quoted per job';
+
+  @override
+  String get travelTitle => 'Travel';
+
+  @override
+  String get couldNotLoadExactLocationRetry =>
+      'Could not load exact job location. Please try again.';
+
+  @override
+  String get gettingYourLocation => 'Getting your location...';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get customerLocationMissingCallCustomer =>
+      'Customer location missing, call the customer';
+
+  @override
+  String get locationSharingNotificationTitle => 'HelaService';
+
+  @override
+  String get locationSharingNotificationText =>
+      'Sharing your location with the customer';
+
+  @override
+  String get preparingMedia => 'Preparing media...';
+
+  @override
+  String uploadingPhotoProgress(int current, int total) {
+    return 'Uploading photo $current of $total...';
+  }
+
+  @override
+  String uploadPhotoBytesProgress(
+      int current, int total, String sentMb, String totalMb) {
+    return 'Photo $current/$total: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get uploadingVideoThumbnail => 'Uploading video thumbnail...';
+
+  @override
+  String get uploadingVideoFile => 'Uploading video file...';
+
+  @override
+  String uploadVideoBytesProgress(String sentMb, String totalMb) {
+    return 'Video: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get ticketAssignedToYou => 'Ticket assigned to you';
+
+  @override
+  String openBookingTimeline(String id) {
+    return 'Open Booking Timeline ($id)';
+  }
+
+  @override
+  String get markInReviewAction => 'Mark In Review';
+
+  @override
+  String get resolveAction => 'Resolve';
+
+  @override
+  String get dismissAction => 'Dismiss';
+
+  @override
+  String get messageHistoryTitle => 'Message History';
+
+  @override
+  String get noRepliesYet => 'No replies in thread yet.';
+
+  @override
+  String get replyAsSupportAdminHint => 'Reply as Support Admin...';
+
+  @override
+  String nicWarningUnder18(int age) {
+    return 'Under 18 ($age yrs) — Cannot be approved';
+  }
+
+  @override
+  String get nicDuplicateCheckNotAvailable =>
+      'duplicate check not available yet';
+
+  @override
+  String nicDuplicateNicApproved(String name, String id) {
+    return 'Duplicate NIC: already approved for $name ($id)';
+  }
+
+  @override
+  String nicDuplicateNicPending(String name, String id) {
+    return 'Duplicate NIC: pending for $name ($id)';
+  }
+
+  @override
+  String nicDuplicatePhone(String name) {
+    return 'Duplicate Phone: already registered to approved provider $name';
+  }
+
+  @override
+  String get notificationIdentityApprovedTitle =>
+      'Identity Verification Approved';
+
+  @override
+  String get notificationIdentityApprovedBody =>
+      'Your identity verification was approved. Your profile is now active.';
+
+  @override
+  String get heroVerifiedArtisans => 'Verified Service Artisans';
+
+  @override
+  String get heroLiveTracking =>
+      'Live tracking when your provider is on the way';
+
+  @override
+  String get heroTransparentQuotes => 'Transparent Local Quotes';
+
+  @override
+  String get heroDirectQuoteRequests => 'Direct quote requests in minutes';
+
+  @override
+  String get heroPrivateSecureChat => 'Private, secure chat';
+
+  @override
+  String get heroCommunityRated => 'Community rated professionals';
 }

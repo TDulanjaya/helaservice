@@ -5,6 +5,7 @@ import '../../../state/role_provider.dart';
 import '../../../models/user_profile.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/responsive.dart';
 import 'complete_profile_screen.dart';
 
 class RoleChoiceScreen extends StatefulWidget {
@@ -96,20 +97,26 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPhoneLandscape = Responsive.isPhoneLandscape(context);
+
     return Scaffold(
       backgroundColor: context.themeBg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: ResponsiveCenter(
+          maxWidth: 560,
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLandscape ? 24 : 20,
+            vertical: isPhoneLandscape ? 12 : 24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 12),
+              SizedBox(height: isPhoneLandscape ? 4 : 12),
               // brand header
               Center(
                 child: Container(
-                  width: 56,
-                  height: 56,
+                  width: isPhoneLandscape ? 44 : 56,
+                  height: isPhoneLandscape ? 44 : 56,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
@@ -118,35 +125,35 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
                       width: 1.5,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.handyman_rounded,
                     color: AppColors.primary,
-                    size: 28,
+                    size: isPhoneLandscape ? 22 : 28,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: isPhoneLandscape ? 8 : 16),
               Text(
                 context.l10n.chooseRoleTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: isPhoneLandscape ? 20 : 24,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
                   color: context.themeInk,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 context.l10n.chooseRoleSubtitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: context.themeTextSecondary,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  color: AppColors.muted,
                   height: 1.35,
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: isPhoneLandscape ? 14 : 28),
 
               // role options
               Expanded(
@@ -260,16 +267,19 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: context.themeInk,
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: context.themeInk,
+                                ),
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,

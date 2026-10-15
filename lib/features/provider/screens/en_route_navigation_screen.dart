@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import 'package:latlong2/latlong.dart';
@@ -23,6 +24,7 @@ import '../../shared/widgets/job_media_gallery.dart';
 import '../../../models/job_request.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../utils/location_utils.dart';
+import '../../../utils/exact_location_helper.dart';
 
 class EnRouteNavigationScreen extends StatefulWidget {
   final Booking? booking;
@@ -38,6 +40,23 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   Position? _lastGpsPosition;
   DateTime? _lastGpsTimestamp;
   String _providerId = '';
+  StreamSubscription<Position>? _positionSub;
+  bool _gpsFailed = false;
+
+  RouteInfo? _currentRoute;
+  LatLng? _lastRouteOrigin;
+  DateTime? _lastRouteFetchedAt;
+  bool _isFetchingRoute = false;
+
+  Future<JobRequest?>? _jobRequestFuture;
+  String? _loadedJobRequestId;
+
+  void _ensureJobRequestLoaded(String? jobRequestId) {
+    if (jobRequestId == null || jobRequestId.isEmpty) return;
+    if (_jobRequestFuture != null && _loadedJobRequestId == jobRequestId) return;
+    _loadedJobRequestId = jobRequestId;
+    _jobRequestFuture = JobRequestRepository().getById(jobRequestId);
+  }
 
   @override
   void initState() {
@@ -47,46 +66,154 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         widget.booking!.status == JobStatus.confirmed) {
       BookingRepository().startNavigation(widget.booking!.id);
     }
+    _ensureJobRequestLoaded(widget.booking?.jobRequestId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLiveTracking();
     });
   }
 
+  // start live location tracking and listen to position updates
   Future<void> _initLiveTracking() async {
+    if (!mounted) return;
+    setState(() {
+      _gpsFailed = false;
+    });
+
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     _providerId =
         roleProvider.currentUser?.id ?? widget.booking?.providerId ?? '';
 
+    // update marker and route on each gps fix
+    _positionSub ??= LiveLocationService.instance.positionStream.listen((pos) {
+      if (!mounted) return;
+      final newPos = LatLng(pos.latitude, pos.longitude);
+      setState(() {
+        _currentGpsPosition = newPos;
+        _lastGpsPosition = pos;
+        _lastGpsTimestamp = DateTime.now();
+        _gpsFailed = false;
+      });
+      _refreshRouteIfNeeded();
+    });
+
+    // apply last known position immediately
+    final existingPos = LiveLocationService.instance.lastKnownPosition;
+    if (existingPos != null) {
+      _currentGpsPosition = LatLng(existingPos.latitude, existingPos.longitude);
+      _lastGpsPosition = existingPos;
+      _lastGpsTimestamp = DateTime.now();
+      _refreshRouteIfNeeded();
+    }
+
+    bool trackingStarted = false;
     if (_providerId.isNotEmpty) {
       final customerId = widget.booking?.customerId;
-      await LiveLocationService.instance.startTracking(
+      final notifTitle = mounted ? context.l10n.locationSharingNotificationTitle : null;
+      final notifText = mounted ? context.l10n.locationSharingNotificationText : null;
+      trackingStarted = await LiveLocationService.instance.startTracking(
         _providerId,
         allowedViewers:
             customerId != null && customerId.isNotEmpty ? [customerId] : null,
+        notificationTitle: notifTitle,
+        notificationText: notifText,
       );
     }
 
-    try {
-      final perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.whileInUse ||
-          perm == LocationPermission.always) {
+    // fallback to single position if tracking failed
+    if (!trackingStarted && _currentGpsPosition == null) {
+      try {
         final pos = await Geolocator.getCurrentPosition(
           locationSettings:
               const LocationSettings(accuracy: LocationAccuracy.high),
-        );
+        ).timeout(const Duration(seconds: 15));
         if (mounted) {
           setState(() {
             _currentGpsPosition = LatLng(pos.latitude, pos.longitude);
             _lastGpsPosition = pos;
             _lastGpsTimestamp = DateTime.now();
+            _gpsFailed = false;
+          });
+          _refreshRouteIfNeeded();
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _gpsFailed = true;
           });
         }
       }
-    } catch (_) {}
+    } else if (trackingStarted && _currentGpsPosition == null) {
+      // one-shot fix while waiting for stream
+      try {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high),
+        ).timeout(const Duration(seconds: 15));
+        if (mounted && _currentGpsPosition == null) {
+          setState(() {
+            _currentGpsPosition = LatLng(pos.latitude, pos.longitude);
+            _lastGpsPosition = pos;
+            _lastGpsTimestamp = DateTime.now();
+            _gpsFailed = false;
+          });
+          _refreshRouteIfNeeded();
+        }
+      } catch (_) {
+        if (mounted && _currentGpsPosition == null) {
+          setState(() {
+            _gpsFailed = true;
+          });
+        }
+      }
+    }
+  }
+
+  LatLng? _getCustomerPoint([Booking? booking]) {
+    final b = booking ?? widget.booking;
+    return ExactLocationHelper.resolveCustomerPoint(
+      latitude: b?.customerLatitude,
+      longitude: b?.customerLongitude,
+    );
+  }
+
+  // fetch or refresh driving route
+  Future<void> _refreshRouteIfNeeded([Booking? booking]) async {
+    final customerPoint = _getCustomerPoint(booking);
+    if (customerPoint == null || _currentGpsPosition == null || _isFetchingRoute) {
+      return;
+    }
+
+    final shouldRefresh = ExactLocationHelper.shouldRefreshRoute(
+      currentPos: _currentGpsPosition,
+      lastRoutePos: _lastRouteOrigin,
+      lastFetchedAt: _lastRouteFetchedAt,
+      now: DateTime.now(),
+      isEstimated: _currentRoute?.isEstimated ?? false,
+    );
+
+    if (!shouldRefresh) return;
+
+    _isFetchingRoute = true;
+    final origin = _currentGpsPosition!;
+    final route = await RoutingService().getDrivingRoute(
+      origin: origin,
+      destination: customerPoint,
+      forceRefresh: _currentRoute?.isEstimated ?? false,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _currentRoute = route;
+      _lastRouteOrigin = origin;
+      _lastRouteFetchedAt = DateTime.now();
+      _isFetchingRoute = false;
+    });
   }
 
   @override
   void dispose() {
+    _positionSub?.cancel();
+    _positionSub = null;
     if (_providerId.isNotEmpty) {
       LiveLocationService.instance.stopTracking();
     }
@@ -959,25 +1086,30 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   }
 
   Widget _buildContent(BuildContext context, Booking? booking) {
-    final hasCustomerLocation = booking?.customerLatitude != null &&
-        booking?.customerLongitude != null;
+    final customerPoint = _getCustomerPoint(booking);
+    final hasCustomerLocation = customerPoint != null;
 
-    final LatLng customerPoint = hasCustomerLocation
-        ? LatLng(booking!.customerLatitude!, booking.customerLongitude!)
-        : (_currentGpsPosition ?? const LatLng(6.9271, 79.8612));
+    final techPoint = ExactLocationHelper.resolveTechPoint(_currentGpsPosition);
 
-    final techPoint = _currentGpsPosition ??
-        (hasCustomerLocation
-            ? LatLng(customerPoint.latitude - 0.009,
-                customerPoint.longitude - 0.013)
-            : const LatLng(6.9271, 79.8612));
-
-    final midPoint = hasCustomerLocation
+    final LatLng midPoint = (customerPoint != null && techPoint != null)
         ? LatLng(
             (customerPoint.latitude + techPoint.latitude) / 2,
             (customerPoint.longitude + techPoint.longitude) / 2,
           )
-        : techPoint;
+        : (customerPoint ?? techPoint ?? const LatLng(6.9271, 79.8612));
+
+    if (_currentRoute == null &&
+        _currentGpsPosition != null &&
+        customerPoint != null &&
+        !_isFetchingRoute) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshRouteIfNeeded(booking);
+      });
+    }
+
+    if (booking?.jobRequestId != null && booking!.jobRequestId!.isNotEmpty) {
+      _ensureJobRequestLoaded(booking.jobRequestId);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -1055,7 +1187,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            context.l10n.customerLocationNotAvailableTitle,
+                            context.l10n.customerLocationMissingCallCustomer,
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 14.5,
@@ -1130,30 +1262,60 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   ],
                 ),
               ),
-            FutureBuilder<RouteInfo>(
-              future: hasCustomerLocation
-                  ? RoutingService().getDrivingRoute(
-                      origin: techPoint,
-                      destination: customerPoint,
-                    )
-                  : Future.value(RouteInfo.empty()),
-              builder: (context, snapshot) {
-                final route = snapshot.data ??
-                    RouteInfo.fallback(techPoint, customerPoint);
-
-                return _ProviderEnRouteMapCard(
-                  techPoint: techPoint,
-                  customerPoint: customerPoint,
-                  midPoint: midPoint,
-                  customerLabel:
-                      booking != null && booking.customerName.isNotEmpty
-                          ? booking.customerName
-                          : context.l10n.roleCustomer,
-                  route: route,
-                  booking: booking,
-                  hasCustomerLocation: hasCustomerLocation,
-                );
-              },
+            if (techPoint == null)
+              Container(
+                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: context.themeSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: Row(
+                  children: [
+                    if (_gpsFailed)
+                      const Icon(Icons.location_off_rounded,
+                          color: AppColors.warning, size: 22)
+                    else
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        context.l10n.gettingYourLocation,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                    ),
+                    if (_gpsFailed)
+                      TextButton.icon(
+                        onPressed: _initLiveTracking,
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: Text(context.l10n.tryAgain),
+                      ),
+                  ],
+                ),
+              ),
+            _ProviderEnRouteMapCard(
+              techPoint: techPoint,
+              customerPoint: customerPoint,
+              midPoint: midPoint,
+              customerLabel:
+                  booking != null && booking.customerName.isNotEmpty
+                      ? booking.customerName
+                      : context.l10n.roleCustomer,
+              route: _currentRoute ??
+                  (techPoint != null && customerPoint != null
+                      ? RouteInfo.fallback(techPoint, customerPoint)
+                      : RouteInfo.empty()),
+              booking: booking,
+              hasCustomerLocation: hasCustomerLocation,
             ),
             const SizedBox(height: 14),
             Container(
@@ -1395,8 +1557,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       ),
                     ),
                     FutureBuilder<JobRequest?>(
-                      future: JobRequestRepository()
-                          .getById(booking.jobRequestId!),
+                      future: _jobRequestFuture,
                       builder: (ctx, snap) {
                         final jr = snap.data;
                         if (jr == null ||
@@ -1557,8 +1718,8 @@ class _DelayChip extends StatelessWidget {
 }
 
 class _ProviderEnRouteMapCard extends StatefulWidget {
-  final LatLng techPoint;
-  final LatLng customerPoint;
+  final LatLng? techPoint;
+  final LatLng? customerPoint;
   final LatLng midPoint;
   final String customerLabel;
   final RouteInfo route;
@@ -1590,7 +1751,9 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
     super.initState();
     _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
     _routePointsNotifier = ValueNotifier<List<LatLng>?>(
-        widget.hasCustomerLocation ? widget.route.points : null);
+        widget.hasCustomerLocation && widget.techPoint != null
+            ? widget.route.points
+            : null);
   }
 
   @override
@@ -1603,33 +1766,38 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
       _markersNotifier.value = _buildMarkers();
     }
     if (oldWidget.route.points != widget.route.points ||
+        oldWidget.techPoint != widget.techPoint ||
         oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _routePointsNotifier.value =
-          widget.hasCustomerLocation ? widget.route.points : null;
+          widget.hasCustomerLocation && widget.techPoint != null
+              ? widget.route.points
+              : null;
     }
   }
 
   List<AppMapMarker> _buildMarkers() {
     return [
-      AppMapMarker.provider(
-        point: widget.techPoint,
-        label: mounted ? context.l10n.youEnRoute : '',
-        enRoute: true,
-      ),
-      if (widget.hasCustomerLocation)
+      if (widget.techPoint != null)
+        AppMapMarker.provider(
+          point: widget.techPoint!,
+          label: mounted ? context.l10n.youEnRoute : '',
+          enRoute: true,
+        ),
+      if (widget.hasCustomerLocation && widget.customerPoint != null)
         AppMapMarker.customer(
-          point: widget.customerPoint,
+          point: widget.customerPoint!,
           label: widget.customerLabel,
         ),
     ];
   }
 
   void _openFullScreen() {
+    final center = widget.hasCustomerLocation && widget.customerPoint != null
+        ? (widget.techPoint != null ? widget.midPoint : widget.customerPoint!)
+        : (widget.techPoint ?? const LatLng(6.9271, 79.8612));
     final route = MaterialPageRoute<void>(
       builder: (ctx) => FullScreenMapPage(
-        initialCenter: widget.hasCustomerLocation
-            ? widget.midPoint
-            : widget.techPoint,
+        initialCenter: center,
         initialZoom: 14.0,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
@@ -1656,7 +1824,12 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
   Widget build(BuildContext context) {
     final booking = widget.booking;
     final customerPoint = widget.customerPoint;
+    final techPoint = widget.techPoint;
     final route = widget.route;
+
+    final initialCenter = (widget.hasCustomerLocation && customerPoint != null)
+        ? (techPoint != null ? widget.midPoint : customerPoint)
+        : (techPoint ?? const LatLng(6.9271, 79.8612));
 
     return SizedBox(
       height: 280,
@@ -1668,13 +1841,13 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
               valueListenable: _markersNotifier,
               builder: (context, markers, _) {
                 return AppMapView(
-                  initialCenter: widget.hasCustomerLocation
-                      ? widget.midPoint
-                      : widget.techPoint,
+                  initialCenter: initialCenter,
                   initialZoom: 14.0,
                   interactive: true,
                   routePoints:
-                      widget.hasCustomerLocation ? route.points : null,
+                      (widget.hasCustomerLocation && techPoint != null)
+                          ? route.points
+                          : null,
                   markers: markers,
                   onExpand: _openFullScreen,
                 );
@@ -1721,7 +1894,9 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.l10n.inDistance(route.formattedDistance),
+                          techPoint == null
+                              ? context.l10n.gettingYourLocation
+                              : context.l10n.inDistance(route.formattedDistance),
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -1739,68 +1914,70 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        route.formattedDuration,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
+                  if (techPoint != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          route.formattedDuration,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        route.formattedDistance,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: context.themeTextSecondary,
+                        Text(
+                          route.formattedDistance,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: context.themeTextSecondary,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
             ),
           ),
-          Positioned(
-            bottom: 12,
-            left: 12,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                MapLauncher.openDirections(
-                  latitude: customerPoint.latitude,
-                  longitude: customerPoint.longitude,
-                  destinationTitle:
-                      booking != null && booking.customerName.isNotEmpty
-                          ? context.l10n.customerLocationNamed(booking.customerName)
-                          : context.l10n.customerLocation,
-                );
-              },
-              icon: const Icon(
-                Icons.navigation_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              label: Text(
-                context.l10n.googleMapsOrWaze,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: context.themeTextPrimary,
+          if (customerPoint != null)
+            Positioned(
+              bottom: 12,
+              left: 12,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  MapLauncher.openDirections(
+                    latitude: customerPoint.latitude,
+                    longitude: customerPoint.longitude,
+                    destinationTitle:
+                        booking != null && booking.customerName.isNotEmpty
+                            ? context.l10n.customerLocationNamed(booking.customerName)
+                            : context.l10n.customerLocation,
+                  );
+                },
+                icon: const Icon(
+                  Icons.navigation_rounded,
+                  size: 14,
+                  color: AppColors.primary,
                 ),
-              ),
-              style: OutlinedButton.styleFrom(
-                backgroundColor: context.themeSurface.withValues(alpha: 0.94),
-                side: BorderSide(color: context.themeBorder),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                label: Text(
+                  context.l10n.googleMapsOrWaze,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: context.themeTextPrimary,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: context.themeSurface.withValues(alpha: 0.94),
+                  side: BorderSide(color: context.themeBorder),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -17,6 +17,7 @@ import 'email_otp_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
+import '../../../utils/responsive.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -538,8 +539,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               : () => _handleGoogleSignIn(),
         ),
         const SizedBox(height: 28),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          runSpacing: 4,
           children: [
             Text(
               context.l10n.alreadyHaveAccount,
@@ -549,7 +553,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(width: 4),
             GestureDetector(
               onTap: () => Navigator.of(context).pop(),
               child: Text(
@@ -571,10 +574,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
+    final isTabletOrDesktop = Responsive.isTablet(context);
 
-    // wide desktop dual pane
-    if (width >= 960) {
+    // wide desktop dual pane (requires shortestSide >= 600)
+    if (width >= 960 && isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
         body: Center(
@@ -639,11 +643,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                             const SizedBox(height: 36),
-                            _buildFeaturePill(context, Icons.speed_rounded, 'Direct quote requests in minutes'),
+                            _buildFeaturePill(context, Icons.speed_rounded, context.l10n.heroDirectQuoteRequests),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.security_rounded, 'Bank-grade encrypted communications'),
+                            _buildFeaturePill(context, Icons.security_rounded, context.l10n.heroPrivateSecureChat),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.stars_rounded, 'Community rated professionals'),
+                            _buildFeaturePill(context, Icons.stars_rounded, context.l10n.heroCommunityRated),
                           ],
                         ),
                       ),
@@ -665,8 +669,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // tablet or desktop centered card
-    if (width >= 600) {
+    // tablet centered card (requires shortestSide >= 600)
+    if (isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
         body: Center(
@@ -696,13 +700,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // mobile layout
+    // mobile phone layout (portrait or compact phone landscape that scrolls)
+    final isPhoneLandscape = Responsive.isPhoneLandscape(context);
     return Scaffold(
       backgroundColor: context.themeBg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-          child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: false),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isPhoneLandscape ? 32 : 24,
+                vertical: isPhoneLandscape ? 16 : 20,
+              ),
+              child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: false),
+            ),
+          ),
         ),
       ),
     );

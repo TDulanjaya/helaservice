@@ -6375,12 +6375,213 @@ class AppLocalizationsSi extends AppLocalizations {
   String get noSearchResults => 'ප්‍රතිඵල කිසිවක් හමු නොවීය';
 
   @override
-  String get searchUnavailableFallback =>
-      'සෙවීම ලබාගත නොහැක, සිතියම ගෙන යන්න';
+  String get searchUnavailableFallback => 'සෙවීම ලබාගත නොහැක, සිතියම ගෙන යන්න';
 
   @override
   String get recentPlaces => 'මෑත ස්ථාන';
 
   @override
   String get useMyCurrentLocation => 'මගේ වත්මන් ස්ථානය භාවිත කරන්න';
+
+  @override
+  String get showingJobsNearYouNow => 'දැන් ඔබ අසල ඇති රැකියා පෙන්වයි';
+
+  @override
+  String showingJobsNearBase(String area) {
+    return 'ඔබගේ මූලික ස්ථානය අසල රැකියා පෙන්වයි ($area)';
+  }
+
+  @override
+  String get showingJobsNearBaseNoArea =>
+      'ඔබගේ මූලික ස්ථානය අසල රැකියා පෙන්වයි';
+
+  @override
+  String get setBaseLocationPrompt =>
+      'ආසන්න රැකියා බැලීමට ඔබගේ මූලික ස්ථානය සකසන්න';
+
+  @override
+  String get setBaseLocationBtn => 'මූලික ස්ථානය සකසන්න';
+
+  @override
+  String awayNow(String distance) {
+    return 'දැන් කි.මී. $distanceක් දුරින්';
+  }
+
+  @override
+  String basedAway(String distance) {
+    return 'මූලස්ථානය කි.මී. $distanceක් දුරින්';
+  }
+
+  @override
+  String locationLastUpdatedMinsAgo(String minutes) {
+    return 'ස්ථානය අවසන් වරට යාවත්කාලීන කළේ මිනිත්තු $minutesකට පෙර';
+  }
+
+  @override
+  String get estimatedLabel => 'ඇස්තමේන්තුගත';
+
+  @override
+  String get baseLocationTitle => 'මූලික ස්ථානය';
+
+  @override
+  String get baseLocationDesc => 'ඔබ සාමාන්‍යයෙන් වැඩ ආරම්භ කරන ස්ථානය';
+
+  @override
+  String get howDoYouChargeTitle => 'ඔබ අය කරන්නේ කෙසේද?';
+
+  @override
+  String get howDoYouChargeSubtitle =>
+      'අවම වශයෙන් එක් අය කිරීමේ ක්‍රමයක් තෝරන්න (පැයකට, දිනකට හෝ කාර්යයකට).';
+
+  @override
+  String get pricingModePerHour => 'පැයකට';
+
+  @override
+  String get pricingModePerDay => 'දිනකට';
+
+  @override
+  String get pricingModePricePerJob =>
+      'කාර්යයකට මිල (සෑම කාර්යයකටම මිලක් නියම කරන්න)';
+
+  @override
+  String get pricingModeVisitFee => 'පැමිණීමේ / පරීක්ෂණ ගාස්තුව';
+
+  @override
+  String get pricingModeTravelPerKm => 'කි.මී. එකකට ගමන් ගාස්තුව';
+
+  @override
+  String get atLeastOneBasePricingModeRequired =>
+      'පැයකට, දිනකට, හෝ කාර්යයකට මිල යන ක්‍රම වලින් අවම වශයෙන් එකක් තෝරන්න.';
+
+  @override
+  String get travelIncluded => 'ගමන් ගාස්තු ඇතුළත් කර ඇත';
+
+  @override
+  String get quoteEachJob => 'කාර්යය අනුව මිල නියම කෙරේ';
+
+  @override
+  String get travelTitle => 'ගමන්';
+
+  @override
+  String get couldNotLoadExactLocationRetry =>
+      'නියමිත රැකියා ස්ථානය ලබා ගැනීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get gettingYourLocation => 'ඔබගේ ස්ථානය ලබා ගනිමින්...';
+
+  @override
+  String get tryAgain => 'නැවත උත්සාහ කරන්න';
+
+  @override
+  String get customerLocationMissingCallCustomer =>
+      'පාරිභෝගිකයාගේ ස්ථානය සොයාගත නොහැක, පාරිභෝගිකයා අමතන්න';
+
+  @override
+  String get locationSharingNotificationTitle => 'HelaService';
+
+  @override
+  String get locationSharingNotificationText =>
+      'පාරිභෝගිකයා සමඟ ඔබේ ස්ථානය බෙදා ගනිමින්';
+
+  @override
+  String get preparingMedia => 'මාධ්‍ය සූදානම් කරමින්...';
+
+  @override
+  String uploadingPhotoProgress(int current, int total) {
+    return 'ඡායාරූපය උඩුගත කරමින් $current / $total...';
+  }
+
+  @override
+  String uploadPhotoBytesProgress(
+      int current, int total, String sentMb, String totalMb) {
+    return 'ඡායාරූපය $current/$total: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get uploadingVideoThumbnail => 'වීඩියෝ පෙරදසුන උඩුගත කරමින්...';
+
+  @override
+  String get uploadingVideoFile => 'වීඩියෝව උඩුගත කරමින්...';
+
+  @override
+  String uploadVideoBytesProgress(String sentMb, String totalMb) {
+    return 'වීඩියෝව: $sentMb MB / $totalMb MB';
+  }
+
+  @override
+  String get ticketAssignedToYou => 'පැමිණිල්ල ඔබට පවරන ලදී';
+
+  @override
+  String openBookingTimeline(String id) {
+    return 'වෙන්කිරීමේ කාලරාමුව විවෘත කරන්න ($id)';
+  }
+
+  @override
+  String get markInReviewAction => 'සමාලෝචනය වෙමින් ලෙස සලකුණු කරන්න';
+
+  @override
+  String get resolveAction => 'විසඳන්න';
+
+  @override
+  String get dismissAction => 'ඉවත් කරන්න';
+
+  @override
+  String get messageHistoryTitle => 'පණිවිඩ ඉතිහාසය';
+
+  @override
+  String get noRepliesYet => 'තවමත් පිළිතුරු නොමැත.';
+
+  @override
+  String get replyAsSupportAdminHint => 'සහාය පරිපාලක ලෙස පිළිතුරු දෙන්න...';
+
+  @override
+  String nicWarningUnder18(int age) {
+    return 'වයස අවුරුදු 18ට අඩුය ($age වසර) — අනුමත කළ නොහැක';
+  }
+
+  @override
+  String get nicDuplicateCheckNotAvailable => 'ද්විත්ව පරීක්ෂාව තවම නොමැත';
+
+  @override
+  String nicDuplicateNicApproved(String name, String id) {
+    return 'ද්විත්ව හැඳුනුම්පත: $name ($id) සඳහා දැනටමත් අනුමත කර ඇත';
+  }
+
+  @override
+  String nicDuplicateNicPending(String name, String id) {
+    return 'ද්විත්ව හැඳුනුම්පත: $name ($id) සඳහා පොරොත්තු ලේඛනයේ ඇත';
+  }
+
+  @override
+  String nicDuplicatePhone(String name) {
+    return 'ද්විත්ව දුරකථන අංකය: අනුමත සේවා සපයන්නා $name සඳහා දැනටමත් ලියාපදිංචි කර ඇත';
+  }
+
+  @override
+  String get notificationIdentityApprovedTitle =>
+      'හැඳුනුම්පත් සත්‍යාපනය අනුමතයි';
+
+  @override
+  String get notificationIdentityApprovedBody =>
+      'ඔබගේ අනන්‍යතා සත්‍යාපනය අනුමත කරන ලදී. ඔබගේ පැතිකඩ දැන් සක්‍රීයයි.';
+
+  @override
+  String get heroVerifiedArtisans => 'සත්‍යාපිත සේවා ශිල්පීන්';
+
+  @override
+  String get heroLiveTracking =>
+      'ඔබගේ සේවාදායකයා එන විට සජීවීව නිරීක්ෂණය කරන්න';
+
+  @override
+  String get heroTransparentQuotes => 'විනිවිදභාවයෙන් යුත් දේශීය මිල ගණන්';
+
+  @override
+  String get heroDirectQuoteRequests =>
+      'මිනිත්තු කිහිපයකින් සෘජු මිල ගණන් ඉල්ලීම්';
+
+  @override
+  String get heroPrivateSecureChat => 'පුද්ගලික, සුරක්ෂිත කතාබස්';
+
+  @override
+  String get heroCommunityRated => 'ප්‍රජාව විසින් ශ්‍රේණිගත කළ වෘත්තිකයන්';
 }

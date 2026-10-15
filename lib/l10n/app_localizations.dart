@@ -11554,6 +11554,337 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use my current location'**
   String get useMyCurrentLocation;
+
+  /// No description provided for @showingJobsNearYouNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing jobs near you now'**
+  String get showingJobsNearYouNow;
+
+  /// No description provided for @showingJobsNearBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing jobs near your base ({area})'**
+  String showingJobsNearBase(String area);
+
+  /// Notice showing jobs near provider base when area name is not known
+  ///
+  /// In en, this message translates to:
+  /// **'Showing jobs near your base'**
+  String get showingJobsNearBaseNoArea;
+
+  /// No description provided for @setBaseLocationPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your base location to see nearby jobs'**
+  String get setBaseLocationPrompt;
+
+  /// No description provided for @setBaseLocationBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Base Location'**
+  String get setBaseLocationBtn;
+
+  /// No description provided for @awayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km away now'**
+  String awayNow(String distance);
+
+  /// No description provided for @basedAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Based {distance} km away'**
+  String basedAway(String distance);
+
+  /// No description provided for @locationLastUpdatedMinsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Location last updated {minutes} min ago'**
+  String locationLastUpdatedMinsAgo(String minutes);
+
+  /// No description provided for @estimatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated'**
+  String get estimatedLabel;
+
+  /// No description provided for @baseLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Base Location'**
+  String get baseLocationTitle;
+
+  /// No description provided for @baseLocationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Where you normally start your workday'**
+  String get baseLocationDesc;
+
+  /// No description provided for @howDoYouChargeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you charge?'**
+  String get howDoYouChargeTitle;
+
+  /// No description provided for @howDoYouChargeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one billing method (per hour, per day, or per job).'**
+  String get howDoYouChargeSubtitle;
+
+  /// No description provided for @pricingModePerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Per hour'**
+  String get pricingModePerHour;
+
+  /// No description provided for @pricingModePerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Per day'**
+  String get pricingModePerDay;
+
+  /// No description provided for @pricingModePricePerJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per job (quote each job)'**
+  String get pricingModePricePerJob;
+
+  /// No description provided for @pricingModeVisitFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit / inspection fee'**
+  String get pricingModeVisitFee;
+
+  /// No description provided for @pricingModeTravelPerKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel charge per km'**
+  String get pricingModeTravelPerKm;
+
+  /// No description provided for @atLeastOneBasePricingModeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one: Per hour, Per day, or Price per job.'**
+  String get atLeastOneBasePricingModeRequired;
+
+  /// No description provided for @travelIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel included'**
+  String get travelIncluded;
+
+  /// No description provided for @quoteEachJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted per job'**
+  String get quoteEachJob;
+
+  /// No description provided for @travelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel'**
+  String get travelTitle;
+
+  /// No description provided for @couldNotLoadExactLocationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load exact job location. Please try again.'**
+  String get couldNotLoadExactLocationRetry;
+
+  /// No description provided for @gettingYourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your location...'**
+  String get gettingYourLocation;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @customerLocationMissingCallCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer location missing, call the customer'**
+  String get customerLocationMissingCallCustomer;
+
+  /// No description provided for @locationSharingNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HelaService'**
+  String get locationSharingNotificationTitle;
+
+  /// No description provided for @locationSharingNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing your location with the customer'**
+  String get locationSharingNotificationText;
+
+  /// No description provided for @preparingMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing media...'**
+  String get preparingMedia;
+
+  /// No description provided for @uploadingPhotoProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo {current} of {total}...'**
+  String uploadingPhotoProgress(int current, int total);
+
+  /// No description provided for @uploadPhotoBytesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {current}/{total}: {sentMb} MB / {totalMb} MB'**
+  String uploadPhotoBytesProgress(
+      int current, int total, String sentMb, String totalMb);
+
+  /// No description provided for @uploadingVideoThumbnail.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading video thumbnail...'**
+  String get uploadingVideoThumbnail;
+
+  /// No description provided for @uploadingVideoFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading video file...'**
+  String get uploadingVideoFile;
+
+  /// No description provided for @uploadVideoBytesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Video: {sentMb} MB / {totalMb} MB'**
+  String uploadVideoBytesProgress(String sentMb, String totalMb);
+
+  /// No description provided for @ticketAssignedToYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket assigned to you'**
+  String get ticketAssignedToYou;
+
+  /// No description provided for @openBookingTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Booking Timeline ({id})'**
+  String openBookingTimeline(String id);
+
+  /// No description provided for @markInReviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark In Review'**
+  String get markInReviewAction;
+
+  /// No description provided for @resolveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve'**
+  String get resolveAction;
+
+  /// No description provided for @dismissAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismissAction;
+
+  /// No description provided for @messageHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Message History'**
+  String get messageHistoryTitle;
+
+  /// No description provided for @noRepliesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No replies in thread yet.'**
+  String get noRepliesYet;
+
+  /// No description provided for @replyAsSupportAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply as Support Admin...'**
+  String get replyAsSupportAdminHint;
+
+  /// No description provided for @nicWarningUnder18.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 18 ({age} yrs) — Cannot be approved'**
+  String nicWarningUnder18(int age);
+
+  /// No description provided for @nicDuplicateCheckNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'duplicate check not available yet'**
+  String get nicDuplicateCheckNotAvailable;
+
+  /// No description provided for @nicDuplicateNicApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate NIC: already approved for {name} ({id})'**
+  String nicDuplicateNicApproved(String name, String id);
+
+  /// No description provided for @nicDuplicateNicPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate NIC: pending for {name} ({id})'**
+  String nicDuplicateNicPending(String name, String id);
+
+  /// No description provided for @nicDuplicatePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Phone: already registered to approved provider {name}'**
+  String nicDuplicatePhone(String name);
+
+  /// No description provided for @notificationIdentityApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity Verification Approved'**
+  String get notificationIdentityApprovedTitle;
+
+  /// No description provided for @notificationIdentityApprovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity verification was approved. Your profile is now active.'**
+  String get notificationIdentityApprovedBody;
+
+  /// No description provided for @heroVerifiedArtisans.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified Service Artisans'**
+  String get heroVerifiedArtisans;
+
+  /// No description provided for @heroLiveTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Live tracking when your provider is on the way'**
+  String get heroLiveTracking;
+
+  /// No description provided for @heroTransparentQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparent Local Quotes'**
+  String get heroTransparentQuotes;
+
+  /// No description provided for @heroDirectQuoteRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct quote requests in minutes'**
+  String get heroDirectQuoteRequests;
+
+  /// No description provided for @heroPrivateSecureChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Private, secure chat'**
+  String get heroPrivateSecureChat;
+
+  /// No description provided for @heroCommunityRated.
+  ///
+  /// In en, this message translates to:
+  /// **'Community rated professionals'**
+  String get heroCommunityRated;
 }
 
 class _AppLocalizationsDelegate

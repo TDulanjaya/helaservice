@@ -23,6 +23,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/hero_card.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../../shared/widgets/notification_bell_icon.dart';
+import '../../../utils/provider_pricing_helper.dart';
 
 class HomeDiscoveryScreen extends StatefulWidget {
   final int initialIndex;
@@ -1062,14 +1063,37 @@ class _ArtisanCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                StatusPill(
-                  type: tech.isAvailableNow
-                      ? StatusPillType.online
-                      : (tech.online ? StatusPillType.pending : StatusPillType.offline),
-                  label: tech.isAvailableNow
-                      ? context.l10n.availableNow
-                      : (tech.online ? context.l10n.outsideWorkingHours : context.l10n.statusOffline),
-                  showDot: true,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    StatusPill(
+                      type: tech.isAvailableNow
+                          ? StatusPillType.online
+                          : (tech.online ? StatusPillType.pending : StatusPillType.offline),
+                      label: tech.isAvailableNow
+                          ? context.l10n.availableNow
+                          : (tech.online ? context.l10n.outsideWorkingHours : context.l10n.statusOffline),
+                      showDot: true,
+                    ),
+                    if (!tech.hasPricingMode(ProviderPricingHelper.modeTravel))
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          context.l10n.travelIncluded,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),

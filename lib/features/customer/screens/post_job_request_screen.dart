@@ -376,7 +376,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       _uploadFailed = false;
       _saveFailed = false;
       _uploadProgressFraction = 0.0;
-      _uploadProgressText = 'Preparing media...';
+      _uploadProgressText = context.l10n.preparingMedia;
     });
 
     try {
@@ -395,7 +395,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
         setState(() {
           _uploadProgressFraction = 0.0;
-          _uploadProgressText = 'Uploading photo ${i + 1} of ${_photos.length}...';
+          _uploadProgressText = context.l10n.uploadingPhotoProgress(i + 1, _photos.length);
         });
         final rawBytes = attachment.bytes;
         final stripped = StorageService.instance.stripExifAndCompressImage(rawBytes);
@@ -413,7 +413,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
                     final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
                     final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-                    _uploadProgressText = 'Photo ${i + 1}/${_photos.length}: $sentMb MB / $totalMb MB';
+                    _uploadProgressText = context.l10n.uploadPhotoBytesProgress(i + 1, _photos.length, sentMb, totalMb);
                   });
                 }
               },
@@ -443,7 +443,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           if (thumbRes == null || _uploadedVideoSource != _processedVideo) {
             setState(() {
               _uploadProgressFraction = 0.0;
-              _uploadProgressText = 'Uploading video thumbnail...';
+              _uploadProgressText = context.l10n.uploadingVideoThumbnail;
             });
             final thumbBytes = await _processedVideo!.thumbnailFile.readAsBytes();
             final thumbStripped = StorageService.instance.stripExifAndCompressImage(thumbBytes);
@@ -468,7 +468,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
           setState(() {
             _uploadProgressFraction = 0.0;
-            _uploadProgressText = 'Uploading video file...';
+            _uploadProgressText = context.l10n.uploadingVideoFile;
           });
           final videoBytes = await _processedVideo!.compressedFile.readAsBytes();
           JobMediaUploadResult? videoRes;
@@ -485,7 +485,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
                       final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
                       final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-                      _uploadProgressText = 'Video: $sentMb MB / $totalMb MB';
+                      _uploadProgressText = context.l10n.uploadVideoBytesProgress(sentMb, totalMb);
                     });
                   }
                 },

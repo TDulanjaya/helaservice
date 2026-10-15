@@ -21,6 +21,7 @@ import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
 import '../../admin/admin_shell.dart';
 import '../../../utils/map_launcher.dart';
+import '../../../utils/responsive.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -618,12 +619,14 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Icon(icon, size: 16, color: AppColors.primary),
         ),
         const SizedBox(width: 12),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            color: context.themeTextPrimary,
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: context.themeTextPrimary,
+            ),
           ),
         ),
       ],
@@ -842,16 +845,18 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: context.themeBorder, width: 1.5),
           ),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 10,
             children: [
-              Expanded(
-                child: Text(
-                  context.l10n.newToHelaService,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: context.themeTextSecondary,
-                  ),
+              Text(
+                context.l10n.newToHelaService,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: context.themeTextSecondary,
                 ),
               ),
               ElevatedButton(
@@ -890,10 +895,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
+    final isTabletOrDesktop = Responsive.isTablet(context);
 
-    // wide desktop dual pane
-    if (width >= 960) {
+    // wide desktop dual pane (must be large screen in both dimensions)
+    if (width >= 960 && isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
         body: Center(
@@ -958,11 +964,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 36),
-                            _buildFeaturePill(context, Icons.verified_user_outlined, 'Verified Service Artisans'),
+                            _buildFeaturePill(context, Icons.verified_user_outlined, context.l10n.heroVerifiedArtisans),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.navigation_outlined, 'Live GPS Motorcycle Tracking'),
+                            _buildFeaturePill(context, Icons.navigation_outlined, context.l10n.heroLiveTracking),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.price_check_outlined, 'Transparent Local Quotes'),
+                            _buildFeaturePill(context, Icons.price_check_outlined, context.l10n.heroTransparentQuotes),
                           ],
                         ),
                       ),
@@ -984,8 +990,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
-    // tablet or desktop centered card
-    if (width >= 600) {
+    // tablet centered card (requires shortestSide >= 600)
+    if (isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
         body: Center(
@@ -1015,13 +1021,22 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
-    // mobile layout
+    // mobile phone layout (portrait or compact phone landscape that scrolls)
+    final isPhoneLandscape = Responsive.isPhoneLandscape(context);
     return Scaffold(
       backgroundColor: context.themeBg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          child: _buildFormContent(context, isFieldBg, showHeader: true),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isPhoneLandscape ? 32 : 24,
+                vertical: isPhoneLandscape ? 16 : 24,
+              ),
+              child: _buildFormContent(context, isFieldBg, showHeader: true),
+            ),
+          ),
         ),
       ),
     );

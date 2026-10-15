@@ -1551,7 +1551,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
       widget.onStatusChanged();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ticket assigned to you'), backgroundColor: AppColors.primary),
+          SnackBar(content: Text(context.l10n.ticketAssignedToYou), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
@@ -1693,7 +1693,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                       bookingTitle: c.effectiveSubject,
                     ),
                     icon: const Icon(Icons.timeline_rounded, size: 16),
-                    label: Text('Open Booking Timeline (${c.bookingId!})'),
+                    label: Text(context.l10n.openBookingTimeline(c.bookingId!)),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -1709,7 +1709,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                             await widget.complaintRepo.updateComplaintStatus(c.id, 'in_progress');
                             widget.onStatusChanged();
                           },
-                          child: const Text('Mark In Review'),
+                          child: Text(context.l10n.markInReviewAction),
                         ),
                       ),
                     const SizedBox(width: 8),
@@ -1723,7 +1723,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                           Navigator.pop(context);
                           widget.onResolve(c, 'resolved');
                         },
-                        child: const Text('Resolve'),
+                        child: Text(context.l10n.resolveAction),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1734,15 +1734,15 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                           Navigator.pop(context);
                           widget.onResolve(c, 'dismissed');
                         },
-                        child: const Text('Dismiss'),
+                        child: Text(context.l10n.dismissAction),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Message History',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                Text(
+                  context.l10n.messageHistoryTitle,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 StreamBuilder<List<SupportMessage>>(
@@ -1754,7 +1754,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Center(
                           child: Text(
-                            'No replies in thread yet.',
+                            context.l10n.noRepliesYet,
                             style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
                           ),
                         ),
@@ -1843,7 +1843,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                     minLines: 1,
                     maxLines: 4,
                     decoration: InputDecoration(
-                      hintText: 'Reply as Support Admin...',
+                      hintText: context.l10n.replyAsSupportAdminHint,
                       hintStyle: TextStyle(fontSize: 13, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,

@@ -865,8 +865,8 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
 
     for (final d in docs) {
       final data = d.data();
-      final lat = (data['latitude'] ?? data['lat']) as num?;
-      final lng = (data['longitude'] ?? data['lng']) as num?;
+      final lat = (data['currentLat'] ?? data['baseLat'] ?? data['latitude'] ?? data['lat']) as num?;
+      final lng = (data['currentLng'] ?? data['baseLng'] ?? data['longitude'] ?? data['lng']) as num?;
       final districtStr = data['district'] as String?;
       final serviceAreaStr = data['serviceArea'] as String?;
 

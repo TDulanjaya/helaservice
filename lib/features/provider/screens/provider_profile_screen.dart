@@ -7,6 +7,9 @@ import '../../../app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/booking.dart';
 import '../../../models/technician.dart';
+import '../../../models/user_profile.dart';
+import '../../../models/job_location.dart';
+import '../../../shared/widgets/job_location_picker.dart';
 import '../widgets/working_hours_sheet.dart';
 import '../widgets/portfolio_management_sheet.dart';
 import '../widgets/rate_card_sheet.dart';
@@ -18,6 +21,7 @@ import '../../../state/theme_provider.dart';
 import '../../../state/locale_provider.dart';
 import '../../../shared/widgets/language_select_sheet.dart';
 import '../../../utils/location_utils.dart';
+import '../../../utils/provider_location_helper.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
@@ -50,6 +54,19 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             longitude: pos.longitude,
           );
           await roleProvider.completeUserProfile(updated);
+          final uid = current.id.isNotEmpty
+              ? current.id
+              : (FirebaseAuth.instance.currentUser?.uid ?? '');
+          if (uid.isNotEmpty) {
+            final area = extractBaseArea(address: current.address);
+            await TechnicianRepository().updateBaseLocation(
+              uid,
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+              address: current.address,
+              baseArea: area,
+            );
+          }
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -71,6 +88,60 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       }
     } finally {
       if (mounted) setState(() => _updatingLocation = false);
+    }
+  }
+
+  Future<void> _pickBaseLocation(BuildContext context) async {
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final current = roleProvider.currentUser;
+    final initialLoc = (current?.latitude != null && current?.longitude != null)
+        ? JobLocation(
+            latitude: current!.latitude!,
+            longitude: current.longitude!,
+            address: current.address ?? '',
+          )
+        : null;
+
+    final picked = await JobLocationPicker.pickLocation(
+      context,
+      title: context.l10n.baseLocationTitle,
+      initialLocation: initialLoc,
+    );
+
+    if (picked != null && context.mounted) {
+      final updated = (current ??
+              UserProfile(
+                id: FirebaseAuth.instance.currentUser?.uid ?? '',
+                email: '',
+                displayName: '',
+              ))
+          .copyWith(
+        latitude: picked.latitude,
+        longitude: picked.longitude,
+        address: picked.address,
+      );
+      await roleProvider.completeUserProfile(updated);
+      final uid = current?.id ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isNotEmpty) {
+        final area = extractBaseArea(city: picked.city, address: picked.address);
+        await TechnicianRepository().updateBaseLocation(
+          uid,
+          latitude: picked.latitude,
+          longitude: picked.longitude,
+          address: picked.address,
+          baseArea: area,
+        );
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(picked.address.isNotEmpty
+                ? picked.address
+                : '${picked.latitude.toStringAsFixed(4)}, ${picked.longitude.toStringAsFixed(4)}'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
     }
   }
 
@@ -562,9 +633,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user?.latitude != null
-                                  ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)}'
-                                  : context.l10n.noGpsSet,
+                              context.l10n.baseLocationTitle,
                               style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
@@ -572,7 +641,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              context.l10n.distanceCalcHint,
+                              user?.address?.isNotEmpty == true
+                                  ? user!.address!
+                                  : (user?.latitude != null
+                                      ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)}'
+                                      : context.l10n.noGpsSet),
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: context.themeTextSecondary,
@@ -584,37 +657,65 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 42,
-                    child: OutlinedButton.icon(
-                      onPressed: _updatingLocation
-                          ? null
-                          : () => _refreshGpsLocation(context),
-                      icon: _updatingLocation
-                          ? const SizedBox(
-                              width: 15,
-                              height: 15,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.gps_fixed_rounded, size: 16),
-                      label: Text(
-                        _updatingLocation
-                            ? context.l10n.statusPending
-                            : context.l10n.autoDetectGps,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 42,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _pickBaseLocation(context),
+                            icon: const Icon(Icons.map_outlined, size: 16),
+                            label: Text(
+                              context.l10n.setBaseLocationBtn,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.primary),
+                              foregroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.primary),
-                        foregroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 42,
+                        child: OutlinedButton.icon(
+                          onPressed: _updatingLocation
+                              ? null
+                              : () => _refreshGpsLocation(context),
+                          icon: _updatingLocation
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.gps_fixed_rounded, size: 16),
+                          label: Text(
+                            context.l10n.autoDetectGps,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: context.themeBorder,
+                            ),
+                            foregroundColor: context.themeTextPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

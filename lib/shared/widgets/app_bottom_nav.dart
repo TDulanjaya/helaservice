@@ -19,6 +19,9 @@ class AppBottomNav extends StatelessWidget {
   static const double floatingNavBottomMargin = 20.0;
   static const double contentBottomPadding = 100.0;
 
+  static double bottomPadding(BuildContext context) =>
+      MediaQuery.sizeOf(context).height < 500 ? 64.0 : contentBottomPadding;
+
   const AppBottomNav({
     super.key,
     required this.items,
@@ -32,13 +35,16 @@ class AppBottomNav extends StatelessWidget {
     final isDark = context.isDark;
     final navBg = isDark ? const Color(0xFF1F2327) : AppColors.ink;
     final navBorder = isDark ? const Color(0xFF30363D) : Colors.transparent;
+    final isShort = MediaQuery.sizeOf(context).height < 500;
+    final navHeight = isShort ? 54.0 : floatingNavHeight;
+    final bottomMargin = isShort ? 6.0 : floatingNavBottomMargin;
 
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, floatingNavBottomMargin),
+        padding: EdgeInsets.fromLTRB(16, 4, 16, bottomMargin),
         child: Container(
-          height: floatingNavHeight,
+          constraints: BoxConstraints(minHeight: navHeight),
           decoration: BoxDecoration(
             color: navBg,
             borderRadius: BorderRadius.circular(24),
@@ -51,14 +57,14 @@ class AppBottomNav extends StatelessWidget {
               ),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 4 : 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
               final active = i == currentIndex;
               final item = items[i];
 
-              if (compact) {
+              if (compact || isShort) {
                 return _buildCompactItem(context, item, active, i);
               }
               return _buildStandardItem(context, item, active, i);

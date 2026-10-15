@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,6 +16,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../repositories/saved_address_repository.dart';
+import '../../../repositories/user_repository.dart';
 import '../../../models/saved_address.dart';
 import '../../../services/analytics_service.dart';
 import '../../../state/role_provider.dart';
@@ -207,6 +209,24 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         unawaited(_reverseGeocode(pos.latitude, pos.longitude));
       }
     } catch (_) {
+      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUid != null && currentUid.isNotEmpty) {
+        try {
+          final profile = await UserRepository().getUserById(currentUid);
+          if (profile?.latitude != null && profile?.longitude != null) {
+            if (mounted) {
+              setState(() {
+                _userLat = profile!.latitude;
+                _userLng = profile.longitude;
+                _userAddress = profile.address ?? '';
+                _isGpsLoading = false;
+                _gpsFailed = false;
+              });
+              return;
+            }
+          }
+        } catch (_) {}
+      }
       if (mounted) {
         setState(() {
           _isGpsLoading = false;
@@ -294,12 +314,13 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   // calculate real distance in kilometers between customer pin and provider location
   double? _getDistanceKm(Technician tech) {
     if (_userLat == null || _userLng == null) return null;
-    if (tech.latitude == null || tech.longitude == null) return null;
+    final eff = tech.effectiveLocation;
+    if (!eff.hasLocation) return null;
     return LocationUtils.calculateDistanceKm(
       _userLat!,
       _userLng!,
-      tech.latitude!,
-      tech.longitude!,
+      eff.latitude!,
+      eff.longitude!,
     );
   }
 
@@ -1173,11 +1194,25 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                               .contains(_selectedCategory.toLowerCase());
                       if (!matchesCategory) return false;
                     }
+                    if (_userLat != null && _userLng != null) {
+                      final dist = _getDistanceKm(t);
+                      if (dist == null) return false;
+                      final maxRadius = math.min(t.serviceRadiusKm, 15.0);
+                      if (dist > maxRadius) return false;
+                    }
                     return true;
                   }).toList();
 
-                  // sort by rating descending
-                  filtered.sort((a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
+                  // closest first, tiebreak on rating
+                  filtered.sort((a, b) {
+                    if (_userLat != null && _userLng != null) {
+                      final distA = _getDistanceKm(a) ?? double.infinity;
+                      final distB = _getDistanceKm(b) ?? double.infinity;
+                      final cmp = distA.compareTo(distB);
+                      if (cmp != 0) return cmp;
+                    }
+                    return (b.rating ?? 0.0).compareTo(a.rating ?? 0.0);
+                  });
 
                   if (filtered.isEmpty) {
                     return Center(
@@ -1350,9 +1385,13 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                                     BorderRadius.circular(6),
                                               ),
                                               child: Text(
-                                                context.l10n.distanceKmAway(
-                                                  distKm.toStringAsFixed(1),
-                                                ),
+                                                tech.effectiveLocation.isCurrent
+                                                    ? context.l10n.awayNow(
+                                                        distKm.toStringAsFixed(1),
+                                                      )
+                                                    : context.l10n.basedAway(
+                                                        distKm.toStringAsFixed(1),
+                                                      ),
                                                 style: const TextStyle(
                                                   fontSize: 10.5,
                                                   fontWeight: FontWeight.w700,

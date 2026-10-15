@@ -3093,5 +3093,138 @@
   "noSearchResults": "No results found",
   "searchUnavailableFallback": "Search not available, move the map instead",
   "recentPlaces": "Recent places",
-  "useMyCurrentLocation": "Use my current location"
+  "useMyCurrentLocation": "Use my current location",
+  "showingJobsNearYouNow": "Showing jobs near you now",
+  "showingJobsNearBase": "Showing jobs near your base ({area})",
+  "@showingJobsNearBase": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "showingJobsNearBaseNoArea": "Showing jobs near your base",
+  "@showingJobsNearBaseNoArea": {
+    "description": "Notice showing jobs near provider base when area name is not known"
+  },
+  "setBaseLocationPrompt": "Set your base location to see nearby jobs",
+  "setBaseLocationBtn": "Set Base Location",
+  "awayNow": "{distance} km away now",
+  "@awayNow": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "basedAway": "Based {distance} km away",
+  "@basedAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "locationLastUpdatedMinsAgo": "Location last updated {minutes} min ago",
+  "@locationLastUpdatedMinsAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "estimatedLabel": "Estimated",
+  "baseLocationTitle": "Base Location",
+  "baseLocationDesc": "Where you normally start your workday",
+  "howDoYouChargeTitle": "How do you charge?",
+  "howDoYouChargeSubtitle": "Select at least one billing method (per hour, per day, or per job).",
+  "pricingModePerHour": "Per hour",
+  "pricingModePerDay": "Per day",
+  "pricingModePricePerJob": "Price per job (quote each job)",
+  "pricingModeVisitFee": "Visit / inspection fee",
+  "pricingModeTravelPerKm": "Travel charge per km",
+  "atLeastOneBasePricingModeRequired": "Select at least one: Per hour, Per day, or Price per job.",
+  "travelIncluded": "Travel included",
+  "quoteEachJob": "Quoted per job",
+  "travelTitle": "Travel",
+  "couldNotLoadExactLocationRetry": "Could not load exact job location. Please try again.",
+  "gettingYourLocation": "Getting your location...",
+  "tryAgain": "Try again",
+  "customerLocationMissingCallCustomer": "Customer location missing, call the customer",
+  "locationSharingNotificationTitle": "HelaService",
+  "locationSharingNotificationText": "Sharing your location with the customer",
+  "preparingMedia": "Preparing media...",
+  "uploadingPhotoProgress": "Uploading photo {current} of {total}...",
+  "@uploadingPhotoProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "uploadPhotoBytesProgress": "Photo {current}/{total}: {sentMb} MB / {totalMb} MB",
+  "@uploadPhotoBytesProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" },
+      "sentMb": { "type": "String" },
+      "totalMb": { "type": "String" }
+    }
+  },
+  "uploadingVideoThumbnail": "Uploading video thumbnail...",
+  "uploadingVideoFile": "Uploading video file...",
+  "uploadVideoBytesProgress": "Video: {sentMb} MB / {totalMb} MB",
+  "@uploadVideoBytesProgress": {
+    "placeholders": {
+      "sentMb": { "type": "String" },
+      "totalMb": { "type": "String" }
+    }
+  },
+  "ticketAssignedToYou": "Ticket assigned to you",
+  "openBookingTimeline": "Open Booking Timeline ({id})",
+  "@openBookingTimeline": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "markInReviewAction": "Mark In Review",
+  "resolveAction": "Resolve",
+  "dismissAction": "Dismiss",
+  "messageHistoryTitle": "Message History",
+  "noRepliesYet": "No replies in thread yet.",
+  "replyAsSupportAdminHint": "Reply as Support Admin...",
+  "nicWarningUnder18": "Under 18 ({age} yrs) — Cannot be approved",
+  "@nicWarningUnder18": {
+    "placeholders": {
+      "age": { "type": "int" }
+    }
+  },
+  "nicDuplicateCheckNotAvailable": "duplicate check not available yet",
+  "nicDuplicateNicApproved": "Duplicate NIC: already approved for {name} ({id})",
+  "@nicDuplicateNicApproved": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "id": { "type": "String" }
+    }
+  },
+  "nicDuplicateNicPending": "Duplicate NIC: pending for {name} ({id})",
+  "@nicDuplicateNicPending": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "id": { "type": "String" }
+    }
+  },
+  "nicDuplicatePhone": "Duplicate Phone: already registered to approved provider {name}",
+  "@nicDuplicatePhone": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "notificationIdentityApprovedTitle": "Identity Verification Approved",
+  "notificationIdentityApprovedBody": "Your identity verification was approved. Your profile is now active.",
+  "heroVerifiedArtisans": "Verified Service Artisans",
+  "heroLiveTracking": "Live tracking when your provider is on the way",
+  "heroTransparentQuotes": "Transparent Local Quotes",
+  "heroDirectQuoteRequests": "Direct quote requests in minutes",
+  "heroPrivateSecureChat": "Private, secure chat",
+  "heroCommunityRated": "Community rated professionals"
 }

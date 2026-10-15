@@ -4,6 +4,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/provider_pricing_helper.dart';
 
 class RateCardSheet extends StatefulWidget {
   final Technician technician;
@@ -29,12 +30,14 @@ class _RateCardSheetState extends State<RateCardSheet> {
   late final TextEditingController _dailyRateController;
   late final TextEditingController _perKmController;
   late final TextEditingController _emergencyRateController;
+  late List<String> _pricingModes;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     final t = widget.technician;
+    _pricingModes = List<String>.from(t.resolvedPricingModes);
     _visitFeeController = TextEditingController(
       text: t.visitFeeLkr?.toString() ?? (t.baseRateLkr > 0 ? t.baseRateLkr.toString() : ''),
     );
@@ -63,44 +66,72 @@ class _RateCardSheetState extends State<RateCardSheet> {
   }
 
   Future<void> _save() async {
-    final visitFee = int.tryParse(_visitFeeController.text.trim());
-    final hourly = int.tryParse(_hourlyRateController.text.trim());
-    final daily = int.tryParse(_dailyRateController.text.trim());
-    final perKm = int.tryParse(_perKmController.text.trim());
+    if (!ProviderPricingHelper.hasBasePricingMode(_pricingModes)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.atLeastOneBasePricingModeRequired)),
+      );
+      return;
+    }
+
+    int? visitFee;
+    if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) {
+      visitFee = int.tryParse(_visitFeeController.text.trim());
+      if (visitFee == null ||
+          visitFee < ProviderPricingHelper.minVisitFee ||
+          visitFee > ProviderPricingHelper.maxVisitFee) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.visitFeeRangeError)),
+        );
+        return;
+      }
+    }
+
+    int? hourly;
+    if (_pricingModes.contains(ProviderPricingHelper.modeHour)) {
+      hourly = int.tryParse(_hourlyRateController.text.trim());
+      if (hourly == null ||
+          hourly < ProviderPricingHelper.minHourlyRate ||
+          hourly > ProviderPricingHelper.maxHourlyRate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.hourlyRateRangeError)),
+        );
+        return;
+      }
+    }
+
+    int? daily;
+    if (_pricingModes.contains(ProviderPricingHelper.modeDay)) {
+      daily = int.tryParse(_dailyRateController.text.trim());
+      if (daily == null ||
+          daily < ProviderPricingHelper.minDailyRate ||
+          daily > ProviderPricingHelper.maxDailyRate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dailyRateRangeError)),
+        );
+        return;
+      }
+    }
+
+    int? perKm;
+    if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) {
+      perKm = int.tryParse(_perKmController.text.trim());
+      if (perKm == null ||
+          perKm < ProviderPricingHelper.minPerKmRate ||
+          perKm > ProviderPricingHelper.maxPerKmRate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.perKmRateRangeError)),
+        );
+        return;
+      }
+    }
+
     final emergency = int.tryParse(_emergencyRateController.text.trim());
-
-    if (visitFee != null && (visitFee < 0 || visitFee > 20000)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.visitFeeRangeError)),
-      );
-      return;
-    }
-
-    if (hourly != null && (hourly < 1 || hourly > 20000)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.hourlyRateRangeError)),
-      );
-      return;
-    }
-
-    if (daily != null && (daily < 1 || daily > 100000)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.dailyRateRangeError)),
-      );
-      return;
-    }
-
-    if (perKm != null && (perKm < 1 || perKm > 1000)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.perKmRateRangeError)),
-      );
-      return;
-    }
 
     setState(() => _saving = true);
     try {
       await TechnicianRepository().updateRates(
         widget.technician.id,
+        pricingModes: _pricingModes,
         visitFeeLkr: visitFee,
         hourlyRateLkr: hourly,
         dailyRateLkr: daily,
@@ -158,49 +189,167 @@ class _RateCardSheetState extends State<RateCardSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              context.l10n.myRateCard,
+              context.l10n.howDoYouChargeTitle,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
-              context.l10n.rateCardSubtitle,
+              context.l10n.howDoYouChargeSubtitle,
               style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
             ),
-            const SizedBox(height: 20),
-            _buildField(
-              controller: _visitFeeController,
-              label: context.l10n.standardVisitFeeWithCurrency,
-              hint: context.l10n.visitFeeOptionalHint,
-              icon: Icons.meeting_room_outlined,
+            const SizedBox(height: 16),
+
+            CheckboxListTile(
+              value: _pricingModes.contains(ProviderPricingHelper.modeHour),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _pricingModes.add(ProviderPricingHelper.modeHour);
+                  } else {
+                    _pricingModes.remove(ProviderPricingHelper.modeHour);
+                  }
+                });
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: Text(
+                context.l10n.pricingModePerHour,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
             ),
-            const SizedBox(height: 14),
-            _buildField(
-              controller: _hourlyRateController,
-              label: context.l10n.hourlyRateWithUnit,
-              hint: context.l10n.hourlyRateHint,
-              icon: Icons.timer_outlined,
+            if (_pricingModes.contains(ProviderPricingHelper.modeHour)) ...[
+              const SizedBox(height: 4),
+              _buildField(
+                controller: _hourlyRateController,
+                label: context.l10n.hourlyRateWithUnit,
+                hint: context.l10n.hourlyRateHint,
+                icon: Icons.timer_outlined,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            CheckboxListTile(
+              value: _pricingModes.contains(ProviderPricingHelper.modeDay),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _pricingModes.add(ProviderPricingHelper.modeDay);
+                  } else {
+                    _pricingModes.remove(ProviderPricingHelper.modeDay);
+                  }
+                });
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: Text(
+                context.l10n.pricingModePerDay,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
             ),
-            const SizedBox(height: 14),
-            _buildField(
-              controller: _dailyRateController,
-              label: context.l10n.dailyRateWithUnit,
-              hint: context.l10n.dailyRateHint,
-              icon: Icons.calendar_today_outlined,
+            if (_pricingModes.contains(ProviderPricingHelper.modeDay)) ...[
+              const SizedBox(height: 4),
+              _buildField(
+                controller: _dailyRateController,
+                label: context.l10n.dailyRateWithUnit,
+                hint: context.l10n.dailyRateHint,
+                icon: Icons.calendar_today_outlined,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            CheckboxListTile(
+              value: _pricingModes.contains(ProviderPricingHelper.modeJob),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _pricingModes.add(ProviderPricingHelper.modeJob);
+                  } else {
+                    _pricingModes.remove(ProviderPricingHelper.modeJob);
+                  }
+                });
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: Text(
+                context.l10n.pricingModePricePerJob,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
             ),
-            const SizedBox(height: 14),
-            _buildField(
-              controller: _perKmController,
-              label: context.l10n.travelRateWithUnit,
-              hint: context.l10n.perKmRateHint,
-              icon: Icons.directions_car_outlined,
+            const SizedBox(height: 8),
+
+            CheckboxListTile(
+              value: _pricingModes.contains(ProviderPricingHelper.modeVisit),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _pricingModes.add(ProviderPricingHelper.modeVisit);
+                  } else {
+                    _pricingModes.remove(ProviderPricingHelper.modeVisit);
+                  }
+                });
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: Text(
+                context.l10n.pricingModeVisitFee,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
             ),
-            const SizedBox(height: 14),
-            _buildField(
-              controller: _emergencyRateController,
-              label: context.l10n.emergencyCalloutRate,
-              hint: context.l10n.hintAmount,
-              icon: Icons.warning_amber_rounded,
+            if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
+              const SizedBox(height: 4),
+              _buildField(
+                controller: _visitFeeController,
+                label: context.l10n.standardVisitFeeWithCurrency,
+                hint: context.l10n.visitFeeOptionalHint,
+                icon: Icons.meeting_room_outlined,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            CheckboxListTile(
+              value: _pricingModes.contains(ProviderPricingHelper.modeTravel),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _pricingModes.add(ProviderPricingHelper.modeTravel);
+                  } else {
+                    _pricingModes.remove(ProviderPricingHelper.modeTravel);
+                  }
+                });
+              },
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppColors.primary,
+              title: Text(
+                context.l10n.pricingModeTravelPerKm,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
             ),
+            if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
+              const SizedBox(height: 4),
+              _buildField(
+                controller: _perKmController,
+                label: context.l10n.travelRateWithUnit,
+                hint: context.l10n.perKmRateHint,
+                icon: Icons.directions_car_outlined,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (widget.technician.emergencyRateLkr > 0) ...[
+              const SizedBox(height: 4),
+              _buildField(
+                controller: _emergencyRateController,
+                label: context.l10n.emergencyCalloutRate,
+                hint: context.l10n.hintAmount,
+                icon: Icons.warning_amber_rounded,
+              ),
+              const SizedBox(height: 12),
+            ],
             const SizedBox(height: 24),
             PrimaryButton(
               label: context.l10n.saveRates,

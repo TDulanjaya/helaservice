@@ -263,9 +263,20 @@ class _NicVerificationWorkspaceScreenState
             .collection(FirestorePaths.users)
             .doc(item.providerId)
             .collection('notifications');
+        final lang = item.preferredLanguage.trim().toLowerCase();
+        final notifTitle = lang == 'si'
+            ? 'හැඳුනුම්පත් සත්‍යාපනය අනුමතයි'
+            : (lang == 'ta'
+                ? 'அடையாளச் சரிபார்ப்பு அங்கீகரிக்கப்பட்டது'
+                : 'Identity Verification Approved');
+        final notifBody = lang == 'si'
+            ? 'ඔබගේ අනන්‍යතා සත්‍යාපනය අනුමත කරන ලදී. ඔබගේ පැතිකඩ දැන් සක්‍රීයයි.'
+            : (lang == 'ta'
+                ? 'உங்கள் அடையாளச் சரிபார்ப்பு அங்கீகரிக்கப்பட்டது. உங்கள் சுயவிவரம் இப்போது செயலில் உள்ளது.'
+                : 'Your identity verification was approved. Your profile is now active.');
         batch.set(notifCol.doc(), {
-          'title': 'Identity Verification Approved',
-          'body': 'Your identity verification was approved. Your profile is now active.',
+          'title': notifTitle,
+          'body': notifBody,
           'type': 'verification_approved',
           'isRead': false,
           'createdAt': FieldValue.serverTimestamp(),
@@ -1479,7 +1490,7 @@ class _NicVerificationWorkspaceScreenState
                     Icon(Icons.person_off_rounded, size: 14, color: context.themeDanger),
                     const SizedBox(width: 6),
                     Text(
-                      'Under 18 (${decodedNic.age} yrs) — Cannot be approved',
+                      context.l10n.nicWarningUnder18(decodedNic.age ?? 0),
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
@@ -1516,17 +1527,17 @@ class _NicVerificationWorkspaceScreenState
               // duplicate check status when no duplicate warnings
               if (duplicateWarnings.isEmpty) ...[
                 if (hasNoHash)
-                  const Row(
+                  Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.info_outline_rounded,
                         size: 14,
                         color: Color(0xFFD6900F),
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
-                        'duplicate check not available yet',
-                        style: TextStyle(
+                        context.l10n.nicDuplicateCheckNotAvailable,
+                        style: const TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFFD6900F),
@@ -1553,6 +1564,7 @@ class _NicVerificationWorkspaceScreenState
   // query duplicate nic hash & duplicate phone across database
   Future<List<String>> _runDuplicateChecks(
       VerificationQueueItem item, String phone) async {
+    final l10n = context.l10n;
     final List<String> warnings = [];
 
     // duplicate nic check using nicHash
@@ -1571,9 +1583,9 @@ class _NicVerificationWorkspaceScreenState
               data['name'] as String? ??
               'Provider';
           if (status == 'approved') {
-            warnings.add('Duplicate NIC: already approved for $name (${doc.id})');
+            warnings.add(l10n.nicDuplicateNicApproved(name, doc.id));
           } else if (status == 'pending') {
-            warnings.add('Duplicate NIC: pending for $name (${doc.id})');
+            warnings.add(l10n.nicDuplicateNicPending(name, doc.id));
           }
         }
       } catch (_) {}
@@ -1595,8 +1607,7 @@ class _NicVerificationWorkspaceScreenState
               data['isVerified'] == true || data['status'] == 'active';
           final name = data['name'] as String? ?? doc.id;
           if (isVerified) {
-            warnings.add(
-                'Duplicate Phone: already registered to approved provider $name');
+            warnings.add(l10n.nicDuplicatePhone(name));
           }
         }
       } catch (_) {}

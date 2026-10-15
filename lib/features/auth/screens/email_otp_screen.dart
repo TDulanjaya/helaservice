@@ -11,6 +11,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../state/role_provider.dart';
 import '../../../splash_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
+import '../../../utils/responsive.dart';
 import 'login_screen.dart';
 
 class EmailOtpScreen extends StatefulWidget {
@@ -373,117 +374,128 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 12),
-              // icon
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.28),
-                    width: 2,
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 36,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: context.themeInk,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: context.themeMuted,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // otp input boxes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(_codeLength, (index) {
-                  return SizedBox(
-                    width: 46,
-                    height: 56,
-                    child: KeyboardListener(
-                      focusNode: FocusNode(),
-                      onKeyEvent: (event) {
-                        if (event is KeyDownEvent &&
-                            event.logicalKey == LogicalKeyboardKey.backspace) {
-                          if (_controllers[index].text.isEmpty && index > 0) {
-                            _controllers[index - 1].clear();
-                            _focusNodes[index - 1].requestFocus();
-                          }
-                        }
-                      },
-                      child: TextField(
-                        controller: _controllers[index],
-                        focusNode: _focusNodes[index],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: index == 0 ? _codeLength : 1,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: context.themeInk,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: cardBg,
-                          contentPadding: EdgeInsets.zero,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: _errorMessage != null
-                                  ? AppColors.error
-                                  : borderCol,
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        onChanged: (val) => _onDigitChanged(index, val),
-                      ),
+        child: ResponsiveCenter(
+          maxWidth: 480,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: Responsive.isPhoneLandscape(context) ? 12 : 16,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 12),
+                // icon
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.28),
+                      width: 2,
                     ),
-                  );
-                }),
-              ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.mark_email_read_outlined,
+                      size: 36,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: context.themeInk,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: context.themeMuted,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // otp input boxes
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final gap = constraints.maxWidth < 340 ? 6.0 : 8.0;
+                    final boxWidth = ((constraints.maxWidth - ((_codeLength - 1) * gap)) / _codeLength).clamp(36.0, 48.0);
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(_codeLength, (index) {
+                        return SizedBox(
+                          width: boxWidth,
+                          height: 56,
+                          child: KeyboardListener(
+                            focusNode: FocusNode(),
+                            onKeyEvent: (event) {
+                              if (event is KeyDownEvent &&
+                                  event.logicalKey == LogicalKeyboardKey.backspace) {
+                                if (_controllers[index].text.isEmpty && index > 0) {
+                                  _controllers[index - 1].clear();
+                                  _focusNodes[index - 1].requestFocus();
+                                }
+                              }
+                            },
+                            child: TextField(
+                              controller: _controllers[index],
+                              focusNode: _focusNodes[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: index == 0 ? _codeLength : 1,
+                              style: TextStyle(
+                                fontSize: boxWidth < 40 ? 18 : 22,
+                                fontWeight: FontWeight.w700,
+                                color: context.themeInk,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: InputDecoration(
+                                counterText: '',
+                                filled: true,
+                                fillColor: cardBg,
+                                contentPadding: EdgeInsets.zero,
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: _errorMessage != null
+                                        ? AppColors.error
+                                        : borderCol,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (val) => _onDigitChanged(index, val),
+                            ),
+                          ),
+                        );
+                      }),
+                    );
+                  },
+                ),
 
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
@@ -649,6 +661,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

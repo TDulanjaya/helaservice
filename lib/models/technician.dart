@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../utils/provider_location_helper.dart';
+import '../utils/provider_pricing_helper.dart';
 import 'review.dart';
 
 class RecentWork {
@@ -85,10 +88,38 @@ class Technician {
   final int? dailyRateLkr;
   final int? perKmRateLkr;
   final int? visitFeeLkr;
+  final List<String>? pricingModes;
   final double? latitude;
   final double? longitude;
+  final double? baseLat;
+  final double? baseLng;
+  final String? baseAddress;
+  final String? baseArea;
+  final double? currentLat;
+  final double? currentLng;
+  final DateTime? currentLocationAt;
 
-  int get effectiveVisitFeeLkr => visitFeeLkr ?? (baseRateLkr > 0 ? baseRateLkr : 0);
+  List<String> get resolvedPricingModes =>
+      ProviderPricingHelper.resolvePricingModes(
+        pricingModes: pricingModes,
+        hourlyRateLkr: hourlyRateLkr,
+        dailyRateLkr: dailyRateLkr,
+        baseRateLkr: baseRateLkr,
+        visitFeeLkr: visitFeeLkr,
+        perKmRateLkr: perKmRateLkr,
+      );
+
+  bool hasPricingMode(String mode) => resolvedPricingModes.contains(mode);
+
+  int get effectiveVisitFeeLkr =>
+      ProviderPricingHelper.resolveVisitFee(
+        modes: resolvedPricingModes,
+        visitFeeLkr: visitFeeLkr,
+        baseRateLkr: baseRateLkr,
+      ) ?? 0;
+
+  // active location based on online state
+  EffectiveProviderLocation get effectiveLocation => getEffectiveProviderLocation(this);
 
   const Technician({
     required this.id,
@@ -112,8 +143,16 @@ class Technician {
     this.dailyRateLkr,
     this.perKmRateLkr,
     this.visitFeeLkr,
+    this.pricingModes,
     this.latitude,
     this.longitude,
+    this.baseLat,
+    this.baseLng,
+    this.baseAddress,
+    this.baseArea,
+    this.currentLat,
+    this.currentLng,
+    this.currentLocationAt,
     required this.about,
     required this.languages,
     required this.serviceArea,
@@ -140,6 +179,12 @@ class Technician {
     double? rating,
     double? latitude,
     double? longitude,
+    double? baseLat,
+    double? baseLng,
+    String? baseAddress,
+    double? currentLat,
+    double? currentLng,
+    DateTime? currentLocationAt,
   }) =>
       Technician(
         id: id,
@@ -160,8 +205,14 @@ class Technician {
         onTimePercent: '',
         hourlyRateLkr: 0,
         emergencyRateLkr: 0,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: latitude ?? baseLat,
+        longitude: longitude ?? baseLng,
+        baseLat: baseLat ?? latitude,
+        baseLng: baseLng ?? longitude,
+        baseAddress: baseAddress,
+        currentLat: currentLat,
+        currentLng: currentLng,
+        currentLocationAt: currentLocationAt,
         about: '',
         languages: '',
         serviceArea: serviceArea,
@@ -173,6 +224,102 @@ class Technician {
         serviceRadiusKm: 25.0,
         workingHours: WorkingDaySchedule.defaultWeek(),
       );
+
+  Technician copyWith({
+    String? id,
+    String? name,
+    String? initials,
+    Color? avatarColor,
+    String? title,
+    String? category,
+    bool? nicVerified,
+    bool? online,
+    double? rating,
+    int? reviewCount,
+    String? etaLabel,
+    int? baseRateLkr,
+    String? responseTimeLabel,
+    int? jobsCount,
+    String? yearsExperience,
+    String? onTimePercent,
+    int? hourlyRateLkr,
+    int? emergencyRateLkr,
+    int? dailyRateLkr,
+    int? perKmRateLkr,
+    int? visitFeeLkr,
+    List<String>? pricingModes,
+    double? latitude,
+    double? longitude,
+    double? baseLat,
+    double? baseLng,
+    String? baseAddress,
+    String? baseArea,
+    double? currentLat,
+    double? currentLng,
+    DateTime? currentLocationAt,
+    String? about,
+    String? languages,
+    String? serviceArea,
+    String? phone,
+    String? certification,
+    List<RecentWork>? recentWork,
+    List<Review>? reviews,
+    bool? isBanned,
+    String? banReason,
+    bool? isVerified,
+    String? status,
+    bool? emergencyAvailable,
+    double? serviceRadiusKm,
+    Map<String, WorkingDaySchedule>? workingHours,
+  }) {
+    return Technician(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      initials: initials ?? this.initials,
+      avatarColor: avatarColor ?? this.avatarColor,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      nicVerified: nicVerified ?? this.nicVerified,
+      online: online ?? this.online,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      etaLabel: etaLabel ?? this.etaLabel,
+      baseRateLkr: baseRateLkr ?? this.baseRateLkr,
+      responseTimeLabel: responseTimeLabel ?? this.responseTimeLabel,
+      jobsCount: jobsCount ?? this.jobsCount,
+      yearsExperience: yearsExperience ?? this.yearsExperience,
+      onTimePercent: onTimePercent ?? this.onTimePercent,
+      hourlyRateLkr: hourlyRateLkr ?? this.hourlyRateLkr,
+      emergencyRateLkr: emergencyRateLkr ?? this.emergencyRateLkr,
+      dailyRateLkr: dailyRateLkr ?? this.dailyRateLkr,
+      perKmRateLkr: perKmRateLkr ?? this.perKmRateLkr,
+      visitFeeLkr: visitFeeLkr ?? this.visitFeeLkr,
+      pricingModes: pricingModes ?? this.pricingModes,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      baseLat: baseLat ?? this.baseLat,
+      baseLng: baseLng ?? this.baseLng,
+      baseAddress: baseAddress ?? this.baseAddress,
+      baseArea: baseArea ?? this.baseArea,
+      currentLat: currentLat ?? this.currentLat,
+      currentLng: currentLng ?? this.currentLng,
+      currentLocationAt: currentLocationAt ?? this.currentLocationAt,
+      about: about ?? this.about,
+      languages: languages ?? this.languages,
+      serviceArea: serviceArea ?? this.serviceArea,
+      phone: phone ?? this.phone,
+      certification: certification ?? this.certification,
+      recentWork: recentWork ?? this.recentWork,
+      reviews: reviews ?? this.reviews,
+      isBanned: isBanned ?? this.isBanned,
+      banReason: banReason ?? this.banReason,
+      isVerified: isVerified ?? this.isVerified,
+      status: status ?? this.status,
+      emergencyAvailable: emergencyAvailable ?? this.emergencyAvailable,
+      serviceRadiusKm: serviceRadiusKm ?? this.serviceRadiusKm,
+      workingHours: workingHours ?? this.workingHours,
+    );
+  }
 
   bool get isApproved {
     if (isBanned) return false;
@@ -215,44 +362,65 @@ class Technician {
     }
   }
 
-  Map<String, dynamic> toMap() => {
-        'name': name,
-        'initials': initials,
-        'avatarColor': avatarColor.toARGB32(),
-        'title': title,
-        'category': category,
-        'nicVerified': nicVerified,
-        'online': online,
-        'rating': rating,
-        'reviewCount': reviewCount,
-        'etaLabel': etaLabel,
-        'baseRateLkr': baseRateLkr,
-        'responseTimeLabel': responseTimeLabel,
-        'jobsCount': jobsCount,
-        'yearsExperience': yearsExperience,
-        'onTimePercent': onTimePercent,
-        'hourlyRateLkr': hourlyRateLkr,
-        'emergencyRateLkr': emergencyRateLkr,
-        if (dailyRateLkr != null) 'dailyRateLkr': dailyRateLkr,
-        if (perKmRateLkr != null) 'perKmRateLkr': perKmRateLkr,
-        if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        'about': about,
-        'languages': languages,
-        'serviceArea': serviceArea,
-        'phone': phone,
-        'certification': certification,
-        'isBanned': isBanned,
-        if (banReason != null) 'banReason': banReason,
-        'isVerified': isVerified,
-        'status': status,
-        'emergencyAvailable': emergencyAvailable,
-        'serviceRadiusKm': serviceRadiusKm,
-        'workingHours': workingHours.map((k, v) => MapEntry(k, v.toMap())),
-        'recentWork': recentWork.map((w) => w.toMap()).toList(),
-        'reviews': reviews.map((r) => r.toMap()).toList(),
-      };
+  Map<String, dynamic> toMap() {
+    final effectiveBaseLat = baseLat ?? latitude;
+    final effectiveBaseLng = baseLng ?? longitude;
+
+    return {
+      'name': name,
+      'initials': initials,
+      'avatarColor': avatarColor.toARGB32(),
+      'title': title,
+      'category': category,
+      'nicVerified': nicVerified,
+      'online': online,
+      'rating': rating,
+      'reviewCount': reviewCount,
+      'etaLabel': etaLabel,
+      'baseRateLkr': baseRateLkr,
+      'responseTimeLabel': responseTimeLabel,
+      'jobsCount': jobsCount,
+      'yearsExperience': yearsExperience,
+      'onTimePercent': onTimePercent,
+      if (hourlyRateLkr > 0) 'hourlyRateLkr': hourlyRateLkr,
+      'emergencyRateLkr': emergencyRateLkr,
+      if (pricingModes != null) 'pricingModes': pricingModes,
+      if (dailyRateLkr != null && dailyRateLkr! > 0) 'dailyRateLkr': dailyRateLkr,
+      if (perKmRateLkr != null && perKmRateLkr! > 0) 'perKmRateLkr': perKmRateLkr,
+      if (visitFeeLkr != null && visitFeeLkr! > 0) 'visitFeeLkr': visitFeeLkr,
+      // round to 2 decimals for privacy
+      if (effectiveBaseLat != null)
+        'baseLat': roundToTwoDecimals(effectiveBaseLat),
+      if (effectiveBaseLng != null)
+        'baseLng': roundToTwoDecimals(effectiveBaseLng),
+      if (baseAddress != null) 'baseAddress': baseAddress,
+      if (baseArea != null && baseArea!.trim().isNotEmpty) 'baseArea': baseArea!.trim(),
+      if (currentLat != null)
+        'currentLat': roundToTwoDecimals(currentLat!),
+      if (currentLng != null)
+        'currentLng': roundToTwoDecimals(currentLng!),
+      if (currentLocationAt != null)
+        'currentLocationAt': Timestamp.fromDate(currentLocationAt!),
+      if (effectiveBaseLat != null)
+        'latitude': roundToTwoDecimals(effectiveBaseLat),
+      if (effectiveBaseLng != null)
+        'longitude': roundToTwoDecimals(effectiveBaseLng),
+      'about': about,
+      'languages': languages,
+      'serviceArea': serviceArea,
+      'phone': phone,
+      'certification': certification,
+      'isBanned': isBanned,
+      if (banReason != null) 'banReason': banReason,
+      'isVerified': isVerified,
+      'status': status,
+      'emergencyAvailable': emergencyAvailable,
+      'serviceRadiusKm': serviceRadiusKm,
+      'workingHours': workingHours.map((k, v) => MapEntry(k, v.toMap())),
+      'recentWork': recentWork.map((w) => w.toMap()).toList(),
+      'reviews': reviews.map((r) => r.toMap()).toList(),
+    };
+  }
 
   factory Technician.fromMap(String id, Map<String, dynamic> map) {
     Map<String, WorkingDaySchedule> parsedWorkingHours = {};
@@ -265,6 +433,18 @@ class Technician {
         }
       });
     }
+
+    final parsedBaseLat = (map['baseLat'] as num?)?.toDouble() ??
+        (map['latitude'] as num?)?.toDouble() ??
+        (map['lat'] as num?)?.toDouble();
+    final parsedBaseLng = (map['baseLng'] as num?)?.toDouble() ??
+        (map['longitude'] as num?)?.toDouble() ??
+        (map['lng'] as num?)?.toDouble();
+    final parsedCurrentLat = (map['currentLat'] as num?)?.toDouble();
+    final parsedCurrentLng = (map['currentLng'] as num?)?.toDouble();
+    final parsedCurrentLocationAt = (map['currentLocationAt'] is Timestamp)
+        ? (map['currentLocationAt'] as Timestamp).toDate()
+        : null;
 
     return Technician(
       id: id,
@@ -288,10 +468,18 @@ class Technician {
       dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
       visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
-      latitude: (map['latitude'] as num?)?.toDouble() ??
-          (map['lat'] as num?)?.toDouble(),
-      longitude: (map['longitude'] as num?)?.toDouble() ??
-          (map['lng'] as num?)?.toDouble(),
+      pricingModes: (map['pricingModes'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
+      latitude: parsedBaseLat,
+      longitude: parsedBaseLng,
+      baseLat: parsedBaseLat,
+      baseLng: parsedBaseLng,
+      baseAddress: map['baseAddress'] as String?,
+      baseArea: map['baseArea'] as String?,
+      currentLat: parsedCurrentLat,
+      currentLng: parsedCurrentLng,
+      currentLocationAt: parsedCurrentLocationAt,
       about: map['about'] ?? '',
       languages: map['languages'] ?? '',
       serviceArea: map['serviceArea'] ?? '',

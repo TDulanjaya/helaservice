@@ -10,6 +10,7 @@ import '../../../models/technician.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../utils/location_utils.dart';
+import '../../../utils/exact_location_helper.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'live_tracking_screen.dart';
@@ -943,6 +944,18 @@ class JobQuotesScreen extends StatelessWidget {
         ),
       );
     } catch (e) {
+      if (e is ExactLocationUnavailableException ||
+          e.toString().contains('ExactLocationUnavailableException')) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.couldNotLoadExactLocationRetry),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
       if (e.toString().contains('JOB_LOCATION_MISSING')) {
         if (context.mounted) {
           await _promptSetJobLocationAndAccept(context, quote, request);
@@ -1363,11 +1376,26 @@ class _QuoteCardState extends State<_QuoteCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${'Travel'} (${quote.travelKm.toStringAsFixed(1)} km @ ${'LKR'} ${quote.travelRateLkr}/km):',
+                        '${context.l10n.travelTitle} (${quote.travelKm.toStringAsFixed(1)} km @ LKR ${quote.travelRateLkr}/km):',
                         style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
                       ),
-                      Text('${'LKR'} ${quote.travelCostLkr}',
+                      Text('LKR ${quote.travelCostLkr}',
                           style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ] else ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${context.l10n.travelTitle}:',
+                        style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                      ),
+                      Text(
+                        context.l10n.travelIncluded,
+                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.primary),
+                      ),
                     ],
                   ),
                 ],

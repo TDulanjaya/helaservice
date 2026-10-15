@@ -351,11 +351,21 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                               const SizedBox(height: 3),
                                               Row(
                                                 children: [
+                                                  if (lastMessage == 'photo' || lastMessage == 'Photo') ...[
+                                                    Icon(
+                                                      Icons.photo_camera_rounded,
+                                                      size: 14,
+                                                      color: hasUnread
+                                                          ? context.themeInk
+                                                          : context.themeTextSecondary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                  ],
                                                   Expanded(
                                                     child: Text(
                                                       lastMessage.isNotEmpty
-                                                          ? ((lastMessage == 'photo' || lastMessage == '📷 Photo')
-                                                              ? '📷 ${context.l10n.chatPhotoMessage}'
+                                                          ? ((lastMessage == 'photo' || lastMessage == 'Photo')
+                                                              ? context.l10n.chatPhotoMessage
                                                               : lastMessage)
                                                           : context.l10n.tapToStartConversation,
                                                       style: TextStyle(

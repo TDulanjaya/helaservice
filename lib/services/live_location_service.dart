@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../constants/firestore_paths.dart';
 
-// live location service
 class LiveLocationService {
   LiveLocationService._();
   static final LiveLocationService instance = LiveLocationService._();
@@ -12,49 +12,83 @@ class LiveLocationService {
   StreamSubscription<Position>? _positionSub;
   bool _isTracking = false;
   String? _trackingUserId;
+  final _positionController = StreamController<Position>.broadcast();
+  Position? _lastKnownPosition;
 
   bool get isTracking => _isTracking;
+  Stream<Position> get positionStream => _positionController.stream;
+  Position? get lastKnownPosition => _lastKnownPosition;
 
-  // start tracking
-  Future<void> startTracking(String userId, {List<String>? allowedViewers}) async {
-    if (_isTracking) return;
+  Future<bool> startTracking(
+    String userId, {
+    List<String>? allowedViewers,
+    String? notificationTitle,
+    String? notificationText,
+  }) async {
+    if (_isTracking) return true;
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return false;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return false;
+      }
+      if (permission == LocationPermission.deniedForever) return false;
+
+      _isTracking = true;
+      _trackingUserId = userId;
+
+      LocationSettings locationSettings;
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        locationSettings = AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 20,
+          foregroundNotificationConfig: ForegroundNotificationConfig(
+            notificationTitle: notificationTitle ?? 'HelaService',
+            notificationText:
+                notificationText ?? 'Sharing your location with the customer',
+            enableWakeLock: true,
+          ),
+        );
+      } else {
+        locationSettings = const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 20,
+        );
+      }
+
+      _positionSub = Geolocator.getPositionStream(
+        locationSettings: locationSettings,
+      ).listen(
+        (pos) {
+          _lastKnownPosition = pos;
+          _positionController.add(pos);
+          FirebaseFirestore.instance
+              .collection(FirestorePaths.liveLocations)
+              .doc(userId)
+              .set({
+            'latitude': pos.latitude,
+            'longitude': pos.longitude,
+            'heading': pos.heading,
+            'speed': pos.speed,
+            'updatedAt': FieldValue.serverTimestamp(),
+            'userId': userId,
+            if (allowedViewers != null && allowedViewers.isNotEmpty)
+              'allowedViewers': allowedViewers,
+          }, SetOptions(merge: true));
+        },
+        onError: (_) {},
+      );
+      return true;
+    } catch (_) {
+      _isTracking = false;
+      return false;
     }
-    if (permission == LocationPermission.deniedForever) return;
-
-    _isTracking = true;
-    _trackingUserId = userId;
-
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 20,
-      ),
-    ).listen(
-      (pos) {
-        FirebaseFirestore.instance
-            .collection(FirestorePaths.liveLocations)
-            .doc(userId)
-            .set({
-          'latitude': pos.latitude,
-          'longitude': pos.longitude,
-          'heading': pos.heading,
-          'speed': pos.speed,
-          'updatedAt': FieldValue.serverTimestamp(),
-          'userId': userId,
-          if (allowedViewers != null && allowedViewers.isNotEmpty)
-            'allowedViewers': allowedViewers,
-        }, SetOptions(merge: true));
-      },
-      onError: (_) {},
-    );
   }
 
-  // stop tracking
   void stopTracking() {
     _positionSub?.cancel();
     _positionSub = null;
@@ -70,7 +104,6 @@ class LiveLocationService {
     }
   }
 
-  // stream tech location
   Stream<LatLng?> streamUserLocation(String userId) {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)
@@ -86,7 +119,6 @@ class LiveLocationService {
     });
   }
 
-  // stream location data
   Stream<Map<String, dynamic>?> streamUserLocationData(String userId) {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)

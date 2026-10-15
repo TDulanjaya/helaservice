@@ -24,42 +24,41 @@ class GoogleSignInButton extends StatelessWidget {
     final textColor = isDark ? const Color(0xFFE3E3E3) : const Color(0xFF1F1F1F);
     final borderColor = isDark ? const Color(0xFF8E918F) : const Color(0xFF747775);
 
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          disabledBackgroundColor: backgroundColor.withValues(alpha: 0.6),
-          side: BorderSide(color: borderColor.withValues(alpha: 0.35), width: 1.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          elevation: 0,
+    return OutlinedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
+        disabledBackgroundColor: backgroundColor.withValues(alpha: 0.6),
+        side: BorderSide(color: borderColor.withValues(alpha: 0.35), width: 1.2),
+        minimumSize: const Size.fromHeight(52),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: isLoading
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  color: isDark ? Colors.white : AppColors.primary,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        elevation: 0,
+      ),
+      child: isLoading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: isDark ? Colors.white : AppColors.primary,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/images/google_g_logo.svg',
+                  width: 20,
+                  height: 20,
+                  fit: BoxFit.contain,
                 ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/images/google_g_logo.svg',
-                    width: 20,
-                    height: 20,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
                     text ?? context.l10n.googleSignIn,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -67,10 +66,13 @@ class GoogleSignInButton extends StatelessWidget {
                       letterSpacing: 0.2,
                       color: textColor,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 }

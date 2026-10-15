@@ -29,13 +29,15 @@ import '../../../shared/widgets/user_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'en_route_navigation_screen.dart';
 import 'provider_profile_screen.dart';
-import 'package:geolocator/geolocator.dart';
 import 'submit_quote_sheet.dart';
 import '../widgets/provider_approval_gate.dart';
 import '../../../shared/widgets/notification_bell_icon.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
+import '../../../models/technician.dart';
+import '../../../services/provider_tracking_service.dart';
+import '../../../utils/provider_location_helper.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -50,12 +52,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   int _navIndex = 0;
   bool _sortByClosest = true;
   double? _selectedRadiusKm;
-  Position? _liveGpsPosition;
 
   @override
   void initState() {
     super.initState();
-    _fetchLiveLocation();
+    _initProviderTracking();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         PermissionUtils.checkAndPromptInitialPermissions(context);
@@ -63,13 +64,28 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     });
   }
 
-  Future<void> _fetchLiveLocation() async {
-    try {
-      final pos = await LocationUtils.getCurrentPosition();
-      if (mounted && pos != null) {
-        setState(() => _liveGpsPosition = pos);
+  Future<void> _initProviderTracking() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      final tech = await TechnicianRepository().getById(uid);
+      if (mounted && tech != null) {
+        setState(() {
+          _online = tech.online;
+          if (_selectedRadiusKm == null && tech.serviceRadiusKm > 0) {
+            _selectedRadiusKm = tech.serviceRadiusKm;
+          }
+        });
+        if (tech.online) {
+          ProviderTrackingService.instance.startOnlineTracking(uid);
+        }
       }
-    } catch (_) {}
+    }
+  }
+
+  @override
+  void dispose() {
+    ProviderTrackingService.instance.stopOnlineTracking();
+    super.dispose();
   }
 
   @override
@@ -310,6 +326,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               if (uid != null && uid.isNotEmpty) {
                                 await TechnicianRepository()
                                     .updateOnlineStatus(uid, v);
+                                if (v) {
+                                  ProviderTrackingService.instance
+                                      .startOnlineTracking(uid);
+                                } else {
+                                  ProviderTrackingService.instance
+                                      .stopOnlineTracking();
+                                }
                               }
                             },
                           ),
@@ -412,6 +435,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               if (uid != null && uid.isNotEmpty) {
                                 await TechnicianRepository()
                                     .updateOnlineStatus(uid, v);
+                                if (v) {
+                                  ProviderTrackingService.instance
+                                      .startOnlineTracking(uid);
+                                } else {
+                                  ProviderTrackingService.instance
+                                      .stopOnlineTracking();
+                                }
                               }
                             },
                           ),
@@ -542,233 +572,292 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 ),
               )
             else
-              StreamBuilder<List<JobRequest>>(
-                stream: JobRequestRepository()
-                    .streamOpenRequestsForCategory(providerCategory),
-                builder: (context, snapshot) {
-                  final rawRequests = snapshot.data ?? [];
-                  final providerLat =
-                      _liveGpsPosition?.latitude ?? user?.latitude;
-                  final providerLng =
-                      _liveGpsPosition?.longitude ?? user?.longitude;
+              StreamBuilder<Technician?>(
+                stream: TechnicianRepository().streamById(user?.id ?? ''),
+                builder: (context, techSnap) {
+                  final tech = techSnap.data;
+                  final effectiveLoc = tech != null
+                      ? getEffectiveProviderLocation(tech)
+                      : EffectiveProviderLocation.none;
 
-                  var requests = List<JobRequest>.from(rawRequests);
+                  if (effectiveLoc.source == ProviderLocationSource.none) {
+                    return _buildNoBaseLocationCard(context);
+                  }
 
-                  // radius filter
-                  if (_selectedRadiusKm != null &&
-                      providerLat != null &&
-                      providerLng != null) {
-                    requests = requests.where((req) {
-                      if (req.latitude == null || req.longitude == null) {
-                        return false;
+                  return StreamBuilder<List<JobRequest>>(
+                    stream: JobRequestRepository()
+                        .streamOpenRequestsForCategory(providerCategory),
+                    builder: (context, snapshot) {
+                      final rawRequests = snapshot.data ?? [];
+                      var requests = List<JobRequest>.from(rawRequests);
+
+                      if (_selectedRadiusKm != null) {
+                        requests = requests.where((req) {
+                          if (req.latitude == null || req.longitude == null) {
+                            return false;
+                          }
+                          final isScheduled = req.scheduledDate != null ||
+                              req.scheduleMode == 'scheduled' ||
+                              req.bookingType == 'scheduled';
+                          final pLat = (isScheduled && tech?.baseLat != null)
+                              ? tech!.baseLat
+                              : effectiveLoc.latitude;
+                          final pLng = (isScheduled && tech?.baseLng != null)
+                              ? tech!.baseLng
+                              : effectiveLoc.longitude;
+                          if (pLat == null || pLng == null) return false;
+                          final km = LocationUtils.calculateDistanceKm(
+                            pLat,
+                            pLng,
+                            req.latitude!,
+                            req.longitude!,
+                          );
+                          return km <= _selectedRadiusKm!;
+                        }).toList();
                       }
-                      final km = LocationUtils.calculateDistanceKm(
-                        providerLat,
-                        providerLng,
-                        req.latitude!,
-                        req.longitude!,
-                      );
-                      return km <= _selectedRadiusKm!;
-                    }).toList();
-                  }
 
-                  // sort by distance or date
-                  if (_sortByClosest &&
-                      providerLat != null &&
-                      providerLng != null) {
-                    requests.sort((a, b) {
-                      final hasA = a.latitude != null && a.longitude != null;
-                      final hasB = b.latitude != null && b.longitude != null;
-                      if (!hasA && !hasB) return 0;
-                      if (!hasA) return 1;
-                      if (!hasB) return -1;
-                      final distA = LocationUtils.calculateDistanceKm(
-                        providerLat,
-                        providerLng,
-                        a.latitude!,
-                        a.longitude!,
-                      );
-                      final distB = LocationUtils.calculateDistanceKm(
-                        providerLat,
-                        providerLng,
-                        b.latitude!,
-                        b.longitude!,
-                      );
-                      return distA.compareTo(distB);
-                    });
-                  } else {
-                    requests.sort((a, b) {
-                      final dtA =
-                          a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                      final dtB =
-                          b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                      return dtB.compareTo(dtA);
-                    });
-                  }
+                      if (_sortByClosest) {
+                        requests.sort((a, b) {
+                          final hasA =
+                              a.latitude != null && a.longitude != null;
+                          final hasB =
+                              b.latitude != null && b.longitude != null;
+                          if (!hasA && !hasB) return 0;
+                          if (!hasA) return 1;
+                          if (!hasB) return -1;
+                          final isSchedA = a.scheduledDate != null ||
+                              a.scheduleMode == 'scheduled' ||
+                              a.bookingType == 'scheduled';
+                          final isSchedB = b.scheduledDate != null ||
+                              b.scheduleMode == 'scheduled' ||
+                              b.bookingType == 'scheduled';
+                          final pLatA = (isSchedA && tech?.baseLat != null)
+                              ? tech!.baseLat
+                              : effectiveLoc.latitude;
+                          final pLngA = (isSchedA && tech?.baseLng != null)
+                              ? tech!.baseLng
+                              : effectiveLoc.longitude;
+                          final pLatB = (isSchedB && tech?.baseLat != null)
+                              ? tech!.baseLat
+                              : effectiveLoc.latitude;
+                          final pLngB = (isSchedB && tech?.baseLng != null)
+                              ? tech!.baseLng
+                              : effectiveLoc.longitude;
+                          if (pLatA == null || pLngA == null) return 0;
+                          if (pLatB == null || pLngB == null) return 0;
+                          final distA = LocationUtils.calculateDistanceKm(
+                            pLatA,
+                            pLngA,
+                            a.latitude!,
+                            a.longitude!,
+                          );
+                          final distB = LocationUtils.calculateDistanceKm(
+                            pLatB,
+                            pLngB,
+                            b.latitude!,
+                            b.longitude!,
+                          );
+                          return distA.compareTo(distB);
+                        });
+                      } else {
+                        requests.sort((a, b) {
+                          final dtA = a.createdAt ??
+                              DateTime.fromMillisecondsSinceEpoch(0);
+                          final dtB = b.createdAt ??
+                              DateTime.fromMillisecondsSinceEpoch(0);
+                          return dtB.compareTo(dtA);
+                        });
+                      }
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      final customRadius = tech?.serviceRadiusKm;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            context.l10n.openJobRequests,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                          if (requests.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                context.l10n.nNew(requests.length),
+                          _buildLocationBanner(context, tech, effectiveLoc),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.l10n.openJobRequests,
                                 style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      // filter and sort
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            // sort toggle
-                            InkWell(
-                              onTap: () => setState(
-                                  () => _sortByClosest = !_sortByClosest),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _sortByClosest
-                                      ? AppColors.primary
-                                          .withValues(alpha: 0.12)
-                                      : context.themeSurfaceLow,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: _sortByClosest
-                                        ? AppColors.primary
-                                        : context.themeBorder,
-                                    width: 1.2,
+                              if (requests.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    context.l10n.nNew(requests.length),
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _sortByClosest
-                                          ? Icons.near_me_rounded
-                                          : Icons.schedule_rounded,
-                                      size: 13,
-                                      color: _sortByClosest
-                                          ? AppColors.primary
-                                          : context.themeTextSecondary,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      _sortByClosest
-                                          ? context.l10n.closestFirst
-                                          : context.l10n.newestFirst,
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: _sortByClosest
-                                            ? AppColors.primary
-                                            : context.themeTextSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildRadiusFilterChip(
-                              label: context.l10n.allDistances,
-                              radius: null,
-                            ),
-                            const SizedBox(width: 6),
-                            _buildRadiusFilterChip(
-                              label: context.l10n.within5Km,
-                              radius: 5.0,
-                            ),
-                            const SizedBox(width: 6),
-                            _buildRadiusFilterChip(
-                              label: context.l10n.within10Km,
-                              radius: 10.0,
-                            ),
-                            const SizedBox(width: 6),
-                            _buildRadiusFilterChip(
-                              label: context.l10n.within25Km,
-                              radius: 25.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (requests.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: context.themeSurface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: context.themeBorder),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(Icons.inbox_outlined,
-                                  size: 36, color: context.themeTextSecondary),
-                              const SizedBox(height: 8),
-                              Text(
-                                rawRequests.isNotEmpty &&
-                                        _selectedRadiusKm != null
-                                    ? context.l10n.noJobsInRadius
-                                    : context.l10n.noOpenRequests,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                context.l10n.customerRequestsAppearHere,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
                             ],
                           ),
-                        )
-                      else
-                        Column(
-                          children: requests
-                              .map((req) => _JobRequestCard(
-                                    request: req,
-                                    providerLat: providerLat,
-                                    providerLng: providerLng,
-                                    onSendQuote: () =>
-                                        _openSubmitQuoteSheet(req),
-                                  ))
-                              .toList(),
-                        ),
-                    ],
+                          const SizedBox(height: 10),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                InkWell(
+                                  onTap: () => setState(
+                                      () => _sortByClosest = !_sortByClosest),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _sortByClosest
+                                          ? AppColors.primary
+                                              .withValues(alpha: 0.12)
+                                          : context.themeSurfaceLow,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: _sortByClosest
+                                            ? AppColors.primary
+                                            : context.themeBorder,
+                                        width: 1.2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _sortByClosest
+                                              ? Icons.near_me_rounded
+                                              : Icons.schedule_rounded,
+                                          size: 13,
+                                          color: _sortByClosest
+                                              ? AppColors.primary
+                                              : context.themeTextSecondary,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          _sortByClosest
+                                              ? context.l10n.closestFirst
+                                              : context.l10n.newestFirst,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: _sortByClosest
+                                                ? AppColors.primary
+                                                : context.themeTextSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _buildRadiusFilterChip(
+                                  label: context.l10n.allDistances,
+                                  radius: null,
+                                ),
+                                if (customRadius != null &&
+                                    customRadius > 0 &&
+                                    customRadius != 5.0 &&
+                                    customRadius != 10.0 &&
+                                    customRadius != 25.0) ...[
+                                  const SizedBox(width: 6),
+                                  _buildRadiusFilterChip(
+                                    label: '${customRadius.toInt()} km',
+                                    radius: customRadius,
+                                  ),
+                                ],
+                                const SizedBox(width: 6),
+                                _buildRadiusFilterChip(
+                                  label: context.l10n.within5Km,
+                                  radius: 5.0,
+                                ),
+                                const SizedBox(width: 6),
+                                _buildRadiusFilterChip(
+                                  label: context.l10n.within10Km,
+                                  radius: 10.0,
+                                ),
+                                const SizedBox(width: 6),
+                                _buildRadiusFilterChip(
+                                  label: context.l10n.within25Km,
+                                  radius: 25.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (requests.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: context.themeSurface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.inbox_outlined,
+                                      size: 36,
+                                      color: context.themeTextSecondary),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    rawRequests.isNotEmpty &&
+                                            _selectedRadiusKm != null
+                                        ? context.l10n.noJobsInRadius
+                                        : context.l10n.noOpenRequests,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: context.themeTextSecondary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    context.l10n.customerRequestsAppearHere,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: context.themeTextSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Column(
+                              children: requests.map((req) {
+                                final isScheduled = req.scheduledDate != null ||
+                                    req.scheduleMode == 'scheduled' ||
+                                    req.bookingType == 'scheduled';
+                                final pLat =
+                                    (isScheduled && tech?.baseLat != null)
+                                        ? tech!.baseLat
+                                        : effectiveLoc.latitude;
+                                final pLng =
+                                    (isScheduled && tech?.baseLng != null)
+                                        ? tech!.baseLng
+                                        : effectiveLoc.longitude;
+                                return _JobRequestCard(
+                                  request: req,
+                                  providerLat: pLat,
+                                  providerLng: pLng,
+                                  onSendQuote: () =>
+                                      _openSubmitQuoteSheet(req),
+                                );
+                              }).toList(),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -1251,6 +1340,129 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 : context.themeTextSecondary,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLocationBanner(
+    BuildContext context,
+    Technician? tech,
+    EffectiveProviderLocation effectiveLoc,
+  ) {
+    final isCurrent = effectiveLoc.source == ProviderLocationSource.current;
+    final areaName = (tech?.baseArea != null && tech!.baseArea!.trim().isNotEmpty)
+        ? tech.baseArea!.trim()
+        : extractBaseArea(address: tech?.baseAddress);
+
+    final title = isCurrent
+        ? context.l10n.showingJobsNearYouNow
+        : (areaName != null && areaName.isNotEmpty)
+            ? context.l10n.showingJobsNearBase(areaName)
+            : context.l10n.showingJobsNearBaseNoArea;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCurrent
+            ? (context.isDark
+                ? const Color(0xFF133F26)
+                : const Color(0xFFE8F5E9))
+            : (context.isDark
+                ? const Color(0xFF1E293B)
+                : const Color(0xFFF1F5F9)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrent
+              ? (context.isDark
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFFA3D9B5))
+              : (context.isDark
+                  ? const Color(0xFF334155)
+                  : const Color(0xFFCBD5E1)),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isCurrent ? Icons.my_location_rounded : Icons.home_work_outlined,
+            size: 18,
+            color: isCurrent
+                ? (context.isDark
+                    ? const Color(0xFF81C784)
+                    : const Color(0xFF2E7D32))
+                : context.themeTextPrimary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: context.themeTextPrimary,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.refreshGps,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: Icon(
+              Icons.refresh_rounded,
+              size: 18,
+              color: context.themeTextSecondary,
+            ),
+            onPressed: () async {
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid != null && uid.isNotEmpty) {
+                final pos = await LocationUtils.getCurrentPosition();
+                if (pos != null) {
+                  await TechnicianRepository().updateCurrentLocation(
+                    uid,
+                    latitude: pos.latitude,
+                    longitude: pos.longitude,
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoBaseLocationCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: context.themeBorder),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.location_off_outlined,
+              size: 40, color: context.themeTextSecondary),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.setBaseLocationPrompt,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.themeTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          PrimaryButton(
+            label: context.l10n.setBaseLocationBtn,
+            leadingIcon: Icons.pin_drop_outlined,
+            onPressed: () => setState(() => _navIndex = 3),
+          ),
+        ],
       ),
     );
   }

@@ -18,7 +18,24 @@ class UserRepository {
     try {
       final doc = await _db.collection(FirestorePaths.users).doc(uid).get();
       if (!doc.exists || doc.data() == null) return null;
-      return UserProfile.fromMap(doc.data()!);
+      var profile = UserProfile.fromMap(doc.data()!, documentId: doc.id);
+      try {
+        final locDoc = await _db
+            .collection(FirestorePaths.users)
+            .doc(uid)
+            .collection('private')
+            .doc('location')
+            .get();
+        if (locDoc.exists && locDoc.data() != null) {
+          final lData = locDoc.data()!;
+          final lat = (lData['latitude'] as num?)?.toDouble();
+          final lng = (lData['longitude'] as num?)?.toDouble();
+          if (lat != null && lng != null) {
+            profile = profile.copyWith(latitude: lat, longitude: lng);
+          }
+        }
+      } catch (_) {}
+      return profile;
     } catch (_) {
       return null;
     }
@@ -31,9 +48,27 @@ class UserRepository {
         .collection(FirestorePaths.users)
         .doc(uid)
         .snapshots()
-        .map((doc) => doc.exists && doc.data() != null
-            ? UserProfile.fromMap(doc.data()!, documentId: doc.id)
-            : null);
+        .asyncMap((doc) async {
+      if (!doc.exists || doc.data() == null) return null;
+      var profile = UserProfile.fromMap(doc.data()!, documentId: doc.id);
+      try {
+        final locDoc = await _db
+            .collection(FirestorePaths.users)
+            .doc(uid)
+            .collection('private')
+            .doc('location')
+            .get();
+        if (locDoc.exists && locDoc.data() != null) {
+          final lData = locDoc.data()!;
+          final lat = (lData['latitude'] as num?)?.toDouble();
+          final lng = (lData['longitude'] as num?)?.toDouble();
+          if (lat != null && lng != null) {
+            profile = profile.copyWith(latitude: lat, longitude: lng);
+          }
+        }
+      } catch (_) {}
+      return profile;
+    });
   }
 
   // stream all users for admin
@@ -78,8 +113,12 @@ class UserRepository {
               data['serviceArea']?.toString();
           final serviceCategory = data['title']?.toString() ??
               data['serviceCategory']?.toString();
-          final lat = (data['latitude'] as num?)?.toDouble();
-          final lng = (data['longitude'] as num?)?.toDouble();
+          final lat = (data['baseLat'] as num?)?.toDouble() ??
+              (data['currentLat'] as num?)?.toDouble() ??
+              (data['latitude'] as num?)?.toDouble();
+          final lng = (data['baseLng'] as num?)?.toDouble() ??
+              (data['currentLng'] as num?)?.toDouble() ??
+              (data['longitude'] as num?)?.toDouble();
 
           if (userMap.containsKey(id)) {
             final existing = userMap[id]!;

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/app_theme.dart';
@@ -217,11 +218,19 @@ class LiveTrackingScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(
                   16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
-                StreamBuilder<LatLng?>(
+                StreamBuilder<Map<String, dynamic>?>(
                     stream: LiveLocationService.instance
-                        .streamUserLocation(tech.id),
+                        .streamUserLocationData(tech.id),
                     builder: (context, locSnapshot) {
-                      final liveTechPoint = locSnapshot.data;
+                      final rawLocData = locSnapshot.data;
+                      final rawLat = (rawLocData?['latitude'] as num?)?.toDouble();
+                      final rawLng = (rawLocData?['longitude'] as num?)?.toDouble();
+                      final liveTechPoint = (rawLat != null && rawLng != null)
+                          ? LatLng(rawLat, rawLng)
+                          : null;
+                      final updatedAt = (rawLocData?['updatedAt'] is Timestamp)
+                          ? (rawLocData!['updatedAt'] as Timestamp).toDate()
+                          : null;
                       final isLive = liveTechPoint != null;
 
                       final hasCustomerLocation =
@@ -393,6 +402,7 @@ class LiveTrackingScreen extends StatelessWidget {
                                     : null,
                                 isLive: isLive,
                                 hasCustomerLocation: hasCustomerLocation,
+                                updatedAt: updatedAt,
                               ),
                               const SizedBox(height: 16),
                               AppCard(
@@ -1087,6 +1097,7 @@ class _CustomerLiveTrackingMapCard extends StatefulWidget {
   final List<LatLng>? routePoints;
   final bool isLive;
   final bool hasCustomerLocation;
+  final DateTime? updatedAt;
 
   const _CustomerLiveTrackingMapCard({
     required this.techPoint,
@@ -1096,6 +1107,7 @@ class _CustomerLiveTrackingMapCard extends StatefulWidget {
     required this.routePoints,
     required this.isLive,
     this.hasCustomerLocation = true,
+    this.updatedAt,
   });
 
   @override
@@ -1221,13 +1233,46 @@ class _CustomerLiveTrackingMapCardState
             Positioned(
               top: 12,
               left: 12,
-              child: PillBadge(
-                label: widget.isLive
-                    ? context.l10n.liveGpsOnTheWay
-                    : context.l10n.techOnTheWay,
-                icon: widget.isLive ? Icons.sensors : null,
-                background: context.themeSurface,
-                foreground: AppColors.primary,
+              child: Builder(
+                builder: (context) {
+                  final minutesOld = widget.updatedAt != null
+                      ? DateTime.now().difference(widget.updatedAt!).inMinutes
+                      : null;
+                  final isStale = minutesOld != null && minutesOld >= 2;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PillBadge(
+                        label: widget.isLive
+                            ? context.l10n.liveGpsOnTheWay
+                            : context.l10n.techOnTheWay,
+                        icon: widget.isLive ? Icons.sensors : null,
+                        background: context.themeSurface,
+                        foreground: AppColors.primary,
+                      ),
+                      if (isStale) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            context.l10n.locationLastUpdatedMinsAgo('$minutesOld'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ],

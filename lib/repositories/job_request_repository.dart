@@ -6,6 +6,7 @@ import '../constants/job_status.dart';
 import '../models/job_request.dart';
 import '../models/quote.dart';
 import '../services/notification_service.dart';
+import '../utils/exact_location_helper.dart';
 import 'booking_repository.dart';
 
 class JobRequestRepository {
@@ -191,7 +192,41 @@ class JobRequestRepository {
 
     final resolvedQuote = quote ?? Quote.fromMap(quoteId, quoteData!);
 
-    // generate pin code
+    // fetch private customer coordinates
+    Map<String, dynamic>? contactData;
+    try {
+      final contactSnap = await _col.doc(requestId).collection('private').doc('contact').get();
+      contactData = contactSnap.data();
+    } catch (_) {}
+
+    // retry once if contact coordinates were missing or invalid
+    if (!ExactLocationHelper.validate(contactData)) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      try {
+        final retrySnap = await _col.doc(requestId).collection('private').doc('contact').get();
+        contactData = retrySnap.data();
+      } catch (_) {}
+    }
+
+    if (!ExactLocationHelper.validate(contactData)) {
+      throw const ExactLocationUnavailableException();
+    }
+
+    final exactLat = (contactData!['latitude'] as num).toDouble();
+    final exactLng = (contactData['longitude'] as num).toDouble();
+    final exactPhone = (contactData['customerPhone'] as String?)?.isNotEmpty == true
+        ? contactData['customerPhone'] as String
+        : request.customerPhone;
+    final exactAddress = (contactData['address'] as String?)?.isNotEmpty == true
+        ? contactData['address'] as String
+        : (request.address.isNotEmpty ? request.address : 'Service Location');
+    final exactLandmark = (contactData['landmark'] as String?) ?? request.landmark ?? '';
+    final accuracyMeters = (contactData['accuracyMeters'] as num?)?.toDouble() ?? request.accuracyMeters;
+    final houseNo = (contactData['houseNo'] as String?) ?? request.houseNo;
+    final street = (contactData['street'] as String?) ?? request.street;
+    final city = (contactData['city'] as String?) ?? request.city;
+    final directions = (contactData['directions'] as String?) ?? request.directions;
+
     final pin = (100000 + Random().nextInt(900000)).toString();
 
     final batch = FirebaseFirestore.instance.batch();
@@ -199,7 +234,6 @@ class JobRequestRepository {
         FirebaseFirestore.instance.collection(FirestorePaths.bookings).doc();
     final pinRef = bookingRef.collection('private').doc('pin');
 
-    // set private pin document
     batch.set(pinRef, {
       'pin': pin,
       'createdAt': FieldValue.serverTimestamp(),
@@ -217,31 +251,7 @@ class JobRequestRepository {
     final quotesCol = _col.doc(requestId).collection(FirestorePaths.quotes);
     batch.update(quotesCol.doc(quoteId), {'status': 'accepted'});
 
-    // read private contact for full details if present
-    Map<String, dynamic>? contactData;
-    try {
-      final contactSnap = await _col.doc(requestId).collection('private').doc('contact').get();
-      contactData = contactSnap.data();
-    } catch (e) {
-      // ignore if not readable
-    }
-
-    final exactPhone = (contactData?['customerPhone'] as String?)?.isNotEmpty == true
-        ? contactData!['customerPhone'] as String
-        : request.customerPhone;
-    final exactAddress = (contactData?['address'] as String?)?.isNotEmpty == true
-        ? contactData!['address'] as String
-        : (request.address.isNotEmpty ? request.address : 'Service Location');
-    final exactLandmark = (contactData?['landmark'] as String?) ?? request.landmark ?? '';
-    final exactLat = (contactData?['latitude'] as num?)?.toDouble() ?? request.latitude!;
-    final exactLng = (contactData?['longitude'] as num?)?.toDouble() ?? request.longitude!;
-    final accuracyMeters = (contactData?['accuracyMeters'] as num?)?.toDouble() ?? request.accuracyMeters;
-    final houseNo = (contactData?['houseNo'] as String?) ?? request.houseNo;
-    final street = (contactData?['street'] as String?) ?? request.street;
-    final city = (contactData?['city'] as String?) ?? request.city;
-    final directions = (contactData?['directions'] as String?) ?? request.directions;
-
-    // Read provider phone from technicians/{providerId} (or users/{providerId})
+    // get provider phone for contact info
     String providerPhone = '';
     try {
       final techDoc = await FirebaseFirestore.instance

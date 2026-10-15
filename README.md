@@ -1,59 +1,109 @@
 # HelaService
 
-An on-demand home services app built with Flutter and Firebase. Customers can book local service providers or post job requests for quotes - with real-time tracking, in-app chat, and support for English, Sinhala, and Tamil.
-
----
+An on-demand home services marketplace for Sri Lanka, built with Flutter and Firebase. Customers post jobs, receive quotes from verified local providers, and track them live on the way. Available in English, Sinhala and Tamil.
 
 ## Features
 
-- **Job Requests & Quotes** - Post a broadcast request and receive price estimates from providers
-- **Direct Bookings** - Browse nearby providers by trade, check ratings, and book instantly
-- **Live Tracking & Chat** - Track providers en route and message them in-app
-- **Verified Providers** - NIC-based identity verification before providers go live
-- **Email Verification** - 6-digit OTP email verification before account creation
-- **Multilingual** - English, Sinhala (`si`), and Tamil (`ta`)
-
----
+* **Job Requests & Quotes:** Post a job and receive quotes from nearby providers (firm price, estimate, or inspect first).
+* **Map Location Picker:** Choose the job location with GPS, search, saved places, or by tapping the map.
+* **Urgent Help:** Find online providers near you, sorted by real distance.
+* **Live Tracking & Chat:** Follow the provider on the map, chat and call in-app.
+* **Job Completion PIN:** Arrival check and a 6-digit PIN to confirm the job is done.
+* **Verified Providers:** NIC-based identity verification before providers can accept work.
+* **Flexible Pricing:** Providers choose how they charge (per hour, per day, per job, visit fee, travel per km).
+* **Admin Desk:** Provider verification, user management, complaints and a live operations map.
+* **Location Privacy:** Public job posts show only an approximate area; the exact location is shared only with the hired provider.
+* **Multilingual:** English, Sinhala and Tamil.
 
 ## Tech Stack
 
-| Layer    | Tools                       |
-| -------- | --------------------------- |
-| Frontend | Flutter                     |
-| Backend  | Firebase + Vercel Functions |
-| Email    | Nodemailer (Gmail SMTP)     |
-| State    | Provider                    |
-| Maps     | flutter_map + OpenStreetMap |
-
----
-
-## Email Verification
-
-New users must verify their email with a 6-digit code before an account is created:
-- A serverless API on Vercel sends codes via Gmail SMTP
-- OTPs are hashed with SHA-256 and stored in Firestore with a 5-minute expiry
-- Built-in 60-second resend timer and 5-attempt limit to prevent brute force
-
----
+* **Framework:** [Flutter](https://flutter.dev/) (Stable channel)
+* **State Management:** [Provider](https://pub.dev/packages/provider) for app-wide state, `StreamBuilder` for live Firestore data, `setState` for screen-level UI
+* **Backend:** [Firebase](https://firebase.google.com/) (Auth, Cloud Firestore, Cloud Messaging, Remote Config, App Check)
+* **Serverless API:** [Vercel Functions](https://vercel.com/docs/functions) (Node.js)
+* **File Storage:** [Backblaze B2](https://www.backblaze.com/cloud-storage)
+* **Maps:** [flutter_map](https://pub.dev/packages/flutter_map) with OpenStreetMap data
 
 ## Getting Started
 
 ### Prerequisites
 
-- Flutter SDK 3.x+
-- Firebase project ([create one here](https://console.firebase.google.com/))
+* [Flutter SDK](https://docs.flutter.dev/get-started/install) installed.
+* [Node.js](https://nodejs.org/) and the [Vercel CLI](https://vercel.com/docs/cli) (for the API).
+* A Firebase project.
+* An IDE such as Android Studio or VS Code.
 
-### Setup
+### Installation
 
-```bash
-git clone https://github.com/your-username/helaservice.git
-cd helaservice
-flutter pub get
+1. Clone the repository:
+```
+   git clone https://github.com/YOUR-GITHUB-USERNAME/helaservice.git
+```
+2. Navigate to the project directory:
+```
+   cd helaservice
+```
+3. Get the required dependencies:
+```
+   flutter pub get
+```
+4. Connect your own Firebase project:
+```
+   flutterfire configure
+```
+5. Run the app on a connected device or emulator:
+```
+   flutter run
 ```
 
-> **Note:** This repo doesn't include Firebase credentials. You'll need to connect your own Firebase project.
+### API Setup
 
-1. Enable **Authentication** (Email/Password + Google) and **Cloud Firestore** in your Firebase project
-2. Run `flutterfire configure` to link the app, or manually add `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-3. Deploy security rules: `firebase deploy --only firestore:rules`
-4. Run the app: `flutter run`
+1. Install the API dependencies:
+```
+   npm install
+```
+2. Copy `.env.local.example` to `.env.local` and fill in your own values.
+3. Start the API locally:
+```
+   vercel dev
+```
+
+## Project Structure
+
+* `lib/features/`: Screens grouped by role (auth, customer, provider, admin, support, shared).
+* `lib/models/`: Data models (User, Technician, Job Request, Quote, Booking, Location).
+* `lib/repositories/`: Firestore read and write logic for each collection.
+* `lib/services/`: Auth, storage uploads, live location, routing and notifications.
+* `lib/state/`: Provider state (role, language, theme).
+* `lib/shared/`: Reusable widgets and shared screens.
+* `lib/utils/`: Helpers for location, pricing, validation and responsive layout.
+* `lib/l10n/`: Translations for English, Sinhala and Tamil.
+* `api/`: Vercel serverless functions (OTP email, uploads, notifications, NIC checks).
+* `firestore.rules`: Firestore security rules.
+
+## Building for Release
+
+To build a release-ready APK for Android:
+
+```
+flutter build apk --release
+```
+
+The generated APK will be located at `build/app/outputs/flutter-apk/app-release.apk`.
+
+> Release builds need your own signing key (`android/key.properties`), which is not included in this repository.
+
+## Installing on an Android Device
+
+1. Enable Developer Options and USB Debugging on your Android device.
+2. Connect your device to your computer via USB.
+3. Install the app directly using Flutter:
+```
+   flutter install
+```
+
+Alternatively, copy the generated `app-release.apk` to your device and install it manually via a file manager.
+
+## Map Data
+
+Map data © OpenStreetMap contributors.

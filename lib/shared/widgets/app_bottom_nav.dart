@@ -44,7 +44,7 @@ class AppBottomNav extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(16, 4, 16, bottomMargin),
         child: Container(
-          constraints: BoxConstraints(minHeight: navHeight),
+          height: navHeight * MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4),
           decoration: BoxDecoration(
             color: navBg,
             borderRadius: BorderRadius.circular(24),

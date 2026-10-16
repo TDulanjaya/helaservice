@@ -12263,6 +12263,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add travel cost'**
   String get quoteAddTravelCost;
+
+  /// No description provided for @couldNotOpenMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open map navigation application'**
+  String get couldNotOpenMaps;
+
+  /// No description provided for @locationSharingStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing stopped'**
+  String get locationSharingStopped;
+
+  /// No description provided for @useCurrentLocationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get useCurrentLocationAction;
+
+  /// No description provided for @searchPlaceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a place'**
+  String get searchPlaceAction;
+
+  /// No description provided for @approximateLocationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Using approximate location from {minutes} min ago. Please verify pin on map.'**
+  String approximateLocationWarning(String minutes);
+
+  /// No description provided for @locationOutsideSriLanka.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected location is outside Sri Lanka. Please select a location within Sri Lanka.'**
+  String get locationOutsideSriLanka;
+
+  /// No description provided for @nearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Near'**
+  String get nearLabel;
+
+  /// No description provided for @setLocationToSeeNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your location to see providers near you'**
+  String get setLocationToSeeNearby;
+
+  /// No description provided for @changeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeAction;
+
+  /// No description provided for @setAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set location'**
+  String get setAction;
+
+  /// No description provided for @distanceFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distanceFilter;
+
+  /// No description provided for @anyDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Any distance'**
+  String get anyDistance;
+
+  /// No description provided for @onlyServesMyArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Only providers who serve my area'**
+  String get onlyServesMyArea;
+
+  /// No description provided for @sortByNearest.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearest first'**
+  String get sortByNearest;
+
+  /// No description provided for @sortByTopRated.
+  ///
+  /// In en, this message translates to:
+  /// **'Top rated'**
+  String get sortByTopRated;
+
+  /// No description provided for @showUpTo50Km.
+  ///
+  /// In en, this message translates to:
+  /// **'Show up to 50 km'**
+  String get showUpTo50Km;
+
+  /// No description provided for @providersNearArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Providers near {area}'**
+  String providersNearArea(String area);
+
+  /// No description provided for @under1KmAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 1 km away'**
+  String get under1KmAway;
+
+  /// No description provided for @onlineNowBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Online now'**
+  String get onlineNowBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../theme/app_theme.dart';
 import '../../../constants/job_status.dart';
+import '../../../constants/firestore_paths.dart';
 import '../../../models/booking.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../shared/widgets/app_map_view.dart';
@@ -63,11 +65,6 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.booking != null &&
-        widget.booking!.id.isNotEmpty &&
-        widget.booking!.status == JobStatus.confirmed) {
-      BookingRepository().startNavigation(widget.booking!.id);
-    }
     _ensureJobRequestLoaded(widget.booking?.jobRequestId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLiveTracking();
@@ -107,20 +104,64 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
       _refreshRouteIfNeeded();
     }
 
+    final bookingId = widget.booking?.id;
     bool trackingStarted = false;
-    if (_providerId.isNotEmpty) {
-      final customerId = widget.booking?.customerId;
-      final notifTitle =
-          mounted ? context.l10n.locationSharingNotificationTitle : null;
-      final notifText =
-          mounted ? context.l10n.locationSharingNotificationText : null;
-      trackingStarted = await LiveLocationService.instance.startTracking(
-        _providerId,
-        allowedViewers:
-            customerId != null && customerId.isNotEmpty ? [customerId] : null,
-        notificationTitle: notifTitle,
-        notificationText: notifText,
-      );
+
+    if (bookingId != null && bookingId.isNotEmpty && _providerId.isNotEmpty) {
+      String? freshStatus;
+      String? customerId = widget.booking?.customerId;
+
+      // 1. read the booking fresh from Firestore
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .doc(bookingId)
+            .get();
+        if (doc.exists && doc.data() != null) {
+          final data = doc.data()!;
+          freshStatus = data['status'] as String?;
+          final freshCust = data['customerId'] as String?;
+          if (freshCust != null && freshCust.isNotEmpty) {
+            customerId = freshCust;
+          }
+        }
+      } catch (e) {
+        debugPrint('[EnRouteNavigation] Error fetching fresh booking: $e');
+      }
+
+      freshStatus ??= widget.booking?.status;
+
+      // 2. Only start tracking when the fresh status is confirmed or en_route (or pending)
+      // Do not start for in_progress, completed, cancelled, etc.
+      if (freshStatus == JobStatus.pending ||
+          freshStatus == JobStatus.confirmed ||
+          freshStatus == JobStatus.enRoute) {
+        // If pending or confirmed, AWAIT BookingRepository().startNavigation(bookingId) first
+        if (freshStatus == JobStatus.pending ||
+            freshStatus == JobStatus.confirmed) {
+          try {
+            await BookingRepository().startNavigation(bookingId);
+          } catch (e) {
+            debugPrint('[EnRouteNavigation] Error starting navigation: $e');
+          }
+        }
+
+        // Then call startTrackingForBooking
+        if (mounted) {
+          final notifTitle = context.l10n.locationSharingNotificationTitle;
+          final notifText = context.l10n.locationSharingNotificationText;
+          trackingStarted =
+              await LiveLocationService.instance.startTrackingForBooking(
+            userId: _providerId,
+            bookingId: bookingId,
+            allowedViewers: customerId != null && customerId.isNotEmpty
+                ? [customerId]
+                : null,
+            notificationTitle: notifTitle,
+            notificationText: notifText,
+          );
+        }
+      }
     }
 
     // fallback to single position if tracking failed
@@ -220,9 +261,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   void dispose() {
     _positionSub?.cancel();
     _positionSub = null;
-    if (_providerId.isNotEmpty) {
-      LiveLocationService.instance.stopTracking();
-    }
+    // do not stop tracking here; tracking is bound to the booking lifecycle
+    // and will auto-stop when no longer en route, or explicitly on arrival/completion/cancellation
     super.dispose();
   }
 
@@ -581,6 +621,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       );
 
                       if (result.success) {
+                        unawaited(LiveLocationService.instance.stopTracking());
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -742,6 +783,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         bookingId: booking.id,
         jobRequestId: booking.jobRequestId,
       );
+      unawaited(LiveLocationService.instance.stopTracking());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1986,8 +2028,8 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
               bottom: 12,
               left: 12,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  MapLauncher.openDirections(
+                onPressed: () async {
+                  final ok = await MapLauncher.openDirections(
                     latitude: customerPoint.latitude,
                     longitude: customerPoint.longitude,
                     destinationTitle:
@@ -1996,6 +2038,14 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                                 .customerLocationNamed(booking.customerName)
                             : context.l10n.customerLocation,
                   );
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.l10n.couldNotOpenMaps),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(
                   Icons.navigation_rounded,

@@ -6783,4 +6783,67 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get quoteAddTravelCost => 'ගමන් වියදම එකතු කරන්න';
+
+  @override
+  String get couldNotOpenMaps => 'සිතියම් මාර්ග යෙදුම විවෘත කිරීමට නොහැකි විය';
+
+  @override
+  String get locationSharingStopped => 'ස්ථානය බෙදාගැනීම නතර කර ඇත';
+
+  @override
+  String get useCurrentLocationAction => 'මගේ වත්මන් ස්ථානය භාවිත කරන්න';
+
+  @override
+  String get searchPlaceAction => 'ස්ථානයක් සොයන්න';
+
+  @override
+  String approximateLocationWarning(String minutes) {
+    return 'මිනිත්තු $minutesකට පෙර ආසන්න ස්ථානය භාවිත කරයි. සිතියමේ පින් එක පරීක්ෂා කරන්න.';
+  }
+
+  @override
+  String get locationOutsideSriLanka =>
+      'තෝරාගත් ස්ථානය ශ්‍රී ලංකාවෙන් පිටත පිහිටා ඇත. කරුණාකර ශ්‍රී ලංකාව තුළ ස්ථානයක් තෝරන්න.';
+
+  @override
+  String get nearLabel => 'ආසන්න';
+
+  @override
+  String get setLocationToSeeNearby =>
+      'ඔබ අසල සේවා සපයන්නන් බැලීමට ඔබේ ස්ථානය සකසන්න';
+
+  @override
+  String get changeAction => 'වෙනස් කරන්න';
+
+  @override
+  String get setAction => 'ස්ථානය සකසන්න';
+
+  @override
+  String get distanceFilter => 'දුර';
+
+  @override
+  String get anyDistance => 'ඕනෑම දුරක්';
+
+  @override
+  String get onlyServesMyArea => 'මගේ ප්‍රදේශයට සේවා සපයන අය පමණි';
+
+  @override
+  String get sortByNearest => 'ළඟම සිට';
+
+  @override
+  String get sortByTopRated => 'ඉහළම ඇගයීම්';
+
+  @override
+  String get showUpTo50Km => 'කි.මී. 50 දක්වා පෙන්වන්න';
+
+  @override
+  String providersNearArea(String area) {
+    return '$area අසල සේවා සපයන්නන්';
+  }
+
+  @override
+  String get under1KmAway => 'කි.මී. 1 ට අඩු දුරින්';
+
+  @override
+  String get onlineNowBadge => 'දැන් සක්‍රියයි';
 }

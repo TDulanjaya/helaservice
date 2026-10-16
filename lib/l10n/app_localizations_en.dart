@@ -6776,4 +6776,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quoteAddTravelCost => 'Add travel cost';
+
+  @override
+  String get couldNotOpenMaps => 'Could not open map navigation application';
+
+  @override
+  String get locationSharingStopped => 'Location sharing stopped';
+
+  @override
+  String get useCurrentLocationAction => 'Use my current location';
+
+  @override
+  String get searchPlaceAction => 'Search a place';
+
+  @override
+  String approximateLocationWarning(String minutes) {
+    return 'Using approximate location from $minutes min ago. Please verify pin on map.';
+  }
+
+  @override
+  String get locationOutsideSriLanka =>
+      'Selected location is outside Sri Lanka. Please select a location within Sri Lanka.';
+
+  @override
+  String get nearLabel => 'Near';
+
+  @override
+  String get setLocationToSeeNearby =>
+      'Set your location to see providers near you';
+
+  @override
+  String get changeAction => 'Change';
+
+  @override
+  String get setAction => 'Set location';
+
+  @override
+  String get distanceFilter => 'Distance';
+
+  @override
+  String get anyDistance => 'Any distance';
+
+  @override
+  String get onlyServesMyArea => 'Only providers who serve my area';
+
+  @override
+  String get sortByNearest => 'Nearest first';
+
+  @override
+  String get sortByTopRated => 'Top rated';
+
+  @override
+  String get showUpTo50Km => 'Show up to 50 km';
+
+  @override
+  String providersNearArea(String area) {
+    return 'Providers near $area';
+  }
+
+  @override
+  String get under1KmAway => 'Under 1 km away';
+
+  @override
+  String get onlineNowBadge => 'Online now';
 }

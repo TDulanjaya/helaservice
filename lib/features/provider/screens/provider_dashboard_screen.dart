@@ -37,6 +37,7 @@ import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
 import '../../../models/technician.dart';
 import '../../../services/provider_tracking_service.dart';
+import '../../../services/live_location_service.dart';
 import '../../../utils/provider_location_helper.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class ProviderDashboardScreen extends StatefulWidget {
 }
 
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
+  static bool _hasCheckedEnRouteResume = false;
   bool _online = true;
   int _navIndex = 0;
   bool _sortByClosest = true;
@@ -78,7 +80,38 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         if (tech.online) {
           ProviderTrackingService.instance.startOnlineTracking(uid);
         }
+
+        // resume live tracking for active en-route booking (once per app start, approved providers only)
+        if (!_hasCheckedEnRouteResume && tech.isApproved) {
+          _hasCheckedEnRouteResume = true;
+          _checkAndResumeEnRouteBooking(uid);
+        }
       }
+    }
+  }
+
+  Future<void> _checkAndResumeEnRouteBooking(String uid) async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection(FirestorePaths.bookings)
+          .where('providerId', isEqualTo: uid)
+          .where('status', isEqualTo: JobStatus.enRoute)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (snap.docs.isNotEmpty) {
+        final doc = snap.docs.first;
+        final booking = Booking.fromMap(doc.id, doc.data());
+        final customerId = booking.customerId;
+        await LiveLocationService.instance.startTrackingForBooking(
+          userId: uid,
+          bookingId: booking.id,
+          allowedViewers: customerId.isNotEmpty ? [customerId] : null,
+        );
+      }
+    } catch (e) {
+      debugPrint('[ProviderDashboard] Error resuming en-route tracking: $e');
     }
   }
 
@@ -325,14 +358,17 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               final uid =
                                   FirebaseAuth.instance.currentUser?.uid;
                               if (uid != null && uid.isNotEmpty) {
+                                if (!v) {
+                                  await LiveLocationService.instance
+                                      .stopTracking();
+                                  ProviderTrackingService.instance
+                                      .stopOnlineTracking();
+                                }
                                 await TechnicianRepository()
                                     .updateOnlineStatus(uid, v);
                                 if (v) {
                                   ProviderTrackingService.instance
                                       .startOnlineTracking(uid);
-                                } else {
-                                  ProviderTrackingService.instance
-                                      .stopOnlineTracking();
                                 }
                               }
                             },
@@ -434,14 +470,17 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               final uid =
                                   FirebaseAuth.instance.currentUser?.uid;
                               if (uid != null && uid.isNotEmpty) {
+                                if (!v) {
+                                  await LiveLocationService.instance
+                                      .stopTracking();
+                                  ProviderTrackingService.instance
+                                      .stopOnlineTracking();
+                                }
                                 await TechnicianRepository()
                                     .updateOnlineStatus(uid, v);
                                 if (v) {
                                   ProviderTrackingService.instance
                                       .startOnlineTracking(uid);
-                                } else {
-                                  ProviderTrackingService.instance
-                                      .stopOnlineTracking();
                                 }
                               }
                             },

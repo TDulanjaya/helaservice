@@ -6941,4 +6941,69 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get quoteAddTravelCost => 'பயணச் செலவைச் சேர்க்கவும்';
+
+  @override
+  String get couldNotOpenMaps =>
+      'வரைபட வழிசெலுத்தல் செயலியைத் திறக்க முடியவில்லை';
+
+  @override
+  String get locationSharingStopped => 'இருப்பிடப் பகிர்வு நிறுத்தப்பட்டது';
+
+  @override
+  String get useCurrentLocationAction =>
+      'எனது தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்';
+
+  @override
+  String get searchPlaceAction => 'இடத்தைத் தேடவும்';
+
+  @override
+  String approximateLocationWarning(String minutes) {
+    return '$minutes நிமிடங்களுக்கு முந்தைய தோராயமான இருப்பிடம் பயன்படுத்தப்படுகிறது. வரைபடத்தில் உள்ள பின்னைச் சரிபார்க்கவும்.';
+  }
+
+  @override
+  String get locationOutsideSriLanka =>
+      'தேர்ந்தெடுக்கப்பட்ட இடம் இலங்கைக்கு வெளியே உள்ளது. இலங்கைக்குள் ஒரு இடத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get nearLabel => 'அருகில்';
+
+  @override
+  String get setLocationToSeeNearby =>
+      'உங்களுக்கு அருகிலுள்ள சேவை வழங்குநர்களைக் காண உங்கள் இருப்பிடத்தை அமைக்கவும்';
+
+  @override
+  String get changeAction => 'மாற்றவும்';
+
+  @override
+  String get setAction => 'இருப்பிடத்தை அமைக்கவும்';
+
+  @override
+  String get distanceFilter => 'தூரம்';
+
+  @override
+  String get anyDistance => 'எந்த தூரமும்';
+
+  @override
+  String get onlyServesMyArea => 'எனது பகுதிக்கு சேவை வழங்குபவர்கள் மட்டும்';
+
+  @override
+  String get sortByNearest => 'அருகிலுள்ளவை முதலில்';
+
+  @override
+  String get sortByTopRated => 'உயர் மதிப்பீடு';
+
+  @override
+  String get showUpTo50Km => '50 கி.மீ வரை காட்டவும்';
+
+  @override
+  String providersNearArea(String area) {
+    return '$area அருகில் உள்ள வழங்குநர்கள்';
+  }
+
+  @override
+  String get under1KmAway => '1 கி.மீ க்கும் குறைவான தூரத்தில்';
+
+  @override
+  String get onlineNowBadge => 'இப்போது ஆன்லைனில்';
 }

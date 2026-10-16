@@ -259,11 +259,13 @@ class LiveTrackingScreen extends StatelessWidget {
                               currentBooking.customerLongitude!)
                           : (liveTechPoint ?? techBaseLatLng);
 
-                      final LatLng techPoint = liveTechPoint ??
-                          (tech.serviceArea.isNotEmpty
-                              ? techBaseLatLng
-                              : LatLng(customerPoint.latitude - 0.008,
-                                  customerPoint.longitude - 0.012));
+                      final effLoc = tech.effectiveLocation;
+                      final LatLng fallbackTechPoint =
+                          (effLoc.latitude != null && effLoc.longitude != null)
+                              ? LatLng(effLoc.latitude!, effLoc.longitude!)
+                              : techBaseLatLng;
+                      final LatLng techPoint =
+                          liveTechPoint ?? fallbackTechPoint;
 
                       final midPoint = hasCustomerLocation
                           ? LatLng(
@@ -1293,12 +1295,16 @@ class _CustomerLiveTrackingMapCardState
                       PillBadge(
                         label: widget.isLive
                             ? context.l10n.liveGpsOnTheWay
-                            : context.l10n.techOnTheWay,
-                        icon: widget.isLive ? Icons.sensors : null,
+                            : context.l10n.locationSharingStopped,
+                        icon: widget.isLive
+                            ? Icons.sensors
+                            : Icons.location_off_rounded,
                         background: context.themeSurface,
-                        foreground: AppColors.primary,
+                        foreground: widget.isLive
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
                       ),
-                      if (isStale) ...[
+                      if (isStale && widget.isLive) ...[
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(

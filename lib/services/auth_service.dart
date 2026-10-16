@@ -11,6 +11,8 @@ import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 import '../utils/provider_location_helper.dart';
 import '../utils/provider_pricing_helper.dart';
+import 'live_location_service.dart';
+import 'provider_tracking_service.dart';
 
 // sign in errors shown by the ui
 class AuthFlowException implements Exception {
@@ -832,6 +834,10 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    try {
+      LiveLocationService.instance.stopTracking();
+      ProviderTrackingService.instance.stopOnlineTracking();
+    } catch (_) {}
     try {
       await _auth.signOut();
       if (!kIsWeb) {

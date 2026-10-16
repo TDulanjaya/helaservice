@@ -3374,5 +3374,38 @@
   "quoteRateForJobHint": "Enter your rate for this job",
   "quoteInspectVisitFeePrompt": "Please enter a visit fee for inspection",
   "quoteIncludeVisitCostHint": "Include any visit cost in your price.",
-  "quoteAddTravelCost": "Add travel cost"
+  "quoteAddTravelCost": "Add travel cost",
+  "couldNotOpenMaps": "Could not open map navigation application",
+  "locationSharingStopped": "Location sharing stopped",
+  "useCurrentLocationAction": "Use my current location",
+  "searchPlaceAction": "Search a place",
+  "approximateLocationWarning": "Using approximate location from {minutes} min ago. Please verify pin on map.",
+  "@approximateLocationWarning": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "locationOutsideSriLanka": "Selected location is outside Sri Lanka. Please select a location within Sri Lanka.",
+  "nearLabel": "Near",
+  "setLocationToSeeNearby": "Set your location to see providers near you",
+  "changeAction": "Change",
+  "setAction": "Set location",
+  "distanceFilter": "Distance",
+  "anyDistance": "Any distance",
+  "onlyServesMyArea": "Only providers who serve my area",
+  "sortByNearest": "Nearest first",
+  "sortByTopRated": "Top rated",
+  "showUpTo50Km": "Show up to 50 km",
+  "providersNearArea": "Providers near {area}",
+  "@providersNearArea": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "under1KmAway": "Under 1 km away",
+  "onlineNowBadge": "Online now"
 }

@@ -28,6 +28,8 @@ import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../models/job_location.dart';
 import '../../../shared/widgets/job_location_picker.dart';
+import '../../../utils/customer_location_prefs.dart';
+import '../../../utils/location_search_helper.dart';
 import 'live_tracking_screen.dart';
 
 // emergency dispatch screen for urgent callouts within fifteen kilometers
@@ -212,23 +214,73 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       );
 
       if (mounted) {
-        setState(() {
-          _userLat = pos.latitude;
-          _userLng = pos.longitude;
-          _isGpsLoading = false;
-          _gpsFailed = false;
-        });
-        unawaited(_reverseGeocode(pos.latitude, pos.longitude));
+        if (LocationSearchHelper.isWithinSriLanka(
+            lat: pos.latitude, lon: pos.longitude)) {
+          setState(() {
+            _userLat = pos.latitude;
+            _userLng = pos.longitude;
+            _isGpsLoading = false;
+            _gpsFailed = false;
+          });
+          unawaited(_reverseGeocode(pos.latitude, pos.longitude));
+        } else {
+          setState(() {
+            _isGpsLoading = false;
+            _gpsFailed = true;
+          });
+        }
       }
     } catch (_) {
+      // 1. check last known position within 10 minutes
+      try {
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null) {
+          final ageMins = DateTime.now().difference(last.timestamp).inMinutes;
+          if (ageMins <= 10 &&
+              LocationSearchHelper.isWithinSriLanka(
+                  lat: last.latitude, lon: last.longitude)) {
+            if (mounted) {
+              setState(() {
+                _userLat = last.latitude;
+                _userLng = last.longitude;
+                _isGpsLoading = false;
+                _gpsFailed = false;
+              });
+              unawaited(_reverseGeocode(last.latitude, last.longitude));
+              return;
+            }
+          }
+        }
+      } catch (_) {}
+
+      // 2. check saved customer home location
+      final homeLoc = await CustomerLocationPrefs.getHomeLocation();
+      if (homeLoc != null &&
+          LocationSearchHelper.isWithinSriLanka(
+              lat: homeLoc.latitude, lon: homeLoc.longitude)) {
+        if (mounted) {
+          setState(() {
+            _userLat = homeLoc.latitude;
+            _userLng = homeLoc.longitude;
+            _userAddress = homeLoc.shortArea;
+            _isGpsLoading = false;
+            _gpsFailed = false;
+          });
+          return;
+        }
+      }
+
       final currentUid = FirebaseAuth.instance.currentUser?.uid;
       if (currentUid != null && currentUid.isNotEmpty) {
         try {
           final profile = await UserRepository().getUserById(currentUid);
-          if (profile?.latitude != null && profile?.longitude != null) {
+          if (profile?.latitude != null &&
+              profile?.longitude != null &&
+              LocationSearchHelper.isWithinSriLanka(
+                  lat: profile!.latitude!, lon: profile.longitude!)) {
             if (mounted) {
               setState(() {
-                _userLat = profile!.latitude;
+                _userLat = profile.latitude;
                 _userLng = profile.longitude;
                 _userAddress = profile.address ?? '';
                 _isGpsLoading = false;

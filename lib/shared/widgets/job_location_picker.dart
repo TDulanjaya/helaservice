@@ -7,15 +7,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../theme/app_theme.dart';
-import '../../constants/firestore_paths.dart';
 import '../../models/job_location.dart';
 import '../../models/saved_address.dart';
 import '../../repositories/saved_address_repository.dart';
 import '../../utils/permission_utils.dart';
 import '../../utils/l10n_extension.dart';
 import '../../utils/location_search_helper.dart';
+import '../../utils/customer_location_prefs.dart';
 import 'app_map_view.dart';
 import 'primary_button.dart';
 import 'icon_square_button.dart';
@@ -55,6 +54,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   final _houseNoController = TextEditingController();
   final _noteController = TextEditingController();
   final _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   double? _latitude;
   double? _longitude;
@@ -72,6 +72,8 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   bool _permissionPermanentlyDenied = false;
   bool _isGeocodingLoading = false;
   bool _isDetailsExpanded = false;
+  bool _isApproximateGps = false;
+  int _approximateMinutesOld = 0;
   String? _savedWithLabel;
 
   String _shortAddress = '';
@@ -90,14 +92,14 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   final Map<String, List<PlaceSuggestion>> _searchCache = {};
   int _searchSequence = 0;
 
-  List<JobLocation> _recentPlaces = [];
-  bool _hasLoadedRecentPlaces = false;
+  List<RecentPlace> _recentPlaces = [];
 
   final List<String> _labelOptions = ['home', 'work', 'other'];
 
   @override
   void initState() {
     super.initState();
+    _loadRecentPlaces();
     if (widget.initialLocation != null) {
       _userChoseLocation = true;
       _userActed = true;
@@ -126,6 +128,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
     _houseNoController.dispose();
     _noteController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -349,6 +352,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
 
       _userActed = true;
       _userChoseLocation = true;
+      _isApproximateGps = false;
       _checkClearChipDetails(pos.latitude, pos.longitude);
 
       setState(() {
@@ -357,16 +361,50 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
         _accuracyMeters = pos.accuracy;
         _isGpsLoading = false;
         _gpsFailed = false;
+        _isApproximateGps = false;
       });
 
       _mapController.move(LatLng(pos.latitude, pos.longitude), 18.0);
       _reverseGeocode(pos.latitude, pos.longitude);
     } catch (_) {
+      // 10-minute last-known GPS fallback labelled 'approximate'
+      Position? fallbackPos;
+      try {
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null) {
+          final ageMins = DateTime.now().difference(last.timestamp).inMinutes;
+          if (ageMins <= 10) {
+            fallbackPos = last;
+          }
+        }
+      } catch (_) {}
+
       if (!mounted) return;
-      setState(() {
-        _isGpsLoading = false;
-        _gpsFailed = true;
-      });
+
+      if (fallbackPos != null) {
+        final ageMins =
+            DateTime.now().difference(fallbackPos.timestamp).inMinutes;
+        _userActed = true;
+        _userChoseLocation = true;
+        _checkClearChipDetails(fallbackPos.latitude, fallbackPos.longitude);
+        setState(() {
+          _latitude = fallbackPos!.latitude;
+          _longitude = fallbackPos.longitude;
+          _accuracyMeters = fallbackPos.accuracy;
+          _isGpsLoading = false;
+          _gpsFailed = false;
+          _isApproximateGps = true;
+          _approximateMinutesOld = ageMins;
+        });
+        _mapController.move(
+            LatLng(fallbackPos.latitude, fallbackPos.longitude), 17.0);
+        _reverseGeocode(fallbackPos.latitude, fallbackPos.longitude);
+      } else {
+        setState(() {
+          _isGpsLoading = false;
+          _gpsFailed = true;
+        });
+      }
     }
   }
 
@@ -577,7 +615,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
     _reverseGeocode(addr.latitude, addr.longitude);
   }
 
-  void _onSelectRecentPlace(JobLocation loc) {
+  void _onSelectRecentPlace(RecentPlace loc) {
     _userActed = true;
     _detailsFromChip = true;
     _chipLat = loc.latitude;
@@ -587,13 +625,12 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       _userChoseLocation = true;
       _latitude = loc.latitude;
       _longitude = loc.longitude;
-      _accuracyMeters = loc.accuracyMeters;
+      _accuracyMeters = null;
       _fullAddress = loc.address;
-      _shortAddress = _formatShortAddress(loc.address);
-      _street = loc.street ?? '';
-      _city = loc.city ?? '';
-      _houseNoController.text = loc.houseNo ?? '';
-      _noteController.text = loc.effectiveNote ?? '';
+      _shortAddress =
+          loc.title.isNotEmpty ? loc.title : _formatShortAddress(loc.address);
+      _street = '';
+      _city = '';
       _searchResults = [];
       _searchErrorMessage = null;
     });
@@ -602,66 +639,12 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
     _reverseGeocode(loc.latitude, loc.longitude);
   }
 
-  // load customer recent places
-  Future<void> _loadRecentPlaces(
-    String uid,
-    List<SavedAddress> savedAddresses,
-  ) async {
-    if (_hasLoadedRecentPlaces || uid.isEmpty) return;
-    _hasLoadedRecentPlaces = true;
-
+  // load customer recent places from phone storage
+  Future<void> _loadRecentPlaces() async {
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection(FirestorePaths.jobRequests)
-          .where('customerId', isEqualTo: uid)
-          .limit(20)
-          .get();
-
-      final docs = snap.docs.toList();
-      docs.sort((a, b) {
-        final aCreated = a.data()['createdAt'];
-        final bCreated = b.data()['createdAt'];
-        final aMillis =
-            aCreated is Timestamp ? aCreated.millisecondsSinceEpoch : 0;
-        final bMillis =
-            bCreated is Timestamp ? bCreated.millisecondsSinceEpoch : 0;
-        return bMillis.compareTo(aMillis);
-      });
-
-      final List<JobLocation> candidates = [];
-      for (final doc in docs.take(10)) {
-        try {
-          final contactSnap =
-              await doc.reference.collection('private').doc('contact').get();
-          if (contactSnap.exists) {
-            final data = contactSnap.data();
-            final lat = data?['latitude'] as num?;
-            final lon = data?['longitude'] as num?;
-            final addr = data?['address'] as String?;
-            if (lat != null && lon != null && addr != null && addr.isNotEmpty) {
-              candidates.add(JobLocation(
-                latitude: lat.toDouble(),
-                longitude: lon.toDouble(),
-                address: addr,
-                note: data?['note'] as String?,
-                landmark: data?['landmark'] as String?,
-                houseNo: data?['houseNo'] as String?,
-                street: data?['street'] as String?,
-                city: data?['city'] as String?,
-              ));
-            }
-          }
-        } catch (_) {}
-      }
-
-      final unique = LocationSearchHelper.deduplicateRecentPlaces(
-        savedAddresses: savedAddresses,
-        recentPlaces: candidates,
-        max: 3,
-      );
-
+      final list = await CustomerLocationPrefs.getRecentPlaces();
       if (mounted) {
-        setState(() => _recentPlaces = unique);
+        setState(() => _recentPlaces = list);
       }
     } catch (e) {
       debugPrint('[JobLocationPicker] load recent places error: $e');
@@ -725,6 +708,16 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
       accuracyMeters: _accuracyMeters,
     );
 
+    // save to phone-only recent places (max 5, no private details)
+    CustomerLocationPrefs.addRecentPlace(
+      RecentPlace(
+        address: finalAddress,
+        title: _shortAddress.isNotEmpty ? _shortAddress : finalAddress,
+        latitude: _latitude!,
+        longitude: _longitude!,
+      ),
+    );
+
     Navigator.of(context).pop(location);
   }
 
@@ -763,9 +756,67 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 children: [
+                  // top choice buttons when location not chosen yet
+                  if (!_userChoseLocation) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                _isGpsLoading ? null : () => _useCurrentGps(),
+                            icon: _isGpsLoading
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.my_location_rounded,
+                                    size: 16),
+                            label: Text(
+                              context.l10n.useCurrentLocationAction,
+                              style: const TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w700),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _searchFocusNode.requestFocus(),
+                            icon: const Icon(Icons.search_rounded, size: 16),
+                            label: Text(
+                              context.l10n.searchPlaceAction,
+                              style: const TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w700),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
                   // search box at the top
                   TextField(
                     controller: _searchController,
+                    focusNode: _searchFocusNode,
                     textInputAction: TextInputAction.search,
                     onSubmitted: (q) => _onSearchSubmitted(q),
                     onChanged: (q) => _onSearchQueryChanged(q),
@@ -885,17 +936,80 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                     ),
                   ],
 
+                  if (_isApproximateGps && _userChoseLocation) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline_rounded,
+                              color: AppColors.warning, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              context.l10n.approximateLocationWarning(
+                                  '$_approximateMinutesOld'),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  if (_latitude != null &&
+                      _longitude != null &&
+                      !LocationSearchHelper.isWithinSriLanka(
+                          lat: _latitude!, lon: _longitude!)) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded,
+                              color: AppColors.error, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              context.l10n.locationOutsideSriLanka,
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   // quick chips under search box
-                  if (uid.isNotEmpty) ...[
+                  if (uid.isNotEmpty || _recentPlaces.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     StreamBuilder<List<SavedAddress>>(
-                      stream:
-                          SavedAddressRepository().streamSavedAddresses(uid),
+                      stream: uid.isNotEmpty
+                          ? SavedAddressRepository().streamSavedAddresses(uid)
+                          : Stream.value([]),
                       builder: (context, snapshot) {
                         final savedList = snapshot.data ?? [];
-                        if (savedList.isNotEmpty) {
-                          _loadRecentPlaces(uid, savedList);
-                        }
 
                         if (savedList.isEmpty && _recentPlaces.isEmpty) {
                           return const SizedBox.shrink();
@@ -939,11 +1053,13 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
 
                               // recent places chips
                               ..._recentPlaces.map((recent) {
-                                final chipLabel = _formatShortAddress(
-                                    recent.address.split(',').first.trim());
+                                final chipLabel = recent.title.isNotEmpty
+                                    ? recent.title
+                                    : _formatShortAddress(
+                                        recent.address.split(',').first.trim());
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 6),
-                                  child: ActionChip(
+                                  child: InputChip(
                                     avatar: const Icon(Icons.history, size: 14),
                                     label: Text(chipLabel.isNotEmpty
                                         ? chipLabel
@@ -953,6 +1069,13 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                                     visualDensity: VisualDensity.compact,
                                     onPressed: () =>
                                         _onSelectRecentPlace(recent),
+                                    onDeleted: () async {
+                                      await CustomerLocationPrefs
+                                          .removeRecentPlace(recent.id);
+                                      _loadRecentPlaces();
+                                    },
+                                    deleteIcon: const Icon(Icons.close_rounded,
+                                        size: 14),
                                   ),
                                 );
                               }),

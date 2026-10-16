@@ -224,6 +224,7 @@ class LocationSearchHelper {
     if (!userChoseLocation) return false;
     if (latitude == null || longitude == null) return false;
     if (isGeocodingLoading) return false;
+    if (!isWithinSriLanka(lat: latitude, lon: longitude)) return false;
     return true;
   }
 

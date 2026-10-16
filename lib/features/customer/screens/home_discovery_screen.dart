@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../models/admin_models.dart';
@@ -12,6 +15,9 @@ import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
+import '../../../utils/customer_location_prefs.dart';
+import '../../../utils/location_search_helper.dart';
+import '../../../shared/widgets/job_location_picker.dart';
 import '../widgets/customer_bookings_view.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 import 'customer_profile_screen.dart';
@@ -43,6 +49,11 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   final TechnicianRepository _techRepo = TechnicianRepository();
   final TextEditingController _searchController = TextEditingController();
 
+  CustomerHomeLocation? _homeLocation;
+  double? _selectedDistanceKm = 20.0; // 5, 10, 20 (default), 50, null for Any
+  bool _onlyServesMyArea = false;
+  String _sortBy = 'nearest'; // 'nearest' or 'rating'
+
   int _selectedCategoryIndex = -1;
   String _selectedCategoryId = '';
   String _selectedCategoryName = '';
@@ -54,7 +65,12 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   double _minRating = 0.0;
 
   bool get _hasActiveFilters =>
-      _onlineOnly || _emergencyOnly || _minRating > 0.0;
+      _onlineOnly ||
+      _emergencyOnly ||
+      _minRating > 0.0 ||
+      _selectedDistanceKm != 20.0 ||
+      _onlyServesMyArea ||
+      _sortBy != 'nearest';
 
   @override
   void initState() {
@@ -122,28 +138,372 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
 
       PermissionUtils.checkAndPromptInitialPermissions(context);
     });
+    _initCustomerLocation();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  Future<void> _initCustomerLocation() async {
+    final home = await CustomerLocationPrefs.getHomeLocation();
+    if (home != null) {
+      if (mounted) setState(() => _homeLocation = home);
+      return;
+    }
 
-  Stream<List<CategoryRow>> get _categoryStream {
-    try {
-      return _categoryRepo.streamLiveCategories();
-    } catch (_) {
-      return const Stream.empty();
+    final hasPrompted = await CustomerLocationPrefs.hasPromptedLocation();
+    if (!hasPrompted && mounted) {
+      await CustomerLocationPrefs.markPromptedLocation();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _promptSetLocationDialog();
+      });
     }
   }
 
-  Stream<List<Technician>> get _technicianStream {
+  Future<void> _promptSetLocationDialog() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_rounded,
+                      color: AppColors.primary, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.setLocationToSeeNearby,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: context.themeInk,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.my_location_rounded,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  context.l10n.useCurrentLocationAction,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _useGpsForHomeLocation();
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.map_rounded,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  context.l10n.searchPlaceAction,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _pickOnMapForHomeLocation();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _useGpsForHomeLocation() async {
     try {
-      return _techRepo.streamApprovedTechnicians();
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        final req = await Geolocator.requestPermission();
+        if (req == LocationPermission.denied ||
+            req == LocationPermission.deniedForever) {
+          return;
+        }
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      if (!LocationSearchHelper.isWithinSriLanka(
+          lat: pos.latitude, lon: pos.longitude)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationOutsideSriLanka),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      final area = await _reverseGeocodeToArea(pos.latitude, pos.longitude);
+      final homeLoc = CustomerHomeLocation(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+        shortArea: area,
+      );
+      await CustomerLocationPrefs.setHomeLocation(homeLoc);
+      if (mounted) {
+        setState(() => _homeLocation = homeLoc);
+      }
     } catch (_) {
-      return const Stream.empty();
+      try {
+        final last = await Geolocator.getLastKnownPosition();
+        if (last != null &&
+            DateTime.now().difference(last.timestamp).inMinutes <= 10) {
+          if (LocationSearchHelper.isWithinSriLanka(
+              lat: last.latitude, lon: last.longitude)) {
+            final area =
+                await _reverseGeocodeToArea(last.latitude, last.longitude);
+            final homeLoc = CustomerHomeLocation(
+              latitude: last.latitude,
+              longitude: last.longitude,
+              shortArea: area,
+            );
+            await CustomerLocationPrefs.setHomeLocation(homeLoc);
+            if (mounted) {
+              setState(() => _homeLocation = homeLoc);
+            }
+          }
+        }
+      } catch (_) {}
     }
+  }
+
+  Future<void> _pickOnMapForHomeLocation() async {
+    final picked = await JobLocationPicker.pickLocation(
+      context,
+      title: context.l10n.selectServiceLocation,
+    );
+    if (picked != null) {
+      final area = picked.city?.isNotEmpty == true
+          ? picked.city!
+          : (picked.street?.isNotEmpty == true
+              ? picked.street!
+              : (picked.address.split(',').first.trim()));
+      final homeLoc = CustomerHomeLocation(
+        latitude: picked.latitude,
+        longitude: picked.longitude,
+        shortArea: area.isNotEmpty ? area : 'Sri Lanka',
+      );
+      await CustomerLocationPrefs.setHomeLocation(homeLoc);
+      if (mounted) {
+        setState(() => _homeLocation = homeLoc);
+      }
+    }
+  }
+
+  Future<String> _reverseGeocodeToArea(double lat, double lon) async {
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lon',
+      );
+      final response = await http.get(url, headers: const {
+        'User-Agent': 'HelaService-App/1.0 (https://helaservice.vercel.app)',
+        'Referer': 'https://helaservice.vercel.app',
+      }).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final addr = data['address'] as Map<String, dynamic>?;
+        if (addr != null) {
+          final city = addr['city'] ??
+              addr['town'] ??
+              addr['suburb'] ??
+              addr['district'] ??
+              addr['village'];
+          if (city != null && city.toString().trim().isNotEmpty) {
+            return city.toString().trim();
+          }
+        }
+      }
+    } catch (_) {}
+    return '${lat.toStringAsFixed(2)}, ${lon.toStringAsFixed(2)}';
+  }
+
+  Future<void> _showChangeLocationSheet() async {
+    final recentPlaces = await CustomerLocationPrefs.getRecentPlaces();
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    context.l10n.selectServiceLocation,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeInk,
+                    ),
+                  ),
+                  if (_homeLocation != null)
+                    TextButton(
+                      onPressed: () async {
+                        await CustomerLocationPrefs.clearHomeLocation();
+                        if (mounted) {
+                          setState(() => _homeLocation = null);
+                        }
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.my_location_rounded,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  context.l10n.useCurrentLocationAction,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _useGpsForHomeLocation();
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.map_outlined,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  context.l10n.searchPlaceAction,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _pickOnMapForHomeLocation();
+                },
+              ),
+              if (recentPlaces.isNotEmpty) ...[
+                const Divider(height: 20),
+                Text(
+                  context.l10n.recentPlaces,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: recentPlaces.map((recent) {
+                    final label = recent.title.isNotEmpty
+                        ? recent.title
+                        : recent.address.split(',').first.trim();
+                    return ActionChip(
+                      avatar: const Icon(Icons.history, size: 14),
+                      label: Text(label),
+                      onPressed: () async {
+                        final homeLoc = CustomerHomeLocation(
+                          latitude: recent.latitude,
+                          longitude: recent.longitude,
+                          shortArea: label,
+                        );
+                        await CustomerLocationPrefs.setHomeLocation(homeLoc);
+                        if (mounted) {
+                          setState(() => _homeLocation = homeLoc);
+                        }
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showFilterSheet() {
@@ -195,11 +555,17 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                 _onlineOnly = false;
                                 _emergencyOnly = false;
                                 _minRating = 0.0;
+                                _selectedDistanceKm = 20.0;
+                                _onlyServesMyArea = false;
+                                _sortBy = 'nearest';
                               });
                               setState(() {
                                 _onlineOnly = false;
                                 _emergencyOnly = false;
                                 _minRating = 0.0;
+                                _selectedDistanceKm = 20.0;
+                                _onlyServesMyArea = false;
+                                _sortBy = 'nearest';
                               });
                             },
                             child: Text(
@@ -264,6 +630,171 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                               setSheetState(() => _emergencyOnly = val);
                               setState(() => _emergencyOnly = val);
                             },
+                          ),
+                          const Divider(height: 24),
+                          Text(
+                            context.l10n.distanceFilter,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ChoiceChip(
+                                label: const Text('5 km'),
+                                selected: _selectedDistanceKm == 5.0,
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _selectedDistanceKm == 5.0
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _selectedDistanceKm == 5.0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(
+                                      () => _selectedDistanceKm = 5.0);
+                                  setState(() => _selectedDistanceKm = 5.0);
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('10 km'),
+                                selected: _selectedDistanceKm == 10.0,
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _selectedDistanceKm == 10.0
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _selectedDistanceKm == 10.0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(
+                                      () => _selectedDistanceKm = 10.0);
+                                  setState(() => _selectedDistanceKm = 10.0);
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('20 km'),
+                                selected: _selectedDistanceKm == 20.0,
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _selectedDistanceKm == 20.0
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _selectedDistanceKm == 20.0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(
+                                      () => _selectedDistanceKm = 20.0);
+                                  setState(() => _selectedDistanceKm = 20.0);
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('50 km'),
+                                selected: _selectedDistanceKm == 50.0,
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _selectedDistanceKm == 50.0
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _selectedDistanceKm == 50.0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(
+                                      () => _selectedDistanceKm = 50.0);
+                                  setState(() => _selectedDistanceKm = 50.0);
+                                },
+                              ),
+                              ChoiceChip(
+                                label: Text(context.l10n.anyDistance),
+                                selected: _selectedDistanceKm == null,
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _selectedDistanceKm == null
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _selectedDistanceKm == null
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(
+                                      () => _selectedDistanceKm = null);
+                                  setState(() => _selectedDistanceKm = null);
+                                },
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              context.l10n.onlyServesMyArea,
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            value: _onlyServesMyArea,
+                            activeThumbColor: AppColors.primary,
+                            onChanged: (val) {
+                              setSheetState(() => _onlyServesMyArea = val);
+                              setState(() => _onlyServesMyArea = val);
+                            },
+                          ),
+                          const Divider(height: 24),
+                          const Text(
+                            'Sort by',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ChoiceChip(
+                                label: Text(context.l10n.sortByNearest),
+                                selected: _sortBy == 'nearest',
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _sortBy == 'nearest'
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _sortBy == 'nearest'
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(() => _sortBy = 'nearest');
+                                  setState(() => _sortBy = 'nearest');
+                                },
+                              ),
+                              ChoiceChip(
+                                label: Text(context.l10n.sortByTopRated),
+                                selected: _sortBy == 'rating',
+                                selectedColor: AppColors.primary,
+                                labelStyle: TextStyle(
+                                  color: _sortBy == 'rating'
+                                      ? AppColors.onPrimary
+                                      : context.themeTextPrimary,
+                                  fontWeight: _sortBy == 'rating'
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (_) {
+                                  setSheetState(() => _sortBy = 'rating');
+                                  setState(() => _sortBy = 'rating');
+                                },
+                              ),
+                            ],
                           ),
                           const Divider(height: 24),
                           Text(
@@ -525,7 +1056,87 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 color: context.themeTextSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.location_on_rounded,
+                      color: AppColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${context.l10n.nearLabel}: ${_homeLocation?.shortArea ?? context.l10n.islandWideBadge}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeInk,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _showChangeLocationSheet,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: Text(
+                      context.l10n.changeAction,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_homeLocation == null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.setLocationToSeeNearby,
+                        style: TextStyle(fontSize: 12, color: context.themeInk),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _showChangeLocationSheet,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(
+                        context.l10n.setAction,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -763,7 +1374,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ),
             const SizedBox(height: 22),
             StreamBuilder<List<CategoryRow>>(
-              stream: _categoryStream,
+              stream: _categoryRepo.streamLiveCategories(),
               builder: (context, snapshot) {
                 final categories = snapshot.data ?? [];
                 return Column(
@@ -883,7 +1494,10 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 Text(
                   _selectedCategoryName.isNotEmpty
                       ? '${context.l10n.topArtisans} — $_selectedCategoryName'
-                      : context.l10n.nearbyArtisans,
+                      : (_homeLocation != null
+                          ? context.l10n
+                              .providersNearArea(_homeLocation!.shortArea)
+                          : context.l10n.nearbyArtisans),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
@@ -891,7 +1505,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ),
             const SizedBox(height: 12),
             StreamBuilder<List<Technician>>(
-              stream: _technicianStream,
+              stream: _techRepo.streamApprovedTechnicians(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -901,46 +1515,118 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                   ));
                 }
 
-                var technicians = snapshot.data ?? [];
+                final rawList = snapshot.data ?? [];
+                final List<_TechDistanceEntry> entries = [];
+
+                for (final tech in rawList) {
+                  double? dist;
+                  bool serves = true;
+
+                  if (_homeLocation != null) {
+                    final effLoc = tech.effectiveLocation;
+                    if (effLoc.hasLocation) {
+                      dist = Geolocator.distanceBetween(
+                            _homeLocation!.latitude,
+                            _homeLocation!.longitude,
+                            effLoc.latitude!,
+                            effLoc.longitude!,
+                          ) /
+                          1000.0;
+                    }
+
+                    if (tech.baseLat != null && tech.baseLng != null) {
+                      final distToBase = Geolocator.distanceBetween(
+                            _homeLocation!.latitude,
+                            _homeLocation!.longitude,
+                            tech.baseLat!,
+                            tech.baseLng!,
+                          ) /
+                          1000.0;
+                      final radius = tech.serviceRadiusKm > 0
+                          ? tech.serviceRadiusKm
+                          : 20.0;
+                      serves = distToBase <= radius;
+                    } else {
+                      final area = tech.serviceArea.toLowerCase();
+                      final custArea = _homeLocation!.shortArea.toLowerCase();
+                      serves = area.isEmpty ||
+                          area.contains(custArea) ||
+                          custArea.contains(area);
+                    }
+                  }
+
+                  entries.add(_TechDistanceEntry(
+                    tech: tech,
+                    distanceKm: dist,
+                    servesArea: serves,
+                  ));
+                }
+
+                var filtered = entries;
 
                 if (_selectedCategoryId.isNotEmpty) {
-                  technicians = technicians.where((t) {
-                    return t.category == _selectedCategoryId;
-                  }).toList();
+                  filtered = filtered
+                      .where((e) => e.tech.category == _selectedCategoryId)
+                      .toList();
                 }
 
                 if (_selectedDistrict.isNotEmpty) {
-                  technicians = technicians.where((t) {
-                    final area = t.serviceArea.toLowerCase();
+                  filtered = filtered.where((e) {
+                    final area = e.tech.serviceArea.toLowerCase();
                     return area.isEmpty ||
                         area.contains(_selectedDistrict.toLowerCase());
                   }).toList();
                 }
 
                 if (_searchQuery.isNotEmpty) {
-                  technicians = technicians.where((t) {
-                    return t.name.toLowerCase().contains(_searchQuery) ||
-                        t.title.toLowerCase().contains(_searchQuery) ||
-                        t.serviceArea.toLowerCase().contains(_searchQuery);
+                  filtered = filtered.where((e) {
+                    return e.tech.name.toLowerCase().contains(_searchQuery) ||
+                        e.tech.title.toLowerCase().contains(_searchQuery) ||
+                        e.tech.serviceArea.toLowerCase().contains(_searchQuery);
                   }).toList();
                 }
 
                 if (_onlineOnly) {
-                  technicians = technicians.where((t) => t.online).toList();
+                  filtered = filtered.where((e) => e.tech.online).toList();
                 }
                 if (_emergencyOnly) {
-                  technicians =
-                      technicians.where((t) => t.emergencyRateLkr > 0).toList();
-                }
-                if (_minRating > 0.0) {
-                  technicians = technicians
-                      .where((t) => (t.rating ?? 0.0) >= _minRating)
+                  filtered = filtered
+                      .where((e) => e.tech.emergencyRateLkr > 0)
                       .toList();
                 }
-                technicians.sort(
-                    (a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
+                if (_minRating > 0.0) {
+                  filtered = filtered
+                      .where((e) => (e.tech.rating ?? 0.0) >= _minRating)
+                      .toList();
+                }
 
-                if (technicians.isEmpty) {
+                if (_homeLocation != null && _selectedDistanceKm != null) {
+                  filtered = filtered
+                      .where((e) =>
+                          e.distanceKm != null &&
+                          e.distanceKm! <= _selectedDistanceKm!)
+                      .toList();
+                }
+
+                if (_homeLocation != null && _onlyServesMyArea) {
+                  filtered = filtered.where((e) => e.servesArea).toList();
+                }
+
+                if (_sortBy == 'nearest' && _homeLocation != null) {
+                  filtered.sort((a, b) {
+                    final distA = a.distanceKm ?? 999999.0;
+                    final distB = b.distanceKm ?? 999999.0;
+                    final cmp = distA.compareTo(distB);
+                    if (cmp != 0) return cmp;
+                    return (b.tech.rating ?? 0.0)
+                        .compareTo(a.tech.rating ?? 0.0);
+                  });
+                } else {
+                  filtered.sort((a, b) =>
+                      (b.tech.rating ?? 0.0).compareTo(a.tech.rating ?? 0.0));
+                }
+
+                if (filtered.isEmpty) {
                   return Container(
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
@@ -966,20 +1652,43 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                               fontSize: 12, color: context.themeTextSecondary),
                         ),
                         const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                              _selectedCategoryIndex = -1;
-                              _selectedCategoryName = '';
-                              _selectedDistrict = '';
-                              _onlineOnly = false;
-                              _emergencyOnly = false;
-                              _minRating = 0.0;
-                            });
-                          },
-                          child: Text(context.l10n.resetAllFilters),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            if (_homeLocation != null &&
+                                _selectedDistanceKm != null) ...[
+                              OutlinedButton(
+                                onPressed: () =>
+                                    setState(() => _selectedDistanceKm = 50.0),
+                                child: Text(context.l10n.showUpTo50Km),
+                              ),
+                              OutlinedButton(
+                                onPressed: () =>
+                                    setState(() => _selectedDistanceKm = null),
+                                child: Text(context.l10n.anyDistance),
+                              ),
+                            ],
+                            TextButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                  _selectedCategoryIndex = -1;
+                                  _selectedCategoryName = '';
+                                  _selectedDistrict = '';
+                                  _onlineOnly = false;
+                                  _emergencyOnly = false;
+                                  _minRating = 0.0;
+                                  _selectedDistanceKm = 20.0;
+                                  _onlyServesMyArea = false;
+                                  _sortBy = 'nearest';
+                                });
+                              },
+                              child: Text(context.l10n.resetAllFilters),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -989,11 +1698,14 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: technicians.length,
+                  itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final tech = technicians[index];
-                    return _ArtisanCard(tech: tech);
+                    final item = filtered[index];
+                    return _ArtisanCard(
+                      tech: item.tech,
+                      distanceKm: item.distanceKm,
+                    );
                   },
                 );
               },
@@ -1005,9 +1717,21 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   }
 }
 
+class _TechDistanceEntry {
+  final Technician tech;
+  final double? distanceKm;
+  final bool servesArea;
+  const _TechDistanceEntry({
+    required this.tech,
+    this.distanceKm,
+    required this.servesArea,
+  });
+}
+
 class _ArtisanCard extends StatelessWidget {
   final Technician tech;
-  const _ArtisanCard({required this.tech});
+  final double? distanceKm;
+  const _ArtisanCard({required this.tech, this.distanceKm});
 
   @override
   Widget build(BuildContext context) {
@@ -1124,6 +1848,27 @@ class _ArtisanCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (distanceKm != null) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeMuted,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        distanceKm! < 1.0
+                            ? context.l10n.under1KmAway
+                            : '${distanceKm!.toStringAsFixed(1)} km away',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1145,6 +1890,37 @@ class _ArtisanCard extends StatelessWidget {
                               : context.l10n.statusOffline),
                       showDot: true,
                     ),
+                    if (tech.online)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.l10n.onlineNowBadge,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (!tech.hasPricingMode(ProviderPricingHelper.modeTravel))
                       Container(
                         padding: const EdgeInsets.symmetric(

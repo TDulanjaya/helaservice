@@ -3407,5 +3407,50 @@
     }
   },
   "under1KmAway": "Under 1 km away",
-  "onlineNowBadge": "Online now"
+  "onlineNowBadge": "Online now",
+  "savedOfflineSyncLater": "Saved on this phone. It will sync when you're back online.",
+  "couldNotSaveCheckConnection": "Could not save. Check your connection and try again.",
+  "providerProfileNotSetupDesc": "Your provider profile is not set up yet. Complete your registration to manage these settings.",
+  "completeRegistrationAction": "Complete Registration",
+  "setYourUsualRates": "Set your usual rates",
+  "pricePerJobAmount": "Price per job LKR {amount}",
+  "@pricePerJobAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ratePerDay": "Per day LKR {amount}",
+  "@ratePerDay": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ratePerHour": "Per hour LKR {amount}",
+  "@ratePerHour": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "rateVisitFee": "Visit LKR {amount}",
+  "@rateVisitFee": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ratePerKm": "LKR {amount}/km",
+  "@ratePerKm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

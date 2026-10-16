@@ -6839,4 +6839,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlineNowBadge => 'Online now';
+
+  @override
+  String get savedOfflineSyncLater =>
+      'Saved on this phone. It will sync when you\'re back online.';
+
+  @override
+  String get couldNotSaveCheckConnection =>
+      'Could not save. Check your connection and try again.';
+
+  @override
+  String get providerProfileNotSetupDesc =>
+      'Your provider profile is not set up yet. Complete your registration to manage these settings.';
+
+  @override
+  String get completeRegistrationAction => 'Complete Registration';
+
+  @override
+  String get setYourUsualRates => 'Set your usual rates';
+
+  @override
+  String pricePerJobAmount(String amount) {
+    return 'Price per job LKR $amount';
+  }
+
+  @override
+  String ratePerDay(String amount) {
+    return 'Per day LKR $amount';
+  }
+
+  @override
+  String ratePerHour(String amount) {
+    return 'Per hour LKR $amount';
+  }
+
+  @override
+  String rateVisitFee(String amount) {
+    return 'Visit LKR $amount';
+  }
+
+  @override
+  String ratePerKm(String amount) {
+    return 'LKR $amount/km';
+  }
 }

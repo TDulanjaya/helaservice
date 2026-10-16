@@ -89,9 +89,7 @@ class TechnicianRepository {
 
   Future<void> updateEmergencyStatus(String id, bool emergencyAvailable) async {
     if (id.isEmpty) return;
-    await _col
-        .doc(id)
-        .update({'emergencyAvailable': emergencyAvailable}).catchError((_) {});
+    await _col.doc(id).update({'emergencyAvailable': emergencyAvailable});
   }
 
   // update provider working hours schedule
@@ -99,13 +97,13 @@ class TechnicianRepository {
       String id, Map<String, WorkingDaySchedule> hours) async {
     if (id.isEmpty) return;
     final data = hours.map((k, v) => MapEntry(k, v.toMap()));
-    await _col.doc(id).update({'workingHours': data}).catchError((_) {});
+    await _col.doc(id).update({'workingHours': data});
   }
 
   // update provider service radius in kilometers
   Future<void> updateServiceRadius(String id, double radiusKm) async {
     if (id.isEmpty) return;
-    await _col.doc(id).update({'serviceRadiusKm': radiusKm}).catchError((_) {});
+    await _col.doc(id).update({'serviceRadiusKm': radiusKm});
   }
 
   Future<void> toggleBanStatus(String id, bool isBanned,

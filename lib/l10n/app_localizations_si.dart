@@ -6846,4 +6846,47 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get onlineNowBadge => 'දැන් සක්‍රියයි';
+
+  @override
+  String get savedOfflineSyncLater =>
+      'මෙම දුරකථනයේ සුරැකිණි. නැවත සබැඳි වූ විට එය සමමුහුර්ත වේ.';
+
+  @override
+  String get couldNotSaveCheckConnection =>
+      'සුරැකීමට නොහැකි විය. ඔබගේ සබඳතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get providerProfileNotSetupDesc =>
+      'ඔබේ සේවා සපයන්නා පැතිකඩ තවමත් සකසා නැත. මෙම සැකසුම් කළමනාකරණය කිරීමට ඔබේ ලියාපදිංචිය සම්පූර්ණ කරන්න.';
+
+  @override
+  String get completeRegistrationAction => 'ලියාපදිංචිය සම්පූර්ණ කරන්න';
+
+  @override
+  String get setYourUsualRates => 'ඔබේ සාමාන්‍ය ගාස්තු සකසන්න';
+
+  @override
+  String pricePerJobAmount(String amount) {
+    return 'වැඩයකට මිල LKR $amount';
+  }
+
+  @override
+  String ratePerDay(String amount) {
+    return 'දිනකට LKR $amount';
+  }
+
+  @override
+  String ratePerHour(String amount) {
+    return 'පැයකට LKR $amount';
+  }
+
+  @override
+  String rateVisitFee(String amount) {
+    return 'පැමිණීම LKR $amount';
+  }
+
+  @override
+  String ratePerKm(String amount) {
+    return 'LKR $amount/කි.මී.';
+  }
 }

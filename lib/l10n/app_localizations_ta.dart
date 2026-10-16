@@ -7006,4 +7006,47 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get onlineNowBadge => 'இப்போது ஆன்லைனில்';
+
+  @override
+  String get savedOfflineSyncLater =>
+      'இந்த தொலைபேசியில் சேமிக்கப்பட்டது. நீங்கள் மீண்டும் இணையத்தில் வரும்போது ஒத்திசைக்கப்படும்.';
+
+  @override
+  String get couldNotSaveCheckConnection =>
+      'சேமிக்க முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get providerProfileNotSetupDesc =>
+      'உங்கள் சேவை வழங்குநர் சுயவிவரம் இன்னும் அமைக்கப்படவில்லை. இந்த அமைப்புகளை நிர்வகிக்க உங்கள் பதிவை முடிக்கவும்.';
+
+  @override
+  String get completeRegistrationAction => 'பதிவை முடிக்கவும்';
+
+  @override
+  String get setYourUsualRates => 'உங்கள் வழக்கமான கட்டணங்களை அமைக்கவும்';
+
+  @override
+  String pricePerJobAmount(String amount) {
+    return 'வேலைக்கான விலை LKR $amount';
+  }
+
+  @override
+  String ratePerDay(String amount) {
+    return 'ஒரு நாளைக்கு LKR $amount';
+  }
+
+  @override
+  String ratePerHour(String amount) {
+    return 'ஒரு மணி நேரத்திற்கு LKR $amount';
+  }
+
+  @override
+  String rateVisitFee(String amount) {
+    return 'வருகை LKR $amount';
+  }
+
+  @override
+  String ratePerKm(String amount) {
+    return 'LKR $amount/கி.மீ.';
+  }
 }

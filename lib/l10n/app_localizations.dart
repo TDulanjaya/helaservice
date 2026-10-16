@@ -12377,6 +12377,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Online now'**
   String get onlineNowBadge;
+
+  /// No description provided for @savedOfflineSyncLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone. It will sync when you\'re back online.'**
+  String get savedOfflineSyncLater;
+
+  /// No description provided for @couldNotSaveCheckConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Check your connection and try again.'**
+  String get couldNotSaveCheckConnection;
+
+  /// No description provided for @providerProfileNotSetupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your provider profile is not set up yet. Complete your registration to manage these settings.'**
+  String get providerProfileNotSetupDesc;
+
+  /// No description provided for @completeRegistrationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistrationAction;
+
+  /// No description provided for @setYourUsualRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your usual rates'**
+  String get setYourUsualRates;
+
+  /// No description provided for @pricePerJobAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per job LKR {amount}'**
+  String pricePerJobAmount(String amount);
+
+  /// No description provided for @ratePerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Per day LKR {amount}'**
+  String ratePerDay(String amount);
+
+  /// No description provided for @ratePerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Per hour LKR {amount}'**
+  String ratePerHour(String amount);
+
+  /// No description provided for @rateVisitFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit LKR {amount}'**
+  String rateVisitFee(String amount);
+
+  /// No description provided for @ratePerKm.
+  ///
+  /// In en, this message translates to:
+  /// **'LKR {amount}/km'**
+  String ratePerKm(String amount);
 }
 
 class _AppLocalizationsDelegate

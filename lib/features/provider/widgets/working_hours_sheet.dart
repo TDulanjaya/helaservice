@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../models/technician.dart';
 import '../../../repositories/technician_repository.dart';
@@ -160,15 +161,27 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
   Future<void> _handleSave() async {
     setState(() => _isSaving = true);
     try {
-      await TechnicianRepository().updateWorkingHours(
-        widget.technician.id,
-        _schedule,
-      );
+      await TechnicianRepository()
+          .updateWorkingHours(
+            widget.technician.id,
+            _schedule,
+          )
+          .timeout(const Duration(seconds: 8));
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.savedScheduleSuccess),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } on TimeoutException {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.savedOfflineSyncLater),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -179,7 +192,7 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToSaveSchedule),
+            content: Text(context.l10n.couldNotSaveCheckConnection),
             backgroundColor: AppColors.error,
           ),
         );

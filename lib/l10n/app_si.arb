@@ -2059,5 +2059,15 @@
   "showUpTo50Km": "කි.මී. 50 දක්වා පෙන්වන්න",
   "providersNearArea": "{area} අසල සේවා සපයන්නන්",
   "under1KmAway": "කි.මී. 1 ට අඩු දුරින්",
-  "onlineNowBadge": "දැන් සක්‍රියයි"
+  "onlineNowBadge": "දැන් සක්‍රියයි",
+  "savedOfflineSyncLater": "මෙම දුරකථනයේ සුරැකිණි. නැවත සබැඳි වූ විට එය සමමුහුර්ත වේ.",
+  "couldNotSaveCheckConnection": "සුරැකීමට නොහැකි විය. ඔබගේ සබඳතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+  "providerProfileNotSetupDesc": "ඔබේ සේවා සපයන්නා පැතිකඩ තවමත් සකසා නැත. මෙම සැකසුම් කළමනාකරණය කිරීමට ඔබේ ලියාපදිංචිය සම්පූර්ණ කරන්න.",
+  "completeRegistrationAction": "ලියාපදිංචිය සම්පූර්ණ කරන්න",
+  "setYourUsualRates": "ඔබේ සාමාන්‍ය ගාස්තු සකසන්න",
+  "pricePerJobAmount": "වැඩයකට මිල LKR {amount}",
+  "ratePerDay": "දිනකට LKR {amount}",
+  "ratePerHour": "පැයකට LKR {amount}",
+  "rateVisitFee": "පැමිණීම LKR {amount}",
+  "ratePerKm": "LKR {amount}/කි.මී."
 }

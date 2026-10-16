@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../state/role_provider.dart';
@@ -23,12 +25,14 @@ import '../../../state/locale_provider.dart';
 import '../../../shared/widgets/language_select_sheet.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/provider_location_helper.dart';
+import '../../../utils/provider_pricing_helper.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/legal_content_sheet.dart';
 import '../../support/screens/help_support_screen.dart';
+import '../../auth/screens/complete_profile_screen.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
@@ -38,7 +42,8 @@ class ProviderProfileScreen extends StatefulWidget {
 }
 
 class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
-  bool _emergencyAvailable = true;
+  bool? _localEmergencyAvailable;
+  double? _localRadiusKm;
   bool _updatingLocation = false;
 
   Future<void> _refreshGpsLocation(BuildContext context) async {
@@ -245,6 +250,50 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       return '$start•••••$end';
     }
     return trimmed;
+  }
+
+  String _buildRateCardSummary(BuildContext context, Technician tech) {
+    final modes = tech.resolvedPricingModes;
+    final parts = <String>[];
+    final formatter = NumberFormat.decimalPattern('en_US');
+
+    if (modes.contains(ProviderPricingHelper.modeDay) &&
+        tech.dailyRateLkr != null &&
+        tech.dailyRateLkr! > 0) {
+      parts.add(context.l10n.ratePerDay(formatter.format(tech.dailyRateLkr)));
+    }
+
+    if (modes.contains(ProviderPricingHelper.modeHour) &&
+        tech.hourlyRateLkr > 0) {
+      parts.add(context.l10n.ratePerHour(formatter.format(tech.hourlyRateLkr)));
+    }
+
+    if (modes.contains(ProviderPricingHelper.modeJob)) {
+      if (tech.baseRateLkr > 0) {
+        parts.add(
+            context.l10n.pricePerJobAmount(formatter.format(tech.baseRateLkr)));
+      } else {
+        parts.add(context.l10n.quoteEachJob);
+      }
+    }
+
+    if (modes.contains(ProviderPricingHelper.modeVisit) &&
+        tech.effectiveVisitFeeLkr > 0) {
+      parts.add(context.l10n
+          .rateVisitFee(formatter.format(tech.effectiveVisitFeeLkr)));
+    }
+
+    if (modes.contains(ProviderPricingHelper.modeTravel) &&
+        tech.perKmRateLkr != null &&
+        tech.perKmRateLkr! > 0) {
+      parts.add(context.l10n.ratePerKm(formatter.format(tech.perKmRateLkr)));
+    }
+
+    if (parts.isEmpty) {
+      return context.l10n.setYourUsualRates;
+    }
+
+    return parts.join(' · ');
   }
 
   @override
@@ -738,10 +787,102 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             StreamBuilder<Technician?>(
               stream: TechnicianRepository().streamById(user?.id ?? ''),
               builder: (context, techSnap) {
+                if (techSnap.connectionState == ConnectionState.waiting &&
+                    !techSnap.hasData) {
+                  return Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    alignment: Alignment.center,
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                }
+
                 final tech = techSnap.data;
-                final radiusKm = tech?.serviceRadiusKm ?? 25.0;
+                if (tech == null) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.assignment_ind_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                context.l10n.providerProfileNotSetupDesc,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: context.themeTextSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CompleteProfileScreen(
+                                    initialProfile: user,
+                                    targetRole: AppRole.provider,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.primary),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              context.l10n.completeRegistrationAction,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final radiusKm = _localRadiusKm ?? tech.serviceRadiusKm;
                 final isEmergency =
-                    tech?.emergencyAvailable ?? _emergencyAvailable;
+                    _localEmergencyAvailable ?? tech.emergencyAvailable;
 
                 return Container(
                   decoration: BoxDecoration(
@@ -771,13 +912,46 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                             color: context.themeTextSecondary,
                           ),
                         ),
-                        onChanged: (val) async {
-                          setState(() => _emergencyAvailable = val);
+                        onChanged: (val) {
+                          final oldVal = isEmergency;
+                          setState(() => _localEmergencyAvailable = val);
                           final uid = FirebaseAuth.instance.currentUser?.uid;
-                          if (uid != null && uid.isNotEmpty) {
-                            await TechnicianRepository()
-                                .updateEmergencyStatus(uid, val);
-                          }
+                          if (uid == null || uid.isEmpty) return;
+                          final messenger = ScaffoldMessenger.of(context);
+                          final offlineMsg = context.l10n.savedOfflineSyncLater;
+                          final errorMsg =
+                              context.l10n.couldNotSaveCheckConnection;
+
+                          TechnicianRepository()
+                              .updateEmergencyStatus(uid, val)
+                              .timeout(const Duration(seconds: 8))
+                              .then((_) {
+                            if (mounted) {
+                              setState(() => _localEmergencyAvailable = null);
+                            }
+                          }).catchError((err) {
+                            if (err is TimeoutException) {
+                              if (mounted) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(offlineMsg),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (mounted) {
+                                setState(
+                                    () => _localEmergencyAvailable = oldVal);
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(errorMsg),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
+                            }
+                          });
                         },
                       ),
                       ListTile(
@@ -803,11 +977,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          tech != null
-                              ? context.l10n.rateCardSummary(
-                                  '${tech.effectiveVisitFeeLkr}',
-                                  '${tech.hourlyRateLkr}')
-                              : context.l10n.setStandardRatesSubtitle,
+                          _buildRateCardSummary(context, tech),
                           style: TextStyle(
                             fontSize: 11.5,
                             color: context.themeTextSecondary,
@@ -818,9 +988,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           size: 20,
                           color: context.themeTextSecondary,
                         ),
-                        onTap: tech != null
-                            ? () => RateCardSheet.show(context, tech)
-                            : null,
+                        onTap: () => RateCardSheet.show(context, tech),
                       ),
                       Divider(height: 1, color: context.themeBorder),
                       ListTile(
@@ -846,15 +1014,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          tech != null && tech.isAvailableNow
+                          tech.isAvailableNow
                               ? context.l10n.availableNow
                               : context.l10n.outsideWorkingHours,
                           style: TextStyle(
                             fontSize: 11.5,
-                            color: tech != null && tech.isAvailableNow
+                            color: tech.isAvailableNow
                                 ? const Color(0xFF22C55E)
                                 : context.themeTextSecondary,
-                            fontWeight: tech != null && tech.isAvailableNow
+                            fontWeight: tech.isAvailableNow
                                 ? FontWeight.w700
                                 : FontWeight.normal,
                           ),
@@ -864,9 +1032,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           size: 20,
                           color: context.themeTextSecondary,
                         ),
-                        onTap: tech != null
-                            ? () => WorkingHoursSheet.show(context, tech)
-                            : null,
+                        onTap: () => WorkingHoursSheet.show(context, tech),
                       ),
                       Divider(height: 1, color: context.themeBorder),
                       Padding(
@@ -939,12 +1105,49 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                               label: '${radiusKm.round()} km',
                               activeColor: AppColors.primary,
                               onChanged: (val) {
+                                setState(() => _localRadiusKm = val);
+                              },
+                              onChangeEnd: (val) {
+                                final oldRadius = tech.serviceRadiusKm;
                                 final uid =
                                     FirebaseAuth.instance.currentUser?.uid;
-                                if (uid != null && uid.isNotEmpty) {
-                                  TechnicianRepository()
-                                      .updateServiceRadius(uid, val);
-                                }
+                                if (uid == null || uid.isEmpty) return;
+                                final messenger = ScaffoldMessenger.of(context);
+                                final offlineMsg =
+                                    context.l10n.savedOfflineSyncLater;
+                                final errorMsg =
+                                    context.l10n.couldNotSaveCheckConnection;
+
+                                TechnicianRepository()
+                                    .updateServiceRadius(uid, val)
+                                    .timeout(const Duration(seconds: 8))
+                                    .then((_) {
+                                  if (mounted) {
+                                    setState(() => _localRadiusKm = null);
+                                  }
+                                }).catchError((err) {
+                                  if (err is TimeoutException) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(offlineMsg),
+                                          backgroundColor: AppColors.primary,
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    if (mounted) {
+                                      setState(
+                                          () => _localRadiusKm = oldRadius);
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(errorMsg),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                });
                               },
                             ),
                           ],

@@ -7,7 +7,6 @@ enum PrimaryButtonVariant {
   secondary, // bordered card button
 }
 
-
 class PrimaryButton extends StatelessWidget {
   final String label;
   final IconData? leadingIcon;
@@ -119,4 +118,3 @@ class PrimaryButton extends StatelessWidget {
     return expand ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
-

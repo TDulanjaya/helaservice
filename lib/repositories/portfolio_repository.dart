@@ -14,7 +14,8 @@ class PortfolioRepository {
   Stream<List<PortfolioItem>> streamPortfolio(String providerId,
       {bool approvedOnly = false}) {
     if (providerId.isEmpty) return Stream.value([]);
-    Query query = _portfolioCol(providerId).orderBy('createdAt', descending: true);
+    Query query =
+        _portfolioCol(providerId).orderBy('createdAt', descending: true);
     if (approvedOnly) {
       query = query.where('isApproved', isEqualTo: true);
     }

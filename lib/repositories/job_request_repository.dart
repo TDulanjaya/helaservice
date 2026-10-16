@@ -35,10 +35,12 @@ class JobRequestRepository {
     publicData.remove('accuracyMeters');
     publicData.remove('note');
     if (request.latitude != null) {
-      publicData['latitude'] = double.parse(request.latitude!.toStringAsFixed(2));
+      publicData['latitude'] =
+          double.parse(request.latitude!.toStringAsFixed(2));
     }
     if (request.longitude != null) {
-      publicData['longitude'] = double.parse(request.longitude!.toStringAsFixed(2));
+      publicData['longitude'] =
+          double.parse(request.longitude!.toStringAsFixed(2));
     }
 
     batch.set(docRef, publicData);
@@ -55,11 +57,16 @@ class JobRequestRepository {
       'landmark': noteText,
       'latitude': request.latitude,
       'longitude': request.longitude,
-      if (request.accuracyMeters != null) 'accuracyMeters': request.accuracyMeters,
-      if (request.houseNo != null && request.houseNo!.isNotEmpty) 'houseNo': request.houseNo,
-      if (request.street != null && request.street!.isNotEmpty) 'street': request.street,
-      if (request.city != null && request.city!.isNotEmpty) 'city': request.city,
-      if (request.directions != null && request.directions!.isNotEmpty) 'directions': request.directions,
+      if (request.accuracyMeters != null)
+        'accuracyMeters': request.accuracyMeters,
+      if (request.houseNo != null && request.houseNo!.isNotEmpty)
+        'houseNo': request.houseNo,
+      if (request.street != null && request.street!.isNotEmpty)
+        'street': request.street,
+      if (request.city != null && request.city!.isNotEmpty)
+        'city': request.city,
+      if (request.directions != null && request.directions!.isNotEmpty)
+        'directions': request.directions,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -68,39 +75,45 @@ class JobRequestRepository {
   }
 
   Stream<List<JobRequest>> streamOpenRequests({int limit = 50}) {
-    return _col.where('status', isEqualTo: JobRequestStatus.open).limit(limit).snapshots().map((snap) {
-      final list = snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
-      list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+    return _col
+        .where('status', isEqualTo: JobRequestStatus.open)
+        .limit(limit)
+        .snapshots()
+        .map((snap) {
+      final list =
+          snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
+      list.sort((a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return list;
     });
   }
 
-  Stream<List<JobRequest>> streamOpenRequestsForCategory(String category, {int limit = 50}) {
+  Stream<List<JobRequest>> streamOpenRequestsForCategory(String category,
+      {int limit = 50}) {
     return _col
         .where('status', isEqualTo: JobRequestStatus.open)
         .where('category', isEqualTo: category)
         .limit(limit)
         .snapshots()
         .map((snap) {
-      final items = snap.docs
-          .map((d) => JobRequest.fromMap(d.id, d.data()))
-          .toList();
+      final items =
+          snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
       items.sort((a, b) =>
           (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return items;
     });
   }
 
-  Stream<List<JobRequest>> streamCustomerRequests(String customerId, {int limit = 50}) {
+  Stream<List<JobRequest>> streamCustomerRequests(String customerId,
+      {int limit = 50}) {
     if (customerId.isEmpty) return Stream.value(const []);
     return _col
         .where('customerId', isEqualTo: customerId)
         .limit(limit)
         .snapshots()
         .map((snap) {
-      final items = snap.docs
-          .map((d) => JobRequest.fromMap(d.id, d.data()))
-          .toList();
+      final items =
+          snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
       items.sort((a, b) =>
           (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return items;
@@ -121,8 +134,10 @@ class JobRequestRepository {
   }
 
   Future<void> submitQuote(String requestId, Quote quote) async {
-    final quoteRef =
-        _col.doc(requestId).collection(FirestorePaths.quotes).doc(quote.providerId);
+    final quoteRef = _col
+        .doc(requestId)
+        .collection(FirestorePaths.quotes)
+        .doc(quote.providerId);
     await quoteRef.set(quote.toMap());
 
     // send alert to customer
@@ -139,7 +154,8 @@ class JobRequestRepository {
         .snapshots()
         .map((snap) {
       final list = snap.docs.map((d) => Quote.fromMap(d.id, d.data())).toList();
-      list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      list.sort((a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return list;
     });
   }
@@ -152,7 +168,9 @@ class JobRequestRepository {
     JobRequest? request,
     Quote? quote,
   }) async {
-    if (request == null || request.latitude == null || request.longitude == null) {
+    if (request == null ||
+        request.latitude == null ||
+        request.longitude == null) {
       throw Exception('JOB_LOCATION_MISSING');
     }
 
@@ -167,22 +185,30 @@ class JobRequestRepository {
         request.scheduledDate!,
         request.scheduledSlot,
       );
-      if (scheduledStartAt.isBefore(DateTime.now().subtract(const Duration(minutes: 15)))) {
+      if (scheduledStartAt
+          .isBefore(DateTime.now().subtract(const Duration(minutes: 15)))) {
         throw 'SCHEDULE_PASSED';
       }
     }
 
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final custId = request.customerId.isNotEmpty == true
-        ? request.customerId
-        : currentUid;
+    final custId =
+        request.customerId.isNotEmpty == true ? request.customerId : currentUid;
 
-    final quoteDoc = await _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId).get();
+    final quoteDoc = await _col
+        .doc(requestId)
+        .collection(FirestorePaths.quotes)
+        .doc(quoteId)
+        .get();
     final quoteData = quoteDoc.data();
     final rawQuoteType = quoteData?['quoteType'] as String?;
     if (rawQuoteType == null || rawQuoteType.isEmpty) {
       try {
-        await _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId).update({
+        await _col
+            .doc(requestId)
+            .collection(FirestorePaths.quotes)
+            .doc(quoteId)
+            .update({
           'status': 'declined',
           'updatedAt': FieldValue.serverTimestamp(),
         });
@@ -195,7 +221,8 @@ class JobRequestRepository {
     // fetch private customer coordinates
     Map<String, dynamic>? contactData;
     try {
-      final contactSnap = await _col.doc(requestId).collection('private').doc('contact').get();
+      final contactSnap =
+          await _col.doc(requestId).collection('private').doc('contact').get();
       contactData = contactSnap.data();
     } catch (_) {}
 
@@ -203,7 +230,11 @@ class JobRequestRepository {
     if (!ExactLocationHelper.validate(contactData)) {
       await Future.delayed(const Duration(milliseconds: 300));
       try {
-        final retrySnap = await _col.doc(requestId).collection('private').doc('contact').get();
+        final retrySnap = await _col
+            .doc(requestId)
+            .collection('private')
+            .doc('contact')
+            .get();
         contactData = retrySnap.data();
       } catch (_) {}
     }
@@ -214,18 +245,23 @@ class JobRequestRepository {
 
     final exactLat = (contactData!['latitude'] as num).toDouble();
     final exactLng = (contactData['longitude'] as num).toDouble();
-    final exactPhone = (contactData['customerPhone'] as String?)?.isNotEmpty == true
-        ? contactData['customerPhone'] as String
-        : request.customerPhone;
+    final exactPhone =
+        (contactData['customerPhone'] as String?)?.isNotEmpty == true
+            ? contactData['customerPhone'] as String
+            : request.customerPhone;
     final exactAddress = (contactData['address'] as String?)?.isNotEmpty == true
         ? contactData['address'] as String
         : (request.address.isNotEmpty ? request.address : 'Service Location');
-    final exactLandmark = (contactData['landmark'] as String?) ?? request.landmark ?? '';
-    final accuracyMeters = (contactData['accuracyMeters'] as num?)?.toDouble() ?? request.accuracyMeters;
+    final exactLandmark =
+        (contactData['landmark'] as String?) ?? request.landmark ?? '';
+    final accuracyMeters =
+        (contactData['accuracyMeters'] as num?)?.toDouble() ??
+            request.accuracyMeters;
     final houseNo = (contactData['houseNo'] as String?) ?? request.houseNo;
     final street = (contactData['street'] as String?) ?? request.street;
     final city = (contactData['city'] as String?) ?? request.city;
-    final directions = (contactData['directions'] as String?) ?? request.directions;
+    final directions =
+        (contactData['directions'] as String?) ?? request.directions;
 
     final pin = (100000 + Random().nextInt(900000)).toString();
 
@@ -303,12 +339,17 @@ class JobRequestRepository {
       'jobRequestId': requestId,
       'quoteId': quoteId,
       'quoteType': resolvedQuote.quoteType,
-      'priceStatus': resolvedQuote.quoteType == 'firm' ? 'approved' : 'awaiting_confirmation',
-      if (resolvedQuote.quoteType == 'firm') 'approvedTotalLkr': resolvedQuote.quotedPrice.round(),
+      'priceStatus': resolvedQuote.quoteType == 'firm'
+          ? 'approved'
+          : 'awaiting_confirmation',
+      if (resolvedQuote.quoteType == 'firm')
+        'approvedTotalLkr': resolvedQuote.quotedPrice.round(),
       if (resolvedQuote.priceUnit != null) 'priceUnit': resolvedQuote.priceUnit,
-      if (resolvedQuote.unitRateLkr != null) 'unitRateLkr': resolvedQuote.unitRateLkr,
+      if (resolvedQuote.unitRateLkr != null)
+        'unitRateLkr': resolvedQuote.unitRateLkr,
       if (resolvedQuote.quantity != null) 'quantity': resolvedQuote.quantity,
-      if (resolvedQuote.materialsEstimateLkr != null) 'materialsEstimateLkr': resolvedQuote.materialsEstimateLkr,
+      if (resolvedQuote.materialsEstimateLkr != null)
+        'materialsEstimateLkr': resolvedQuote.materialsEstimateLkr,
       'visitFeeLkr': resolvedQuote.visitFeeLkr,
       'travelKm': resolvedQuote.travelKm,
       'travelRateLkr': resolvedQuote.travelRateLkr,
@@ -342,7 +383,8 @@ class JobRequestRepository {
     batch.set(eventRef, {
       'action': 'created',
       'title': 'Booking Confirmed',
-      'description': 'Customer accepted quote from ${resolvedQuote.providerName}',
+      'description':
+          'Customer accepted quote from ${resolvedQuote.providerName}',
       'timestamp': FieldValue.serverTimestamp(),
       'actorUid': custId,
       'actorRole': 'customer',
@@ -373,7 +415,8 @@ class JobRequestRepository {
   }
 
   Future<Map<String, dynamic>?> getJobContact(String requestId) async {
-    final doc = await _col.doc(requestId).collection('private').doc('contact').get();
+    final doc =
+        await _col.doc(requestId).collection('private').doc('contact').get();
     return doc.data();
   }
 
@@ -397,14 +440,17 @@ class JobRequestRepository {
       if (district != null) 'district': district,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    batch.set(_col.doc(requestId).collection('private').doc('contact'), {
-      'latitude': latitude,
-      'longitude': longitude,
-      'address': address,
-      if (effectiveNote != null) 'note': effectiveNote,
-      if (effectiveNote != null) 'landmark': effectiveNote,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    batch.set(
+        _col.doc(requestId).collection('private').doc('contact'),
+        {
+          'latitude': latitude,
+          'longitude': longitude,
+          'address': address,
+          if (effectiveNote != null) 'note': effectiveNote,
+          if (effectiveNote != null) 'landmark': effectiveNote,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
     await batch.commit();
   }
 
@@ -421,13 +467,16 @@ class JobRequestRepository {
       if (scheduledSlot != null && scheduledSlot.isNotEmpty)
         'scheduledSlot': scheduledSlot,
       if (scheduleMode != null) 'scheduleMode': scheduleMode,
-      if (scheduledStartAt != null) 'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
-      if (scheduledEndAt != null) 'scheduledEndAt': Timestamp.fromDate(scheduledEndAt),
+      if (scheduledStartAt != null)
+        'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+      if (scheduledEndAt != null)
+        'scheduledEndAt': Timestamp.fromDate(scheduledEndAt),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  Stream<List<Quote>> streamProviderQuotes(String providerId, {int limit = 50}) {
+  Stream<List<Quote>> streamProviderQuotes(String providerId,
+      {int limit = 50}) {
     return FirebaseFirestore.instance
         .collectionGroup(FirestorePaths.quotes)
         .where('providerId', isEqualTo: providerId)
@@ -438,7 +487,8 @@ class JobRequestRepository {
             snap.docs.map((d) => Quote.fromMap(d.id, d.data())).toList());
   }
 
-  Stream<List<JobRequest>> streamAllCustomerRequests({String? statusFilter, int limit = 50}) {
+  Stream<List<JobRequest>> streamAllCustomerRequests(
+      {String? statusFilter, int limit = 50}) {
     Query query = _col.orderBy('createdAt', descending: true).limit(limit);
     if (statusFilter != null && statusFilter != 'all') {
       query = _col
@@ -485,7 +535,9 @@ class JobRequestRepository {
 
     if (bookingId != null && bookingId.isNotEmpty) {
       batch.update(
-        FirebaseFirestore.instance.collection(FirestorePaths.bookings).doc(bookingId),
+        FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .doc(bookingId),
         {
           'status': JobStatus.cancelled,
           'cancellationReason': reason,

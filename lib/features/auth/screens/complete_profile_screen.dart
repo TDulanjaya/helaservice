@@ -1,5 +1,8 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform, kDebugMode, debugPrint;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -24,7 +27,11 @@ import '../../../models/admin_models.dart';
 import '../../../repositories/category_repository.dart';
 import '../../../utils/nic_validator.dart';
 import '../../../utils/provider_pricing_helper.dart';
+import '../../../utils/provider_routing_helper.dart';
 import '../../../utils/responsive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../constants/firestore_paths.dart';
+import '../../provider/widgets/certificate_upload_section.dart';
 import 'role_choice_screen.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -73,6 +80,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String? _uploadedPhotoUrl;
   String? _uploadedNicFrontKey;
   String? _uploadedNicBackKey;
+  final List<PickedCertificateItem> _certificateItems = [];
   final ImagePicker _picker = ImagePicker();
 
   static List<String> get _districts =>
@@ -131,6 +139,57 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         _nicController.text = NicValidator.cleanNic(existingNic);
       }
     }
+    _recoverLostPhoto();
+  }
+
+  static const String _pendingPhotoSlotKey = 'profile_pending_photo_slot';
+
+  // save photo slot before camera opens
+  Future<void> _setPendingPhotoSlot(String? slot) async {
+    if (kIsWeb) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (slot == null) {
+        await prefs.remove(_pendingPhotoSlotKey);
+      } else {
+        await prefs.setString(_pendingPhotoSlotKey, slot);
+      }
+    } catch (_) {}
+  }
+
+  // restore photo taken before app closed
+  Future<void> _recoverLostPhoto() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final slot = prefs.getString(_pendingPhotoSlotKey);
+      final lost = await _picker.retrieveLostData();
+      await prefs.remove(_pendingPhotoSlotKey);
+      if (lost.isEmpty || slot == null) return;
+      final files = lost.files;
+      final file = lost.file ??
+          ((files != null && files.isNotEmpty) ? files.first : null);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        if (slot == 'profile') {
+          _profileImage = file;
+          _profileImageBytes = bytes;
+          _uploadedPhotoUrl = null;
+        } else if (slot == 'nicFront') {
+          _nicFrontImage = file;
+          _nicFrontImageBytes = bytes;
+          _uploadedNicFrontKey = null;
+        } else if (slot == 'nicBack') {
+          _nicBackImage = file;
+          _nicBackImageBytes = bytes;
+          _uploadedNicBackKey = null;
+        }
+      });
+    } catch (e) {
+      debugPrint('[CompleteProfile] recover photo failed: $e');
+    }
   }
 
   @override
@@ -143,12 +202,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _hourlyRateController.dispose();
     _perKmRateController.dispose();
     _visitFeeController.dispose();
+    for (final item in _certificateItems) {
+      item.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _detectGpsLocation() async {
-    final granted =
-        await PermissionUtils.requestLocationWithRationale(context);
+    final granted = await PermissionUtils.requestLocationWithRationale(context);
     if (!granted) return;
 
     setState(() => _detectingLocation = true);
@@ -235,12 +296,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
 
     try {
+      await _setPendingPhotoSlot('profile');
       final picked = await _picker.pickImage(
         source: source,
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
+      await _setPendingPhotoSlot(null);
       if (picked != null) {
         final bytes = await picked.readAsBytes();
         setState(() {
@@ -266,26 +329,31 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (source == ImageSource.camera) {
       final ok = await PermissionUtils.requestCameraWithRationale(
         context,
-        title: isFront ? context.l10n.captureNicFront : context.l10n.captureNicBack,
+        title: isFront
+            ? context.l10n.captureNicFront
+            : context.l10n.captureNicBack,
         description: context.l10n.captureNicPrompt,
       );
       if (!ok) return;
     } else {
       final ok = await PermissionUtils.requestGalleryWithRationale(
         context,
-        title: isFront ? context.l10n.selectNicFront : context.l10n.selectNicBack,
+        title:
+            isFront ? context.l10n.selectNicFront : context.l10n.selectNicBack,
         description: context.l10n.selectNicGalleryPrompt,
       );
       if (!ok) return;
     }
 
     try {
+      await _setPendingPhotoSlot(isFront ? 'nicFront' : 'nicBack');
       final picked = await _picker.pickImage(
         source: source,
         maxWidth: 1280,
         maxHeight: 1280,
         imageQuality: 85,
       );
+      await _setPendingPhotoSlot(null);
       if (picked != null) {
         final bytes = await picked.readAsBytes();
         setState(() {
@@ -432,6 +500,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _submit() async {
+    if (kDebugMode) {
+      debugPrint('[navdbg] submit start');
+    }
     if (!_agreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -453,7 +524,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedRole == AppRole.provider && !NicValidator.isValidNic(cleanedNic)) {
+    if (_selectedRole == AppRole.provider &&
+        !NicValidator.isValidNic(cleanedNic)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.l10n.invalidNicFormatError),
@@ -468,7 +540,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         pv.Provider.of<LocaleProvider>(context, listen: false);
     final current = widget.initialProfile ?? roleProvider.currentUser;
 
-    // provider validations
+    // check provider fields
     if (_selectedRole == AppRole.provider) {
       if (_profileImage == null &&
           (current?.photoUrl == null || current!.photoUrl!.isEmpty)) {
@@ -613,20 +685,57 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           AuthService().currentFirebaseUser?.uid ??
           'usr_${DateTime.now().millisecondsSinceEpoch}';
 
+      // upload and save provider certificates if any picked
+      if (_selectedRole == AppRole.provider && _certificateItems.isNotEmpty) {
+        final certsCol = FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
+            .doc(uid)
+            .collection('certificates');
+
+        for (final item in _certificateItems) {
+          String? certKey = item.uploadedKey;
+          if (certKey == null) {
+            certKey = await StorageService.instance.uploadBytes(
+              item.bytes,
+              filename: item.name,
+              purpose: 'cert',
+            );
+            item.uploadedKey = certKey;
+          }
+
+          if (item.savedDocId == null) {
+            final rawTitle = item.titleController.text.trim();
+            final title =
+                rawTitle.length > 80 ? rawTitle.substring(0, 80) : rawTitle;
+            final docRef = certsCol.doc();
+            await docRef.set({
+              'key': certKey,
+              'title': title,
+              'type': item.isPdf ? 'pdf' : 'image',
+              'status': 'pending',
+              'uploadedAt': FieldValue.serverTimestamp(),
+            });
+            item.savedDocId = docRef.id;
+          }
+        }
+      }
+
       final existingInitialRole = current?.initialRole;
       final String resolvedInitialRole;
       if (existingInitialRole != null) {
         resolvedInitialRole = existingInitialRole;
-      } else if (widget.targetRole == AppRole.provider || current?.role == AppRole.customer) {
+      } else if (widget.targetRole == AppRole.provider ||
+          current?.role == AppRole.customer) {
         resolvedInitialRole = 'customer';
       } else {
-        resolvedInitialRole = _selectedRole == AppRole.provider ? 'provider' : 'customer';
+        resolvedInitialRole =
+            _selectedRole == AppRole.provider ? 'provider' : 'customer';
       }
 
       final UserProfile updatedProfile;
 
       if (_selectedRole == AppRole.customer) {
-        // customer profile has no static location
+        // customer has no base location
         updatedProfile = (current ??
                 UserProfile(
                   id: uid,
@@ -648,7 +757,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           preferredLanguage: localeProvider.languageCode,
         );
       } else {
-        // provider base location required
+        // provider needs base location
         updatedProfile = (current ??
                 UserProfile(
                   id: uid,
@@ -695,22 +804,36 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       }
 
       await roleProvider.completeUserProfile(updatedProfile);
+      if (kDebugMode) {
+        debugPrint('[navdbg] submit saved');
+      }
 
       if (!mounted) return;
 
       if (_selectedRole == AppRole.customer) {
+        if (kDebugMode) {
+          debugPrint(
+              '[navdbg] -> customer home from complete_profile_screen.dart');
+        }
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
           (route) => false,
         );
       } else {
         if (roleProvider.isApprovedProvider) {
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] -> dashboard from complete_profile_screen.dart');
+          }
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
             (route) => false,
           );
         } else {
           final isExistingCustomer = resolvedInitialRole == 'customer';
+          if (kDebugMode) {
+            debugPrint('[navdbg] -> pending from complete_profile_screen.dart');
+          }
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (_) => ProviderPendingScreen(
@@ -762,8 +885,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       ),
       filled: true,
       fillColor: bg,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: context.themeBorder, width: 1.5),
@@ -779,6 +901,86 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
+  // send incomplete signup to role choice
+  void _handleBack() {
+    final nav = Navigator.of(context);
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final current = widget.initialProfile ?? roleProvider.currentUser;
+    final isUnfinished = current == null || isSignupUnfinished(current);
+
+    if (kDebugMode) {
+      debugPrint(
+        '[navdbg] complete_profile _handleBack: _selectedRole=$_selectedRole, '
+        'initialProfile.isProfileComplete=${widget.initialProfile?.isProfileComplete}, '
+        'currentUser.isProfileComplete=${roleProvider.currentUser?.isProfileComplete}, '
+        'role=${current?.role}, initialRole=${current?.initialRole}, '
+        'canPop=${nav.canPop()}, isUnfinished=$isUnfinished',
+      );
+    }
+
+    if (!isUnfinished) {
+      if (nav.canPop()) {
+        if (kDebugMode) {
+          debugPrint('[navdbg] complete_profile _handleBack branch: canPop');
+        }
+        nav.pop();
+        return;
+      }
+      final destination = resolveAppDestination(
+        profile: current,
+        isAuthorizedAdmin: roleProvider.isAuthorizedAdmin,
+        isEmailOtpVerified: true,
+        isTechnicianApproved: roleProvider.isApprovedProvider,
+      );
+      if (kDebugMode) {
+        debugPrint(
+          '[navdbg] complete_profile _handleBack branch: !isUnfinished destination=$destination',
+        );
+      }
+      Widget target;
+      switch (destination) {
+        case AppDestination.providerDashboard:
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] -> dashboard from complete_profile_screen.dart');
+          }
+          target = const ProviderDashboardScreen();
+          break;
+        case AppDestination.providerPendingNew:
+          if (kDebugMode) {
+            debugPrint('[navdbg] -> pending from complete_profile_screen.dart');
+          }
+          target = const ProviderPendingScreen(isExistingCustomer: false);
+          break;
+        case AppDestination.providerPendingCustomer:
+        case AppDestination.homeDiscovery:
+        default:
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] -> customer home from complete_profile_screen.dart');
+          }
+          target = const HomeDiscoveryScreen();
+          break;
+      }
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => target),
+        (route) => false,
+      );
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+          '[navdbg] complete_profile _handleBack branch: isUnfinished -> RoleChoiceScreen');
+    }
+    nav.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => RoleChoiceScreen(user: current),
+      ),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
@@ -786,700 +988,361 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final profile = widget.initialProfile ?? roleProvider.currentUser;
     final isFieldBg = context.isDark ? context.themeSurfaceLow : Colors.white;
 
-    return Scaffold(
-      backgroundColor: context.themeBg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Center(
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isFieldBg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.themeBorder, width: 1.5),
-              ),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 18, color: context.themeTextPrimary),
-                onPressed: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  } else {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                          builder: (_) => const HomeDiscoveryScreen()),
-                      (route) => false,
-                    );
-                  }
-                },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: context.themeBg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isFieldBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.themeBorder, width: 1.5),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 18, color: context.themeTextPrimary),
+                  onPressed: _handleBack,
+                ),
               ),
             ),
           ),
-        ),
-        title: Text(
-          _selectedRole == AppRole.provider
-              ? context.l10n.completeProviderProfileTitle
-              : context.l10n.completeProfileTitle,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: context.themeTextPrimary,
+          title: Text(
+            _selectedRole == AppRole.provider
+                ? context.l10n.completeProviderProfileTitle
+                : context.l10n.completeProfileTitle,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: context.themeTextPrimary,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 680),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                Responsive.isPhoneLandscape(context) ? 32 : 20,
-                12,
-                Responsive.isPhoneLandscape(context) ? 32 : 20,
-                32,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (profile != null)
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  Responsive.isPhoneLandscape(context) ? 32 : 20,
+                  12,
+                  Responsive.isPhoneLandscape(context) ? 32 : 20,
+                  32,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (profile != null)
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: isFieldBg,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                                color: context.themeBorder, width: 1.5),
+                          ),
+                          child: Row(
+                            children: [
+                              UserAvatar(
+                                uid: profile.id,
+                                displayName: profile.displayName,
+                                email: profile.email,
+                                photoUrl: profile.photoUrl,
+                                radius: 20,
+                                backgroundColor: const Color(0xFF1E293B),
+                                textColor: Colors.white,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      profile.email.isNotEmpty
+                                          ? profile.email
+                                          : profile.displayName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: context.themeTextPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.check_circle_rounded,
+                                            color: AppColors.success, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          context.l10n.accountVerified,
+                                          style: const TextStyle(
+                                            color: AppColors.success,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // language selection
+                      Text(
+                        context.l10n.preferredLanguage,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(14),
-                        margin: const EdgeInsets.only(bottom: 20),
+                        constraints: const BoxConstraints(minHeight: 48),
+                        padding: const EdgeInsets.all(4),
+                        margin: const EdgeInsets.only(bottom: 22),
                         decoration: BoxDecoration(
                           color: isFieldBg,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                               color: context.themeBorder, width: 1.5),
                         ),
                         child: Row(
                           children: [
-                            UserAvatar(
-                              uid: profile.id,
-                              displayName: profile.displayName,
-                              email: profile.email,
-                              photoUrl: profile.photoUrl,
-                              radius: 20,
-                              backgroundColor: const Color(0xFF1E293B),
-                              textColor: Colors.white,
+                            _SegmentedLanguageItem(
+                              label: 'English',
+                              selected: localeProvider.languageCode == 'en',
+                              onTap: () =>
+                                  localeProvider.setLocale(const Locale('en')),
+                            ),
+                            _SegmentedLanguageItem(
+                              label: 'සිංහල',
+                              selected: localeProvider.languageCode == 'si',
+                              onTap: () =>
+                                  localeProvider.setLocale(const Locale('si')),
+                            ),
+                            _SegmentedLanguageItem(
+                              label: 'தமிழ்',
+                              selected: localeProvider.languageCode == 'ta',
+                              onTap: () =>
+                                  localeProvider.setLocale(const Locale('ta')),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // role display
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedRole == AppRole.provider
+                              ? AppColors.primary.withValues(alpha: 0.08)
+                              : isFieldBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _selectedRole == AppRole.provider
+                                ? AppColors.primary.withValues(alpha: 0.35)
+                                : context.themeBorder,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                _selectedRole == AppRole.provider
+                                    ? Icons.handyman_outlined
+                                    : Icons.home_outlined,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    profile.email.isNotEmpty
-                                        ? profile.email
-                                        : profile.displayName,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                      color: context.themeTextPrimary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
                                   Row(
                                     children: [
-                                      const Icon(Icons.check_circle_rounded,
-                                          color: AppColors.success, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        context.l10n.accountVerified,
-                                        style: const TextStyle(
-                                          color: AppColors.success,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
+                                      Flexible(
+                                        child: Text(
+                                          _selectedRole == AppRole.provider
+                                              ? context.l10n.roleProvider
+                                              : context.l10n.roleCustomer,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            color: context.themeTextPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          context.l10n.statusSelected,
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
                                     ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _selectedRole == AppRole.provider
+                                        ? context.l10n
+                                            .providingServicesAcrossSriLanka
+                                        : context
+                                            .l10n.requestingDomesticServices,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: context.themeTextSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-
-                    // language selection
-                    Text(
-                      context.l10n.preferredLanguage,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      constraints: const BoxConstraints(minHeight: 48),
-                      padding: const EdgeInsets.all(4),
-                      margin: const EdgeInsets.only(bottom: 22),
-                      decoration: BoxDecoration(
-                        color: isFieldBg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: context.themeBorder, width: 1.5),
-                      ),
-                      child: Row(
-                        children: [
-                          _SegmentedLanguageItem(
-                            label: 'English',
-                            selected: localeProvider.languageCode == 'en',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('en')),
-                          ),
-                          _SegmentedLanguageItem(
-                            label: 'සිංහල',
-                            selected: localeProvider.languageCode == 'si',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('si')),
-                          ),
-                          _SegmentedLanguageItem(
-                            label: 'தமிழ்',
-                            selected: localeProvider.languageCode == 'ta',
-                            onTap: () =>
-                                localeProvider.setLocale(const Locale('ta')),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // role display
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _selectedRole == AppRole.provider
-                            ? AppColors.primary.withValues(alpha: 0.08)
-                            : isFieldBg,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _selectedRole == AppRole.provider
-                              ? AppColors.primary.withValues(alpha: 0.35)
-                              : context.themeBorder,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              _selectedRole == AppRole.provider
-                                  ? Icons.handyman_outlined
-                                  : Icons.home_outlined,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        _selectedRole == AppRole.provider
-                                            ? context.l10n.roleProvider
-                                            : context.l10n.roleCustomer,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                          color: context.themeTextPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        context.l10n.statusSelected,
-                                        style: const TextStyle(
-                                          color: AppColors.primary,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _selectedRole == AppRole.provider
-                                      ? context.l10n.providingServicesAcrossSriLanka
-                                      : context.l10n.requestingDomesticServices,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: context.themeTextSecondary,
+                            TextButton(
+                              onPressed: () {
+                                final roleProvider =
+                                    pv.Provider.of<RoleProvider>(context,
+                                        listen: false);
+                                final current = widget.initialProfile ??
+                                    roleProvider.currentUser;
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        RoleChoiceScreen(user: current),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              final roleProvider = pv.Provider.of<RoleProvider>(
-                                  context,
-                                  listen: false);
-                              final current = widget.initialProfile ??
-                                  roleProvider.currentUser;
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      RoleChoiceScreen(user: current),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              context.l10n.change,
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-
-                    // profile photo
-                    Center(
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: _showProfilePhotoSourceSheet,
-                            child: Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                Container(
-                                  width: 90,
-                                  height: 90,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: context.themeSurfaceLow,
-                                    border: Border.all(
-                                      color: _selectedRole == AppRole.provider
-                                          ? AppColors.primary
-                                          : context.themeBorder,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: ClipOval(
-                                    child: _profileImageBytes != null
-                                        ? Image.memory(
-                                            _profileImageBytes!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : (profile?.photoUrl != null &&
-                                                profile!.photoUrl!.isNotEmpty)
-                                            ? Image.network(
-                                                profile.photoUrl!,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Icon(
-                                                Icons.person_rounded,
-                                                size: 48,
-                                                color: context
-                                                    .themeTextSecondary,
-                                              ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt_rounded,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _selectedRole == AppRole.provider
-                                ? '${context.l10n.profilePhoto} *'
-                                : '${context.l10n.profilePhoto} (${context.l10n.optional})',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.themeTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // full name
-                    Text(
-                      context.l10n.fullName,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      style: TextStyle(
-                          color: context.themeTextPrimary, fontSize: 14.5),
-                      decoration: _inputDecoration(
-                        context,
-                        hint: context.l10n.fullNameAsNic,
-                        icon: Icons.person_outline,
-                        isDark: context.isDark,
-                      ),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return context.l10n.fullName;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // phone number
-                    Text(
-                      context.l10n.phoneLabel,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      style: TextStyle(
-                          color: context.themeTextPrimary, fontSize: 14.5),
-                      decoration: _inputDecoration(
-                        context,
-                        hint: context.l10n.phonePlaceholderPattern,
-                        icon: Icons.phone_outlined,
-                        isDark: context.isDark,
-                        prefixText: '+94 ',
-                      ),
-                      validator: (val) {
-                        if (val == null || val.trim().length < 9) {
-                          return context.l10n.phoneNumber;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // provider only fields
-                    if (_selectedRole == AppRole.provider) ...[
-                      // category
-                      StreamBuilder<List<CategoryRow>>(
-                        stream: CategoryRepository().streamLiveCategories(),
-                        builder: (context, snapshot) {
-                          final liveCats = snapshot.data ?? [];
-                          if (liveCats.isEmpty &&
-                              snapshot.connectionState !=
-                                  ConnectionState.waiting) {
-                            return Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(14),
-                                border:
-                                    Border.all(color: context.themeBorder),
-                              ),
+                                );
+                              },
                               child: Text(
-                                context.l10n.noServicesAvailableYet,
-                                style: TextStyle(
+                                context.l10n.change,
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 13,
-                                  color: context.themeTextSecondary,
                                 ),
                               ),
-                            );
-                          }
-                          final effectiveVal =
-                              liveCats.any((c) => c.id == _category)
-                                  ? _category
-                                  : (liveCats.isNotEmpty
-                                      ? liveCats.first.id
-                                      : '');
-                          if (_category.isEmpty && liveCats.isNotEmpty) {
-                            WidgetsBinding.instance
-                                .addPostFrameCallback((_) {
-                              if (mounted && _category.isEmpty) {
-                                setState(() => _category = effectiveVal);
-                              }
-                            });
-                          }
-
-                          return SearchableSelectPicker<String>(
-                            label: context.l10n.serviceCategory,
-                            selectedValue: effectiveVal.isNotEmpty
-                                ? effectiveVal
-                                : null,
-                            prefixIcon: Icons.handyman_outlined,
-                            isDarkField: context.isDark,
-                            modalTitle: context.l10n.selectServiceCategory,
-                            searchHint: context.l10n.searchCategoryHint,
-                            items: liveCats.map((c) {
-                              return SearchableSelectItem<String>(
-                                value: c.id,
-                                label: c.name,
-                                icon: c.icon,
-                              );
-                            }).toList(),
-                            onSelected: (val) =>
-                                setState(() => _category = val),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // district
-                      SearchableSelectPicker<String>(
-                        label: context.l10n.district,
-                        selectedValue: _district,
-                        prefixIcon: Icons.map_outlined,
-                        isDarkField: context.isDark,
-                        modalTitle: context.l10n.district,
-                        searchHint: context.l10n.searchDistrictHint,
-                        items: _districts.map((d) {
-                          final localizedName =
-                              LocalizedData.getDistrict(context, d);
-                          return SearchableSelectItem<String>(
-                            value: d,
-                            label: localizedName,
-                            subtitle: localizedName != d ? d : null,
-                            icon: Icons.location_on_outlined,
-                          );
-                        }).toList(),
-                        onSelected: (val) => setState(() => _district = val),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // base location card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isFieldBg,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: (_latitude != null && _longitude != null)
-                                ? AppColors.primary
-                                : context.themeBorder,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(Icons.my_location,
-                                      color: AppColors.primary, size: 20),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        context.l10n.baseWorkshopLocation,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 13.5,
-                                          color: context.themeTextPrimary,
-                                        ),
-                                      ),
-                                      Text(
-                                        context.l10n.baseLocationDispatchNotice,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: context.themeTextSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isNarrow = constraints.maxWidth < 360;
-                                final gpsButton = OutlinedButton.icon(
-                                  onPressed: _detectingLocation
-                                      ? null
-                                      : _detectGpsLocation,
-                                  icon: _detectingLocation
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2),
-                                        )
-                                      : const Icon(
-                                          Icons.my_location_rounded,
-                                          size: 16),
-                                  label: Flexible(
-                                    child: Text(
-                                      context.l10n.useGps,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(44),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-
-                                final mapButton = OutlinedButton.icon(
-                                  onPressed: _pickOnMap,
-                                  icon: const Icon(
-                                      Icons.pin_drop_rounded,
-                                      size: 16),
-                                  label: Flexible(
-                                    child: Text(
-                                      _latitude != null
-                                          ? context.l10n.updatePinButton
-                                          : context.l10n.pickOnMapButton,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(44),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-
-                                if (isNarrow) {
-                                  return Column(
-                                    children: [
-                                      gpsButton,
-                                      const SizedBox(height: 8),
-                                      mapButton,
-                                    ],
-                                  );
-                                }
-
-                                return Row(
-                                  children: [
-                                    Expanded(child: gpsButton),
-                                    const SizedBox(width: 10),
-                                    Expanded(child: mapButton),
-                                  ],
-                                );
-                              },
-                            ),
-                            if (_latitude != null && _longitude != null) ...[
-                              const SizedBox(height: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.check_circle_rounded,
-                                        color: AppColors.primary, size: 14),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${context.l10n.location}: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
-                                      style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _addressController,
-                              style: TextStyle(
-                                  color: context.themeTextPrimary,
-                                  fontSize: 14),
-                              decoration: _inputDecoration(
-                                context,
-                                hint: context.l10n.workshopAddressRequiredLabel,
-                                icon: Icons.location_on_outlined,
-                                isDark: context.isDark,
-                              ),
-                              validator: (val) {
-                                if (_selectedRole == AppRole.provider &&
-                                    (val == null || val.trim().isEmpty)) {
-                                  return context.l10n.operatingAddressRequiredError;
-                                }
-                                return null;
-                              },
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 22),
 
-                      // identity card number
+                      // profile photo
+                      Center(
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: _showProfilePhotoSourceSheet,
+                              child: Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  Container(
+                                    width: 90,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: context.themeSurfaceLow,
+                                      border: Border.all(
+                                        color: _selectedRole == AppRole.provider
+                                            ? AppColors.primary
+                                            : context.themeBorder,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: _profileImageBytes != null
+                                          ? Image.memory(
+                                              _profileImageBytes!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : (profile?.photoUrl != null &&
+                                                  profile!.photoUrl!.isNotEmpty)
+                                              ? Image.network(
+                                                  profile.photoUrl!,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Icon(
+                                                  Icons.person_rounded,
+                                                  size: 48,
+                                                  color: context
+                                                      .themeTextSecondary,
+                                                ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _selectedRole == AppRole.provider
+                                  ? '${context.l10n.profilePhoto} *'
+                                  : '${context.l10n.profilePhoto} (${context.l10n.optional})',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // full name
                       Text(
-                        '${context.l10n.nicNumber} *',
+                        context.l10n.fullName,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -1488,291 +1351,660 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
-                        controller: _nicController,
+                        controller: _nameController,
                         style: TextStyle(
-                            color: context.themeTextPrimary,
-                            fontSize: 14.5),
-                        textCapitalization: TextCapitalization.characters,
+                            color: context.themeTextPrimary, fontSize: 14.5),
                         decoration: _inputDecoration(
                           context,
-                          hint: 'e.g. 199012345678 or 901234567V',
-                          icon: Icons.badge_outlined,
+                          hint: context.l10n.fullNameAsNic,
+                          icon: Icons.person_outline,
                           isDark: context.isDark,
                         ),
                         validator: (val) {
-                          if (_selectedRole == AppRole.provider) {
-                            return NicValidator.validateNic(val, context.l10n);
+                          if (val == null || val.trim().isEmpty) {
+                            return context.l10n.fullName;
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // identity card photos
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _DocUploadBox(
-                              label: context.l10n.nicFront,
-                              file: _nicFrontImage,
-                              bytes: _nicFrontImageBytes,
-                              networkUrl: profile?.nicFrontUrl,
-                              onTap: () => _showNicSourceSheet(true),
-                              isDark: context.isDark,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _DocUploadBox(
-                              label: context.l10n.nicBack,
-                              file: _nicBackImage,
-                              bytes: _nicBackImageBytes,
-                              networkUrl: profile?.nicBackUrl,
-                              onTap: () => _showNicSourceSheet(false),
-                              isDark: context.isDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
+                      // phone number
                       Text(
-                        context.l10n.howDoYouChargeTitle,
+                        context.l10n.phoneLabel,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
                           color: context.themeTextPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.howDoYouChargeSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.themeTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      CheckboxListTile(
-                        value: _pricingModes.contains(ProviderPricingHelper.modeHour),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _pricingModes.add(ProviderPricingHelper.modeHour);
-                            } else {
-                              _pricingModes.remove(ProviderPricingHelper.modeHour);
-                            }
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        title: Text(
-                          context.l10n.pricingModePerHour,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ),
-                      if (_pricingModes.contains(ProviderPricingHelper.modeHour)) ...[
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _hourlyRateController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                          decoration: _inputDecoration(
-                            context,
-                            hint: context.l10n.hourlyRateHint,
-                            icon: Icons.timer_outlined,
-                            prefixText: 'LKR ',
-                            labelText: context.l10n.hourlyRate,
-                            isDark: context.isDark,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      CheckboxListTile(
-                        value: _pricingModes.contains(ProviderPricingHelper.modeDay),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _pricingModes.add(ProviderPricingHelper.modeDay);
-                            } else {
-                              _pricingModes.remove(ProviderPricingHelper.modeDay);
-                            }
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        title: Text(
-                          context.l10n.pricingModePerDay,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ),
-                      if (_pricingModes.contains(ProviderPricingHelper.modeDay)) ...[
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _dailyRateController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                          decoration: _inputDecoration(
-                            context,
-                            hint: context.l10n.dailyRateHint,
-                            icon: Icons.calendar_today_outlined,
-                            prefixText: 'LKR ',
-                            labelText: context.l10n.dailyRate,
-                            isDark: context.isDark,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      CheckboxListTile(
-                        value: _pricingModes.contains(ProviderPricingHelper.modeJob),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _pricingModes.add(ProviderPricingHelper.modeJob);
-                            } else {
-                              _pricingModes.remove(ProviderPricingHelper.modeJob);
-                            }
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        title: Text(
-                          context.l10n.pricingModePricePerJob,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 8),
-
-                      CheckboxListTile(
-                        value: _pricingModes.contains(ProviderPricingHelper.modeVisit),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _pricingModes.add(ProviderPricingHelper.modeVisit);
-                            } else {
-                              _pricingModes.remove(ProviderPricingHelper.modeVisit);
-                            }
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        title: Text(
-                          context.l10n.pricingModeVisitFee,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ),
-                      if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _visitFeeController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                          decoration: _inputDecoration(
-                            context,
-                            hint: context.l10n.visitFeeOptionalHint,
-                            icon: Icons.meeting_room_outlined,
-                            prefixText: 'LKR ',
-                            labelText: context.l10n.standardVisitFee,
-                            isDark: context.isDark,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      CheckboxListTile(
-                        value: _pricingModes.contains(ProviderPricingHelper.modeTravel),
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == true) {
-                              _pricingModes.add(ProviderPricingHelper.modeTravel);
-                            } else {
-                              _pricingModes.remove(ProviderPricingHelper.modeTravel);
-                            }
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        title: Text(
-                          context.l10n.pricingModeTravelPerKm,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
-                          ),
-                        ),
-                      ),
-                      if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
-                        const SizedBox(height: 4),
-                        TextFormField(
-                          controller: _perKmRateController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
-                          decoration: _inputDecoration(
-                            context,
-                            hint: context.l10n.perKmRateHint,
-                            icon: Icons.directions_car_outlined,
-                            prefixText: 'LKR ',
-                            labelText: context.l10n.perKmTravelRate,
-                            isDark: context.isDark,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ],
-
-                    const SizedBox(height: 20),
-
-                    // terms checkbox
-                    CheckboxListTile(
-                      value: _agreeTerms,
-                      onChanged: (val) =>
-                          setState(() => _agreeTerms = val ?? false),
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: AppColors.primary,
-                      title: Text(
-                        context.l10n.agreeTerms,
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
                         style: TextStyle(
-                          fontSize: 12.5,
-                          color: context.themeTextSecondary,
+                            color: context.themeTextPrimary, fontSize: 14.5),
+                        decoration: _inputDecoration(
+                          context,
+                          hint: context.l10n.phonePlaceholderPattern,
+                          icon: Icons.phone_outlined,
+                          isDark: context.isDark,
+                          prefixText: '+94 ',
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().length < 9) {
+                            return context.l10n.phoneNumber;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // provider only fields
+                      if (_selectedRole == AppRole.provider) ...[
+                        // category
+                        StreamBuilder<List<CategoryRow>>(
+                          stream: CategoryRepository().streamLiveCategories(),
+                          builder: (context, snapshot) {
+                            final liveCats = snapshot.data ?? [];
+                            if (liveCats.isEmpty &&
+                                snapshot.connectionState !=
+                                    ConnectionState.waiting) {
+                              return Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: context.themeSurfaceLow,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border:
+                                      Border.all(color: context.themeBorder),
+                                ),
+                                child: Text(
+                                  context.l10n.noServicesAvailableYet,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: context.themeTextSecondary,
+                                  ),
+                                ),
+                              );
+                            }
+                            final effectiveVal =
+                                liveCats.any((c) => c.id == _category)
+                                    ? _category
+                                    : (liveCats.isNotEmpty
+                                        ? liveCats.first.id
+                                        : '');
+                            if (_category.isEmpty && liveCats.isNotEmpty) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (mounted && _category.isEmpty) {
+                                  setState(() => _category = effectiveVal);
+                                }
+                              });
+                            }
+
+                            return SearchableSelectPicker<String>(
+                              label: context.l10n.serviceCategory,
+                              selectedValue:
+                                  effectiveVal.isNotEmpty ? effectiveVal : null,
+                              prefixIcon: Icons.handyman_outlined,
+                              isDarkField: context.isDark,
+                              modalTitle: context.l10n.selectServiceCategory,
+                              searchHint: context.l10n.searchCategoryHint,
+                              items: liveCats.map((c) {
+                                return SearchableSelectItem<String>(
+                                  value: c.id,
+                                  label: c.name,
+                                  icon: c.icon,
+                                );
+                              }).toList(),
+                              onSelected: (val) =>
+                                  setState(() => _category = val),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // district
+                        SearchableSelectPicker<String>(
+                          label: context.l10n.district,
+                          selectedValue: _district,
+                          prefixIcon: Icons.map_outlined,
+                          isDarkField: context.isDark,
+                          modalTitle: context.l10n.district,
+                          searchHint: context.l10n.searchDistrictHint,
+                          items: _districts.map((d) {
+                            final localizedName =
+                                LocalizedData.getDistrict(context, d);
+                            return SearchableSelectItem<String>(
+                              value: d,
+                              label: localizedName,
+                              subtitle: localizedName != d ? d : null,
+                              icon: Icons.location_on_outlined,
+                            );
+                          }).toList(),
+                          onSelected: (val) => setState(() => _district = val),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // base location card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isFieldBg,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: (_latitude != null && _longitude != null)
+                                  ? AppColors.primary
+                                  : context.themeBorder,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(Icons.my_location,
+                                        color: AppColors.primary, size: 20),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          context.l10n.baseWorkshopLocation,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13.5,
+                                            color: context.themeTextPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          context
+                                              .l10n.baseLocationDispatchNotice,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: context.themeTextSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isNarrow = constraints.maxWidth < 360;
+                                  final gpsButton = OutlinedButton.icon(
+                                    onPressed: _detectingLocation
+                                        ? null
+                                        : _detectGpsLocation,
+                                    icon: _detectingLocation
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2),
+                                          )
+                                        : const Icon(Icons.my_location_rounded,
+                                            size: 16),
+                                    label: Text(
+                                      context.l10n.useGps,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(44),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  );
+
+                                  final mapButton = OutlinedButton.icon(
+                                    onPressed: _pickOnMap,
+                                    icon: const Icon(Icons.pin_drop_rounded,
+                                        size: 16),
+                                    label: Text(
+                                      _latitude != null
+                                          ? context.l10n.updatePinButton
+                                          : context.l10n.pickOnMapButton,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(44),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 8),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  );
+
+                                  if (isNarrow) {
+                                    return Column(
+                                      children: [
+                                        gpsButton,
+                                        const SizedBox(height: 8),
+                                        mapButton,
+                                      ],
+                                    );
+                                  }
+
+                                  return Row(
+                                    children: [
+                                      Expanded(child: gpsButton),
+                                      const SizedBox(width: 10),
+                                      Expanded(child: mapButton),
+                                    ],
+                                  );
+                                },
+                              ),
+                              if (_latitude != null && _longitude != null) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.check_circle_rounded,
+                                          color: AppColors.primary, size: 14),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${context.l10n.location}: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _addressController,
+                                style: TextStyle(
+                                    color: context.themeTextPrimary,
+                                    fontSize: 14),
+                                decoration: _inputDecoration(
+                                  context,
+                                  hint:
+                                      context.l10n.workshopAddressRequiredLabel,
+                                  icon: Icons.location_on_outlined,
+                                  isDark: context.isDark,
+                                ),
+                                validator: (val) {
+                                  if (_selectedRole == AppRole.provider &&
+                                      (val == null || val.trim().isEmpty)) {
+                                    return context
+                                        .l10n.operatingAddressRequiredError;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // identity card number
+                        Text(
+                          '${context.l10n.nicNumber} *',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _nicController,
+                          style: TextStyle(
+                              color: context.themeTextPrimary, fontSize: 14.5),
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: _inputDecoration(
+                            context,
+                            hint: 'e.g. 199012345678 or 901234567V',
+                            icon: Icons.badge_outlined,
+                            isDark: context.isDark,
+                          ),
+                          validator: (val) {
+                            if (_selectedRole == AppRole.provider) {
+                              return NicValidator.validateNic(
+                                  val, context.l10n);
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // identity card photos
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _DocUploadBox(
+                                label: context.l10n.nicFront,
+                                file: _nicFrontImage,
+                                bytes: _nicFrontImageBytes,
+                                networkUrl: profile?.nicFrontUrl,
+                                onTap: () => _showNicSourceSheet(true),
+                                isDark: context.isDark,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _DocUploadBox(
+                                label: context.l10n.nicBack,
+                                file: _nicBackImage,
+                                bytes: _nicBackImageBytes,
+                                networkUrl: profile?.nicBackUrl,
+                                onTap: () => _showNicSourceSheet(false),
+                                isDark: context.isDark,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // trade certificates and documents
+                        CertificateUploadSection(
+                          items: _certificateItems,
+                          onChanged: (updated) {
+                            setState(() {
+                              _certificateItems
+                                ..clear()
+                                ..addAll(updated);
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 20),
+
+                        Text(
+                          context.l10n.howDoYouChargeTitle,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.howDoYouChargeSubtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        CheckboxListTile(
+                          value: _pricingModes
+                              .contains(ProviderPricingHelper.modeHour),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _pricingModes
+                                    .add(ProviderPricingHelper.modeHour);
+                              } else {
+                                _pricingModes
+                                    .remove(ProviderPricingHelper.modeHour);
+                              }
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.primary,
+                          title: Text(
+                            context.l10n.pricingModePerHour,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_pricingModes
+                            .contains(ProviderPricingHelper.modeHour)) ...[
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            controller: _hourlyRateController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                                color: context.themeTextPrimary, fontSize: 14),
+                            decoration: _inputDecoration(
+                              context,
+                              hint: context.l10n.hourlyRateHint,
+                              icon: Icons.timer_outlined,
+                              prefixText: 'LKR ',
+                              labelText: context.l10n.hourlyRate,
+                              isDark: context.isDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        CheckboxListTile(
+                          value: _pricingModes
+                              .contains(ProviderPricingHelper.modeDay),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _pricingModes
+                                    .add(ProviderPricingHelper.modeDay);
+                              } else {
+                                _pricingModes
+                                    .remove(ProviderPricingHelper.modeDay);
+                              }
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.primary,
+                          title: Text(
+                            context.l10n.pricingModePerDay,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_pricingModes
+                            .contains(ProviderPricingHelper.modeDay)) ...[
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            controller: _dailyRateController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                                color: context.themeTextPrimary, fontSize: 14),
+                            decoration: _inputDecoration(
+                              context,
+                              hint: context.l10n.dailyRateHint,
+                              icon: Icons.calendar_today_outlined,
+                              prefixText: 'LKR ',
+                              labelText: context.l10n.dailyRate,
+                              isDark: context.isDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        CheckboxListTile(
+                          value: _pricingModes
+                              .contains(ProviderPricingHelper.modeJob),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _pricingModes
+                                    .add(ProviderPricingHelper.modeJob);
+                              } else {
+                                _pricingModes
+                                    .remove(ProviderPricingHelper.modeJob);
+                              }
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.primary,
+                          title: Text(
+                            context.l10n.pricingModePricePerJob,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        CheckboxListTile(
+                          value: _pricingModes
+                              .contains(ProviderPricingHelper.modeVisit),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _pricingModes
+                                    .add(ProviderPricingHelper.modeVisit);
+                              } else {
+                                _pricingModes
+                                    .remove(ProviderPricingHelper.modeVisit);
+                              }
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.primary,
+                          title: Text(
+                            context.l10n.pricingModeVisitFee,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_pricingModes
+                            .contains(ProviderPricingHelper.modeVisit)) ...[
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            controller: _visitFeeController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                                color: context.themeTextPrimary, fontSize: 14),
+                            decoration: _inputDecoration(
+                              context,
+                              hint: context.l10n.visitFeeOptionalHint,
+                              icon: Icons.meeting_room_outlined,
+                              prefixText: 'LKR ',
+                              labelText: context.l10n.standardVisitFee,
+                              isDark: context.isDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        CheckboxListTile(
+                          value: _pricingModes
+                              .contains(ProviderPricingHelper.modeTravel),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _pricingModes
+                                    .add(ProviderPricingHelper.modeTravel);
+                              } else {
+                                _pricingModes
+                                    .remove(ProviderPricingHelper.modeTravel);
+                              }
+                            });
+                          },
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: AppColors.primary,
+                          title: Text(
+                            context.l10n.pricingModeTravelPerKm,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.themeTextPrimary,
+                            ),
+                          ),
+                        ),
+                        if (_pricingModes
+                            .contains(ProviderPricingHelper.modeTravel)) ...[
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            controller: _perKmRateController,
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(
+                                color: context.themeTextPrimary, fontSize: 14),
+                            decoration: _inputDecoration(
+                              context,
+                              hint: context.l10n.perKmRateHint,
+                              icon: Icons.directions_car_outlined,
+                              prefixText: 'LKR ',
+                              labelText: context.l10n.perKmTravelRate,
+                              isDark: context.isDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      // terms checkbox
+                      CheckboxListTile(
+                        value: _agreeTerms,
+                        onChanged: (val) =>
+                            setState(() => _agreeTerms = val ?? false),
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        title: Text(
+                          context.l10n.agreeTerms,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: context.themeTextSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // submit button
-                    PrimaryButton(
-                      label: _selectedRole == AppRole.provider
-                          ? context.l10n.completeProviderRegistration
-                          : context.l10n.saveProfile,
-                      loading: _isSubmitting,
-                      onPressed: _agreeTerms && !_isSubmitting ? _submit : null,
-                    ),
-                  ],
+                      // submit button
+                      PrimaryButton(
+                        label: _selectedRole == AppRole.provider
+                            ? context.l10n.completeProviderRegistration
+                            : context.l10n.saveProfile,
+                        loading: _isSubmitting,
+                        onPressed:
+                            _agreeTerms && !_isSubmitting ? _submit : null,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1802,13 +2034,18 @@ class _DocUploadBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = bytes != null || file != null || (networkUrl != null && networkUrl!.isNotEmpty);
+    final hasImage = bytes != null ||
+        file != null ||
+        (networkUrl != null && networkUrl!.isNotEmpty);
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 110),
+        // box size changes when photo is set
+        constraints: hasImage
+            ? const BoxConstraints.tightFor(height: 110)
+            : const BoxConstraints(minHeight: 110),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isDark ? context.themeSurfaceLow : Colors.white,
@@ -1839,7 +2076,8 @@ class _DocUploadBox extends StatelessWidget {
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.check, size: 12, color: Colors.white),
+                      child: const Icon(Icons.check,
+                          size: 12, color: Colors.white),
                     ),
                   ),
                 ],

@@ -53,7 +53,9 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
   void _ensureJobRequestLoaded(String? jobRequestId) {
     if (jobRequestId == null || jobRequestId.isEmpty) return;
-    if (_jobRequestFuture != null && _loadedJobRequestId == jobRequestId) return;
+    if (_jobRequestFuture != null && _loadedJobRequestId == jobRequestId) {
+      return;
+    }
     _loadedJobRequestId = jobRequestId;
     _jobRequestFuture = JobRequestRepository().getById(jobRequestId);
   }
@@ -108,8 +110,10 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     bool trackingStarted = false;
     if (_providerId.isNotEmpty) {
       final customerId = widget.booking?.customerId;
-      final notifTitle = mounted ? context.l10n.locationSharingNotificationTitle : null;
-      final notifText = mounted ? context.l10n.locationSharingNotificationText : null;
+      final notifTitle =
+          mounted ? context.l10n.locationSharingNotificationTitle : null;
+      final notifText =
+          mounted ? context.l10n.locationSharingNotificationText : null;
       trackingStarted = await LiveLocationService.instance.startTracking(
         _providerId,
         allowedViewers:
@@ -179,7 +183,9 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   // fetch or refresh driving route
   Future<void> _refreshRouteIfNeeded([Booking? booking]) async {
     final customerPoint = _getCustomerPoint(booking);
-    if (customerPoint == null || _currentGpsPosition == null || _isFetchingRoute) {
+    if (customerPoint == null ||
+        _currentGpsPosition == null ||
+        _isFetchingRoute) {
       return;
     }
 
@@ -293,33 +299,29 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     _DelayChip(
                       Icons.traffic_rounded,
                       context.l10n.heavyTraffic,
-                      onSelected: () =>
-                          _handleDelaySelected(
-                              'Heavy Traffic', context.l10n.heavyTraffic),
+                      onSelected: () => _handleDelaySelected(
+                          'Heavy Traffic', context.l10n.heavyTraffic),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.water_drop_outlined,
                       context.l10n.monsoonRain,
-                      onSelected: () =>
-                          _handleDelaySelected(
-                              'Monsoon Rain', context.l10n.monsoonRain),
+                      onSelected: () => _handleDelaySelected(
+                          'Monsoon Rain', context.l10n.monsoonRain),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.alt_route_rounded,
                       context.l10n.roadDetour,
-                      onSelected: () =>
-                          _handleDelaySelected(
-                              'Road Detour / Blocked', context.l10n.roadDetour),
+                      onSelected: () => _handleDelaySelected(
+                          'Road Detour / Blocked', context.l10n.roadDetour),
                     ),
                     const SizedBox(height: 8),
                     _DelayChip(
                       Icons.local_gas_station_rounded,
                       context.l10n.refuelingStop,
-                      onSelected: () =>
-                          _handleDelaySelected(
-                              'Refueling Stop', context.l10n.refuelingStop),
+                      onSelected: () => _handleDelaySelected(
+                          'Refueling Stop', context.l10n.refuelingStop),
                     ),
                   ],
                 ),
@@ -350,12 +352,14 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
   }
 
-  Future<void> _promptCompletionPin(BuildContext context, {String? defaultCompletionType}) async {
+  Future<void> _promptCompletionPin(BuildContext context,
+      {String? defaultCompletionType}) async {
     final b = widget.booking;
     if (b == null || b.id.isEmpty) return;
 
     final isRejected = b.priceStatus == 'rejected';
-    String completionType = defaultCompletionType ?? (isRejected ? 'visit_only' : 'normal');
+    String completionType =
+        defaultCompletionType ?? (isRejected ? 'visit_only' : 'normal');
     final normalAmount = b.approvedTotalLkr != null && b.approvedTotalLkr! > 0
         ? b.approvedTotalLkr!.toStringAsFixed(0)
         : (b.agreedPrice != null && b.agreedPrice! > 0
@@ -369,7 +373,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             : '1500');
 
     final pinController = TextEditingController();
-    final amountController = TextEditingController(text: isRejected ? visitOnlyAmount : normalAmount);
+    final amountController = TextEditingController(
+        text: isRejected ? visitOnlyAmount : normalAmount);
     final noteController = TextEditingController();
     bool isSubmitting = false;
     String? errorMessage;
@@ -383,11 +388,13 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.verified_outlined, color: AppColors.primary, size: 24),
+              const Icon(Icons.verified_outlined,
+                  color: AppColors.primary, size: 24),
               const SizedBox(width: 8),
               Text(
                 context.l10n.verifyAndFinish,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
               ),
             ],
           ),
@@ -400,7 +407,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   children: [
                     Expanded(
                       child: ChoiceChip(
-                        label: Text(context.l10n.completionTypeNormal, style: const TextStyle(fontSize: 12)),
+                        label: Text(context.l10n.completionTypeNormal,
+                            style: const TextStyle(fontSize: 12)),
                         selected: completionType == 'normal',
                         onSelected: isRejected
                             ? null
@@ -417,7 +425,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: ChoiceChip(
-                        label: Text(context.l10n.completionTypeVisitOnly, style: const TextStyle(fontSize: 12)),
+                        label: Text(context.l10n.completionTypeVisitOnly,
+                            style: const TextStyle(fontSize: 12)),
                         selected: completionType == 'visit_only',
                         onSelected: (sel) {
                           if (sel) {
@@ -445,7 +454,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 const SizedBox(height: 14),
                 Text(
                   context.l10n.pinCode,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 TextField(
@@ -472,12 +482,14 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 const SizedBox(height: 14),
                 Text(
                   context.l10n.cashReceived,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     prefixText: 'LKR ',
                     filled: true,
@@ -491,7 +503,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 const SizedBox(height: 14),
                 Text(
                   context.l10n.paymentNoteOptional,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 TextField(
@@ -538,7 +551,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       }
 
                       final enteredAmount = double.tryParse(
-                            amountController.text.replaceAll(RegExp(r'[^0-9.]'), ''),
+                            amountController.text
+                                .replaceAll(RegExp(r'[^0-9.]'), ''),
                           ) ??
                           (b.agreedPrice ?? 0);
 
@@ -556,8 +570,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         errorMessage = null;
                       });
 
-                      final result = await BookingRepository()
-                          .verifyAndCompleteJob(
+                      final result =
+                          await BookingRepository().verifyAndCompleteJob(
                         bookingId: b.id,
                         enteredPin: pin,
                         jobRequestId: b.jobRequestId,
@@ -571,7 +585,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(context.l10n.jobCompletedSuccessfully),
+                              content:
+                                  Text(context.l10n.jobCompletedSuccessfully),
                               backgroundColor: AppColors.success,
                             ),
                           );
@@ -656,7 +671,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
   }
 
-  Future<void> _handleClaimArrival(Booking booking, {bool outsideZone = false}) async {
+  Future<void> _handleClaimArrival(Booking booking,
+      {bool outsideZone = false}) async {
     try {
       Position? pos;
       try {
@@ -759,11 +775,13 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+              border:
+                  Border.all(color: AppColors.success.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.success, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -799,7 +817,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             icon: const Icon(Icons.photo_library_outlined, size: 20),
             label: Text(
               context.l10n.jobPhotos,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
             onPressed: () {
               JobPhotosSheet.show(context, booking: booking, isProvider: true);
@@ -853,7 +872,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     color: AppColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.hourglass_top_rounded, color: AppColors.primary, size: 20),
+                  child: const Icon(Icons.hourglass_top_rounded,
+                      color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -868,10 +888,12 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            if (booking.arrivalOutsideZone == true || booking.arrivalMocked == true) ...[
+            if (booking.arrivalOutsideZone == true ||
+                booking.arrivalMocked == true) ...[
               Text(
                 context.l10n.callCustomerToConfirm,
-                style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 12, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 10),
               if (booking.customerPhone.isNotEmpty)
@@ -882,13 +904,15 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
             ] else if (canAutoStart) ...[
               Text(
                 context.l10n.customerDidNotAnswer,
-                style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 12, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 10),
               ElevatedButton.icon(
@@ -898,14 +922,16 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   minimumSize: const Size.fromHeight(44),
                 ),
               ),
             ] else ...[
               Text(
                 context.l10n.customerWillBeNotified,
-                style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                style: TextStyle(
+                    fontSize: 11.5, color: context.themeTextSecondary),
               ),
             ],
           ],
@@ -929,7 +955,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+                const Icon(Icons.warning_amber_rounded,
+                    color: AppColors.error, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -946,7 +973,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             const SizedBox(height: 8),
             Text(
               context.l10n.arrivalDeniedProviderNotice,
-              style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+              style:
+                  TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
             ),
             const SizedBox(height: 12),
             Row(
@@ -958,7 +986,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       icon: const Icon(Icons.call, size: 16),
                       label: Text(context.l10n.callCustomer),
                       style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ),
@@ -972,7 +1001,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ),
@@ -981,7 +1011,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   Expanded(
                     child: Text(
                       context.l10n.maxClaimsReached,
-                      style: const TextStyle(fontSize: 11, color: AppColors.error),
+                      style:
+                          const TextStyle(fontSize: 11, color: AppColors.error),
                     ),
                   ),
                 ],
@@ -1019,7 +1050,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
           Center(
             child: Text(
               context.l10n.customerWillBeNotified,
-              style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+              style:
+                  TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
             ),
           ),
         ],
@@ -1037,14 +1069,16 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.navigation_outlined, size: 18, color: AppColors.primary),
+                const Icon(Icons.navigation_outlined,
+                    size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     distanceM < 999999
                         ? context.l10n.youAreMetersAway(distanceM.toString())
                         : context.l10n.customerLocation,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -1056,14 +1090,17 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
             icon: const Icon(Icons.wrong_location_outlined, size: 20),
             label: Text(
               context.l10n.imHereGpsWrong,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
             ),
-            onPressed: () => _showOutsideZoneConfirmDialog(context, booking, distanceM),
+            onPressed: () =>
+                _showOutsideZoneConfirmDialog(context, booking, distanceM),
           ),
         ],
       );
@@ -1148,7 +1185,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                     const SizedBox(width: 4),
                     Text(
                       booking != null && booking.customerName.isNotEmpty
-                          ? context.l10n.customerLocationNamed(booking.customerName)
+                          ? context.l10n
+                              .customerLocationNamed(booking.customerName)
                           : context.l10n.customerLocation,
                       style: const TextStyle(
                         fontSize: 11,
@@ -1239,8 +1277,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                 MaterialPageRoute(
                                   builder: (_) => DirectChatScreen(
                                     otherPartyId: booking?.customerId ?? '',
-                                    otherPartyName:
-                                        booking?.customerName ?? context.l10n.roleCustomer,
+                                    otherPartyName: booking?.customerName ??
+                                        context.l10n.roleCustomer,
                                     otherPartyRole: 'customer',
                                     otherPartyPhone: booking?.customerPhone,
                                     jobRequestId: booking?.jobRequestId,
@@ -1248,8 +1286,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.chat_bubble_outline,
-                                size: 16),
+                            icon:
+                                const Icon(Icons.chat_bubble_outline, size: 16),
                             label: Text(context.l10n.chat),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
@@ -1306,10 +1344,9 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               techPoint: techPoint,
               customerPoint: customerPoint,
               midPoint: midPoint,
-              customerLabel:
-                  booking != null && booking.customerName.isNotEmpty
-                      ? booking.customerName
-                      : context.l10n.roleCustomer,
+              customerLabel: booking != null && booking.customerName.isNotEmpty
+                  ? booking.customerName
+                  : context.l10n.roleCustomer,
               route: _currentRoute ??
                   (techPoint != null && customerPoint != null
                       ? RouteInfo.fallback(techPoint, customerPoint)
@@ -1408,7 +1445,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                                   const SizedBox(width: 3),
                                   Expanded(
                                     child: Text(
-                                      booking!.formattedScheduledSummary(context),
+                                      booking!
+                                          .formattedScheduledSummary(context),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -1466,7 +1504,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                             CallService.instance.startCall(
                               context: context,
                               calleePhone: phone,
-                              calleeName: booking?.customerName ?? context.l10n.roleCustomer,
+                              calleeName: booking?.customerName ??
+                                  context.l10n.roleCustomer,
                               bookingId: booking?.id,
                               calleeUid: booking?.customerId,
                               calleeRole: 'customer',
@@ -1844,10 +1883,9 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                   initialCenter: initialCenter,
                   initialZoom: 14.0,
                   interactive: true,
-                  routePoints:
-                      (widget.hasCustomerLocation && techPoint != null)
-                          ? route.points
-                          : null,
+                  routePoints: (widget.hasCustomerLocation && techPoint != null)
+                      ? route.points
+                      : null,
                   markers: markers,
                   onExpand: _openFullScreen,
                 );
@@ -1896,7 +1934,8 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                         Text(
                           techPoint == null
                               ? context.l10n.gettingYourLocation
-                              : context.l10n.inDistance(route.formattedDistance),
+                              : context.l10n
+                                  .inDistance(route.formattedDistance),
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -1904,7 +1943,10 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                           ),
                         ),
                         Text(
-                          context.l10n.navigatingTo(booking?.customerName.isNotEmpty == true ? booking!.customerName : context.l10n.roleCustomer),
+                          context.l10n.navigatingTo(
+                              booking?.customerName.isNotEmpty == true
+                                  ? booking!.customerName
+                                  : context.l10n.roleCustomer),
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 13,
@@ -1950,7 +1992,8 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
                     longitude: customerPoint.longitude,
                     destinationTitle:
                         booking != null && booking.customerName.isNotEmpty
-                            ? context.l10n.customerLocationNamed(booking.customerName)
+                            ? context.l10n
+                                .customerLocationNamed(booking.customerName)
                             : context.l10n.customerLocation,
                   );
                 },

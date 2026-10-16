@@ -426,7 +426,7 @@
   "manualNicReview": "හැඳුනුම්පත අතින් පරීක්ෂාව",
   "ocrAuditConcordant": "OCR විගණනය — ක්ෂේත්‍ර 4ම නිවැරදියි",
   "ocrAuditFlagged": "OCR විගණනය — නොගැලපීමක් සලකුණු කර ඇත",
-  "notProvided": "ලබා දී නොමැත",
+  "notProvided": "සපයා නැත",
   "notSpecified": "සඳහන් කර නොමැත",
   "enterFullName": "කරුණාකර ඔබගේ සම්පූර්ණ නම ඇතුළත් කරන්න",
   "enterValidEmail": "කරුණාකර වලංගු විද්‍යුත් තැපැල් ලිපිනයක් ඇතුළත් කරන්න",
@@ -1106,7 +1106,7 @@
   "zoomOut": "කුඩා කරන්න",
   "recenterMap": "සිතියම මැදට ගන්න",
   "superAdminCannotBeSuspended": "ප්‍රධාන පරිපාලක ගිණුම් අත්හිටුවිය නොහැක.",
-  "openSettings": "සැකසීම් විවෘත කරන්න",
+  "openSettings": "සැකසුම් විවෘත කරන්න",
   "ok": "හරි",
   "permissionCameraPermanentlyDisabled": "කැමරා ප්‍රවේශය සම්පූර්ණයෙන්ම අක්‍රිය කර ඇත. ඡායාරූප ලබා ගැනීමට කරුණාකර එය සැකසීම් වලින් සක්‍රිය කරන්න.",
   "permissionCameraDisabled": "කැමරා ප්‍රවේශය අක්‍රිය කර ඇත. කරුණාකර එය යෙදුම් සැකසීම් වලින් සක්‍රිය කරන්න.",
@@ -1793,13 +1793,17 @@
   "locationAccuracy": "නිරවද්‍යතාව: ±{meters} මී",
   "@locationAccuracy": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "locationAccuracyLowWarning": "ස්ථාන නිරවද්‍යතාව අඩුය (±{meters} මී). කරුණාකර ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න.",
   "@locationAccuracyLowWarning": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "fineTunePinInstruction": "ඔබගේ නිවස හෝ දොරටුව වෙත සිතියමේ කටුව ගෙන යන්න",
@@ -1825,7 +1829,7 @@
   "admin2faTitle": "පරිපාලක තහවුරු කිරීම",
   "admin2faSubtitle": "ඔබගේ පරිපාලක ඊමේල් එකට ආ ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.",
   "useDifferentAccount": "වෙනත් ගිණුමක් භාවිතා කරන්න",
-  "continueAsCustomer": "පාරිභෝගික / ශිල්පී ලෙස ඉදිරියට යන්න",
+  "continueAsCustomer": "පාරිභෝගිකයෙකු ලෙස ඉදිරියට යන්න",
   "otpNoSession": "තවමත් කේතයක් යවා නැත — නැවත යවන්න තට්ටු කරන්න",
   "otpExpiredResend": "කේතය කල් ඉකුත් විය — නැවත යවන්න තට්ටු කරන්න",
   "otpMaxAttemptsResend": "වැරදි උත්සාහයන් වැඩියි — නැවත යවන්න තට්ටු කරන්න",
@@ -1842,7 +1846,6 @@
   "notHereChooseAnother": "මෙහි නොවේද? වෙනත් ස්ථානයක් තෝරන්න",
   "couldNotGetLocationFallback": "ඔබගේ ස්ථානය ලබා ගැනීමට නොහැකි විය — ස්ථානයක් තෝරන්න හෝ සිතියම සොයන්න",
   "tryGpsAgain": "නැවත GPS උත්සාහ කරන්න",
-  "openSettings": "සැකසුම් විවෘත කරන්න",
   "addDetailsForProvider": "සේවා සපයන්නා සඳහා විස්තර එක් කරන්න",
   "providerNoteLabel": "සේවා සපයන්නා සඳහා සටහන",
   "providerNoteHint": "උදා: නිල් ගේට්ටුව, බස් නැවතුම අසල සුදු ටොයෝටා",
@@ -1869,7 +1872,6 @@
   "serviceCategoryLabel": "සේවා කාණ්ඩය",
   "applicantNameLabel": "අයදුම්කරුගේ නම",
   "fixAndResubmit": "නිවැරදි කර නැවත යවන්න",
-  "continueAsCustomer": "පාරිභෝගිකයෙකු ලෙස ඉදිරියට යන්න",
   "providerPendingCustomerToast": "ඔබගේ සේවා සපයන්නා ඉල්ලීම පරීක්ෂා කරමින් පවතී. ඒ අතරතුර පාරිභෝගික කොටස භාවිත කළ හැක.",
   "providerApprovedCelebration": "සුභ පැතුම්! ඔබගේ සේවා සපයන්නා ගිණුම දැන් අනුමත වී සක්‍රීයයි.",
   "providerApplicationStatusBadge": "සේවා අයදුම්පත",
@@ -1905,7 +1907,6 @@
   "reasonFaceMismatch": "මුහුණ ජ.හැ. ඡායාරූපයට නොගැලපේ",
   "reasonOther": "වෙනත් හේතුවක්",
   "optionalReviewerNote": "අමතර උපදෙස් (විකල්ප, උපරිම අකුරු 300)",
-  "filterAll": "සියල්ල",
   "filterPending": "බලාපොරොත්තුවෙන්",
   "filterResubmitted": "නැවත ඉදිරිපත් කළ",
   "filterRejected": "ප්‍රතික්ෂේප කළ",
@@ -1916,7 +1917,6 @@
   "nicBackLabel": "ජ.හැ. පසුපස",
   "rotatePhoto": "90° කරකවන්න",
   "zoomHint": "විශාලනය කිරීමට ඇඟිලි දෙකෙන් අදින්න",
-  "notProvided": "සපයා නැත",
   "auditHistoryTitle": "සමාලෝචන සහ ඉදිරිපත් කිරීමේ ඉතිහාසය",
   "submissionAttempt": "ඉදිරිපත් කිරීම #{number}",
   "noSearchResults": "ප්‍රතිඵල කිසිවක් හමු නොවීය",
@@ -1934,8 +1934,8 @@
   "estimatedLabel": "ඇස්තමේන්තුගත",
   "baseLocationTitle": "මූලික ස්ථානය",
   "baseLocationDesc": "ඔබ සාමාන්‍යයෙන් වැඩ ආරම්භ කරන ස්ථානය",
-  "howDoYouChargeTitle": "ඔබ අය කරන්නේ කෙසේද?",
-  "howDoYouChargeSubtitle": "අවම වශයෙන් එකක් තෝරන්න (පැයකට, දිනකට හෝ වැඩයකට).",
+  "howDoYouChargeTitle": "ඔබේ සාමාන්‍ය ගාස්තු",
+  "howDoYouChargeSubtitle": "පාරිභෝගිකයින් මේවා ඔබේ පැතිකඩෙහි දකී. මිල ගණන් යවන විට සෑම වැඩයක් සඳහාම වෙනස් මිල වර්ගයක් තෝරාගත හැක.",
   "pricingModePerHour": "පැයකට",
   "pricingModePerDay": "දිනකට",
   "pricingModePricePerJob": "වැඩයකට මිල (එක් එක් වැඩයට මිල කියන්න)",
@@ -2011,5 +2011,34 @@
   "timelineDescAfterPhotoAdded": "සේවා සපයන්නා වැඩය අවසන් වූ පසු ඡායාරූපයක් එක් කළා",
   "timelineDescRescheduleRequested": "වෙලාව වෙනස් කිරීමට ඉල්ලා සිටියා",
   "timelineDescRescheduleAccepted": "වෙලාව වෙනස් කිරීම පිළිගත්තා",
-  "timelineDescRescheduleDeclined": "වෙලාව වෙනස් කිරීම ප්‍රතික්ෂේප කළා"
+  "timelineDescRescheduleDeclined": "වෙලාව වෙනස් කිරීම ප්‍රතික්ෂේප කළා",
+  "failedToSetRoleGeneric": "භූමිකාව සැකසීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.",
+  "roleSwitchLockedProviderBlocked": "ඔබගේ සේවා සපයන්නා ගිණුම තහවුරු වන තෙක් පාරිභෝගික ප්‍රකාරය භාවිතා කළ නොහැක.",
+  "certUploadSectionTitle": "සහතික සහ ලියකියවිලි (විකල්ප)",
+  "certUploadSectionHint": "ඕනෑම සහතිකයක්, බලපත්‍රයක් හෝ පුහුණු ලිපියක් එක් කරන්න. ඡායාරූප හෝ PDF.",
+  "certUploadButton": "ලියකියවිලි උඩුගත කරන්න",
+  "certUploadChooseFiles": "ගොනු තෝරන්න",
+  "certUploadMaxFilesError": "ඔබට උපරිම ලියකියවිලි 10ක් පමණක් උඩුගත කළ හැක.",
+  "certUploadFileTooLargeError": "{fileName} 10 MB ප්‍රමාණ සීමාව ඉක්මවයි.",
+  "certUploadUnsupportedTypeError": "{fileName} සහාය නොදක්වන ගොනු වර්ගයකි. වලංගු: JPG, PNG, WEBP, PDF.",
+  "certUploadTitleHint": "ලියකියවිල්ලේ නම (උදා: NVQ Level 4)",
+  "certDefaultTitle": "සහතිකය",
+  "certCertifiedBadge": "සහතිකලත්",
+  "certApprovedSectionTitle": "වෘත්තීය සහතික සහ බලපත්‍ර",
+  "certAddMore": "සහතික එක් කරන්න",
+  "certSaveButton": "සහතික සුරකින්න",
+  "certSubmittedSuccess": "සහතික තහවුරු කිරීම සඳහා ඉදිරිපත් කරන ලදී.",
+  "certTradeLicensesTitle": "වෘත්තීය සහතික සහ බලපත්‍ර ({count})",
+  "certNumberTitle": "සහතිකය #{number}",
+  "certApproveAll": "සියල්ල අනුමත කරන්න",
+  "certRejectReasonTitle": "සහතිකය ප්‍රතික්ෂේප කරන්න",
+  "certRejectReasonPrompt": "මෙම සහතිකය ප්‍රතික්ෂේප කිරීමට හේතුවක් ඇතුළත් කරන්න",
+  "certRejectReasonRequired": "කරුණාකර ප්‍රතික්ෂේප කිරීමට හේතුවක් ඇතුළත් කරන්න.",
+  "certApprovedNotice": "සහතිකය අනුමත කරන ලදී",
+  "certRejectedNotice": "සහතිකය ප්‍රතික්ෂේප කරන ලදී",
+  "certAllApprovedNotice": "සියලු සහතික අනුමත කරන ලදී",
+  "quoteRateForJobHint": "මෙම වැඩය සඳහා ඔබේ අනුපාතය ඇතුළත් කරන්න",
+  "quoteInspectVisitFeePrompt": "කරුණාකර පරීක්ෂා කිරීම සඳහා පැමිණීමේ ගාස්තුවක් ඇතුළත් කරන්න",
+  "quoteIncludeVisitCostHint": "ඕනෑම පැමිණීමේ වියදමක් ඔබේ මිලට ඇතුළත් කරන්න.",
+  "quoteAddTravelCost": "ගමන් වියදම එකතු කරන්න"
 }

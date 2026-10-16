@@ -39,7 +39,8 @@ class _RateCardSheetState extends State<RateCardSheet> {
     final t = widget.technician;
     _pricingModes = List<String>.from(t.resolvedPricingModes);
     _visitFeeController = TextEditingController(
-      text: t.visitFeeLkr?.toString() ?? (t.baseRateLkr > 0 ? t.baseRateLkr.toString() : ''),
+      text: t.visitFeeLkr?.toString() ??
+          (t.baseRateLkr > 0 ? t.baseRateLkr.toString() : ''),
     );
     _hourlyRateController = TextEditingController(
       text: t.hourlyRateLkr > 0 ? t.hourlyRateLkr.toString() : '',
@@ -151,7 +152,9 @@ class _RateCardSheetState extends State<RateCardSheet> {
       debugPrint('updateRateCard error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.failedToUpdateRates), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(context.l10n.failedToUpdateRates),
+              backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -198,7 +201,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
               style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
             ),
             const SizedBox(height: 16),
-
             CheckboxListTile(
               value: _pricingModes.contains(ProviderPricingHelper.modeHour),
               onChanged: (val) {
@@ -215,7 +217,8 @@ class _RateCardSheetState extends State<RateCardSheet> {
               activeColor: AppColors.primary,
               title: Text(
                 context.l10n.pricingModePerHour,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             if (_pricingModes.contains(ProviderPricingHelper.modeHour)) ...[
@@ -228,7 +231,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
               ),
               const SizedBox(height: 12),
             ],
-
             CheckboxListTile(
               value: _pricingModes.contains(ProviderPricingHelper.modeDay),
               onChanged: (val) {
@@ -245,7 +247,8 @@ class _RateCardSheetState extends State<RateCardSheet> {
               activeColor: AppColors.primary,
               title: Text(
                 context.l10n.pricingModePerDay,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             if (_pricingModes.contains(ProviderPricingHelper.modeDay)) ...[
@@ -258,7 +261,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
               ),
               const SizedBox(height: 12),
             ],
-
             CheckboxListTile(
               value: _pricingModes.contains(ProviderPricingHelper.modeJob),
               onChanged: (val) {
@@ -275,11 +277,11 @@ class _RateCardSheetState extends State<RateCardSheet> {
               activeColor: AppColors.primary,
               title: Text(
                 context.l10n.pricingModePricePerJob,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 8),
-
             CheckboxListTile(
               value: _pricingModes.contains(ProviderPricingHelper.modeVisit),
               onChanged: (val) {
@@ -296,7 +298,8 @@ class _RateCardSheetState extends State<RateCardSheet> {
               activeColor: AppColors.primary,
               title: Text(
                 context.l10n.pricingModeVisitFee,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
@@ -309,7 +312,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
               ),
               const SizedBox(height: 12),
             ],
-
             CheckboxListTile(
               value: _pricingModes.contains(ProviderPricingHelper.modeTravel),
               onChanged: (val) {
@@ -326,7 +328,8 @@ class _RateCardSheetState extends State<RateCardSheet> {
               activeColor: AppColors.primary,
               title: Text(
                 context.l10n.pricingModeTravelPerKm,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             if (_pricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
@@ -339,7 +342,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
               ),
               const SizedBox(height: 12),
             ],
-
             if (widget.technician.emergencyRateLkr > 0) ...[
               const SizedBox(height: 4),
               _buildField(

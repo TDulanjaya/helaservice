@@ -12,7 +12,8 @@ class PhotoViewerDialog extends StatelessWidget {
     this.title = '',
   });
 
-  static void show(BuildContext context, {required String photoUrl, String title = ''}) {
+  static void show(BuildContext context,
+      {required String photoUrl, String title = ''}) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.88),
@@ -48,7 +49,8 @@ class PhotoViewerDialog extends StatelessWidget {
               else
                 const Spacer(),
               IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.white, size: 26),
+                icon: const Icon(Icons.close_rounded,
+                    color: Colors.white, size: 26),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],

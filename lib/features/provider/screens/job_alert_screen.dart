@@ -45,12 +45,23 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    final title = booking?.title.isNotEmpty == true ? booking!.title : context.l10n.serviceRequest;
-    final customerName = booking?.customerName.isNotEmpty == true ? booking!.customerName : context.l10n.roleCustomer;
-    final initials = booking?.customerInitials.isNotEmpty == true ? booking!.customerInitials : 'CU';
-    final distance = booking?.distance.isNotEmpty == true ? booking!.distance : context.l10n.nearby;
-    final location = booking?.location.isNotEmpty == true ? booking!.location : context.l10n.clientAddress;
-    final estRate = booking?.estRate.isNotEmpty == true ? booking!.estRate : 'LKR 2,500';
+    final title = booking?.title.isNotEmpty == true
+        ? booking!.title
+        : context.l10n.serviceRequest;
+    final customerName = booking?.customerName.isNotEmpty == true
+        ? booking!.customerName
+        : context.l10n.roleCustomer;
+    final initials = booking?.customerInitials.isNotEmpty == true
+        ? booking!.customerInitials
+        : 'CU';
+    final distance = booking?.distance.isNotEmpty == true
+        ? booking!.distance
+        : context.l10n.nearby;
+    final location = booking?.location.isNotEmpty == true
+        ? booking!.location
+        : context.l10n.clientAddress;
+    final estRate =
+        booking?.estRate.isNotEmpty == true ? booking!.estRate : 'LKR 2,500';
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -98,7 +109,8 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: AppColors.error.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(6),
@@ -389,7 +401,8 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                         if (!context.mounted) return;
                         Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => EnRouteNavigationScreen(booking: booking),
+                            builder: (_) =>
+                                EnRouteNavigationScreen(booking: booking),
                           ),
                         );
                       },
@@ -420,7 +433,8 @@ class _JobAlertScreenState extends State<JobAlertScreen> {
                     Center(
                       child: Text(
                         context.l10n.pullOverSafelyWarning,
-                        style: const TextStyle(color: Colors.white38, fontSize: 11),
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 11),
                       ),
                     ),
                   ],

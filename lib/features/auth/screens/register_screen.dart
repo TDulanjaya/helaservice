@@ -17,6 +17,7 @@ import 'email_otp_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
+import '../../../utils/provider_routing_helper.dart';
 import '../../../utils/responsive.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -102,7 +103,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         displayName: fullName,
       );
 
-      await OtpService().sendEmailOtp(email, purpose: 'signup', language: currentLocale);
+      await OtpService()
+          .sendEmailOtp(email, purpose: 'signup', language: currentLocale);
 
       if (!mounted) return;
 
@@ -138,47 +140,79 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _routeAfterOtp(UserProfile user) {
-    if (user.role == null) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => RoleChoiceScreen(user: user),
-        ),
-        (route) => false,
-      );
-    } else if (!user.isProfileComplete) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => CompleteProfileScreen(initialProfile: user),
-        ),
-        (route) => false,
-      );
-    } else if (user.role == AppRole.provider) {
-      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-      if (roleProvider.isApprovedProvider || user.isVerified) {
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final appDest = resolveAppDestination(
+      profile: user,
+      isAuthorizedAdmin: roleProvider.isAuthorizedAdmin,
+      isEmailOtpVerified: true,
+      isTechnicianApproved: roleProvider.isApprovedProvider,
+    );
+    if (kDebugMode) {
+      debugPrint('[navdbg] register resolved AppDestination: $appDest');
+    }
+
+    switch (appDest) {
+      case AppDestination.roleChoice:
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: user)),
+          (route) => false,
+        );
+        return;
+      case AppDestination.completeProfile:
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => const ProviderDashboardScreen(),
+            builder: (_) => CompleteProfileScreen(initialProfile: user),
           ),
           (route) => false,
         );
-      } else {
-        final isExistingCustomer = user.initialRole == 'customer';
+        return;
+      case AppDestination.providerDashboard:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> dashboard from register_screen.dart');
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+          (route) => false,
+        );
+        return;
+      case AppDestination.providerPendingNew:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> pending from register_screen.dart');
+        }
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => ProviderPendingScreen(
-              isExistingCustomer: isExistingCustomer,
+            builder: (_) => const ProviderPendingScreen(
+              isExistingCustomer: false,
             ),
           ),
           (route) => false,
         );
-      }
-    } else {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const HomeDiscoveryScreen(),
-        ),
-        (route) => false,
-      );
+        return;
+      case AppDestination.providerPendingCustomer:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from register_screen.dart');
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.providerPendingCustomerToast),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        return;
+      case AppDestination.homeDiscovery:
+      default:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from register_screen.dart');
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+          (route) => false,
+        );
+        return;
     }
   }
 
@@ -200,7 +234,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       if (!isVerified) {
-        await OtpService().sendEmailOtp(profile.email, purpose: 'signup', language: currentLocale);
+        await OtpService().sendEmailOtp(profile.email,
+            purpose: 'signup', language: currentLocale);
 
         if (!mounted) return;
 
@@ -217,8 +252,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       if (!mounted) return;
-      final roleProvider =
-          pv.Provider.of<RoleProvider>(context, listen: false);
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
       roleProvider.setUser(profile);
       _routeAfterOtp(profile);
     } catch (e) {
@@ -271,7 +305,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildRegisterFormContent(BuildContext context, Color isFieldBg, {required bool isWideLayout}) {
+  Widget _buildRegisterFormContent(BuildContext context, Color isFieldBg,
+      {required bool isWideLayout}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -333,18 +368,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
-              borderSide:
-                  BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -378,18 +410,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
-              borderSide:
-                  BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -434,18 +463,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
-              borderSide:
-                  BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -481,8 +507,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 size: 20,
                 color: context.themeTextSecondary,
               ),
-              onPressed: () => setState(() =>
-                  _obscureConfirmPassword = !_obscureConfirmPassword),
+              onPressed: () => setState(
+                  () => _obscureConfirmPassword = !_obscureConfirmPassword),
             ),
             filled: true,
             fillColor: isFieldBg,
@@ -490,18 +516,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: context.themeBorder, width: 1.5),
+              borderSide: BorderSide(color: context.themeBorder, width: 1.5),
             ),
             focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
-              borderSide:
-                  BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -509,14 +532,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         PrimaryButton(
           label: context.l10n.continueText,
           loading: _isLoading,
-          onPressed:
-              (_isLoading || _isGoogleLoading) ? null : _handleRegister,
+          onPressed: (_isLoading || _isGoogleLoading) ? null : _handleRegister,
         ),
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(
-                child: Divider(color: context.themeBorder, thickness: 1)),
+            Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
@@ -528,8 +549,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
-            Expanded(
-                child: Divider(color: context.themeBorder, thickness: 1)),
+            Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
           ],
         ),
         GoogleSignInButton(
@@ -577,7 +597,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isTabletOrDesktop = Responsive.isTablet(context);
 
-    // wide desktop dual pane (requires shortestSide >= 600)
+    // wide desktop layout
     if (width >= 960 && isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -593,7 +613,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: Border.all(color: context.themeBorder, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: context.isDark ? 0.35 : 0.06),
+                      color: Colors.black
+                          .withValues(alpha: context.isDark ? 0.35 : 0.06),
                       blurRadius: 32,
                       offset: const Offset(0, 12),
                     ),
@@ -608,8 +629,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(44),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: context.isDark ? 0.12 : 0.08),
-                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(26)),
+                          color: AppColors.primary
+                              .withValues(alpha: context.isDark ? 0.12 : 0.08),
+                          borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(26)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,10 +641,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.18),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Image.asset('assets/images/app_logo.png', width: 56, height: 56),
+                              child: Image.asset('assets/images/app_logo.png',
+                                  width: 56, height: 56),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -643,11 +668,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                             const SizedBox(height: 36),
-                            _buildFeaturePill(context, Icons.speed_rounded, context.l10n.heroDirectQuoteRequests),
+                            _buildFeaturePill(context, Icons.speed_rounded,
+                                context.l10n.heroDirectQuoteRequests),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.security_rounded, context.l10n.heroPrivateSecureChat),
+                            _buildFeaturePill(context, Icons.security_rounded,
+                                context.l10n.heroPrivateSecureChat),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.stars_rounded, context.l10n.heroCommunityRated),
+                            _buildFeaturePill(context, Icons.stars_rounded,
+                                context.l10n.heroCommunityRated),
                           ],
                         ),
                       ),
@@ -657,7 +685,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       flex: 6,
                       child: Padding(
                         padding: const EdgeInsets.all(40),
-                        child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: true),
+                        child: _buildRegisterFormContent(context, isFieldBg,
+                            isWideLayout: true),
                       ),
                     ),
                   ],
@@ -669,7 +698,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // tablet centered card (requires shortestSide >= 600)
+    // tablet centered card
     if (isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -686,13 +715,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: Border.all(color: context.themeBorder, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
+                      color: Colors.black
+                          .withValues(alpha: context.isDark ? 0.3 : 0.05),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: false),
+                child: _buildRegisterFormContent(context, isFieldBg,
+                    isWideLayout: false),
               ),
             ),
           ),
@@ -700,7 +731,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
 
-    // mobile phone layout (portrait or compact phone landscape that scrolls)
+    // mobile phone layout
     final isPhoneLandscape = Responsive.isPhoneLandscape(context);
     return Scaffold(
       backgroundColor: context.themeBg,
@@ -713,7 +744,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 horizontal: isPhoneLandscape ? 32 : 24,
                 vertical: isPhoneLandscape ? 16 : 20,
               ),
-              child: _buildRegisterFormContent(context, isFieldBg, isWideLayout: false),
+              child: _buildRegisterFormContent(context, isFieldBg,
+                  isWideLayout: false),
             ),
           ),
         ),

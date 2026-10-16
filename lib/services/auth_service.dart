@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint, kDebugMode;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,16 +29,16 @@ class AuthFlowException implements Exception {
 
 // what google sign in should do next
 enum GoogleSignInDecision {
-  // has profile, sign in
+  // has profile sign in
   proceed,
 
-  // new account from login page, delete it
+  // new account from login page delete it
   rejectNewAccount,
 
-  // old account without profile, sign out
+  // old account without profile sign out
   rejectMissingProfile,
 
-  // register page, create profile
+  // register page create profile
   createProfile,
 }
 
@@ -95,7 +95,8 @@ class AuthService {
     );
 
     if (credential.user != null) {
-      return (await _resolveOrCreateProfile(credential.user!, allowCreate: true))!;
+      return (await _resolveOrCreateProfile(credential.user!,
+          allowCreate: true))!;
     }
 
     throw Exception('Authentication failed for $cleanEmail');
@@ -150,7 +151,7 @@ class AuthService {
         visitFeeLkr: visitFeeLkr,
       );
 
-      return await saveUserProfile(profile);
+      return await saveUserProfile(profile, markComplete: false);
     }
 
     throw Exception('Registration failed for $cleanEmail');
@@ -165,7 +166,7 @@ class AuthService {
     }
   }
 
-  // google sign in, login page cant create accounts
+  // google sign in login page cannot create accounts
   Future<UserProfile> signInWithGoogle({required bool allowCreate}) async {
     fb.UserCredential userCredential;
 
@@ -246,7 +247,7 @@ class AuthService {
     await signOut();
   }
 
-  // load current profile, never creates
+  // load current profile without creating
   Future<UserProfile?> fetchCurrentUserProfile({
     bool throwOnNetwork = false,
   }) async {
@@ -262,7 +263,7 @@ class AuthService {
 
   static const Duration _profileReadTimeout = Duration(seconds: 10);
 
-  // read user doc, null only if server says missing
+  // read user doc from server or cache
   Future<Map<String, dynamic>?> _readUserData(String uid) async {
     final ref =
         FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
@@ -375,14 +376,16 @@ class AuthService {
       ]).timeout(const Duration(seconds: 2));
       if (checks.any((doc) => doc.exists)) return;
     } catch (e) {
-      debugPrint('[AuthService] Provider/Admin check error: $e. Aborting migration for retry.');
+      debugPrint(
+          '[AuthService] Provider/Admin check error: $e. Aborting migration for retry.');
       return;
     }
 
     final rawLat = data['latitude'];
     final rawLng = data['longitude'];
     final hasAddress = data.containsKey('address') && data['address'] != null;
-    final hasDistrict = data.containsKey('district') && data['district'] != null;
+    final hasDistrict =
+        data.containsKey('district') && data['district'] != null;
 
     if (rawLat == null && rawLng == null && !hasAddress && !hasDistrict) {
       return;
@@ -393,8 +396,14 @@ class AuthService {
       final double? lng = (rawLng is num) ? rawLng.toDouble() : null;
 
       bool hasRealCoordinates = false;
-      if (lat != null && lng != null && lat.isFinite && lng.isFinite && lat != 0.0 && lng != 0.0) {
-        final isColomboDefault = (lat - 6.9271).abs() < 0.0001 && (lng - 79.8612).abs() < 0.0001;
+      if (lat != null &&
+          lng != null &&
+          lat.isFinite &&
+          lng.isFinite &&
+          lat != 0.0 &&
+          lng != 0.0) {
+        final isColomboDefault =
+            (lat - 6.9271).abs() < 0.0001 && (lng - 79.8612).abs() < 0.0001;
         if (!isColomboDefault) {
           hasRealCoordinates = true;
         }
@@ -405,14 +414,16 @@ class AuthService {
 
       if (hasRealCoordinates) {
         final savedCol = userDocRef.collection('savedAddresses');
-        final existing = await savedCol.where('label', isEqualTo: 'Home').limit(1).get();
+        final existing =
+            await savedCol.where('label', isEqualTo: 'Home').limit(1).get();
 
         if (existing.docs.isEmpty) {
-          final address = (data['address'] as String?)?.trim().isNotEmpty == true
-              ? (data['address'] as String).trim()
-              : ((data['district'] as String?)?.trim().isNotEmpty == true
-                  ? data['district'] as String
-                  : 'home');
+          final address =
+              (data['address'] as String?)?.trim().isNotEmpty == true
+                  ? (data['address'] as String).trim()
+                  : ((data['district'] as String?)?.trim().isNotEmpty == true
+                      ? data['district'] as String
+                      : 'home');
 
           final newAddrRef = savedCol.doc();
           batch.set(newAddrRef, {
@@ -446,8 +457,19 @@ class AuthService {
     }
   }
 
-  Future<UserProfile> saveUserProfile(UserProfile updatedProfile) async {
-    final completed = updatedProfile.copyWith(isProfileComplete: true);
+  Future<UserProfile> saveUserProfile(
+    UserProfile updatedProfile, {
+    bool markComplete = true,
+  }) async {
+    if (kDebugMode) {
+      final trace =
+          StackTrace.current.toString().split('\n').take(8).join('\n');
+      debugPrint(
+          '[navdbg] saveUserProfile called (markComplete=$markComplete):\n$trace');
+    }
+    final completed = markComplete
+        ? updatedProfile.copyWith(isProfileComplete: true)
+        : updatedProfile;
     final uid =
         completed.id.isNotEmpty ? completed.id : (_auth.currentUser?.uid ?? '');
     final profileWithId = completed.copyWith(id: uid);
@@ -460,29 +482,41 @@ class AuthService {
           FirebaseFirestore.instance.collection(FirestorePaths.users).doc(uid);
       final userMap = profileWithId.toMap();
       if (profileWithId.pricingModes != null) {
-        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeHour) || (profileWithId.hourlyRateLkr ?? 0) <= 0) {
+        if (!profileWithId.pricingModes!
+                .contains(ProviderPricingHelper.modeHour) ||
+            (profileWithId.hourlyRateLkr ?? 0) <= 0) {
           userMap['hourlyRateLkr'] = FieldValue.delete();
         }
-        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeDay) || (profileWithId.dailyRateLkr ?? 0) <= 0) {
+        if (!profileWithId.pricingModes!
+                .contains(ProviderPricingHelper.modeDay) ||
+            (profileWithId.dailyRateLkr ?? 0) <= 0) {
           userMap['dailyRateLkr'] = FieldValue.delete();
         }
-        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeTravel) || (profileWithId.perKmRateLkr ?? 0) <= 0) {
+        if (!profileWithId.pricingModes!
+                .contains(ProviderPricingHelper.modeTravel) ||
+            (profileWithId.perKmRateLkr ?? 0) <= 0) {
           userMap['perKmRateLkr'] = FieldValue.delete();
         }
-        if (!profileWithId.pricingModes!.contains(ProviderPricingHelper.modeVisit) || (profileWithId.visitFeeLkr ?? 0) <= 0) {
+        if (!profileWithId.pricingModes!
+                .contains(ProviderPricingHelper.modeVisit) ||
+            (profileWithId.visitFeeLkr ?? 0) <= 0) {
           userMap['visitFeeLkr'] = FieldValue.delete();
         }
       } else {
-        if ((profileWithId.hourlyRateLkr ?? 0) <= 0 && profileWithId.hourlyRateLkr != null) {
+        if ((profileWithId.hourlyRateLkr ?? 0) <= 0 &&
+            profileWithId.hourlyRateLkr != null) {
           userMap['hourlyRateLkr'] = FieldValue.delete();
         }
-        if ((profileWithId.dailyRateLkr ?? 0) <= 0 && profileWithId.dailyRateLkr != null) {
+        if ((profileWithId.dailyRateLkr ?? 0) <= 0 &&
+            profileWithId.dailyRateLkr != null) {
           userMap['dailyRateLkr'] = FieldValue.delete();
         }
-        if ((profileWithId.perKmRateLkr ?? 0) <= 0 && profileWithId.perKmRateLkr != null) {
+        if ((profileWithId.perKmRateLkr ?? 0) <= 0 &&
+            profileWithId.perKmRateLkr != null) {
           userMap['perKmRateLkr'] = FieldValue.delete();
         }
-        if ((profileWithId.visitFeeLkr ?? 0) <= 0 && profileWithId.visitFeeLkr != null) {
+        if ((profileWithId.visitFeeLkr ?? 0) <= 0 &&
+            profileWithId.visitFeeLkr != null) {
           userMap['visitFeeLkr'] = FieldValue.delete();
         }
       }
@@ -535,28 +569,47 @@ class AuthService {
           'serviceArea': profileWithId.district ?? '',
           'district': profileWithId.district,
           'phone': profileWithId.phone,
-          if (profileWithId.pricingModes != null) 'pricingModes': profileWithId.pricingModes,
-          if (profileWithId.latitude != null && profileWithId.longitude != null) ...{
+          if (profileWithId.pricingModes != null)
+            'pricingModes': profileWithId.pricingModes,
+          if (profileWithId.latitude != null &&
+              profileWithId.longitude != null) ...{
             'latitude': roundToTwoDecimals(profileWithId.latitude!),
             'longitude': roundToTwoDecimals(profileWithId.longitude!),
             'baseLat': roundToTwoDecimals(profileWithId.latitude!),
             'baseLng': roundToTwoDecimals(profileWithId.longitude!),
-            if (profileWithId.address != null && profileWithId.address!.trim().isNotEmpty)
+            if (profileWithId.address != null &&
+                profileWithId.address!.trim().isNotEmpty)
               'baseAddress': profileWithId.address!.trim(),
           },
-          if (profileWithId.dailyRateLkr != null && profileWithId.dailyRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeDay)))
+          if (profileWithId.dailyRateLkr != null &&
+              profileWithId.dailyRateLkr! > 0 &&
+              (profileWithId.pricingModes == null ||
+                  profileWithId.pricingModes!
+                      .contains(ProviderPricingHelper.modeDay)))
             'dailyRateLkr': profileWithId.dailyRateLkr
           else if (!isNewTech)
             'dailyRateLkr': FieldValue.delete(),
-          if (profileWithId.hourlyRateLkr != null && profileWithId.hourlyRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeHour)))
+          if (profileWithId.hourlyRateLkr != null &&
+              profileWithId.hourlyRateLkr! > 0 &&
+              (profileWithId.pricingModes == null ||
+                  profileWithId.pricingModes!
+                      .contains(ProviderPricingHelper.modeHour)))
             'hourlyRateLkr': profileWithId.hourlyRateLkr
           else if (!isNewTech)
             'hourlyRateLkr': FieldValue.delete(),
-          if (profileWithId.perKmRateLkr != null && profileWithId.perKmRateLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeTravel)))
+          if (profileWithId.perKmRateLkr != null &&
+              profileWithId.perKmRateLkr! > 0 &&
+              (profileWithId.pricingModes == null ||
+                  profileWithId.pricingModes!
+                      .contains(ProviderPricingHelper.modeTravel)))
             'perKmRateLkr': profileWithId.perKmRateLkr
           else if (!isNewTech)
             'perKmRateLkr': FieldValue.delete(),
-          if (profileWithId.visitFeeLkr != null && profileWithId.visitFeeLkr! > 0 && (profileWithId.pricingModes == null || profileWithId.pricingModes!.contains(ProviderPricingHelper.modeVisit)))
+          if (profileWithId.visitFeeLkr != null &&
+              profileWithId.visitFeeLkr! > 0 &&
+              (profileWithId.pricingModes == null ||
+                  profileWithId.pricingModes!
+                      .contains(ProviderPricingHelper.modeVisit)))
             'visitFeeLkr': profileWithId.visitFeeLkr
           else if (!isNewTech)
             'visitFeeLkr': FieldValue.delete(),
@@ -582,14 +635,16 @@ class AuthService {
             kycDoc,
             {
               if (profileWithId.nic != null) 'nic': profileWithId.nic,
-              if (profileWithId.nicFrontKey != null) 'nicFrontKey': profileWithId.nicFrontKey,
-              if (profileWithId.nicBackKey != null) 'nicBackKey': profileWithId.nicBackKey,
+              if (profileWithId.nicFrontKey != null)
+                'nicFrontKey': profileWithId.nicFrontKey,
+              if (profileWithId.nicBackKey != null)
+                'nicBackKey': profileWithId.nicBackKey,
               'updatedAt': FieldValue.serverTimestamp(),
             },
             SetOptions(merge: true),
           );
         }
- 
+
         if (profileWithId.nicFrontKey != null ||
             profileWithId.nicBackKey != null) {
           final verQueueDoc = FirebaseFirestore.instance
@@ -600,14 +655,17 @@ class AuthService {
           final existingData = verSnap.data();
           final existingStatus = existingData?['status'] as String?;
 
-          // queue review if first submit, resubmit, or photo updated
+          // queue review on changes
           if (!docExists) {
             shouldQueue = true;
-          } else if (existingStatus == 'rejected' || existingStatus == 'resubmit') {
+          } else if (existingStatus == 'rejected' ||
+              existingStatus == 'resubmit') {
             shouldQueue = true;
           } else {
-            final oldFront = existingData?['nicFrontKey'] as String? ?? existingData?['nicFrontUrl'] as String?;
-            final oldBack = existingData?['nicBackKey'] as String? ?? existingData?['nicBackUrl'] as String?;
+            final oldFront = existingData?['nicFrontKey'] as String? ??
+                existingData?['nicFrontUrl'] as String?;
+            final oldBack = existingData?['nicBackKey'] as String? ??
+                existingData?['nicBackUrl'] as String?;
             if (profileWithId.nicFrontKey != oldFront ||
                 profileWithId.nicBackKey != oldBack) {
               shouldQueue = true;
@@ -638,7 +696,7 @@ class AuthService {
       await batch.commit().timeout(const Duration(seconds: 10));
 
       if (shouldQueue) {
-        // request server-side nic hash (failure must not block submit)
+        // request server nic hash
         await requestNicHash();
       }
     }
@@ -715,7 +773,7 @@ class AuthService {
     };
   }
 
-  // request server-side nic hash calculation
+  // request server nic hash calculation
   Future<void> requestNicHash() async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -735,10 +793,11 @@ class AuthService {
       ).timeout(const Duration(seconds: 15));
 
       if (res.statusCode != 200) {
-        debugPrint('[nic-hash] non-200 response: ${res.statusCode} ${res.body}');
+        debugPrint(
+            '[nic-hash] non-200 response: ${res.statusCode} ${res.body}');
       }
     } catch (e) {
-      // failures must not block the submit; just log and show nothing
+      // submit errors are ignored
       debugPrint('[nic-hash] request error: $e');
     }
   }

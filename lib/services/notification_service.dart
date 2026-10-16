@@ -67,7 +67,8 @@ class NotificationService {
     if (uid == null || uid.isEmpty) return;
 
     try {
-      final tokenHash = token.length > 32 ? token.substring(token.length - 32) : token;
+      final tokenHash =
+          token.length > 32 ? token.substring(token.length - 32) : token;
       final docRef = _firestore
           .collection(FirestorePaths.users)
           .doc(uid)
@@ -95,7 +96,8 @@ class NotificationService {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => AppNotification.fromDoc(doc)).toList());
+        .map((snap) =>
+            snap.docs.map((doc) => AppNotification.fromDoc(doc)).toList());
   }
 
   // stream unread notification count

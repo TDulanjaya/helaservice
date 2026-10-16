@@ -402,18 +402,20 @@ service cloud.firestore {
         request.resource.data.get('reviewCount', 0) == 0 &&
         request.resource.data.get('jobsCount', 0) == 0 &&
         (!('status' in request.resource.data) || request.resource.data.status == 'pending') &&
+        (!('hasApprovedCertificates' in request.resource.data) || request.resource.data.hasApprovedCertificates == false) &&
+        (!('certificateTitles' in request.resource.data) || request.resource.data.certificateTitles == []) &&
         validTechnicianRates(request.resource.data) &&
         validTechnicianLocation(request.resource.data)
       );
       allow update: if (
         isAdmin() &&
         (!changed().hasAny(['isBanned', 'banned', 'bannedAt', 'banReason']) || hasPerm('manage_users')) &&
-        (!changed().hasAny(['isVerified', 'nicVerified', 'status', 'certificationsStatus']) || hasPerm('verify_nic')) &&
+        (!changed().hasAny(['isVerified', 'nicVerified', 'status', 'certificationsStatus', 'certificateTitles', 'hasApprovedCertificates']) || hasPerm('verify_nic')) &&
         (hasPerm('manage_users') || hasPerm('verify_nic'))
       ) || (
         isOwner(techId) && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount'
+            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount', 'certificateTitles', 'hasApprovedCertificates'
           ]) &&
           (
             !('category' in resource.data) ||
@@ -425,6 +427,24 @@ service cloud.firestore {
         )
       );
       allow delete: if isSuperAdmin();
+
+      // trade certificates and licenses subcollection
+      match /certificates/{certId} {
+        allow read: if isOwner(techId) || hasPerm('verify_nic');
+        allow create: if isOwner(techId) &&
+          request.resource.data.status == 'pending' &&
+          request.resource.data.key is string &&
+          request.resource.data.key.matches('^certs/' + techId + '/.+') &&
+          request.resource.data.type in ['image', 'pdf'] &&
+          (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 80)) &&
+          !('reviewedAt' in request.resource.data) &&
+          !('reviewedBy' in request.resource.data) &&
+          !('rejectReason' in request.resource.data);
+        allow delete: if isOwner(techId) && resource.data.status == 'pending';
+        allow update: if hasPerm('verify_nic') &&
+          changed().hasOnly(['status', 'rejectReason', 'reviewedAt', 'reviewedBy']) &&
+          request.resource.data.status in ['approved', 'rejected', 'pending'];
+      }
 
       // private verification details
       match /private/kyc {
@@ -472,6 +492,7 @@ service cloud.firestore {
       );
       allow create: if isUserActive() &&
         !isLockedNewProvider() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isProfileComplete', false) == true &&
         request.resource.data.customerId == request.auth.uid &&
         request.resource.data.latitude is number &&
         request.resource.data.longitude is number &&

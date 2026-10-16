@@ -16,8 +16,7 @@ class PlaceSuggestion {
     required this.longitude,
   });
 
-  String get fullDisplay =>
-      shortArea.isNotEmpty ? '$name, $shortArea' : name;
+  String get fullDisplay => shortArea.isNotEmpty ? '$name, $shortArea' : name;
 }
 
 // helper methods for location search
@@ -70,11 +69,11 @@ class LocationSearchHelper {
     final rawName = properties['name']?.toString().trim() ?? '';
     final street = properties['street']?.toString().trim() ?? '';
     final city = (properties['city'] ??
-            properties['town'] ??
-            properties['district'] ??
-            properties['locality'])
-        ?.toString()
-        .trim() ??
+                properties['town'] ??
+                properties['district'] ??
+                properties['locality'])
+            ?.toString()
+            .trim() ??
         '';
     final state = properties['state']?.toString().trim() ?? '';
 
@@ -261,4 +260,3 @@ class LocationSearchHelper {
     return previousValue;
   }
 }
-

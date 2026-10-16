@@ -17,7 +17,8 @@ class CategoryService extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
-  Map<String, CategoryRow> get categoriesById => Map.unmodifiable(_categoriesById);
+  Map<String, CategoryRow> get categoriesById =>
+      Map.unmodifiable(_categoriesById);
   List<CategoryRow> get allCategories {
     final list = _categoriesById.values.toSet().toList();
     list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -48,7 +49,8 @@ class CategoryService extends ChangeNotifier {
             _categoriesById[doc.id] = cat;
             _categoriesById[doc.id.toLowerCase()] = cat;
           } catch (e) {
-            debugPrint('[CategoryService] Failed to parse category ${doc.id}: $e');
+            debugPrint(
+                '[CategoryService] Failed to parse category ${doc.id}: $e');
           }
         }
         _isLoading = false;
@@ -72,7 +74,8 @@ class CategoryService extends ChangeNotifier {
     final trimmed = id.trim();
     if (trimmed.isEmpty) return fallbackLabel;
 
-    final cat = _categoriesById[trimmed] ?? _categoriesById[trimmed.toLowerCase()];
+    final cat =
+        _categoriesById[trimmed] ?? _categoriesById[trimmed.toLowerCase()];
     if (cat == null) {
       return fallbackLabel;
     }

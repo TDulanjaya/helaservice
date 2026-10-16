@@ -84,7 +84,8 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
     _mode = widget.initialMode ?? ScheduleHelpers.modeDateOnly;
 
     final now = DateTime.now();
-    if (widget.initialDate != null && !widget.initialDate!.isBefore(DateTime(now.year, now.month, now.day))) {
+    if (widget.initialDate != null &&
+        !widget.initialDate!.isBefore(DateTime(now.year, now.month, now.day))) {
       _selectedDate = widget.initialDate!;
     } else {
       // Default to tomorrow if today is past cutoff
@@ -172,7 +173,9 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
         scheduledDate: res.scheduledDate,
         scheduledStartAt: res.scheduledStartAt,
         scheduledEndAt: res.scheduledEndAt,
-        legacySlot: _mode == ScheduleHelpers.modeDateOnly ? 'anytime' : '${_fromTime.format(context)} - ${_toTime.format(context)}',
+        legacySlot: _mode == ScheduleHelpers.modeDateOnly
+            ? 'anytime'
+            : '${_fromTime.format(context)} - ${_toTime.format(context)}',
       ),
     );
   }
@@ -288,14 +291,16 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
               // Date selection
               Text(
                 context.l10n.selectScheduledDate,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               InkWell(
                 onTap: () => _pickDate(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: context.themeSurfaceLow,
                     borderRadius: BorderRadius.circular(12),
@@ -303,14 +308,17 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.event_outlined, size: 20, color: AppColors.primary),
+                      const Icon(Icons.event_outlined,
+                          size: 20, color: AppColors.primary),
                       const SizedBox(width: 10),
                       Text(
                         formattedDate,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const Spacer(),
-                      const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                      const Icon(Icons.arrow_drop_down,
+                          color: AppColors.primary),
                     ],
                   ),
                 ),
@@ -324,16 +332,19 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+                      const Icon(Icons.info_outline_rounded,
+                          size: 18, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           context.l10n.scheduleAnyTime,
-                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              fontSize: 12.5, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -349,27 +360,33 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                         children: [
                           Text(
                             context.l10n.scheduleFrom,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickTime(context, true),
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
                                 color: context.themeSurfaceLow,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: context.themeBorder),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _fromTime.format(context),
-                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14),
                                   ),
-                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                  const Icon(Icons.access_time_rounded,
+                                      size: 16, color: AppColors.primary),
                                 ],
                               ),
                             ),
@@ -384,27 +401,33 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                         children: [
                           Text(
                             context.l10n.scheduleTo,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickTime(context, false),
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
                                 color: context.themeSurfaceLow,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: context.themeBorder),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _toTime.format(context),
-                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14),
                                   ),
-                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                  const Icon(Icons.access_time_rounded,
+                                      size: 16, color: AppColors.primary),
                                 ],
                               ),
                             ),
@@ -423,16 +446,21 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 16),
+                      const Icon(Icons.error_outline_rounded,
+                          color: AppColors.error, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorMessage!,
-                          style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -448,7 +476,8 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(context.l10n.cancel),
                     ),
@@ -461,7 +490,8 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
                         context.l10n.save,

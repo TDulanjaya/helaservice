@@ -7,7 +7,8 @@ class ThemeProvider extends ChangeNotifier {
   static const String _prefKey = 'app_theme_mode';
   ThemeMode _mode;
 
-  ThemeProvider({ThemeMode initialMode = ThemeMode.system}) : _mode = initialMode;
+  ThemeProvider({ThemeMode initialMode = ThemeMode.system})
+      : _mode = initialMode;
 
   static Future<ThemeMode> loadSavedMode() async {
     try {

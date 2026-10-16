@@ -33,7 +33,8 @@ class ChatMessageModel {
       senderName: map['senderName'] ?? '',
       text: map['text'] ?? '',
       imageUrl: map['imageUrl']?.toString(),
-      type: map['type']?.toString() ?? (map['imageUrl'] != null ? 'image' : 'text'),
+      type: map['type']?.toString() ??
+          (map['imageUrl'] != null ? 'image' : 'text'),
       createdAt: ts is Timestamp ? ts.toDate() : null,
     );
   }
@@ -221,12 +222,24 @@ class ChatService {
       });
     } else {
       final updates = <String, dynamic>{};
-      if (user1Name.isNotEmpty) updates['participantNames.$userId1'] = user1Name;
-      if (user2Name.isNotEmpty) updates['participantNames.$userId2'] = user2Name;
-      if (user1Role != null && user1Role.isNotEmpty) updates['participantRoles.$userId1'] = user1Role;
-      if (user2Role != null && user2Role.isNotEmpty) updates['participantRoles.$userId2'] = user2Role;
-      if (user1Phone != null && user1Phone.isNotEmpty) updates['participantPhones.$userId1'] = user1Phone;
-      if (user2Phone != null && user2Phone.isNotEmpty) updates['participantPhones.$userId2'] = user2Phone;
+      if (user1Name.isNotEmpty) {
+        updates['participantNames.$userId1'] = user1Name;
+      }
+      if (user2Name.isNotEmpty) {
+        updates['participantNames.$userId2'] = user2Name;
+      }
+      if (user1Role != null && user1Role.isNotEmpty) {
+        updates['participantRoles.$userId1'] = user1Role;
+      }
+      if (user2Role != null && user2Role.isNotEmpty) {
+        updates['participantRoles.$userId2'] = user2Role;
+      }
+      if (user1Phone != null && user1Phone.isNotEmpty) {
+        updates['participantPhones.$userId1'] = user1Phone;
+      }
+      if (user2Phone != null && user2Phone.isNotEmpty) {
+        updates['participantPhones.$userId2'] = user2Phone;
+      }
       if (updates.isNotEmpty) {
         await docRef.update(updates);
       }
@@ -236,7 +249,8 @@ class ChatService {
   }
 
   // stream chat rooms for user
-  Stream<List<ChatRoomSummary>> streamUserChatRooms(String userId, {int limit = 50}) {
+  Stream<List<ChatRoomSummary>> streamUserChatRooms(String userId,
+      {int limit = 50}) {
     return _db
         .collection(FirestorePaths.chatRooms)
         .where('participants', arrayContains: userId)
@@ -317,9 +331,14 @@ class ChatService {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    final docSnap = await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).get();
-    final participants = (docSnap.data()?['participants'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    final recipientUid = participants.firstWhere((p) => p != senderId, orElse: () => '');
+    final docSnap =
+        await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).get();
+    final participants = (docSnap.data()?['participants'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+    final recipientUid =
+        participants.firstWhere((p) => p != senderId, orElse: () => '');
 
     final roomUpdates = <String, dynamic>{
       'lastMessage': previewText,
@@ -359,9 +378,11 @@ class ChatService {
   }) async {
     String? uploadedUrl;
     if (imageInput is PickedAttachment) {
-      uploadedUrl = await StorageService.instance.uploadPickedAttachment(imageInput, purpose: 'chat');
+      uploadedUrl = await StorageService.instance
+          .uploadPickedAttachment(imageInput, purpose: 'chat');
     } else if (imageInput is XFile) {
-      uploadedUrl = await StorageService.instance.uploadPickedImage(imageInput, purpose: 'chat');
+      uploadedUrl = await StorageService.instance
+          .uploadPickedImage(imageInput, purpose: 'chat');
     } else if (imageInput is Uint8List) {
       final chatFilename = 'chat_${DateTime.now().millisecondsSinceEpoch}.jpg';
       uploadedUrl = await StorageService.instance.uploadBytes(
@@ -371,7 +392,8 @@ class ChatService {
     } else if (imageInput is String && imageInput.startsWith('http')) {
       uploadedUrl = imageInput;
     } else if (imageInput != null) {
-      uploadedUrl = await StorageService.instance.uploadFile(imageInput, purpose: 'chat');
+      uploadedUrl =
+          await StorageService.instance.uploadFile(imageInput, purpose: 'chat');
     }
 
     if (uploadedUrl == null || uploadedUrl.isEmpty) {
@@ -389,7 +411,8 @@ class ChatService {
   }
 
   // stream room messages
-  Stream<List<ChatMessageModel>> streamMessages(String chatRoomId, {int limit = 100}) {
+  Stream<List<ChatMessageModel>> streamMessages(String chatRoomId,
+      {int limit = 100}) {
     return _db
         .collection(FirestorePaths.chatRooms)
         .doc(chatRoomId)
@@ -402,4 +425,3 @@ class ChatService {
             .toList());
   }
 }
-

@@ -80,9 +80,11 @@ class Quote {
         'status': status,
         'quoteType': quoteType,
         if (quoteType != 'inspect' && priceUnit != null) 'priceUnit': priceUnit,
-        if (quoteType != 'inspect' && unitRateLkr != null) 'unitRateLkr': unitRateLkr,
+        if (quoteType != 'inspect' && unitRateLkr != null)
+          'unitRateLkr': unitRateLkr,
         if (quoteType != 'inspect' && quantity != null) 'quantity': quantity,
-        if (quoteType != 'inspect' && materialsEstimateLkr != null) 'materialsEstimateLkr': materialsEstimateLkr,
+        if (quoteType != 'inspect' && materialsEstimateLkr != null)
+          'materialsEstimateLkr': materialsEstimateLkr,
         'visitFeeLkr': visitFeeLkr,
         'travelKm': travelKm,
         'travelRateLkr': travelRateLkr,
@@ -101,7 +103,8 @@ class Quote {
       id: id,
       requestId: map['requestId'] ?? '',
       providerId: map['providerId'] ?? '',
-      createdBy: (map['createdBy'] as String?) ?? (map['providerId'] as String? ?? ''),
+      createdBy:
+          (map['createdBy'] as String?) ?? (map['providerId'] as String? ?? ''),
       providerName: map['providerName'] ?? '',
       providerRating: (map['providerRating'] as num?)?.toDouble() ?? 0.0,
       providerReviewCount: map['providerReviewCount'] ?? 0,
@@ -132,4 +135,3 @@ class Quote {
     );
   }
 }
-

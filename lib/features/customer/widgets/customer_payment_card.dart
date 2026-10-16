@@ -122,7 +122,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.l10n.paymentDisputedWithReason(reasonController.text.trim()),
+                context.l10n
+                    .paymentDisputedWithReason(reasonController.text.trim()),
               ),
               backgroundColor: AppColors.warning,
             ),
@@ -148,8 +149,10 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
   Widget build(BuildContext context) {
     final b = widget.booking;
     final amountVal = b.finalAmount ?? b.agreedPrice ?? 0.0;
-    final amountStr = amountVal > 0 ? 'LKR ${amountVal.toStringAsFixed(0)}' : 'LKR --';
-    final providerName = b.providerName.isNotEmpty ? b.providerName : context.l10n.technician;
+    final amountStr =
+        amountVal > 0 ? 'LKR ${amountVal.toStringAsFixed(0)}' : 'LKR --';
+    final providerName =
+        b.providerName.isNotEmpty ? b.providerName : context.l10n.technician;
 
     if (b.customerConfirmedPaidAt != null) {
       return Container(
@@ -162,7 +165,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+            const Icon(Icons.check_circle_rounded,
+                color: AppColors.success, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -190,11 +194,13 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.error, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                context.l10n.paymentDisputedWithReason(b.paymentDisputeReason ?? ''),
+                context.l10n
+                    .paymentDisputedWithReason(b.paymentDisputeReason ?? ''),
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -222,7 +228,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
         break;
     }
 
-    final initialEstimateVal = b.estimatedTotalLkr ?? b.agreedPrice?.round() ?? b.agreedPriceLkr;
+    final initialEstimateVal =
+        b.estimatedTotalLkr ?? b.agreedPrice?.round() ?? b.agreedPriceLkr;
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -237,7 +244,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
         children: [
           Row(
             children: [
-              const Icon(Icons.payments_outlined, color: AppColors.primary, size: 20),
+              const Icon(Icons.payments_outlined,
+                  color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -275,7 +283,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
@@ -283,7 +292,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.check_circle_rounded, size: 12, color: AppColors.success),
+                          const Icon(Icons.check_circle_rounded,
+                              size: 12, color: AppColors.success),
                           const SizedBox(width: 4),
                           Text(
                             b.completionType == 'visit_only'
@@ -306,7 +316,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                   'LKR $initialEstimateVal',
                   context,
                 ),
-                if (b.priceStatus == 'approved' && b.approvedTotalLkr != null) ...[
+                if (b.priceStatus == 'approved' &&
+                    b.approvedTotalLkr != null) ...[
                   const SizedBox(height: 6),
                   _buildBreakdownRow(
                     context.l10n.revisedAgreedPrice,
@@ -317,7 +328,9 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                 StreamBuilder<List<BookingExtra>>(
                   stream: BookingRepository().streamExtras(b.id),
                   builder: (context, snap) {
-                    final extras = (snap.data ?? []).where((e) => e.status == 'approved').toList();
+                    final extras = (snap.data ?? [])
+                        .where((e) => e.status == 'approved')
+                        .toList();
                     if (extras.isEmpty) return const SizedBox.shrink();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +339,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                         ...extras.map((ex) => Padding(
                               padding: const EdgeInsets.symmetric(vertical: 2),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
@@ -394,7 +408,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                     icon: const Icon(Icons.check, size: 16),
                     label: Text(
                       context.l10n.yesPaid,
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 12.5, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
@@ -421,7 +436,8 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
                     ),
                     child: Text(
                       context.l10n.reportPaymentProblem,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -449,7 +465,10 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-            color: color ?? (isBold ? context.themeTextPrimary : context.themeTextSecondary),
+            color: color ??
+                (isBold
+                    ? context.themeTextPrimary
+                    : context.themeTextSecondary),
           ),
         ),
         Text(

@@ -1932,7 +1932,7 @@
   "zoomOut": "Zoom Out",
   "recenterMap": "Recenter Map",
   "superAdminCannotBeSuspended": "Super Admin accounts cannot be suspended.",
-  "openSettings": "Open Settings",
+  "openSettings": "Open settings",
   "ok": "OK",
   "permissionCameraPermanentlyDisabled": "Camera access is permanently disabled. Please enable it in Settings to capture photos.",
   "permissionCameraDisabled": "Camera access is disabled. Please enable it in App Settings.",
@@ -2947,13 +2947,17 @@
   "locationAccuracy": "Accuracy: ±{meters} m",
   "@locationAccuracy": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "locationAccuracyLowWarning": "Location accuracy is low (±{meters} m). Please drag the map pin to your exact gate or house.",
   "@locationAccuracyLowWarning": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "fineTunePinInstruction": "Drag pin to your exact gate or house",
@@ -2979,14 +2983,16 @@
   "admin2faTitle": "Admin Verification",
   "admin2faSubtitle": "Enter the 6-digit code sent to your admin email to authenticate your session.",
   "useDifferentAccount": "Use a different account",
-  "continueAsCustomer": "Continue as customer / provider",
+  "continueAsCustomer": "Continue as Customer",
   "otpNoSession": "No code sent yet — tap Resend",
   "otpExpiredResend": "Code expired — tap Resend",
   "otpMaxAttemptsResend": "Too many wrong tries — tap Resend",
   "otpIncorrectTriesLeft": "Incorrect code. {count} tries left",
   "@otpIncorrectTriesLeft": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "codeAlreadySent": "Code already sent",
@@ -3001,7 +3007,6 @@
   "notHereChooseAnother": "Not here? Choose another place",
   "couldNotGetLocationFallback": "Couldn't get your location — choose a place or search the map",
   "tryGpsAgain": "Try GPS again",
-  "openSettings": "Open settings",
   "addDetailsForProvider": "Add details for the provider",
   "providerNoteLabel": "Note for provider",
   "providerNoteHint": "e.g. blue gate, white Toyota near the bus stop",
@@ -3011,7 +3016,9 @@
   "accuracyBadge": "±{meters} m",
   "@accuracyBadge": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "saved": "Saved",
@@ -3033,7 +3040,6 @@
   "serviceCategoryLabel": "Service Category",
   "applicantNameLabel": "Applicant Name",
   "fixAndResubmit": "Fix & Resubmit",
-  "continueAsCustomer": "Continue as Customer",
   "providerPendingCustomerToast": "Your provider application is under review. You can continue using customer features in the meantime.",
   "providerApprovedCelebration": "Congratulations! Your provider account is now approved and active.",
   "providerApplicationStatusBadge": "Provider Application",
@@ -3069,7 +3075,6 @@
   "reasonFaceMismatch": "Profile photo does not match NIC face",
   "reasonOther": "Other reason",
   "optionalReviewerNote": "Additional instructions (optional, max 300 chars)",
-  "filterAll": "All",
   "filterPending": "Pending",
   "filterResubmitted": "Resubmitted",
   "filterRejected": "Rejected",
@@ -3080,7 +3085,6 @@
   "nicBackLabel": "NIC Back",
   "rotatePhoto": "Rotate 90°",
   "zoomHint": "Pinch or double tap to zoom",
-  "notProvided": "Not provided",
   "auditHistoryTitle": "Review & Submission History",
   "submissionAttempt": "Submission #{number}",
   "@submissionAttempt": {
@@ -3136,8 +3140,8 @@
   "estimatedLabel": "Estimated",
   "baseLocationTitle": "Base Location",
   "baseLocationDesc": "Where you normally start your workday",
-  "howDoYouChargeTitle": "How do you charge?",
-  "howDoYouChargeSubtitle": "Select at least one billing method (per hour, per day, or per job).",
+  "howDoYouChargeTitle": "Your usual rates",
+  "howDoYouChargeSubtitle": "Customers see these on your profile. You can still choose a different price type for each job when you send a bid.",
   "pricingModePerHour": "Per hour",
   "pricingModePerDay": "Per day",
   "pricingModePricePerJob": "Price per job (quote each job)",
@@ -3157,17 +3161,29 @@
   "uploadingPhotoProgress": "Uploading photo {current} of {total}...",
   "@uploadingPhotoProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "uploadPhotoBytesProgress": "Photo {current}/{total}: {sentMb} MB / {totalMb} MB",
   "@uploadPhotoBytesProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" },
-      "sentMb": { "type": "String" },
-      "totalMb": { "type": "String" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "sentMb": {
+        "type": "String"
+      },
+      "totalMb": {
+        "type": "String"
+      }
     }
   },
   "uploadingVideoThumbnail": "Uploading video thumbnail...",
@@ -3175,15 +3191,21 @@
   "uploadVideoBytesProgress": "Video: {sentMb} MB / {totalMb} MB",
   "@uploadVideoBytesProgress": {
     "placeholders": {
-      "sentMb": { "type": "String" },
-      "totalMb": { "type": "String" }
+      "sentMb": {
+        "type": "String"
+      },
+      "totalMb": {
+        "type": "String"
+      }
     }
   },
   "ticketAssignedToYou": "Ticket assigned to you",
   "openBookingTimeline": "Open Booking Timeline ({id})",
   "@openBookingTimeline": {
     "placeholders": {
-      "id": { "type": "String" }
+      "id": {
+        "type": "String"
+      }
     }
   },
   "markInReviewAction": "Mark In Review",
@@ -3195,28 +3217,40 @@
   "nicWarningUnder18": "Under 18 ({age} yrs) — Cannot be approved",
   "@nicWarningUnder18": {
     "placeholders": {
-      "age": { "type": "int" }
+      "age": {
+        "type": "int"
+      }
     }
   },
   "nicDuplicateCheckNotAvailable": "duplicate check not available yet",
   "nicDuplicateNicApproved": "Duplicate NIC: already approved for {name} ({id})",
   "@nicDuplicateNicApproved": {
     "placeholders": {
-      "name": { "type": "String" },
-      "id": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
     }
   },
   "nicDuplicateNicPending": "Duplicate NIC: pending for {name} ({id})",
   "@nicDuplicateNicPending": {
     "placeholders": {
-      "name": { "type": "String" },
-      "id": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
     }
   },
   "nicDuplicatePhone": "Duplicate Phone: already registered to approved provider {name}",
   "@nicDuplicatePhone": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "notificationIdentityApprovedTitle": "Identity Verification Approved",
@@ -3277,5 +3311,68 @@
   "timelineDescAfterPhotoAdded": "Provider uploaded completed work photo",
   "timelineDescRescheduleRequested": "Reschedule requested",
   "timelineDescRescheduleAccepted": "Reschedule accepted",
-  "timelineDescRescheduleDeclined": "Reschedule declined"
+  "timelineDescRescheduleDeclined": "Reschedule declined",
+  "failedToSetRoleGeneric": "Failed to set role. Please try again.",
+  "@failedToSetRoleGeneric": {
+    "description": "Friendly error message when setting user role fails"
+  },
+  "roleSwitchLockedProviderBlocked": "Customer mode is unavailable while your provider account is pending approval.",
+  "@roleSwitchLockedProviderBlocked": {
+    "description": "Notice shown when a pending new provider tries to switch to customer mode"
+  },
+  "certUploadSectionTitle": "Certificates and documents (optional)",
+  "certUploadSectionHint": "Add any certificates, licences or training letters. Photos or PDF.",
+  "certUploadButton": "Upload Documents",
+  "certUploadChooseFiles": "Choose files",
+  "certUploadMaxFilesError": "You can upload a maximum of 10 documents.",
+  "certUploadFileTooLargeError": "{fileName} exceeds the 10 MB size limit.",
+  "@certUploadFileTooLargeError": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "certUploadUnsupportedTypeError": "{fileName} is not a supported file type. Allowed: JPG, PNG, WEBP, PDF.",
+  "@certUploadUnsupportedTypeError": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "certUploadTitleHint": "Document title (e.g. NVQ Level 4)",
+  "certDefaultTitle": "Certificate",
+  "certCertifiedBadge": "Certified",
+  "certApprovedSectionTitle": "Trade Certifications & Licenses",
+  "certAddMore": "Add certificates",
+  "certSaveButton": "Save Certificates",
+  "certSubmittedSuccess": "Certificates submitted for verification.",
+  "certTradeLicensesTitle": "Trade Certifications & Licenses ({count})",
+  "@certTradeLicensesTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "certNumberTitle": "Certificate #{number}",
+  "@certNumberTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "certApproveAll": "Approve all",
+  "certRejectReasonTitle": "Reject Certificate",
+  "certRejectReasonPrompt": "Please enter a reason for rejecting this certificate",
+  "certRejectReasonRequired": "Please enter a rejection reason.",
+  "certApprovedNotice": "Certificate approved",
+  "certRejectedNotice": "Certificate rejected",
+  "certAllApprovedNotice": "All certificates approved",
+  "quoteRateForJobHint": "Enter your rate for this job",
+  "quoteInspectVisitFeePrompt": "Please enter a visit fee for inspection",
+  "quoteIncludeVisitCostHint": "Include any visit cost in your price.",
+  "quoteAddTravelCost": "Add travel cost"
 }

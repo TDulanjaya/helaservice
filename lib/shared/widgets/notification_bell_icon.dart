@@ -54,12 +54,16 @@ class NotificationBellIcon extends StatelessWidget {
                 top: -3,
                 right: -3,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  constraints:
+                      const BoxConstraints(minWidth: 16, minHeight: 16),
                   decoration: BoxDecoration(
                     color: AppColors.error,
-                    shape: unreadCount < 10 ? BoxShape.circle : BoxShape.rectangle,
-                    borderRadius: unreadCount >= 10 ? BorderRadius.circular(10) : null,
+                    shape:
+                        unreadCount < 10 ? BoxShape.circle : BoxShape.rectangle,
+                    borderRadius:
+                        unreadCount >= 10 ? BorderRadius.circular(10) : null,
                     border: Border.all(color: Colors.white, width: 1.5),
                   ),
                   child: Center(

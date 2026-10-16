@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart' as pv;
@@ -18,6 +19,7 @@ import 'features/provider/screens/provider_dashboard_screen.dart';
 import 'features/provider/screens/provider_pending_screen.dart';
 import 'features/admin/admin_shell.dart';
 import 'utils/l10n_extension.dart';
+import 'utils/provider_routing_helper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -75,7 +77,8 @@ class _SplashScreenState extends State<SplashScreen> {
         }
 
         final tokenResult = await fbUser.getIdTokenResult();
-        final admin2faUntil = (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
+        final admin2faUntil =
+            (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
         final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         final is2faValid = admin2faUntil > nowSec;
 
@@ -104,7 +107,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (user == null) {
       try {
         // load profile
-        user = await AuthService().fetchCurrentUserProfile(throwOnNetwork: true);
+        user =
+            await AuthService().fetchCurrentUserProfile(throwOnNetwork: true);
       } on AuthFlowException {
         await minDelay;
         if (!mounted) return;
@@ -178,37 +182,59 @@ class _SplashScreenState extends State<SplashScreen> {
     await minDelay;
     if (!mounted) return;
 
-    Widget destination = const LoginScreen();
-    if (profile.role == null) {
-      destination = RoleChoiceScreen(user: profile);
-    } else if (!roleProvider.isProfileCompleted) {
-      destination = CompleteProfileScreen(initialProfile: profile);
-    } else {
-      switch (profile.role!) {
-        case AppRole.customer:
-        case AppRole.admin:
-          destination = const HomeDiscoveryScreen();
-          break;
-        case AppRole.provider:
-          if (roleProvider.isApprovedProvider || profile.isVerified) {
-            destination = const ProviderDashboardScreen();
-          } else if (profile.initialRole == 'customer') {
-            destination = const HomeDiscoveryScreen();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.providerPendingCustomerToast),
-                    backgroundColor: AppColors.primary,
-                  ),
-                );
-              }
-            });
-          } else {
-            destination = const ProviderPendingScreen(isExistingCustomer: false);
+    final appDest = resolveAppDestination(
+      profile: profile,
+      isAuthorizedAdmin: roleProvider.isAuthorizedAdmin,
+      isEmailOtpVerified: true,
+      isTechnicianApproved: roleProvider.isApprovedProvider,
+    );
+    if (kDebugMode) {
+      debugPrint('[navdbg] splash resolved AppDestination: $appDest');
+    }
+
+    Widget destination;
+    switch (appDest) {
+      case AppDestination.roleChoice:
+        destination = RoleChoiceScreen(user: profile);
+        break;
+      case AppDestination.completeProfile:
+        destination = CompleteProfileScreen(initialProfile: profile);
+        break;
+      case AppDestination.providerDashboard:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> dashboard from splash_screen.dart');
+        }
+        destination = const ProviderDashboardScreen();
+        break;
+      case AppDestination.providerPendingNew:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> pending from splash_screen.dart');
+        }
+        destination = const ProviderPendingScreen(isExistingCustomer: false);
+        break;
+      case AppDestination.providerPendingCustomer:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from splash_screen.dart');
+        }
+        destination = const HomeDiscoveryScreen();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.providerPendingCustomerToast),
+                backgroundColor: AppColors.primary,
+              ),
+            );
           }
-          break;
-      }
+        });
+        break;
+      case AppDestination.homeDiscovery:
+      default:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from splash_screen.dart');
+        }
+        destination = const HomeDiscoveryScreen();
+        break;
     }
 
     Navigator.of(context).pushReplacement(
@@ -228,137 +254,139 @@ class _SplashScreenState extends State<SplashScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFF0B0C0E),
         body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 320,
-                        height: 320,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.16),
-                              Colors.transparent,
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 320,
+                          height: 320,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                AppColors.primary.withValues(alpha: 0.16),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 220,
+                          height: 220,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                AppColors.primary.withValues(alpha: 0.28),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.35),
+                                blurRadius: 36,
+                                offset: const Offset(0, 10),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
                             ],
                           ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(28),
+                            child: Image.asset(
+                              'assets/images/app_logo.png',
+                              width: 110,
+                              height: 110,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      context.l10n.appTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
                       ),
-                      Container(
-                        width: 220,
-                        height: 220,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.28),
-                              Colors.transparent,
-                            ],
+                    ),
+                    const SizedBox(height: 26),
+                    if (_offline) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          context.l10n.splashNoConnection,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 14,
+                            height: 1.45,
                           ),
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.35),
-                              blurRadius: 36,
-                              offset: const Offset(0, 10),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _retry,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: const Color(0xFF17140F),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: Image.asset(
-                            'assets/images/app_logo.png',
-                            width: 110,
-                            height: 110,
-                            fit: BoxFit.cover,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(context.l10n.retryAction),
+                      ),
+                    ] else
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: const SizedBox(
+                          width: 72,
+                          height: 4,
+                          child: LinearProgressIndicator(
+                            backgroundColor: Color(0xFF232529),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    context.l10n.appTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 26),
-                  if (_offline) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        context.l10n.splashNoConnection,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 14,
-                          height: 1.45,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _retry,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: const Color(0xFF17140F),
-                      ),
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: Text(context.l10n.retryAction),
-                    ),
-                  ] else
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: const SizedBox(
-                        width: 72,
-                        height: 4,
-                        child: LinearProgressIndicator(
-                          backgroundColor: Color(0xFF232529),
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Text(
-                  '© 2026 Thisara Dulanjaya. All rights reserved.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.45),
-                    letterSpacing: 0.2,
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Text(
+                    '© 2026 Thisara Dulanjaya. All rights reserved.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.45),
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

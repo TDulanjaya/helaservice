@@ -47,6 +47,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   bool _submitting = false;
   bool _loadingRates = true;
   bool _isEstimatedTravelKm = false;
+  bool _addTravelCost = false;
   Technician? _technician;
 
   static const List<int> _etaOptions = [15, 30, 45, 60, 90, 120];
@@ -60,12 +61,41 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   void _prefillUnitRate(String unit, Technician tech) {
     if (unit == 'fixed') {
       _quantityController.text = '1';
-      final prefill = ProviderPricingHelper.resolveFixedPricePrefill(baseRateLkr: tech.baseRateLkr);
+      final prefill = ProviderPricingHelper.resolveFixedPricePrefill(
+          baseRateLkr: tech.baseRateLkr);
       _unitRateController.text = prefill != null ? '$prefill' : '';
     } else if (unit == 'hour') {
-      _unitRateController.text = tech.hourlyRateLkr > 0 ? '${tech.hourlyRateLkr}' : '';
+      _unitRateController.text =
+          tech.hourlyRateLkr > 0 ? '${tech.hourlyRateLkr}' : '';
     } else if (unit == 'day') {
-      _unitRateController.text = (tech.dailyRateLkr != null && tech.dailyRateLkr! > 0) ? '${tech.dailyRateLkr}' : '';
+      _unitRateController.text =
+          (tech.dailyRateLkr != null && tech.dailyRateLkr! > 0)
+              ? '${tech.dailyRateLkr}'
+              : '';
+    }
+  }
+
+  void _calculateEstimatedDistance(Technician tech, dynamic profile) {
+    final req = widget.jobRequest;
+    final eff = tech.effectiveLocation;
+    final pLat = eff.latitude ?? profile?.latitude;
+    final pLng = eff.longitude ?? profile?.longitude;
+    if (pLat != null &&
+        pLng != null &&
+        req.latitude != null &&
+        req.longitude != null) {
+      final directKm = LocationUtils.calculateDistanceKm(
+        pLat,
+        pLng,
+        req.latitude!,
+        req.longitude!,
+      );
+      final estKm = (directKm * 1.3).clamp(0.0, 200.0);
+      _travelKmController.text = estKm.toStringAsFixed(1);
+      _isEstimatedTravelKm = true;
+    } else {
+      _travelKmController.text = '0.0';
+      _isEstimatedTravelKm = false;
     }
   }
 
@@ -78,55 +108,32 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         _technician = tech;
         final modes = tech.resolvedPricingModes;
 
-        if (modes.contains(ProviderPricingHelper.modeVisit)) {
-          final fee = tech.effectiveVisitFeeLkr;
-          _visitFeeController.text = fee > 0 ? '$fee' : '';
+        // initial unit selection based on provider's saved modes
+        if (modes.contains(ProviderPricingHelper.modeJob)) {
+          _selectedPriceUnit = 'fixed';
+        } else if (modes.contains(ProviderPricingHelper.modeHour)) {
+          _selectedPriceUnit = 'hour';
+        } else if (modes.contains(ProviderPricingHelper.modeDay)) {
+          _selectedPriceUnit = 'day';
         } else {
-          _visitFeeController.text = '';
-          if (_selectedQuoteType == 'inspect') {
-            _selectedQuoteType = 'firm';
-          }
+          _selectedPriceUnit = 'fixed';
         }
-
-        if (modes.contains(ProviderPricingHelper.modeTravel)) {
-          _travelRateController.text = (tech.perKmRateLkr != null && tech.perKmRateLkr! > 0)
-              ? '${tech.perKmRateLkr}'
-              : '';
-          final req = widget.jobRequest;
-          final eff = tech.effectiveLocation;
-          final pLat = eff.latitude ?? profile?.latitude;
-          final pLng = eff.longitude ?? profile?.longitude;
-          if (pLat != null &&
-              pLng != null &&
-              req.latitude != null &&
-              req.longitude != null) {
-            final directKm = LocationUtils.calculateDistanceKm(
-              pLat,
-              pLng,
-              req.latitude!,
-              req.longitude!,
-            );
-            final estKm = (directKm * 1.3).clamp(0.0, 200.0);
-            _travelKmController.text = estKm.toStringAsFixed(1);
-            _isEstimatedTravelKm = true;
-          }
-        } else {
-          _travelKmController.text = '0.0';
-          _travelRateController.text = '0';
-          _isEstimatedTravelKm = false;
-        }
-
-        final allowedUnits = <String>[];
-        if (modes.contains(ProviderPricingHelper.modeJob)) allowedUnits.add('fixed');
-        if (modes.contains(ProviderPricingHelper.modeHour)) allowedUnits.add('hour');
-        if (modes.contains(ProviderPricingHelper.modeDay)) allowedUnits.add('day');
-        if (allowedUnits.isEmpty) allowedUnits.add('fixed');
-
-        if (!allowedUnits.contains(_selectedPriceUnit)) {
-          _selectedPriceUnit = allowedUnits.first;
-        }
-
         _prefillUnitRate(_selectedPriceUnit, tech);
+
+        // prefill visit fee (used in inspect mode)
+        final fee = tech.effectiveVisitFeeLkr;
+        _visitFeeController.text = fee > 0 ? '$fee' : '';
+
+        // travel setup
+        final hasSavedTravel =
+            tech.perKmRateLkr != null && tech.perKmRateLkr! > 0;
+        _addTravelCost = hasSavedTravel;
+        if (hasSavedTravel) {
+          _travelRateController.text = '${tech.perKmRateLkr}';
+        } else {
+          _travelRateController.text = '';
+        }
+        _calculateEstimatedDistance(tech, profile);
       }
     }
     if (mounted) {
@@ -147,11 +154,11 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   }
 
   int get _travelCostLkr {
-    if (_technician != null && !_technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel)) {
-      return 0;
-    }
-    final km = double.tryParse(_travelKmController.text.trim()) ?? 0.0;
-    final rate = int.tryParse(_travelRateController.text.trim()) ?? 0;
+    if (!_addTravelCost) return 0;
+    final km = (double.tryParse(_travelKmController.text.trim()) ?? 0.0)
+        .clamp(0.0, 200.0);
+    final rate =
+        (int.tryParse(_travelRateController.text.trim()) ?? 0).clamp(0, 1000);
     return (km * rate).round();
   }
 
@@ -186,12 +193,11 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       return;
     }
 
-    final hasTravel = _technician == null ||
-        _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel);
-    final travelKm = hasTravel
-        ? (double.tryParse(_travelKmController.text.trim()) ?? 0.0).clamp(0.0, 200.0)
+    final travelKm = _addTravelCost
+        ? (double.tryParse(_travelKmController.text.trim()) ?? 0.0)
+            .clamp(0.0, 200.0)
         : 0.0;
-    final travelRate = hasTravel
+    final travelRate = _addTravelCost
         ? (int.tryParse(_travelRateController.text.trim()) ?? 0).clamp(0, 1000)
         : 0;
     final travelCost = (travelKm * travelRate).round();
@@ -206,7 +212,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       final visit = int.tryParse(_visitFeeController.text.trim());
       if (visit == null || visit <= 0 || visit > 20000) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.validVisitFeePrompt)),
+          SnackBar(content: Text(context.l10n.quoteInspectVisitFeePrompt)),
         );
         return;
       }
@@ -243,6 +249,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       unitRate = uRate;
       quantity = qty;
       materials = mat;
+      visitFee = 0;
       quotedPrice = (unitRate * quantity).round() + materials + travelCost;
     }
 
@@ -274,10 +281,11 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         if (techDoc.exists) {
           final tData = techDoc.data();
           if (tData != null) {
-            final isApproved = tData['nicVerified'] == true ||
-                tData['isVerified'] == true;
+            final isApproved =
+                tData['nicVerified'] == true || tData['isVerified'] == true;
             if (!isApproved) {
-              throw Exception('Your provider profile is pending admin approval.');
+              throw Exception(
+                  'Your provider profile is pending admin approval.');
             }
             if (providerLocation.isEmpty) {
               providerLocation = (tData['serviceArea'] as String?) ??
@@ -316,8 +324,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         travelCostLkr: travelCost,
       );
 
-      await JobRequestRepository()
-          .submitQuote(widget.jobRequest.id, quote);
+      await JobRequestRepository().submitQuote(widget.jobRequest.id, quote);
 
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -357,8 +364,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         return Container(
           decoration: BoxDecoration(
             color: context.themeBg,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ListView(
             controller: scrollController,
@@ -448,7 +454,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                                   size: 13, color: AppColors.primary),
                               const SizedBox(width: 4),
                               Text(
-                                CategoryService.instance.nameOf(req.category, context: context),
+                                CategoryService.instance
+                                    .nameOf(req.category, context: context),
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -492,7 +499,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                         ),
                       ),
                     ],
-                    if (req.photos.isNotEmpty || req.video != null || req.photoUrls.isNotEmpty) ...[
+                    if (req.photos.isNotEmpty ||
+                        req.video != null ||
+                        req.photoUrls.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       JobMediaGallery(
                         photos: req.photos,
@@ -529,19 +538,20 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
               // Quote Type Selector (3 Types: firm, estimate, inspect)
               Text(
                 context.l10n.quoteType,
-                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                    fontSize: 13.5, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _buildTypeTab('firm', context.l10n.quoteTypeFirm, Icons.verified_rounded),
+                  _buildTypeTab('firm', context.l10n.quoteTypeFirm,
+                      Icons.verified_rounded),
                   const SizedBox(width: 8),
-                  _buildTypeTab('estimate', context.l10n.quoteTypeEstimate, Icons.tune_rounded),
-                  if (_technician == null ||
-                      _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeVisit)) ...[
-                    const SizedBox(width: 8),
-                    _buildTypeTab('inspect', context.l10n.quoteTypeInspect, Icons.search_rounded),
-                  ],
+                  _buildTypeTab('estimate', context.l10n.quoteTypeEstimate,
+                      Icons.tune_rounded),
+                  const SizedBox(width: 8),
+                  _buildTypeTab('inspect', context.l10n.quoteTypeInspect,
+                      Icons.search_rounded),
                 ],
               ),
 
@@ -558,16 +568,19 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                      border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+                        const Icon(Icons.info_outline_rounded,
+                            size: 18, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             context.l10n.inspectionQuoteNotice,
-                            style: TextStyle(fontSize: 12, color: context.themeTextPrimary),
+                            style: TextStyle(
+                                fontSize: 12, color: context.themeTextPrimary),
                           ),
                         ),
                       ],
@@ -576,14 +589,18 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.standardVisitFee,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _visitFeeController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: context.l10n.hintAmount),
+                    decoration: _inputDecoration(
+                        prefixText: 'LKR ', hintText: context.l10n.hintAmount),
                   ),
                 ] else ...[
                   // Firm / Estimate Mode
@@ -593,7 +610,10 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                       children: [
                         Text(
                           context.l10n.billingUnit,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: context.themeTextPrimary),
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
@@ -625,7 +645,10 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                             children: [
                               Text(
                                 context.l10n.billingUnit,
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.themeTextPrimary),
                               ),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
@@ -660,12 +683,17 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                                       ? context.l10n.unitHours
                                       : context.l10n.unitDays,
                                 ),
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: context.themeTextPrimary),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _quantityController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
                                 onChanged: (_) => setState(() {}),
                                 decoration: _inputDecoration(hintText: '1.0'),
                               ),
@@ -678,32 +706,73 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                   const SizedBox(height: 14),
                   Text(
                     context.l10n.unitRateLkr,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _unitRateController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: context.l10n.hintAmount),
+                    decoration: _inputDecoration(
+                        prefixText: 'LKR ',
+                        hintText: context.l10n.quoteRateForJobHint),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    context.l10n.quoteIncludeVisitCostHint,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: context.themeTextSecondary,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   Text(
                     context.l10n.materialsEstimateOptional,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary),
                   ),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _materialsController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    decoration: _inputDecoration(prefixText: 'LKR ', hintText: '0'),
+                    decoration:
+                        _inputDecoration(prefixText: 'LKR ', hintText: '0'),
                   ),
                 ],
 
-                if (_technician == null ||
-                    _technician!.resolvedPricingModes.contains(ProviderPricingHelper.modeTravel)) ...[
-                  const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  value: _addTravelCost,
+                  title: Text(
+                    context.l10n.quoteAddTravelCost,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  activeTrackColor: AppColors.primary,
+                  onChanged: (val) {
+                    setState(() {
+                      _addTravelCost = val;
+                      if (val && _travelRateController.text.trim().isEmpty) {
+                        final rate = _technician?.perKmRateLkr;
+                        if (rate != null && rate > 0) {
+                          _travelRateController.text = '$rate';
+                        }
+                      }
+                    });
+                  },
+                ),
+                if (_addTravelCost) ...[
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -744,7 +813,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _travelKmController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
                               onChanged: (_) => setState(() {}),
                               decoration: _inputDecoration(hintText: '0.0'),
                             ),
@@ -758,14 +829,18 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                           children: [
                             Text(
                               context.l10n.travelRateLkrKm,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.themeTextPrimary),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: context.themeTextPrimary),
                             ),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _travelRateController,
                               keyboardType: TextInputType.number,
                               onChanged: (_) => setState(() {}),
-                              decoration: _inputDecoration(hintText: context.l10n.hintAmount),
+                              decoration: _inputDecoration(
+                                  hintText: context.l10n.hintAmount),
                             ),
                           ],
                         ),
@@ -792,26 +867,33 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                           children: [
                             Text(
                               'Base (${_quantityController.text} × LKR ${_unitRateController.text})',
-                              style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: context.themeTextSecondary),
                             ),
                             Text(
                               'LKR ${((double.tryParse(_quantityController.text) ?? 1.0) * (int.tryParse(_unitRateController.text) ?? 0)).round()}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
-                        if ((int.tryParse(_materialsController.text) ?? 0) > 0) ...[
+                        if ((int.tryParse(_materialsController.text) ?? 0) >
+                            0) ...[
                           const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 context.l10n.materialsEstimateColon,
-                                style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                                style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: context.themeTextSecondary),
                               ),
                               Text(
                                 'LKR ${int.tryParse(_materialsController.text) ?? 0}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -822,11 +904,14 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                           children: [
                             Text(
                               context.l10n.standardVisitFee,
-                              style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: context.themeTextSecondary),
                             ),
                             Text(
                               'LKR ${int.tryParse(_visitFeeController.text) ?? 0}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -838,11 +923,14 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                           children: [
                             Text(
                               '${context.l10n.travelFee} (${_travelKmController.text} km @ LKR ${_travelRateController.text}/km)',
-                              style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: context.themeTextSecondary),
                             ),
                             Text(
                               'LKR $_travelCostLkr',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -853,7 +941,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                         children: [
                           Text(
                             context.l10n.totalQuotedPrice,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w800),
                           ),
                           Text(
                             'LKR $_calculatedQuotedPrice',
@@ -997,7 +1086,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
               Icon(
                 icon,
                 size: 20,
-                color: selected ? AppColors.primary : context.themeTextSecondary,
+                color:
+                    selected ? AppColors.primary : context.themeTextSecondary,
               ),
               const SizedBox(height: 4),
               Text(
@@ -1006,7 +1096,8 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                  color: selected ? AppColors.primary : context.themeTextSecondary,
+                  color:
+                      selected ? AppColors.primary : context.themeTextSecondary,
                 ),
               ),
             ],
@@ -1048,20 +1139,12 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   }
 
   List<DropdownMenuItem<String>> _buildUnitDropdownItems(BuildContext context) {
-    final modes = _technician?.resolvedPricingModes ?? ProviderPricingHelper.allModes;
-    final items = <DropdownMenuItem<String>>[];
-    if (modes.contains(ProviderPricingHelper.modeJob)) {
-      items.add(DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)));
-    }
-    if (modes.contains(ProviderPricingHelper.modeHour)) {
-      items.add(DropdownMenuItem(value: 'hour', child: Text(context.l10n.billingUnitHour)));
-    }
-    if (modes.contains(ProviderPricingHelper.modeDay)) {
-      items.add(DropdownMenuItem(value: 'day', child: Text(context.l10n.billingUnitDay)));
-    }
-    if (items.isEmpty) {
-      items.add(DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)));
-    }
-    return items;
+    return [
+      DropdownMenuItem(
+          value: 'fixed', child: Text(context.l10n.billingUnitFixed)),
+      DropdownMenuItem(
+          value: 'hour', child: Text(context.l10n.billingUnitHour)),
+      DropdownMenuItem(value: 'day', child: Text(context.l10n.billingUnitDay)),
+    ];
   }
 }

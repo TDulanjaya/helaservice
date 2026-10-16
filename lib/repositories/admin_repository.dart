@@ -43,7 +43,8 @@ class AdminRepository {
       action: 'update_admin_permissions',
       targetType: 'admin',
       targetId: adminId,
-      details: 'Updated role to ${role.key} with ${permissions.length} permissions',
+      details:
+          'Updated role to ${role.key} with ${permissions.length} permissions',
     );
   }
 
@@ -117,7 +118,8 @@ class AdminRepository {
     } catch (_) {}
   }
 
-  Future<void> updateOwnAdminProfile({String? displayName, String? phone}) async {
+  Future<void> updateOwnAdminProfile(
+      {String? displayName, String? phone}) async {
     final uid = fb.FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
     final updates = <String, dynamic>{};
@@ -126,9 +128,9 @@ class AdminRepository {
     if (updates.isNotEmpty) {
       await _col.doc(uid).update(updates);
       if (displayName != null) {
-        await fb.FirebaseAuth.instance.currentUser?.updateDisplayName(displayName);
+        await fb.FirebaseAuth.instance.currentUser
+            ?.updateDisplayName(displayName);
       }
     }
   }
 }
-

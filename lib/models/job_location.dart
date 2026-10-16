@@ -31,7 +31,8 @@ class JobLocation {
     if (note != null && note!.trim().isNotEmpty) return note!.trim();
     final parts = [
       if (landmark != null && landmark!.trim().isNotEmpty) landmark!.trim(),
-      if (directions != null && directions!.trim().isNotEmpty) directions!.trim(),
+      if (directions != null && directions!.trim().isNotEmpty)
+        directions!.trim(),
     ];
     return parts.isNotEmpty ? parts.join(' · ') : null;
   }
@@ -48,7 +49,8 @@ class JobLocation {
         if (houseNo != null && houseNo!.isNotEmpty) 'houseNo': houseNo,
         if (street != null && street!.isNotEmpty) 'street': street,
         if (city != null && city!.isNotEmpty) 'city': city,
-        if (directions != null && directions!.isNotEmpty) 'directions': directions,
+        if (directions != null && directions!.isNotEmpty)
+          'directions': directions,
       };
 
   factory JobLocation.fromMap(Map<String, dynamic> map) {
@@ -59,8 +61,10 @@ class JobLocation {
     String? resolvedNote = noteRaw?.trim();
     if (resolvedNote == null || resolvedNote.isEmpty) {
       final parts = [
-        if (landmarkRaw != null && landmarkRaw.trim().isNotEmpty) landmarkRaw.trim(),
-        if (directionsRaw != null && directionsRaw.trim().isNotEmpty) directionsRaw.trim(),
+        if (landmarkRaw != null && landmarkRaw.trim().isNotEmpty)
+          landmarkRaw.trim(),
+        if (directionsRaw != null && directionsRaw.trim().isNotEmpty)
+          directionsRaw.trim(),
       ];
       if (parts.isNotEmpty) {
         resolvedNote = parts.join(' · ');

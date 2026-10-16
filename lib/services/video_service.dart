@@ -21,7 +21,8 @@ class VideoService {
   // compress video <= 120s and make thumbnail
   Future<ProcessedVideoResult> processJobVideo(File rawVideoFile) async {
     if (kIsWeb) {
-      throw UnsupportedError('Video upload is only available in the mobile app.');
+      throw UnsupportedError(
+          'Video upload is only available in the mobile app.');
     }
     try {
       final info = await VideoCompress.getMediaInfo(rawVideoFile.path);
@@ -29,7 +30,8 @@ class VideoService {
       final durationSec = (rawDurationMs / 1000).round();
 
       if (durationSec > 120) {
-        throw Exception('Video length is $durationSec seconds. Maximum allowed duration is 120 seconds (2 minutes).');
+        throw Exception(
+            'Video length is $durationSec seconds. Maximum allowed duration is 120 seconds (2 minutes).');
       }
 
       // make thumbnail

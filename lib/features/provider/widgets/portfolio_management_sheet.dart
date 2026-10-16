@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../models/portfolio_item.dart';
@@ -135,7 +136,8 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text(
                     context.l10n.addPortfolioItem,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -143,7 +145,8 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
                 ),
               ],
@@ -180,7 +183,8 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                   }
 
                   return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
@@ -214,7 +218,8 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Container(
                                         color: context.themeSurface,
-                                        child: const Icon(Icons.broken_image_rounded),
+                                        child: const Icon(
+                                            Icons.broken_image_rounded),
                                       ),
                                     ),
                                   ),
@@ -222,11 +227,13 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                                     top: 6,
                                     right: 6,
                                     child: GestureDetector(
-                                      onTap: () => _confirmDelete(context, item),
+                                      onTap: () =>
+                                          _confirmDelete(context, item),
                                       child: Container(
                                         padding: const EdgeInsets.all(5),
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.65),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.65),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -257,7 +264,9 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                                   if (item.category.isNotEmpty) ...[
                                     const SizedBox(height: 2),
                                     Text(
-                                      CategoryService.instance.nameOf(item.category, context: context),
+                                      CategoryService.instance.nameOf(
+                                          item.category,
+                                          context: context),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -303,6 +312,7 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
   final TextEditingController _descController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   XFile? _selectedImage;
+  Uint8List? _selectedImageBytes;
   bool _isSaving = false;
   String _selectedCategory = '';
 
@@ -321,7 +331,13 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
       imageQuality: 82,
     );
     if (picked != null) {
-      setState(() => _selectedImage = picked);
+      // load image bytes for preview
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _selectedImage = picked;
+        _selectedImageBytes = bytes;
+      });
     }
   }
 
@@ -346,8 +362,8 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
       final bytes = await _selectedImage!.readAsBytes();
       final filename =
           'portfolio_${widget.providerId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final photoUrl = await StorageService.instance
-          .uploadBytes(bytes, filename: filename);
+      final photoUrl =
+          await StorageService.instance.uploadBytes(bytes, filename: filename);
 
       await PortfolioRepository().addPortfolioItem(
         providerId: widget.providerId,
@@ -471,13 +487,18 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(14),
-                              child: Image.network(
-                                _selectedImage!.path,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Center(
-                                  child: Icon(Icons.image, size: 40),
-                                ),
-                              ),
+                              child: _selectedImageBytes == null
+                                  ? const Center(
+                                      child: Icon(Icons.image, size: 40),
+                                    )
+                                  : Image.memory(
+                                      _selectedImageBytes!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Center(
+                                        child: Icon(Icons.image, size: 40),
+                                      ),
+                                    ),
                             ),
                             Positioned(
                               bottom: 8,
@@ -536,7 +557,8 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
               const SizedBox(height: 16),
               Text(
                 context.l10n.portfolioItemTitle,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -554,7 +576,8 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
               const SizedBox(height: 14),
               Text(
                 context.l10n.portfolioItemDesc,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -573,11 +596,13 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
               const SizedBox(height: 14),
               Text(
                 context.l10n.categoryLabel,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                initialValue: _selectedCategory.isNotEmpty ? _selectedCategory : null,
+                initialValue:
+                    _selectedCategory.isNotEmpty ? _selectedCategory : null,
                 hint: Text(context.l10n.selectCategoryPrompt),
                 dropdownColor: context.themeSurface,
                 decoration: InputDecoration(

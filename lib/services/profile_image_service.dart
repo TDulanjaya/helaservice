@@ -39,7 +39,8 @@ Uint8List _processProfileImage(Uint8List rawBytes) {
 
   Uint8List? result;
   for (final quality in qualitySteps) {
-    final encoded = Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+    final encoded =
+        Uint8List.fromList(img.encodeJpg(resized, quality: quality));
     if (encoded.lengthInBytes <= targetMaxBytes) {
       result = encoded;
       break;
@@ -52,7 +53,8 @@ Uint8List _processProfileImage(Uint8List rawBytes) {
     if (fallback.lengthInBytes <= targetMaxBytes) {
       result = fallback;
     } else {
-      throw Exception('Image is too complex to compress under 150 KB. Please choose a simpler photo.');
+      throw Exception(
+          'Image is too complex to compress under 150 KB. Please choose a simpler photo.');
     }
   }
 

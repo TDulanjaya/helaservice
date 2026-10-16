@@ -27,7 +27,8 @@ class JobMediaGallery extends StatelessWidget {
     this.showHeader = true,
   });
 
-  factory JobMediaGallery.fromRequest(JobRequest request, {double height = 76, bool showHeader = true}) {
+  factory JobMediaGallery.fromRequest(JobRequest request,
+      {double height = 76, bool showHeader = true}) {
     return JobMediaGallery(
       photos: request.photos,
       video: request.video,
@@ -123,7 +124,8 @@ class JobMediaGallery extends StatelessWidget {
                 bottom: 10,
                 right: 10,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(6),
@@ -208,7 +210,8 @@ class JobMediaGallery extends StatelessWidget {
           ),
         );
       } catch (_) {
-        return const Center(child: Icon(Icons.broken_image, size: 28, color: Colors.grey));
+        return const Center(
+            child: Icon(Icons.broken_image, size: 28, color: Colors.grey));
       }
     }
     return Image.network(
@@ -220,10 +223,12 @@ class JobMediaGallery extends StatelessWidget {
     );
   }
 
-  void _openPhotoViewer(BuildContext context, List<String> urls, int initialIndex) {
+  void _openPhotoViewer(
+      BuildContext context, List<String> urls, int initialIndex) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _FullScreenPhotoViewer(urls: urls, initialIndex: initialIndex),
+        builder: (_) =>
+            _FullScreenPhotoViewer(urls: urls, initialIndex: initialIndex),
       ),
     );
   }
@@ -291,17 +296,20 @@ class _FullScreenPhotoViewerState extends State<_FullScreenPhotoViewer> {
               maxScale: 4.0,
               child: widget.urls[i].startsWith('data:')
                   ? Image.memory(
-                      Uint8List.fromList(base64Decode(widget.urls[i].split(',').last)),
+                      Uint8List.fromList(
+                          base64Decode(widget.urls[i].split(',').last)),
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image, size: 48, color: Colors.white54),
+                        child: Icon(Icons.broken_image,
+                            size: 48, color: Colors.white54),
                       ),
                     )
                   : Image.network(
                       widget.urls[i],
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image, size: 48, color: Colors.white54),
+                        child: Icon(Icons.broken_image,
+                            size: 48, color: Colors.white54),
                       ),
                     ),
             ),
@@ -356,7 +364,8 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(context.l10n.jobVideo, style: const TextStyle(fontSize: 15)),
+        title:
+            Text(context.l10n.jobVideo, style: const TextStyle(fontSize: 15)),
       ),
       body: Center(
         child: _error != null
@@ -392,13 +401,17 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
         children: [
           IconButton(
             icon: Icon(
-              _controller.value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              _controller.value.isPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
               color: Colors.white,
               size: 28,
             ),
             onPressed: () {
               setState(() {
-                _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                _controller.value.isPlaying
+                    ? _controller.pause()
+                    : _controller.play();
               });
             },
           ),

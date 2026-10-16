@@ -34,14 +34,16 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
     }
 
     final buffer = StringBuffer();
-    buffer.writeln('Log ID,Admin UID,Admin Email,Action,Target Type,Target ID,Details,Timestamp');
+    buffer.writeln(
+        'Log ID,Admin UID,Admin Email,Action,Target Type,Target ID,Details,Timestamp');
 
     for (final l in logs) {
       final tsStr = l.timestamp != null
           ? DateFormat('yyyy-MM-dd HH:mm:ss').format(l.timestamp!)
           : '';
       final details = l.details.replaceAll('"', '""');
-      buffer.writeln('"${l.id}","${l.adminUid}","${l.adminEmail}","${l.action}","${l.targetType}","${l.targetId}","$details","$tsStr"');
+      buffer.writeln(
+          '"${l.id}","${l.adminUid}","${l.adminEmail}","${l.action}","${l.targetType}","${l.targetId}","$details","$tsStr"');
     }
 
     showDialog(
@@ -78,7 +80,9 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
           final allLogs = snapshot.data ?? [];
           final filteredLogs = _selectedFilter == 'all'
               ? allLogs
-              : allLogs.where((l) => l.targetType.toLowerCase() == _selectedFilter).toList();
+              : allLogs
+                  .where((l) => l.targetType.toLowerCase() == _selectedFilter)
+                  .toList();
 
           return Column(
             children: [
@@ -130,12 +134,15 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
                       ),
                     ),
                     OutlinedButton.icon(
-                      onPressed: () => _exportAdminLogsCsv(context, filteredLogs),
+                      onPressed: () =>
+                          _exportAdminLogsCsv(context, filteredLogs),
                       icon: const Icon(Icons.download_rounded, size: 16),
                       label: Text(context.l10n.exportCsv),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
@@ -144,7 +151,8 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
               // filter chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                 child: Row(
                   children: [
                     _buildFilterChip('all', context.l10n.filterAll),
@@ -167,18 +175,22 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
                         ? Center(
                             child: Text(
                               context.l10n.noAdminLogsFound,
-                              style: TextStyle(color: context.themeTextSecondary),
+                              style:
+                                  TextStyle(color: context.themeTextSecondary),
                             ),
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.all(20),
                             itemCount: filteredLogs.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 10),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final log = filteredLogs[index];
-                              final locale = Localizations.localeOf(context).languageCode;
+                              final locale =
+                                  Localizations.localeOf(context).languageCode;
                               final timeStr = log.timestamp != null
-                                  ? DateFormat('MMM d, hh:mm a', locale).format(log.timestamp!)
+                                  ? DateFormat('MMM d, hh:mm a', locale)
+                                      .format(log.timestamp!)
                                   : '';
 
                               return Container(
@@ -186,20 +198,24 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
                                 decoration: BoxDecoration(
                                   color: context.themeSurfaceLow,
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: context.themeBorder),
+                                  border:
+                                      Border.all(color: context.themeBorder),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: AppColors.primary.withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                           ),
                                           child: Text(
                                             log.action.toUpperCase(),
@@ -232,7 +248,8 @@ class _AdminActionLogsSheetState extends State<AdminActionLogsSheet> {
                                     Row(
                                       children: [
                                         Icon(Icons.person_outline_rounded,
-                                            size: 13, color: context.themeTextSecondary),
+                                            size: 13,
+                                            color: context.themeTextSecondary),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(

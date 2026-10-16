@@ -21,6 +21,7 @@ import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
 import '../../admin/admin_shell.dart';
 import '../../../utils/map_launcher.dart';
+import '../../../utils/provider_routing_helper.dart';
 import '../../../utils/responsive.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,7 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           final tokenResult = await fbUser.getIdTokenResult();
-          final admin2faUntil = (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
+          final admin2faUntil =
+              (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
           final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
           final is2faValid = admin2faUntil > nowSec;
 
@@ -144,68 +146,80 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
 
-    if (user.role == null) {
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: user)),
-        (route) => false,
-      );
-      return;
+    if (!mounted) return;
+
+    final appDest = resolveAppDestination(
+      profile: user,
+      isAuthorizedAdmin: roleProvider.isAuthorizedAdmin,
+      isEmailOtpVerified: true,
+      isTechnicianApproved: roleProvider.isApprovedProvider,
+    );
+    if (kDebugMode) {
+      debugPrint('[navdbg] login resolved AppDestination: $appDest');
     }
 
-    if (!user.isProfileComplete) {
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => CompleteProfileScreen(initialProfile: user),
-        ),
-        (route) => false,
-      );
-      return;
-    }
-
-    if (user.role == AppRole.provider) {
-      if (!mounted) return;
-      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-      if (roleProvider.isApprovedProvider || user.isVerified) {
+    switch (appDest) {
+      case AppDestination.roleChoice:
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: user)),
+          (route) => false,
+        );
+        return;
+      case AppDestination.completeProfile:
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => CompleteProfileScreen(initialProfile: user),
+          ),
+          (route) => false,
+        );
+        return;
+      case AppDestination.providerDashboard:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> dashboard from login_screen.dart');
+        }
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
           (route) => false,
         );
-      } else {
-        final isExistingCustomer = user.initialRole == 'customer';
-        if (isExistingCustomer) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-            (route) => false,
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.providerPendingCustomerToast),
-              backgroundColor: AppColors.primary,
-            ),
-          );
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => const ProviderPendingScreen(
-                isExistingCustomer: false,
-              ),
-            ),
-            (route) => false,
-          );
+        return;
+      case AppDestination.providerPendingNew:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> pending from login_screen.dart');
         }
-      }
-      return;
-    }
-
-    if (user.role == AppRole.customer || user.role == AppRole.admin) {
-      if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-        (route) => false,
-      );
-      return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const ProviderPendingScreen(
+              isExistingCustomer: false,
+            ),
+          ),
+          (route) => false,
+        );
+        return;
+      case AppDestination.providerPendingCustomer:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from login_screen.dart');
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.providerPendingCustomerToast),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        return;
+      case AppDestination.homeDiscovery:
+      default:
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> customer home from login_screen.dart');
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+          (route) => false,
+        );
+        return;
     }
   }
 
@@ -213,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isGoogleLoading = true);
 
     try {
-      // login only, no new accounts
+      // login only without creating accounts
       final user = await AuthService().signInWithGoogle(allowCreate: false);
 
       if (!mounted) return;
@@ -378,7 +392,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: AppColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.lock_reset, color: AppColors.primary, size: 22),
+                  child: const Icon(Icons.lock_reset,
+                      color: AppColors.primary, size: 22),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -419,25 +434,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextField(
                     controller: resetController,
                     keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
+                    style: TextStyle(
+                        color: context.themeTextPrimary, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: context.l10n.hintEmail,
-                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: context.themeTextSecondary),
+                      prefixIcon: Icon(Icons.email_outlined,
+                          size: 20, color: context.themeTextSecondary),
                       filled: true,
-                      fillColor: context.isDark ? context.themeSurfaceLow : Colors.white,
+                      fillColor: context.isDark
+                          ? context.themeSurfaceLow
+                          : Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                        borderSide:
+                            BorderSide(color: context.themeBorder, width: 1.5),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                        borderSide:
+                            BorderSide(color: context.themeBorder, width: 1.5),
                       ),
                       focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(14)),
-                        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                        borderSide:
+                            BorderSide(color: AppColors.primary, width: 1.5),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
                     ),
                   ),
                 ],
@@ -481,8 +504,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  Text(authErrorMessage(context, e)),
+                              content: Text(authErrorMessage(context, e)),
                               backgroundColor: AppColors.error,
                             ),
                           );
@@ -492,7 +514,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -533,13 +556,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: AppColors.error.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.block_flipped, color: AppColors.error, size: 24),
+              child: const Icon(Icons.block_flipped,
+                  color: AppColors.error, size: 24),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 context.l10n.accountSuspendedTitle,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
               ),
             ),
           ],
@@ -550,7 +575,10 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text(
               context.l10n.accountSuspendedDesc,
-              style: TextStyle(fontSize: 13.5, color: context.themeTextSecondary, height: 1.4),
+              style: TextStyle(
+                  fontSize: 13.5,
+                  color: context.themeTextSecondary,
+                  height: 1.4),
             ),
             if (reason != null && reason.trim().isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -560,7 +588,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,7 +605,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 4),
                     Text(
                       reason,
-                      style: TextStyle(fontSize: 12.5, color: context.themeTextPrimary),
+                      style: TextStyle(
+                          fontSize: 12.5, color: context.themeTextPrimary),
                     ),
                   ],
                 ),
@@ -593,7 +623,8 @@ class _LoginScreenState extends State<LoginScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -633,7 +664,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildFormContent(BuildContext context, Color isFieldBg, {required bool showHeader}) {
+  Widget _buildFormContent(BuildContext context, Color isFieldBg,
+      {required bool showHeader}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -696,7 +728,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 28),
-
         Text(
           context.l10n.emailAddress,
           style: TextStyle(
@@ -722,7 +753,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             filled: true,
             fillColor: isFieldBg,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: context.themeBorder, width: 1.5),
@@ -737,7 +769,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: 18),
         Text(
           context.l10n.password,
@@ -761,15 +792,19 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                _obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 size: 20,
                 color: context.themeTextSecondary,
               ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
             filled: true,
             fillColor: isFieldBg,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: context.themeBorder, width: 1.5),
@@ -784,7 +819,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: 10),
         Align(
           alignment: Alignment.centerRight,
@@ -803,14 +837,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: 18),
         PrimaryButton(
           label: context.l10n.signIn,
           loading: _isEmailLoading,
-          onPressed: (_isEmailLoading || _isGoogleLoading) ? null : _handleEmailSignIn,
+          onPressed:
+              (_isEmailLoading || _isGoogleLoading) ? null : _handleEmailSignIn,
         ),
-
         const SizedBox(height: 24),
         Row(
           children: [
@@ -829,14 +862,14 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(child: Divider(color: context.themeBorder, thickness: 1)),
           ],
         ),
-
         const SizedBox(height: 20),
         GoogleSignInButton(
           isLoading: _isGoogleLoading,
           text: context.l10n.googleSignInExisting,
-          onPressed: (_isGoogleLoading || _isEmailLoading) ? null : () => _handleGoogleSignIn(),
+          onPressed: (_isGoogleLoading || _isEmailLoading)
+              ? null
+              : () => _handleGoogleSignIn(),
         ),
-
         const SizedBox(height: 32),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -869,10 +902,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: context.isDark ? Colors.white : const Color(0xFF141517),
-                  foregroundColor: context.isDark ? const Color(0xFF141517) : Colors.white,
+                  backgroundColor:
+                      context.isDark ? Colors.white : const Color(0xFF141517),
+                  foregroundColor:
+                      context.isDark ? const Color(0xFF141517) : Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -898,7 +934,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isTabletOrDesktop = Responsive.isTablet(context);
 
-    // wide desktop dual pane (must be large screen in both dimensions)
+    // wide desktop layout
     if (width >= 960 && isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -914,7 +950,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: Border.all(color: context.themeBorder, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: context.isDark ? 0.35 : 0.06),
+                      color: Colors.black
+                          .withValues(alpha: context.isDark ? 0.35 : 0.06),
                       blurRadius: 32,
                       offset: const Offset(0, 12),
                     ),
@@ -929,8 +966,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(44),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: context.isDark ? 0.12 : 0.08),
-                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(26)),
+                          color: AppColors.primary
+                              .withValues(alpha: context.isDark ? 0.12 : 0.08),
+                          borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(26)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -939,10 +978,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.18),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Image.asset('assets/images/app_logo.png', width: 56, height: 56),
+                              child: Image.asset('assets/images/app_logo.png',
+                                  width: 56, height: 56),
                             ),
                             const SizedBox(height: 24),
                             Text(
@@ -964,11 +1005,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 36),
-                            _buildFeaturePill(context, Icons.verified_user_outlined, context.l10n.heroVerifiedArtisans),
+                            _buildFeaturePill(
+                                context,
+                                Icons.verified_user_outlined,
+                                context.l10n.heroVerifiedArtisans),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.navigation_outlined, context.l10n.heroLiveTracking),
+                            _buildFeaturePill(
+                                context,
+                                Icons.navigation_outlined,
+                                context.l10n.heroLiveTracking),
                             const SizedBox(height: 14),
-                            _buildFeaturePill(context, Icons.price_check_outlined, context.l10n.heroTransparentQuotes),
+                            _buildFeaturePill(
+                                context,
+                                Icons.price_check_outlined,
+                                context.l10n.heroTransparentQuotes),
                           ],
                         ),
                       ),
@@ -978,7 +1028,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       flex: 6,
                       child: Padding(
                         padding: const EdgeInsets.all(44),
-                        child: _buildFormContent(context, isFieldBg, showHeader: false),
+                        child: _buildFormContent(context, isFieldBg,
+                            showHeader: false),
                       ),
                     ),
                   ],
@@ -990,7 +1041,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
-    // tablet centered card (requires shortestSide >= 600)
+    // tablet centered card
     if (isTabletOrDesktop) {
       return Scaffold(
         backgroundColor: context.themeBg,
@@ -1007,7 +1058,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: Border.all(color: context.themeBorder, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
+                      color: Colors.black
+                          .withValues(alpha: context.isDark ? 0.3 : 0.05),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -1021,7 +1073,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
 
-    // mobile phone layout (portrait or compact phone landscape that scrolls)
+    // mobile phone layout
     final isPhoneLandscape = Responsive.isPhoneLandscape(context);
     return Scaffold(
       backgroundColor: context.themeBg,

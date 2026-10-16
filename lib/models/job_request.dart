@@ -148,10 +148,12 @@ class JobRequest {
         if (district != null) 'district': district,
         'status': status,
         'quoteCount': quoteCount,
-        if (selectedProviderId != null) 'selectedProviderId': selectedProviderId,
+        if (selectedProviderId != null)
+          'selectedProviderId': selectedProviderId,
         if (acceptedQuoteId != null) 'acceptedQuoteId': acceptedQuoteId,
         if (agreedPrice != null) 'agreedPrice': agreedPrice,
-        if (cancellationReason != null) 'cancellationReason': cancellationReason,
+        if (cancellationReason != null)
+          'cancellationReason': cancellationReason,
         if (cancelledBy != null) 'cancelledBy': cancelledBy,
         if (completedAt != null)
           'completedAt': Timestamp.fromDate(completedAt!),
@@ -163,7 +165,8 @@ class JobRequest {
           'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
         if (scheduledEndAt != null)
           'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
-        if (scheduledSlot != null && scheduledSlot!.isNotEmpty) 'scheduledSlot': scheduledSlot,
+        if (scheduledSlot != null && scheduledSlot!.isNotEmpty)
+          'scheduledSlot': scheduledSlot,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
@@ -196,11 +199,14 @@ class JobRequest {
 
     JobVideoItem? parsedVideo;
     if (map['video'] is Map) {
-      parsedVideo = JobVideoItem.fromMap(Map<String, dynamic>.from(map['video'] as Map));
+      parsedVideo =
+          JobVideoItem.fromMap(Map<String, dynamic>.from(map['video'] as Map));
     }
 
     final mode = map['scheduleMode'] as String? ??
-        (map['bookingType'] == 'scheduled' ? 'date_only' : (map['bookingType']?.toString() ?? 'asap'));
+        (map['bookingType'] == 'scheduled'
+            ? 'date_only'
+            : (map['bookingType']?.toString() ?? 'asap'));
 
     final noteRaw = map['note'] as String?;
     final landmarkRaw = map['landmark'] as String?;
@@ -208,8 +214,10 @@ class JobRequest {
     String? resolvedNote = noteRaw?.trim();
     if (resolvedNote == null || resolvedNote.isEmpty) {
       final parts = [
-        if (landmarkRaw != null && landmarkRaw.trim().isNotEmpty) landmarkRaw.trim(),
-        if (directionsRaw != null && directionsRaw.trim().isNotEmpty) directionsRaw.trim(),
+        if (landmarkRaw != null && landmarkRaw.trim().isNotEmpty)
+          landmarkRaw.trim(),
+        if (directionsRaw != null && directionsRaw.trim().isNotEmpty)
+          directionsRaw.trim(),
       ];
       if (parts.isNotEmpty) {
         resolvedNote = parts.join(' · ');

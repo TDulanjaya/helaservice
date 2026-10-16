@@ -70,11 +70,13 @@ class AdminCallLogsSheet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.phone_in_talk, color: AppColors.primary, size: 24),
+                    const Icon(Icons.phone_in_talk,
+                        color: AppColors.primary, size: 24),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.callLogsTitle,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -107,7 +109,8 @@ class AdminCallLogsSheet extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final log = logs[index];
                       final outcomeColor = _getOutcomeColor(log.outcome);
-                      final outcomeText = _getOutcomeLabel(context, log.outcome);
+                      final outcomeText =
+                          _getOutcomeLabel(context, log.outcome);
 
                       return Container(
                         padding: const EdgeInsets.all(14),
@@ -124,11 +127,16 @@ class AdminCallLogsSheet extends StatelessWidget {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.access_time, size: 14, color: context.themeTextSecondary),
+                                    Icon(Icons.access_time,
+                                        size: 14,
+                                        color: context.themeTextSecondary),
                                     const SizedBox(width: 4),
                                     Text(
                                       log.startedAt != null
-                                          ? log.startedAt!.toLocal().toString().substring(0, 16)
+                                          ? log.startedAt!
+                                              .toLocal()
+                                              .toString()
+                                              .substring(0, 16)
                                           : context.l10n.timeJustNow,
                                       style: TextStyle(
                                         fontSize: 12,
@@ -139,7 +147,8 @@ class AdminCallLogsSheet extends StatelessWidget {
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: outcomeColor.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(999),
@@ -160,7 +169,8 @@ class AdminCallLogsSheet extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         context.l10n.callLogCaller,
@@ -181,11 +191,13 @@ class AdminCallLogsSheet extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                const Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.primary),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    size: 16, color: AppColors.primary),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         context.l10n.callLogCallee,

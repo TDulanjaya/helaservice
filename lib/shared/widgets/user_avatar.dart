@@ -7,7 +7,6 @@ import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
 import '../../utils/permission_utils.dart';
 
-
 class UserAvatar extends StatefulWidget {
   final String? uid;
   final String displayName;
@@ -228,19 +227,26 @@ class _UserAvatarState extends State<UserAvatar> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
-                title: Text(context.l10n.takePhoto, style: const TextStyle(fontWeight: FontWeight.w600)),
+                leading: const Icon(Icons.photo_camera_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.takePhoto,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () => _handlePick(ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-                title: Text(context.l10n.chooseFromGallery, style: const TextStyle(fontWeight: FontWeight.w600)),
+                leading: const Icon(Icons.photo_library_outlined,
+                    color: AppColors.primary),
+                title: Text(context.l10n.chooseFromGallery,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () => _handlePick(ImageSource.gallery),
               ),
               if (hasDp)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: AppColors.error),
-                  title: Text(context.l10n.removePhoto, style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+                  leading:
+                      const Icon(Icons.delete_outline, color: AppColors.error),
+                  title: Text(context.l10n.removePhoto,
+                      style: const TextStyle(
+                          color: AppColors.error, fontWeight: FontWeight.w600)),
                   onTap: _handleRemove,
                 ),
               ListTile(
@@ -274,7 +280,8 @@ class _UserAvatarState extends State<UserAvatar> {
   }
 
   Widget _buildFallback(double diameter) {
-    final bg = widget.backgroundColor ?? UserAvatar.computeBackgroundColor(widget.uid);
+    final bg =
+        widget.backgroundColor ?? UserAvatar.computeBackgroundColor(widget.uid);
     return Container(
       width: diameter,
       height: diameter,
@@ -382,6 +389,5 @@ class _UserAvatarState extends State<UserAvatar> {
         ),
       ],
     );
-
   }
 }

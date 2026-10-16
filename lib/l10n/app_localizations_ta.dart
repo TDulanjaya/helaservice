@@ -6550,11 +6550,11 @@ class AppLocalizationsTa extends AppLocalizations {
   String get baseLocationDesc => 'நீங்கள் வழக்கமாக பணியைத் தொடங்கும் இடம்';
 
   @override
-  String get howDoYouChargeTitle => 'நீங்கள் எவ்வாறு கட்டணம் வசூலிக்கிறீர்கள்?';
+  String get howDoYouChargeTitle => 'உங்கள் வழக்கமான கட்டணங்கள்';
 
   @override
   String get howDoYouChargeSubtitle =>
-      'குறைந்தது ஒரு கட்டண முறையைத் தேர்ந்தெடுக்கவும் (மணிநேரத்திற்கு, நாளுக்கு, அல்லது வேலைக்கு).';
+      'வாடிக்கையாளர்கள் இவற்றை உங்கள் சுயவிவரத்தில் காண்பார்கள். மதிப்பீட்டை அனுப்பும்போது ஒவ்வொரு வேலைக்கும் வேறு விலை வகையைத் தேர்ந்தெடுக்கலாம்.';
 
   @override
   String get pricingModePerHour => 'மணிநேரத்திற்கு';
@@ -6833,4 +6833,112 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get timelineDescRescheduleDeclined => 'மறுஅட்டவணை நிராகரிக்கப்பட்டது';
+
+  @override
+  String get failedToSetRoleGeneric =>
+      'பங்கை அமைக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get roleSwitchLockedProviderBlocked =>
+      'உங்கள் சேவை வழங்குநர் கணக்கு ஒப்புதலுக்காக காத்திருக்கும் போது வாடிக்கையாளர் பயன்முறையைப் பயன்படுத்த முடியாது.';
+
+  @override
+  String get certUploadSectionTitle =>
+      'சான்றிதழ்கள் மற்றும் ஆவணங்கள் (விருப்பத்திற்குரியது)';
+
+  @override
+  String get certUploadSectionHint =>
+      'சான்றிதழ்கள், உரிமங்கள் அல்லது பயிற்சி கடிதங்களைச் சேர்க்கவும். புகைப்படங்கள் அல்லது PDF.';
+
+  @override
+  String get certUploadButton => 'ஆவணங்களைப் பதிவேற்றவும்';
+
+  @override
+  String get certUploadChooseFiles => 'கோப்புகளைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get certUploadMaxFilesError =>
+      'அதிகபட்சம் 10 ஆவணங்களை மட்டுமே பதிவேற்ற முடியும்.';
+
+  @override
+  String certUploadFileTooLargeError(String fileName) {
+    return '$fileName 10 MB அளவு வரம்பை மீறுகிறது.';
+  }
+
+  @override
+  String certUploadUnsupportedTypeError(String fileName) {
+    return '$fileName ஆதரிக்கப்படாத கோப்பு வடிவம். அனுமதிக்கப்பட்டவை: JPG, PNG, WEBP, PDF.';
+  }
+
+  @override
+  String get certUploadTitleHint => 'ஆவணத்தின் தலைப்பு (எ.கா. NVQ Level 4)';
+
+  @override
+  String get certDefaultTitle => 'சான்றிதழ்';
+
+  @override
+  String get certCertifiedBadge => 'சான்றிதழ் பெற்றது';
+
+  @override
+  String get certApprovedSectionTitle =>
+      'தொழில் சான்றிதழ்கள் மற்றும் உரிமங்கள்';
+
+  @override
+  String get certAddMore => 'சான்றிதழ்களைச் சேர்க்கவும்';
+
+  @override
+  String get certSaveButton => 'சான்றிதழ்களைச் சேமிக்கவும்';
+
+  @override
+  String get certSubmittedSuccess =>
+      'சான்றிதழ்கள் சரிபார்ப்புக்கு சமர்ப்பிக்கப்பட்டன.';
+
+  @override
+  String certTradeLicensesTitle(int count) {
+    return 'தொழில் சான்றிதழ்கள் மற்றும் உரிமங்கள் ($count)';
+  }
+
+  @override
+  String certNumberTitle(int number) {
+    return 'சான்றிதழ் #$number';
+  }
+
+  @override
+  String get certApproveAll => 'அனைத்தையும் அங்கீகரிக்கவும்';
+
+  @override
+  String get certRejectReasonTitle => 'சான்றிதழை நிராகரிக்கவும்';
+
+  @override
+  String get certRejectReasonPrompt =>
+      'இந்த சான்றிதழை நிராகரிப்பதற்கான காரணத்தை உள்ளிடவும்';
+
+  @override
+  String get certRejectReasonRequired =>
+      'நிராகரிப்பதற்கான காரணத்தை உள்ளிடவும்.';
+
+  @override
+  String get certApprovedNotice => 'சான்றிதழ் அங்கீகரிக்கப்பட்டது';
+
+  @override
+  String get certRejectedNotice => 'சான்றிதழ் நிராகரிக்கப்பட்டது';
+
+  @override
+  String get certAllApprovedNotice =>
+      'அனைத்து சான்றிதழ்களும் அங்கீகரிக்கப்பட்டன';
+
+  @override
+  String get quoteRateForJobHint =>
+      'இந்த வேலைக்கான உங்கள் கட்டணத்தை உள்ளிடவும்';
+
+  @override
+  String get quoteInspectVisitFeePrompt =>
+      'பரிசோதனைக்கான வருகைக் கட்டணத்தை உள்ளிடவும்';
+
+  @override
+  String get quoteIncludeVisitCostHint =>
+      'வருகைக் கட்டணம் ஏதேனும் இருந்தால் அதை உங்கள் விலையில் சேர்க்கவும்.';
+
+  @override
+  String get quoteAddTravelCost => 'பயணச் செலவைச் சேர்க்கவும்';
 }

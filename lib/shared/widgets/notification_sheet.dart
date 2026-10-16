@@ -117,7 +117,8 @@ class NotificationSheet extends StatelessWidget {
             // notification list stream
             Expanded(
               child: StreamBuilder<List<AppNotification>>(
-                stream: NotificationService.instance.streamUserNotifications(uid),
+                stream:
+                    NotificationService.instance.streamUserNotifications(uid),
                 builder: (context, snapshot) {
                   final notifications = snapshot.data ?? [];
 
@@ -131,7 +132,8 @@ class NotificationSheet extends StatelessWidget {
                             Icon(
                               Icons.notifications_off_outlined,
                               size: 48,
-                              color: context.themeTextSecondary.withValues(alpha: 0.4),
+                              color: context.themeTextSecondary
+                                  .withValues(alpha: 0.4),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -230,7 +232,8 @@ class _NotificationCard extends StatelessWidget {
   Future<void> _handleTap(BuildContext context) async {
     // mark item as read
     if (!notification.isRead) {
-      await NotificationService.instance.markAsRead(currentUid, notification.id);
+      await NotificationService.instance
+          .markAsRead(currentUid, notification.id);
     }
 
     if (!context.mounted) return;
@@ -238,7 +241,8 @@ class _NotificationCard extends StatelessWidget {
 
     // navigate based on target data
     if (notification.bookingId != null && notification.bookingId!.isNotEmpty) {
-      final bookingSnap = await BookingRepository().getBookingById(notification.bookingId!);
+      final bookingSnap =
+          await BookingRepository().getBookingById(notification.bookingId!);
       if (bookingSnap != null && context.mounted) {
         if (isProvider) {
           Navigator.push(
@@ -261,7 +265,9 @@ class _NotificationCard extends StatelessWidget {
 
     if (!context.mounted) return;
 
-    if (notification.jobRequestId != null && notification.jobRequestId!.isNotEmpty && !isProvider) {
+    if (notification.jobRequestId != null &&
+        notification.jobRequestId!.isNotEmpty &&
+        !isProvider) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -274,7 +280,8 @@ class _NotificationCard extends StatelessWidget {
       return;
     }
 
-    if (notification.chatRoomId != null || notification.eventType == 'new_chat_message') {
+    if (notification.chatRoomId != null ||
+        notification.eventType == 'new_chat_message') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -284,7 +291,6 @@ class _NotificationCard extends StatelessWidget {
       return;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -304,7 +310,8 @@ class _NotificationCard extends StatelessWidget {
         child: const Icon(Icons.delete_outline, color: AppColors.error),
       ),
       onDismissed: (_) {
-        NotificationService.instance.deleteNotification(currentUid, notification.id);
+        NotificationService.instance
+            .deleteNotification(currentUid, notification.id);
       },
       child: AppCard(
         onTap: () => _handleTap(context),
@@ -335,7 +342,9 @@ class _NotificationCard extends StatelessWidget {
                         child: Text(
                           notification.title,
                           style: TextStyle(
-                            fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
+                            fontWeight: notification.isRead
+                                ? FontWeight.w600
+                                : FontWeight.w800,
                             fontSize: 13.5,
                             color: context.themeInk,
                           ),

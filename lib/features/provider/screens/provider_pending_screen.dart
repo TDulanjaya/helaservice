@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -15,6 +16,7 @@ import '../../../shared/widgets/language_select_sheet.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../support/screens/help_support_screen.dart';
 import '../../auth/screens/complete_profile_screen.dart';
+import 'nic_verification_screen.dart';
 import 'provider_dashboard_screen.dart';
 
 // pending or rejected provider screen
@@ -37,6 +39,40 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
   Map<String, dynamic>? _techData;
   Map<String, dynamic>? _queueData;
   bool _navigatedToDashboard = false;
+  bool _isRefreshing = false;
+
+  // check provider approval status
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    try {
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isNotEmpty) {
+        final techSnap = await FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
+            .doc(uid)
+            .get();
+        final queueSnap = await FirebaseFirestore.instance
+            .collection(FirestorePaths.verificationQueue)
+            .doc(uid)
+            .get();
+        if (mounted) {
+          setState(() {
+            _techData = techSnap.data();
+            _queueData = queueSnap.data();
+          });
+          _checkApproval();
+        }
+      }
+      await roleProvider.resolveAdminStatus(uid);
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -80,14 +116,17 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
     if (_navigatedToDashboard || !mounted) return;
 
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
-    final isTechApproved = _techData?['isVerified'] == true ||
-        _techData?['nicVerified'] == true;
+    final isTechApproved =
+        _techData?['isVerified'] == true || _techData?['nicVerified'] == true;
     final isQueueApproved = _queueData?['status'] == 'approved';
 
     if (isTechApproved || isQueueApproved || roleProvider.isApprovedProvider) {
       _navigatedToDashboard = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        if (kDebugMode) {
+          debugPrint('[navdbg] -> dashboard from provider_pending_screen.dart');
+        }
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
           (route) => false,
@@ -166,6 +205,10 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
       canPop: widget.isExistingCustomer,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && widget.isExistingCustomer) {
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] -> customer home from provider_pending_screen.dart');
+          }
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
             (route) => false,
@@ -179,7 +222,8 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 540),
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 children: [
                   const SizedBox(height: 12),
 
@@ -195,7 +239,9 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                       child: Icon(
                         isRejected
                             ? Icons.error_outline_rounded
-                            : (isResubmit ? Icons.update_rounded : Icons.hourglass_top_rounded),
+                            : (isResubmit
+                                ? Icons.update_rounded
+                                : Icons.hourglass_top_rounded),
                         color: statusIconColor,
                         size: 40,
                       ),
@@ -226,9 +272,13 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                   const SizedBox(height: 24),
 
                   // rejection note
-                  if (hasIssue && rejectionReason != null && rejectionReason.isNotEmpty) ...[
+                  if (hasIssue &&
+                      rejectionReason != null &&
+                      rejectionReason.isNotEmpty) ...[
                     AppCard(
-                      color: (isRejected ? AppColors.error : const Color(0xFFD6900F))
+                      color: (isRejected
+                              ? AppColors.error
+                              : const Color(0xFFD6900F))
                           .withValues(alpha: 0.08),
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -237,8 +287,12 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                           Row(
                             children: [
                               Icon(
-                                isRejected ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
-                                color: isRejected ? AppColors.error : const Color(0xFFD6900F),
+                                isRejected
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.info_outline_rounded,
+                                color: isRejected
+                                    ? AppColors.error
+                                    : const Color(0xFFD6900F),
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
@@ -247,7 +301,9 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 13,
-                                  color: isRejected ? AppColors.error : const Color(0xFFD6900F),
+                                  color: isRejected
+                                      ? AppColors.error
+                                      : const Color(0xFFD6900F),
                                 ),
                               ),
                             ],
@@ -258,14 +314,16 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                               rejectionReason,
                               style: TextStyle(
                                 fontSize: 13.5,
-                                fontWeight: (rejectionNote != null && rejectionNote.isNotEmpty)
+                                fontWeight: (rejectionNote != null &&
+                                        rejectionNote.isNotEmpty)
                                     ? FontWeight.w700
                                     : FontWeight.normal,
                                 color: context.themeInk,
                                 height: 1.35,
                               ),
                             ),
-                          if (rejectionNote != null && rejectionNote.isNotEmpty) ...[
+                          if (rejectionNote != null &&
+                              rejectionNote.isNotEmpty) ...[
                             if (rejectionReason.isNotEmpty)
                               const SizedBox(height: 6),
                             Text(
@@ -348,12 +406,30 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                     const SizedBox(height: 12),
                   ],
 
+                  // nic verification
+                  PrimaryButton(
+                    label: context.l10n.proSubmitNicAction,
+                    leadingIcon: Icons.badge_outlined,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NicVerificationScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
                   // customer mode
                   if (widget.isExistingCustomer) ...[
                     PrimaryButton(
                       label: context.l10n.continueAsCustomer,
                       leadingIcon: Icons.arrow_forward_rounded,
                       onPressed: () {
+                        if (kDebugMode) {
+                          debugPrint(
+                              '[navdbg] -> customer home from provider_pending_screen.dart');
+                        }
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
                             builder: (_) => const HomeDiscoveryScreen(),
@@ -364,6 +440,16 @@ class _ProviderPendingScreenState extends State<ProviderPendingScreen> {
                     ),
                     const SizedBox(height: 12),
                   ],
+
+                  // refresh status
+                  AppOutlineButton(
+                    label: _isRefreshing
+                        ? context.l10n.proCheckingStatus
+                        : context.l10n.proRefreshStatus,
+                    icon: Icons.refresh_rounded,
+                    onPressed: _isRefreshing ? null : _handleRefresh,
+                  ),
+                  const SizedBox(height: 10),
 
                   // support
                   AppOutlineButton(

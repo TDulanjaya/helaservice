@@ -37,7 +37,8 @@ class AppConfig {
 
       if (kDebugMode) {
         final allKeys = remoteConfig.getAll().keys.toList();
-        debugPrint('[AppConfig] Remote Config initialized. Keys present: $allKeys');
+        debugPrint(
+            '[AppConfig] Remote Config initialized. Keys present: $allKeys');
       }
     } catch (e) {
       debugPrint('[AppConfig] Firebase Remote Config init warning: $e');
@@ -85,14 +86,16 @@ class AppConfig {
   // api base url
   static String get otpApiUrl {
     if (_localOtpApiUrl.isNotEmpty) return _localOtpApiUrl;
-    return getString('otp_api_url', fallback: 'https://helaservice.vercel.app/api');
+    return getString('otp_api_url',
+        fallback: 'https://helaservice.vercel.app/api');
   }
 
   // api secret key
   static String get apiSecretKey {
     final key = getString('api_secret_key', fallback: '');
     if (key.isEmpty) {
-      debugPrint('[AppConfig] Warning: Firebase Remote Config is missing api_secret_key.');
+      debugPrint(
+          '[AppConfig] Warning: Firebase Remote Config is missing api_secret_key.');
     }
     return key;
   }

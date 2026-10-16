@@ -81,7 +81,8 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
               color: AppColors.error.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.report_problem_outlined, color: AppColors.error, size: 20),
+            child: const Icon(Icons.report_problem_outlined,
+                color: AppColors.error, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -104,7 +105,8 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
             if (widget.otherPartyName.isNotEmpty)
               Text(
                 'Party: ${widget.otherPartyName} (${widget.otherPartyRole})',
-                style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 12, color: context.themeTextSecondary),
               ),
             const SizedBox(height: 12),
             TextField(
@@ -137,7 +139,8 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Image.memory(_photos[i].bytes, width: 60, height: 60, fit: BoxFit.cover),
+                        child: Image.memory(_photos[i].bytes,
+                            width: 60, height: 60, fit: BoxFit.cover),
                       ),
                       Positioned(
                         top: 2,
@@ -145,9 +148,11 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                         child: GestureDetector(
                           onTap: () => setState(() => _photos.removeAt(i)),
                           child: Container(
-                            decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(
+                                color: Colors.black54, shape: BoxShape.circle),
                             padding: const EdgeInsets.all(2),
-                            child: const Icon(Icons.close, size: 12, color: Colors.white),
+                            child: const Icon(Icons.close,
+                                size: 12, color: Colors.white),
                           ),
                         ),
                       ),
@@ -160,10 +165,12 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
             if (_photos.length < 3)
               OutlinedButton.icon(
                 onPressed: () async {
-                  final img = await _picker.pickImage(source: ImageSource.gallery);
+                  final img =
+                      await _picker.pickImage(source: ImageSource.gallery);
                   if (img != null) {
                     final bytes = await img.readAsBytes();
-                    setState(() => _photos.add(PickedAttachment(file: img, bytes: bytes)));
+                    setState(() =>
+                        _photos.add(PickedAttachment(file: img, bytes: bytes)));
                   }
                 },
                 icon: const Icon(Icons.add_a_photo_outlined, size: 16),
@@ -191,31 +198,39 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
 
                   final messenger = ScaffoldMessenger.of(context);
                   final successMsg = context.l10n.ticketCreatedSuccess;
-                  final photoUploadFailedMsg = context.l10n.ticketPhotoUploadFailed;
+                  final photoUploadFailedMsg =
+                      context.l10n.ticketPhotoUploadFailed;
                   final nav = Navigator.of(context);
 
                   final user = FirebaseAuth.instance.currentUser;
                   if (user == null) return;
 
-                  final roleProvider = Provider.of<RoleProvider>(context, listen: false);
-                  final profile = roleProvider.currentUser ?? AuthService().currentUser;
+                  final roleProvider =
+                      Provider.of<RoleProvider>(context, listen: false);
+                  final profile =
+                      roleProvider.currentUser ?? AuthService().currentUser;
                   final myRole = (profile?.role == AppRole.provider)
                       ? 'provider'
                       : ((profile?.role == AppRole.customer)
                           ? 'customer'
-                          : (widget.otherPartyRole == 'provider' ? 'customer' : 'provider'));
-                  final myName = (profile?.displayName.trim().isNotEmpty == true)
-                      ? profile!.displayName.trim()
-                      : ((user.displayName != null && user.displayName!.trim().isNotEmpty)
-                          ? user.displayName!.trim()
-                          : (user.email ?? ''));
+                          : (widget.otherPartyRole == 'provider'
+                              ? 'customer'
+                              : 'provider'));
+                  final myName =
+                      (profile?.displayName.trim().isNotEmpty == true)
+                          ? profile!.displayName.trim()
+                          : ((user.displayName != null &&
+                                  user.displayName!.trim().isNotEmpty)
+                              ? user.displayName!.trim()
+                              : (user.email ?? ''));
 
                   setState(() => _isSubmitting = true);
                   final photoUrls = <String>[];
                   final storage = StorageService();
                   try {
                     for (final p in _photos) {
-                      final url = await storage.uploadPickedAttachment(p, purpose: 'job_photo');
+                      final url = await storage.uploadPickedAttachment(p,
+                          purpose: 'job_photo');
                       photoUrls.add(url);
                     }
                   } catch (e) {
@@ -266,13 +281,19 @@ class _ReportProblemDialogState extends State<ReportProblemDialog> {
                     if (context.mounted) {
                       setState(() => _isSubmitting = false);
                       messenger.showSnackBar(
-                        SnackBar(content: Text(ticketErrorMessage(context, e)), backgroundColor: AppColors.error),
+                        SnackBar(
+                            content: Text(ticketErrorMessage(context, e)),
+                            backgroundColor: AppColors.error),
                       );
                     }
                   }
                 },
           child: _isSubmitting
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
               : Text(context.l10n.ticketSend),
         ),
       ],

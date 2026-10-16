@@ -6404,11 +6404,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get baseLocationDesc => 'ඔබ සාමාන්‍යයෙන් වැඩ ආරම්භ කරන ස්ථානය';
 
   @override
-  String get howDoYouChargeTitle => 'ඔබ අය කරන්නේ කෙසේද?';
+  String get howDoYouChargeTitle => 'ඔබේ සාමාන්‍ය ගාස්තු';
 
   @override
   String get howDoYouChargeSubtitle =>
-      'අවම වශයෙන් එකක් තෝරන්න (පැයකට, දිනකට හෝ වැඩයකට).';
+      'පාරිභෝගිකයින් මේවා ඔබේ පැතිකඩෙහි දකී. මිල ගණන් යවන විට සෑම වැඩයක් සඳහාම වෙනස් මිල වර්ගයක් තෝරාගත හැක.';
 
   @override
   String get pricingModePerHour => 'පැයකට';
@@ -6679,4 +6679,108 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get timelineDescRescheduleDeclined =>
       'වෙලාව වෙනස් කිරීම ප්‍රතික්ෂේප කළා';
+
+  @override
+  String get failedToSetRoleGeneric =>
+      'භූමිකාව සැකසීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get roleSwitchLockedProviderBlocked =>
+      'ඔබගේ සේවා සපයන්නා ගිණුම තහවුරු වන තෙක් පාරිභෝගික ප්‍රකාරය භාවිතා කළ නොහැක.';
+
+  @override
+  String get certUploadSectionTitle => 'සහතික සහ ලියකියවිලි (විකල්ප)';
+
+  @override
+  String get certUploadSectionHint =>
+      'ඕනෑම සහතිකයක්, බලපත්‍රයක් හෝ පුහුණු ලිපියක් එක් කරන්න. ඡායාරූප හෝ PDF.';
+
+  @override
+  String get certUploadButton => 'ලියකියවිලි උඩුගත කරන්න';
+
+  @override
+  String get certUploadChooseFiles => 'ගොනු තෝරන්න';
+
+  @override
+  String get certUploadMaxFilesError =>
+      'ඔබට උපරිම ලියකියවිලි 10ක් පමණක් උඩුගත කළ හැක.';
+
+  @override
+  String certUploadFileTooLargeError(String fileName) {
+    return '$fileName 10 MB ප්‍රමාණ සීමාව ඉක්මවයි.';
+  }
+
+  @override
+  String certUploadUnsupportedTypeError(String fileName) {
+    return '$fileName සහාය නොදක්වන ගොනු වර්ගයකි. වලංගු: JPG, PNG, WEBP, PDF.';
+  }
+
+  @override
+  String get certUploadTitleHint => 'ලියකියවිල්ලේ නම (උදා: NVQ Level 4)';
+
+  @override
+  String get certDefaultTitle => 'සහතිකය';
+
+  @override
+  String get certCertifiedBadge => 'සහතිකලත්';
+
+  @override
+  String get certApprovedSectionTitle => 'වෘත්තීය සහතික සහ බලපත්‍ර';
+
+  @override
+  String get certAddMore => 'සහතික එක් කරන්න';
+
+  @override
+  String get certSaveButton => 'සහතික සුරකින්න';
+
+  @override
+  String get certSubmittedSuccess =>
+      'සහතික තහවුරු කිරීම සඳහා ඉදිරිපත් කරන ලදී.';
+
+  @override
+  String certTradeLicensesTitle(int count) {
+    return 'වෘත්තීය සහතික සහ බලපත්‍ර ($count)';
+  }
+
+  @override
+  String certNumberTitle(int number) {
+    return 'සහතිකය #$number';
+  }
+
+  @override
+  String get certApproveAll => 'සියල්ල අනුමත කරන්න';
+
+  @override
+  String get certRejectReasonTitle => 'සහතිකය ප්‍රතික්ෂේප කරන්න';
+
+  @override
+  String get certRejectReasonPrompt =>
+      'මෙම සහතිකය ප්‍රතික්ෂේප කිරීමට හේතුවක් ඇතුළත් කරන්න';
+
+  @override
+  String get certRejectReasonRequired =>
+      'කරුණාකර ප්‍රතික්ෂේප කිරීමට හේතුවක් ඇතුළත් කරන්න.';
+
+  @override
+  String get certApprovedNotice => 'සහතිකය අනුමත කරන ලදී';
+
+  @override
+  String get certRejectedNotice => 'සහතිකය ප්‍රතික්ෂේප කරන ලදී';
+
+  @override
+  String get certAllApprovedNotice => 'සියලු සහතික අනුමත කරන ලදී';
+
+  @override
+  String get quoteRateForJobHint => 'මෙම වැඩය සඳහා ඔබේ අනුපාතය ඇතුළත් කරන්න';
+
+  @override
+  String get quoteInspectVisitFeePrompt =>
+      'කරුණාකර පරීක්ෂා කිරීම සඳහා පැමිණීමේ ගාස්තුවක් ඇතුළත් කරන්න';
+
+  @override
+  String get quoteIncludeVisitCostHint =>
+      'ඕනෑම පැමිණීමේ වියදමක් ඔබේ මිලට ඇතුළත් කරන්න.';
+
+  @override
+  String get quoteAddTravelCost => 'ගමන් වියදම එකතු කරන්න';
 }

@@ -28,7 +28,8 @@ class PillBadge extends StatelessWidget {
 
     return Container(
       constraints: const BoxConstraints(minHeight: 24),
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
@@ -55,4 +56,3 @@ class PillBadge extends StatelessWidget {
     );
   }
 }
-

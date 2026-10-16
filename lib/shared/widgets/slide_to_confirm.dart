@@ -32,9 +32,8 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
         return Container(
           height: _trackHeight,
           decoration: BoxDecoration(
-            color: _confirmed
-                ? context.themeSuccessTint
-                : context.themeAmberTint,
+            color:
+                _confirmed ? context.themeSuccessTint : context.themeAmberTint,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: _confirmed
@@ -49,7 +48,9 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
               Center(
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 150),
-                  opacity: _confirmed ? 1.0 : (1.0 - (_dragX / maxDrag)).clamp(0.0, 1.0),
+                  opacity: _confirmed
+                      ? 1.0
+                      : (1.0 - (_dragX / maxDrag)).clamp(0.0, 1.0),
                   child: Text(
                     _confirmed
                         ? (widget.confirmedLabel ??
@@ -91,7 +92,8 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                     width: _knobSize,
                     height: _knobSize,
                     decoration: BoxDecoration(
-                      color: _confirmed ? context.themeSuccess : AppColors.primary,
+                      color:
+                          _confirmed ? context.themeSuccess : AppColors.primary,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -102,7 +104,9 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
                       ],
                     ),
                     child: Icon(
-                      _confirmed ? Icons.check_rounded : Icons.arrow_forward_rounded,
+                      _confirmed
+                          ? Icons.check_rounded
+                          : Icons.arrow_forward_rounded,
                       color: _confirmed ? Colors.white : AppColors.onPrimary,
                       size: 22,
                     ),
@@ -116,4 +120,3 @@ class _SlideToConfirmState extends State<SlideToConfirm> {
     );
   }
 }
-

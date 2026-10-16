@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Complaint {
   final String id;
-  final String type; // 'help' | 'report_user' | 'booking_problem' | 'payment_dispute' | 'account' | 'app_problem'
+  final String
+      type; // 'help' | 'report_user' | 'booking_problem' | 'payment_dispute' | 'account' | 'app_problem'
   final String reporterUid;
   final String reporterRole; // 'customer' | 'provider'
   final String? reporterName;
@@ -13,7 +14,8 @@ class Complaint {
   final String subject;
   final String description;
   final List<String> photos;
-  final String status; // 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed'
+  final String
+      status; // 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed'
   final String? assignedAdminId;
   final String? resolutionNote;
   final DateTime? resolvedAt;
@@ -134,26 +136,32 @@ class Complaint {
         ? rawPhotos.map((e) => e.toString()).toList()
         : <String>[];
 
-    final rUid = map['reporterUid']?.toString() ?? map['customerId']?.toString() ?? '';
+    final rUid =
+        map['reporterUid']?.toString() ?? map['customerId']?.toString() ?? '';
     final rRole = map['reporterRole']?.toString() ?? 'customer';
-    final targetUid = map['reportedUid']?.toString() ?? map['providerId']?.toString();
+    final targetUid =
+        map['reportedUid']?.toString() ?? map['providerId']?.toString();
 
     return Complaint(
       id: id,
       type: map['type']?.toString() ?? 'report_user',
       reporterUid: rUid,
       reporterRole: rRole,
-      reporterName: map['reporterName']?.toString() ?? map['customerName']?.toString(),
+      reporterName:
+          map['reporterName']?.toString() ?? map['customerName']?.toString(),
       reportedUid: targetUid,
-      reportedRole: map['reportedRole']?.toString() ?? map['accusedRole']?.toString(),
-      reportedName: map['reportedName']?.toString() ?? map['providerName']?.toString(),
+      reportedRole:
+          map['reportedRole']?.toString() ?? map['accusedRole']?.toString(),
+      reportedName:
+          map['reportedName']?.toString() ?? map['providerName']?.toString(),
       bookingId: map['bookingId']?.toString(),
       subject: map['subject']?.toString() ?? map['reason']?.toString() ?? '',
       description: map['description']?.toString() ?? '',
       photos: photoList,
       status: map['status']?.toString() ?? 'open',
       assignedAdminId: map['assignedAdminId']?.toString(),
-      resolutionNote: map['resolutionNote']?.toString() ?? map['adminNotes']?.toString(),
+      resolutionNote:
+          map['resolutionNote']?.toString() ?? map['adminNotes']?.toString(),
       resolvedAt: parseDate(map['resolvedAt']),
       createdAt: parseDate(map['createdAt']),
       updatedAt: parseDate(map['updatedAt']),

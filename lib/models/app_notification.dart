@@ -35,7 +35,8 @@ class AppNotification {
     return AppNotification.fromMap(map, documentId: doc.id);
   }
 
-  factory AppNotification.fromMap(Map<String, dynamic> map, {String? documentId}) {
+  factory AppNotification.fromMap(Map<String, dynamic> map,
+      {String? documentId}) {
     DateTime? parsedCreatedAt;
     final rawCreated = map['createdAt'];
     if (rawCreated is Timestamp) {

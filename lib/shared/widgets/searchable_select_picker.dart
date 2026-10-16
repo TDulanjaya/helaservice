@@ -161,7 +161,8 @@ class SearchableSelectPicker<T> extends StatelessWidget {
                           hint ?? label,
                           style: TextStyle(
                             fontSize: 14.5,
-                            color: context.themeTextSecondary.withValues(alpha: 0.6),
+                            color: context.themeTextSecondary
+                                .withValues(alpha: 0.6),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -216,7 +217,9 @@ class _PickerSheetContentState<T> extends State<_PickerSheetContent<T>> {
     final q = _query.trim().toLowerCase();
     return widget.items.where((it) {
       if (it.label.toLowerCase().contains(q)) return true;
-      if (it.subtitle != null && it.subtitle!.toLowerCase().contains(q)) return true;
+      if (it.subtitle != null && it.subtitle!.toLowerCase().contains(q)) {
+        return true;
+      }
       for (final term in it.searchTerms) {
         if (term.toLowerCase().contains(q)) return true;
       }
@@ -279,8 +282,10 @@ class _PickerSheetContentState<T> extends State<_PickerSheetContent<T>> {
                     )
                   : null,
               filled: true,
-              fillColor: isDark ? context.themeSurfaceLow : const Color(0xFFF6F7F9),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              fillColor:
+                  isDark ? context.themeSurfaceLow : const Color(0xFFF6F7F9),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(color: context.themeBorder),
@@ -305,7 +310,8 @@ class _PickerSheetContentState<T> extends State<_PickerSheetContent<T>> {
                         Icon(
                           Icons.search_off_rounded,
                           size: 40,
-                          color: context.themeTextSecondary.withValues(alpha: 0.5),
+                          color:
+                              context.themeTextSecondary.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -343,7 +349,8 @@ class _PickerSheetContentState<T> extends State<_PickerSheetContent<T>> {
                               borderRadius: BorderRadius.circular(14),
                               border: isSelected
                                   ? Border.all(
-                                      color: AppColors.primary.withValues(alpha: 0.4),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.4),
                                     )
                                   : null,
                             ),
@@ -354,28 +361,38 @@ class _PickerSheetContentState<T> extends State<_PickerSheetContent<T>> {
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? AppColors.primary.withValues(alpha: 0.15)
-                                          : (isDark ? context.themeSurfaceLow : const Color(0xFFF1F3F5)),
+                                          ? AppColors.primary
+                                              .withValues(alpha: 0.15)
+                                          : (isDark
+                                              ? context.themeSurfaceLow
+                                              : const Color(0xFFF1F3F5)),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       it.icon,
                                       size: 16,
-                                      color: isSelected ? AppColors.primary : context.themeTextSecondary,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : context.themeTextSecondary,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                 ],
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         it.label,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                          color: isSelected ? AppColors.primary : context.themeTextPrimary,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : context.themeTextPrimary,
                                         ),
                                       ),
                                       if (it.subtitle != null) ...[

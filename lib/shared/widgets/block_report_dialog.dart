@@ -158,7 +158,8 @@ class _ReportUserSheetState extends State<_ReportUserSheet> {
             : (widget.targetRole == 'provider' ? 'customer' : 'provider'));
     final currentName = (profile?.displayName.trim().isNotEmpty == true)
         ? profile!.displayName.trim()
-        : ((currentUser?.displayName != null && currentUser!.displayName!.trim().isNotEmpty)
+        : ((currentUser?.displayName != null &&
+                currentUser!.displayName!.trim().isNotEmpty)
             ? currentUser.displayName!.trim()
             : (currentUser?.email ?? ''));
 

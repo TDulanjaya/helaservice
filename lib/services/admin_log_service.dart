@@ -47,8 +47,7 @@ class AdminLogService {
         .orderBy('timestamp', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => AdminLog.fromMap(d.id, d.data()))
-            .toList());
+        .map((snap) =>
+            snap.docs.map((d) => AdminLog.fromMap(d.id, d.data())).toList());
   }
 }

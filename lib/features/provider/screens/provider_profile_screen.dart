@@ -12,6 +12,7 @@ import '../../../models/job_location.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import '../widgets/working_hours_sheet.dart';
 import '../widgets/portfolio_management_sheet.dart';
+import '../widgets/certificate_management_sheet.dart';
 import '../widgets/rate_card_sheet.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
@@ -123,7 +124,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       await roleProvider.completeUserProfile(updated);
       final uid = current?.id ?? FirebaseAuth.instance.currentUser?.uid ?? '';
       if (uid.isNotEmpty) {
-        final area = extractBaseArea(city: picked.city, address: picked.address);
+        final area =
+            extractBaseArea(city: picked.city, address: picked.address);
         await TechnicianRepository().updateBaseLocation(
           uid,
           latitude: picked.latitude,
@@ -167,7 +169,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
               );
               try {
-                await pv.Provider.of<RoleProvider>(context, listen: false).logout();
+                await pv.Provider.of<RoleProvider>(context, listen: false)
+                    .logout();
               } finally {
                 if (context.mounted) {
                   Navigator.of(context).pushNamedAndRemoveUntil(
@@ -211,7 +214,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
               );
               try {
-                await pv.Provider.of<RoleProvider>(context, listen: false).deleteAccount();
+                await pv.Provider.of<RoleProvider>(context, listen: false)
+                    .deleteAccount();
               } finally {
                 if (context.mounted) {
                   Navigator.of(context).pushNamedAndRemoveUntil(
@@ -256,7 +260,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     final category = user?.serviceCategory ?? '';
     final district = user?.district ?? context.l10n.cdmSriLanka;
     final nic = user?.nic?.isNotEmpty == true ? user!.nic! : '';
-    final resolvedCatName = CategoryService.instance.nameOf(category, context: context);
+    final resolvedCatName =
+        CategoryService.instance.nameOf(category, context: context);
     final categoryName = resolvedCatName.isNotEmpty
         ? resolvedCatName
         : context.l10n.provSpecialist;
@@ -735,7 +740,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               builder: (context, techSnap) {
                 final tech = techSnap.data;
                 final radiusKm = tech?.serviceRadiusKm ?? 25.0;
-                final isEmergency = tech?.emergencyAvailable ?? _emergencyAvailable;
+                final isEmergency =
+                    tech?.emergencyAvailable ?? _emergencyAvailable;
 
                 return Container(
                   decoration: BoxDecoration(
@@ -746,8 +752,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   child: Column(
                     children: [
                       SwitchListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         value: isEmergency,
                         activeThumbColor: Colors.white,
                         activeTrackColor: const Color(0xFF22C55E),
@@ -775,8 +781,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         },
                       ),
                       ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -798,7 +804,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         ),
                         subtitle: Text(
                           tech != null
-                              ? context.l10n.rateCardSummary('${tech.effectiveVisitFeeLkr}', '${tech.hourlyRateLkr}')
+                              ? context.l10n.rateCardSummary(
+                                  '${tech.effectiveVisitFeeLkr}',
+                                  '${tech.hourlyRateLkr}')
                               : context.l10n.setStandardRatesSubtitle,
                           style: TextStyle(
                             fontSize: 11.5,
@@ -816,8 +824,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                       ),
                       Divider(height: 1, color: context.themeBorder),
                       ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -903,7 +911,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    context.l10n.serviceRadiusKm(radiusKm.round()),
+                                    context.l10n
+                                        .serviceRadiusKm(radiusKm.round()),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
@@ -991,6 +1000,55 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   final uid = FirebaseAuth.instance.currentUser?.uid;
                   if (uid != null && uid.isNotEmpty) {
                     PortfolioManagementSheet.show(context, uid);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: context.themeSurface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.card_membership_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  context.l10n.certApprovedSectionTitle,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                subtitle: Text(
+                  context.l10n.certAddMore,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: context.themeTextSecondary,
+                ),
+                onTap: () {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid != null && uid.isNotEmpty) {
+                    CertificateManagementSheet.show(context, uid);
                   }
                 },
               ),
@@ -1277,18 +1335,22 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 0),
+                  onPressed: () =>
+                      LegalContentSheet.show(context, initialTabIndex: 0),
                   child: Text(
                     context.l10n.privacyPolicy,
-                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                    style: TextStyle(
+                        fontSize: 12, color: context.themeTextSecondary),
                   ),
                 ),
                 Text('•', style: TextStyle(color: context.themeBorder)),
                 TextButton(
-                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 1),
+                  onPressed: () =>
+                      LegalContentSheet.show(context, initialTabIndex: 1),
                   child: Text(
                     context.l10n.termsOfService,
-                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                    style: TextStyle(
+                        fontSize: 12, color: context.themeTextSecondary),
                   ),
                 ),
               ],

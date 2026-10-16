@@ -16,7 +16,8 @@ class ComplaintRepository {
 
   // submit new complaint / support ticket
   Future<String> submitComplaint(Complaint complaint) async {
-    final targetId = (complaint.reportedUid ?? complaint.providerId).trim().toLowerCase();
+    final targetId =
+        (complaint.reportedUid ?? complaint.providerId).trim().toLowerCase();
     final senderId = complaint.effectiveReporterUid.trim().toLowerCase();
     if (targetId == 'admin_support' ||
         targetId == 'admin' ||
@@ -27,7 +28,8 @@ class ComplaintRepository {
     }
     final map = complaint.toMap();
     if (kDebugMode) {
-      debugPrint('[ComplaintRepository] submitComplaint keys: ${map.keys.toList()}');
+      debugPrint(
+          '[ComplaintRepository] submitComplaint keys: ${map.keys.toList()}');
     }
     final docRef = await _col.add(map);
     unawaited(NotificationService.instance.sendNotification(
@@ -40,14 +42,12 @@ class ComplaintRepository {
   // stream user's own tickets
   Stream<List<Complaint>> streamMyTickets(String userId) {
     if (userId.isEmpty) return Stream.value(const []);
-    return _col
-        .where('reporterUid', isEqualTo: userId)
-        .snapshots()
-        .map((snap) {
+    return _col.where('reporterUid', isEqualTo: userId).snapshots().map((snap) {
       final list = snap.docs
           .map((doc) => Complaint.fromMap(doc.id, doc.data()))
           .toList();
-      list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      list.sort((a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return list;
     });
   }
@@ -76,11 +76,10 @@ class ComplaintRepository {
 
   Stream<List<Complaint>> streamComplaintsForProvider(String providerId) {
     if (providerId.isEmpty) return Stream.value(const []);
-    return _col
-        .where('reportedUid', isEqualTo: providerId)
-        .snapshots()
-        .map((snap) =>
-            snap.docs.map((doc) => Complaint.fromMap(doc.id, doc.data())).toList());
+    return _col.where('reportedUid', isEqualTo: providerId).snapshots().map(
+        (snap) => snap.docs
+            .map((doc) => Complaint.fromMap(doc.id, doc.data()))
+            .toList());
   }
 
   // stream messages in a ticket thread

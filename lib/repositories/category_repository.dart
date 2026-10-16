@@ -18,18 +18,20 @@ class CategoryRepository {
   }
 
   Stream<List<CategoryRow>> streamLiveCategories() {
-    return streamCategoryRows().map((list) => list.where((c) => c.isLive).toList());
+    return streamCategoryRows()
+        .map((list) => list.where((c) => c.isLive).toList());
   }
 
   Future<void> addCategory(CategoryRow category) async {
     final docId = category.id.isNotEmpty
         ? category.id
         : 'cat_${category.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}';
-    
+
     // Check if category already exists to avoid unintended overwrite
     final existing = await _col.doc(docId).get();
     if (existing.exists && category.id.isEmpty) {
-      throw Exception('Category with ID "$docId" already exists. Please choose a different name.');
+      throw Exception(
+          'Category with ID "$docId" already exists. Please choose a different name.');
     }
 
     await _col.doc(docId).set(category.toMap(), SetOptions(merge: true));

@@ -81,9 +81,7 @@ class RoleProvider extends ChangeNotifier {
     final isProviderAccount = _primaryRole == AppRole.provider ||
         _currentUser!.role == AppRole.provider ||
         _currentUser!.isVerified;
-    return isProviderAccount &&
-        (_currentUser!.isVerified ||
-            _currentUser!.certificationsStatus == 'approved');
+    return isProviderAccount && _currentUser!.isVerified;
   }
 
   Future<void> refreshAdminStatus() async {
@@ -120,10 +118,8 @@ class RoleProvider extends ChangeNotifier {
       }
 
       // check staff admin
-      final adminDoc = await FirebaseFirestore.instance
-          .collection('admins')
-          .doc(uid)
-          .get();
+      final adminDoc =
+          await FirebaseFirestore.instance.collection('admins').doc(uid).get();
       if (adminDoc.exists && adminDoc.data() != null) {
         final admin = AdminUser.fromMap(adminDoc.data()!, id: uid);
         // block super admin in staff list
@@ -191,7 +187,8 @@ class RoleProvider extends ChangeNotifier {
   void _listenToUser(String uid) {
     if (uid.isEmpty) return;
     _userProfileSub?.cancel();
-    _userProfileSub = UserRepository().streamUserById(uid).listen((updatedUser) {
+    _userProfileSub =
+        UserRepository().streamUserById(uid).listen((updatedUser) {
       if (updatedUser != null) {
         _currentUser = updatedUser;
         if (updatedUser.role != null && updatedUser.role != AppRole.admin) {
@@ -273,4 +270,3 @@ class RoleProvider extends ChangeNotifier {
     }
   }
 }
-

@@ -94,9 +94,9 @@ class RoutingService {
         '?overview=full&geometries=geojson',
       );
 
-      final response = await http
-          .get(url, headers: {'User-Agent': 'HelaService-App/1.0'})
-          .timeout(const Duration(seconds: 4));
+      final response = await http.get(url, headers: {
+        'User-Agent': 'HelaService-App/1.0'
+      }).timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

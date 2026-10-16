@@ -74,8 +74,8 @@ class UserProfile {
     this.visitFeeLkr,
     this.baseRateLkr,
     this.pricingModes,
-  }) : nicFrontKey = nicFrontKey ?? nicFrontUrl,
-       nicBackKey = nicBackKey ?? nicBackUrl;
+  })  : nicFrontKey = nicFrontKey ?? nicFrontUrl,
+        nicBackKey = nicBackKey ?? nicBackUrl;
 
   bool get isSuperAdmin =>
       adminRole == AdminRole.superAdmin ||
@@ -125,6 +125,7 @@ class UserProfile {
     String? photoStatus,
     AppRole? role,
     String? initialRole,
+    bool clearInitialRole = false,
     bool? isProfileComplete,
     String? phone,
     String? district,
@@ -160,7 +161,7 @@ class UserProfile {
       photoUrl: photoUrl ?? this.photoUrl,
       photoStatus: photoStatus ?? this.photoStatus,
       role: role ?? this.role,
-      initialRole: initialRole ?? this.initialRole,
+      initialRole: clearInitialRole ? null : (initialRole ?? this.initialRole),
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
       phone: phone ?? this.phone,
       district: district ?? this.district,
@@ -206,16 +207,20 @@ class UserProfile {
       'district': district,
       'address': address,
       if (certificationUrls.isNotEmpty) 'certificationUrls': certificationUrls,
-      if (certificationsStatus != null) 'certificationsStatus': certificationsStatus,
+      if (certificationsStatus != null)
+        'certificationsStatus': certificationsStatus,
       'serviceCategory': serviceCategory,
       if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
       'isBanned': isBanned,
       'banned': isBanned,
       if (banReason != null) 'banReason': banReason,
       'isVerified': isVerified,
-      if (dailyRateLkr != null && dailyRateLkr! > 0) 'dailyRateLkr': dailyRateLkr,
-      if (hourlyRateLkr != null && hourlyRateLkr! > 0) 'hourlyRateLkr': hourlyRateLkr,
-      if (perKmRateLkr != null && perKmRateLkr! > 0) 'perKmRateLkr': perKmRateLkr,
+      if (dailyRateLkr != null && dailyRateLkr! > 0)
+        'dailyRateLkr': dailyRateLkr,
+      if (hourlyRateLkr != null && hourlyRateLkr! > 0)
+        'hourlyRateLkr': hourlyRateLkr,
+      if (perKmRateLkr != null && perKmRateLkr! > 0)
+        'perKmRateLkr': perKmRateLkr,
       if (visitFeeLkr != null && visitFeeLkr! > 0) 'visitFeeLkr': visitFeeLkr,
       if (baseRateLkr != null) 'baseRateLkr': baseRateLkr,
       if (pricingModes != null) 'pricingModes': pricingModes,
@@ -280,9 +285,8 @@ class UserProfile {
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
       visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
       baseRateLkr: (map['baseRateLkr'] as num?)?.toInt(),
-      pricingModes: (map['pricingModes'] as List?)
-          ?.map((e) => e.toString())
-          .toList(),
+      pricingModes:
+          (map['pricingModes'] as List?)?.map((e) => e.toString()).toList(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -32,38 +33,39 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
     try {
       final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
       final current = widget.user ?? roleProvider.currentUser;
+      if (kDebugMode) {
+        debugPrint(
+          '[navdbg] role_choice _selectRole: role picked=$role, '
+          'current?.isProfileComplete=${current?.isProfileComplete}',
+        );
+      }
       final fbUser = AuthService().currentFirebaseUser;
-      final uid = current?.id.isNotEmpty == true ? current!.id : (fbUser?.uid ?? '');
+      final uid =
+          current?.id.isNotEmpty == true ? current!.id : (fbUser?.uid ?? '');
 
       final roleString = role == AppRole.provider ? 'provider' : 'customer';
 
       if (uid.isNotEmpty) {
-        final updateMap = <String, dynamic>{
+        await AuthService().updateUserField(uid, {
           'role': roleString,
-        };
-        if (current?.initialRole == null) {
-          updateMap['initialRole'] = roleString;
-        }
-        await AuthService().updateUserField(uid, updateMap);
+        });
       }
 
-      final effectiveInitialRole = current?.initialRole ?? roleString;
       UserProfile updatedProfile;
       if (current != null) {
         updatedProfile = current.copyWith(
           role: role,
-          initialRole: effectiveInitialRole,
+          clearInitialRole: !current.isProfileComplete,
         );
       } else if (fbUser != null) {
         updatedProfile = UserProfile.fromFirebaseUser(
           fbUser,
           role: role,
-        ).copyWith(initialRole: effectiveInitialRole);
+        ).copyWith(clearInitialRole: true);
       } else {
         updatedProfile = UserProfile(
           id: uid,
           role: role,
-          initialRole: effectiveInitialRole,
         );
       }
 
@@ -76,11 +78,11 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
           builder: (_) => CompleteProfileScreen(initialProfile: updatedProfile),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToSetRole(e.toString())),
+            content: Text(context.l10n.failedToSetRoleGeneric),
             backgroundColor: AppColors.error,
           ),
         );
@@ -240,7 +242,8 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
               BoxShadow(
                 color: isSelected
                     ? accentColor.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                    : Colors.black
+                        .withValues(alpha: context.isDark ? 0.2 : 0.04),
                 blurRadius: 14,
                 offset: const Offset(0, 4),
               ),
@@ -315,7 +318,8 @@ class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
                 ],
               ),
               const SizedBox(height: 14),
-              Divider(height: 1, color: context.themeBorder.withValues(alpha: 0.6)),
+              Divider(
+                  height: 1, color: context.themeBorder.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,

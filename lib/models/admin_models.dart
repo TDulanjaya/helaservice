@@ -297,11 +297,12 @@ class VerificationQueueItem {
         ? map['providerName'] as String
         : (map['name'] as String? ?? '');
 
-    final resolvedTrade = (map['serviceCategory'] as String?)?.isNotEmpty == true
-        ? map['serviceCategory'] as String
-        : ((map['category'] as String?)?.isNotEmpty == true
-            ? map['category'] as String
-            : (map['trade'] as String? ?? ''));
+    final resolvedTrade =
+        (map['serviceCategory'] as String?)?.isNotEmpty == true
+            ? map['serviceCategory'] as String
+            : ((map['category'] as String?)?.isNotEmpty == true
+                ? map['category'] as String
+                : (map['trade'] as String? ?? ''));
 
     final resolvedLocation = (map['district'] as String?)?.isNotEmpty == true
         ? map['district'] as String
@@ -326,7 +327,8 @@ class VerificationQueueItem {
       location: resolvedLocation,
       nicNumber: resolvedNic,
       nicHash: map['nicHash'] as String?,
-      rejectionReason: map['rejectionReason'] as String? ?? map['reason'] as String?,
+      rejectionReason:
+          map['rejectionReason'] as String? ?? map['reason'] as String?,
       rejectionNote: map['rejectionNote'] as String? ?? map['note'] as String?,
       docNote: map['docNote'] as String? ?? '',
       matchPercent: (map['matchPercent'] as num?)?.toInt() ?? 0,
@@ -334,7 +336,8 @@ class VerificationQueueItem {
       phone: map['phone'] as String? ?? '',
       preferredLanguage: map['preferredLanguage'] as String? ?? '',
       photoUrl: map['photoUrl'] as String?,
-      nicFrontKey: map['nicFrontKey'] as String? ?? map['nicFrontUrl'] as String?,
+      nicFrontKey:
+          map['nicFrontKey'] as String? ?? map['nicFrontUrl'] as String?,
       nicBackKey: map['nicBackKey'] as String? ?? map['nicBackUrl'] as String?,
       certificationUrls: certList,
       photoApproved: map['photoApproved'] as bool? ?? false,

@@ -102,23 +102,26 @@ class StorageService {
     final token = await user.getIdToken();
 
     // get presigned url
-    final presignRes = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'mode': 'presign',
-        'purpose': 'job_media',
-        'filename': filename,
-        'contentType': contentType,
-        'sizeBytes': bytes.length,
-      }),
-    ).timeout(const Duration(seconds: 20));
+    final presignRes = await http
+        .post(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'mode': 'presign',
+            'purpose': 'job_media',
+            'filename': filename,
+            'contentType': contentType,
+            'sizeBytes': bytes.length,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
 
     if (presignRes.statusCode != 200) {
-      debugPrint('[StorageService] Presign error: ${presignRes.statusCode} - ${presignRes.body}');
+      debugPrint(
+          '[StorageService] Presign error: ${presignRes.statusCode} - ${presignRes.body}');
       throw Exception('Failed to get upload authorization: ${presignRes.body}');
     }
 
@@ -143,7 +146,8 @@ class StorageService {
     () async {
       int sent = 0;
       for (int i = 0; i < bytes.length; i += chunkSize) {
-        final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+        final end =
+            (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
         final chunk = bytes.sublist(i, end);
         streamedReq.sink.add(chunk);
         sent += chunk.length;
@@ -152,11 +156,13 @@ class StorageService {
       streamedReq.sink.close();
     }();
 
-    final streamedRes = await streamedReq.send().timeout(const Duration(seconds: 90));
+    final streamedRes =
+        await streamedReq.send().timeout(const Duration(seconds: 90));
     final putRes = await http.Response.fromStream(streamedRes);
 
     if (putRes.statusCode < 200 || putRes.statusCode >= 300) {
-      debugPrint('[StorageService] B2 direct upload error: ${putRes.statusCode} - ${putRes.body}');
+      debugPrint(
+          '[StorageService] B2 direct upload error: ${putRes.statusCode} - ${putRes.body}');
       throw Exception('B2 upload failed (${putRes.statusCode})');
     }
 
@@ -205,10 +211,12 @@ class StorageService {
   }
 
   // upload file to storage api (legacy multipart)
-  Future<String> uploadFile(dynamic file, {String? filename, String? purpose}) async {
+  Future<String> uploadFile(dynamic file,
+      {String? filename, String? purpose}) async {
     try {
       if (file is PickedAttachment) {
-        return await uploadPickedAttachment(file, purpose: purpose ?? 'job_photo');
+        return await uploadPickedAttachment(file,
+            purpose: purpose ?? 'job_photo');
       }
       if (file is XFile) {
         return await uploadPickedImage(file, purpose: purpose ?? 'job_photo');
@@ -217,7 +225,8 @@ class StorageService {
       final rawName = filename ??
           (file is XFile
               ? file.name
-              : file.path?.toString().split(RegExp(r'[\\/]')).last ?? 'file.jpg');
+              : file.path?.toString().split(RegExp(r'[\\/]')).last ??
+                  'file.jpg');
       return await uploadBytes(bytes, filename: rawName, purpose: purpose);
     } catch (e) {
       debugPrint('[StorageService] Local read error: $e');
@@ -226,12 +235,13 @@ class StorageService {
   }
 
   // upload file bytes (legacy multipart)
-  Future<String> uploadBytes(Uint8List bytes, {required String filename, String? purpose}) async {
+  Future<String> uploadBytes(Uint8List bytes,
+      {required String filename, String? purpose}) async {
     final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
-    final isNic = purpose == 'nic';
+    final isPrivate = purpose == 'nic' || purpose == 'cert';
     final baseUploadUri = Uri.parse('$cleanBase/upload');
-    final uri = isNic
-        ? baseUploadUri.replace(queryParameters: {'purpose': 'nic'})
+    final uri = isPrivate
+        ? baseUploadUri.replace(queryParameters: {'purpose': purpose!})
         : baseUploadUri;
 
     final mimeType = _resolveMimeType(filename);
@@ -267,7 +277,7 @@ class StorageService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (isNic) {
+        if (isPrivate) {
           final key = data['key'] as String?;
           if (key != null && key.isNotEmpty) {
             return key;
@@ -290,4 +300,3 @@ class StorageService {
     }
   }
 }
-

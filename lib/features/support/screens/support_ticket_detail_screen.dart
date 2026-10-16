@@ -17,7 +17,8 @@ class SupportTicketDetailScreen extends StatefulWidget {
   const SupportTicketDetailScreen({super.key, required this.ticketId});
 
   @override
-  State<SupportTicketDetailScreen> createState() => _SupportTicketDetailScreenState();
+  State<SupportTicketDetailScreen> createState() =>
+      _SupportTicketDetailScreenState();
 }
 
 class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
@@ -197,7 +198,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                   onPressed: _closeTicket,
                   child: Text(
                     context.l10n.ticketCloseConfirm,
-                    style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: AppColors.error, fontWeight: FontWeight.bold),
                   ),
                 ),
             ],
@@ -207,10 +209,12 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
               // Ticket Header Summary
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: context.themeSurfaceLow,
-                  border: Border(bottom: BorderSide(color: context.themeBorder)),
+                  border:
+                      Border(bottom: BorderSide(color: context.themeBorder)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +222,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
@@ -235,12 +240,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'Type: ${ticket.effectiveType}',
-                          style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                          style: TextStyle(
+                              fontSize: 12, color: context.themeTextSecondary),
                         ),
                         const Spacer(),
                         Text(
                           timeAgoL10n(context, ticket.createdAt),
-                          style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+                          style: TextStyle(
+                              fontSize: 11, color: context.themeTextSecondary),
                         ),
                       ],
                     ),
@@ -269,7 +276,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                         ),
                       ),
                     ],
-                    if (ticket.resolutionNote != null && ticket.resolutionNote!.isNotEmpty) ...[
+                    if (ticket.resolutionNote != null &&
+                        ticket.resolutionNote!.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -279,7 +287,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                         ),
                         child: Text(
                           '${context.l10n.ticketResolvedNote}: ${ticket.resolutionNote}',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF2E7D32), fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF2E7D32),
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -297,13 +308,15 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                       return Center(
                         child: Text(
                           context.l10n.ticketReplyPrompt,
-                          style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+                          style: TextStyle(
+                              fontSize: 13, color: context.themeTextSecondary),
                         ),
                       );
                     }
 
                     return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       itemCount: messages.length,
                       itemBuilder: (context, i) {
                         final m = messages[i];
@@ -311,18 +324,22 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                         final isAdmin = m.isAdmin;
 
                         return Align(
-                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isMe
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(12),
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.78,
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.78,
                             ),
                             decoration: BoxDecoration(
                               color: isMe
                                   ? AppColors.primary
                                   : (isAdmin
-                                      ? AppColors.primary.withValues(alpha: 0.15)
+                                      ? AppColors.primary
+                                          .withValues(alpha: 0.15)
                                       : context.themeSurfaceLow),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
@@ -338,7 +355,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                   const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.shield_outlined, size: 14, color: AppColors.primary),
+                                      Icon(Icons.shield_outlined,
+                                          size: 14, color: AppColors.primary),
                                       SizedBox(width: 4),
                                       Text(
                                         'HelaService Support',
@@ -352,11 +370,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                   ),
                                 if (m.text.isNotEmpty)
                                   Padding(
-                                    padding: EdgeInsets.only(top: isAdmin ? 4 : 0),
+                                    padding:
+                                        EdgeInsets.only(top: isAdmin ? 4 : 0),
                                     child: Text(
                                       m.text,
                                       style: TextStyle(
-                                        color: isMe ? Colors.white : context.themeInk,
+                                        color: isMe
+                                            ? Colors.white
+                                            : context.themeInk,
                                         fontSize: 13.5,
                                       ),
                                     ),
@@ -368,7 +389,10 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                     children: m.photos.map((pUrl) {
                                       return ClipRRect(
                                         borderRadius: BorderRadius.circular(6),
-                                        child: Image.network(pUrl, width: 80, height: 80, fit: BoxFit.cover),
+                                        child: Image.network(pUrl,
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover),
                                       );
                                     }).toList(),
                                   ),
@@ -380,7 +404,9 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                     timeAgoL10n(context, m.createdAt),
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: isMe ? Colors.white70 : context.themeTextSecondary,
+                                      color: isMe
+                                          ? Colors.white70
+                                          : context.themeTextSecondary,
                                     ),
                                   ),
                                 ),
@@ -417,12 +443,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
-                                child: Image.memory(_selectedPhoto!.bytes, width: 44, height: 44, fit: BoxFit.cover),
+                                child: Image.memory(_selectedPhoto!.bytes,
+                                    width: 44, height: 44, fit: BoxFit.cover),
                               ),
                               const SizedBox(width: 8),
                               IconButton(
                                 icon: const Icon(Icons.close, size: 18),
-                                onPressed: () => setState(() => _selectedPhoto = null),
+                                onPressed: () =>
+                                    setState(() => _selectedPhoto = null),
                               ),
                             ],
                           ),
@@ -432,10 +460,12 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                           IconButton(
                             icon: const Icon(Icons.add_a_photo_outlined),
                             onPressed: () async {
-                              final img = await _picker.pickImage(source: ImageSource.gallery);
+                              final img = await _picker.pickImage(
+                                  source: ImageSource.gallery);
                               if (img != null) {
                                 final bytes = await img.readAsBytes();
-                                setState(() => _selectedPhoto = PickedAttachment(file: img, bytes: bytes));
+                                setState(() => _selectedPhoto =
+                                    PickedAttachment(file: img, bytes: bytes));
                               }
                             },
                           ),
@@ -448,9 +478,11 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                 hintText: context.l10n.ticketReplyHint,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(20),
-                                  borderSide: BorderSide(color: context.themeBorder),
+                                  borderSide:
+                                      BorderSide(color: context.themeBorder),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
                               ),
                             ),
                           ),
@@ -460,9 +492,11 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
                                   )
-                                : const Icon(Icons.send_rounded, color: AppColors.primary),
+                                : const Icon(Icons.send_rounded,
+                                    color: AppColors.primary),
                             onPressed: _isSending ? null : _sendMessage,
                           ),
                         ],
@@ -477,7 +511,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                   child: Center(
                     child: Text(
                       'This ticket is closed.',
-                      style: TextStyle(color: context.themeTextSecondary, fontSize: 13),
+                      style: TextStyle(
+                          color: context.themeTextSecondary, fontSize: 13),
                     ),
                   ),
                 ),

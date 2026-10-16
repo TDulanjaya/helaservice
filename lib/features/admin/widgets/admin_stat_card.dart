@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
+
 class AdminStatCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -33,7 +34,9 @@ class AdminStatCard extends StatelessWidget {
       if (b.contains('req') || b.contains('pending') || b.contains('flag')) {
         bgBadge = context.themeDangerTint;
         fgBadge = context.themeDanger;
-      } else if (b.contains('active') || b.contains('live') || b.contains('online')) {
+      } else if (b.contains('active') ||
+          b.contains('live') ||
+          b.contains('online')) {
         bgBadge = context.themeInfoTint;
         fgBadge = context.themeInfo;
       } else {
@@ -62,7 +65,8 @@ class AdminStatCard extends StatelessWidget {
               const Spacer(),
               if (trailingBadge != null && trailingBadge!.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: bgBadge,
                     borderRadius: BorderRadius.circular(999),

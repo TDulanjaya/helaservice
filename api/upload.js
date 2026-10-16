@@ -84,17 +84,17 @@ module.exports = async (req, res) => {
   }
 
   const purpose = (req.query && req.query.purpose ? req.query.purpose : '').toLowerCase();
-  const isNicPurpose = purpose === 'nic';
+  const isPrivatePurpose = purpose === 'nic' || purpose === 'cert';
 
-  if (isNicPurpose) {
+  if (isPrivatePurpose) {
     if (!process.env.B2_PRIVATE_BUCKET || !process.env.B2_PRIVATE_KEY_ID || !process.env.B2_PRIVATE_KEY) {
       return res.status(500).json({ error: 'private_storage_not_configured' });
     }
   }
 
-  const s3 = getS3Client(isNicPurpose);
+  const s3 = getS3Client(isPrivatePurpose);
   if (!s3) {
-    if (isNicPurpose) {
+    if (isPrivatePurpose) {
       return res.status(500).json({ error: 'private_storage_not_configured' });
     }
     return res.status(500).json({
@@ -102,7 +102,7 @@ module.exports = async (req, res) => {
     });
   }
 
-  const bucketName = (isNicPurpose
+  const bucketName = (isPrivatePurpose
     ? process.env.B2_PRIVATE_BUCKET
     : (process.env.B2_BUCKET_NAME || 'helaservice-storage')).trim();
 
@@ -224,9 +224,11 @@ module.exports = async (req, res) => {
             : (rawExt === 'pdf' ? 'pdf' : MIME_TO_EXT[normalizedMime])));
 
       const randomStr = Math.random().toString(36).substring(2, 9);
-      const key = isNicPurpose
+      const key = purpose === 'nic'
         ? `nic/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`
-        : `uploads/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`;
+        : purpose === 'cert'
+          ? `certs/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`
+          : `uploads/${authUid}/${Date.now()}_${randomStr}.${cleanExt}`;
 
       const chunks = [];
       file.on('data', (data) => chunks.push(data));
@@ -242,7 +244,7 @@ module.exports = async (req, res) => {
             })
           )
           .then(() => {
-            if (isNicPurpose) {
+            if (isPrivatePurpose) {
               return { key };
             }
             const cleanPrefix = publicPrefix.replace(/\/+$/, '');

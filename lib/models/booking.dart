@@ -61,7 +61,8 @@ class Booking {
   // price flow and extras
   final String? quoteId;
   final String? quoteType;
-  final String? priceStatus; // 'awaiting_confirmation', 'proposed', 'approved', 'rejected'
+  final String?
+      priceStatus; // 'awaiting_confirmation', 'proposed', 'approved', 'rejected'
   final Map<String, dynamic>? proposedPrice;
   final int? approvedTotalLkr;
   final int? approvedExtrasLkr;
@@ -83,7 +84,8 @@ class Booking {
   final DateTime? priceConfirmedAt;
 
   // verified arrival and no-show
-  final String? arrivalStatus; // 'claimed', 'confirmed', 'denied', 'auto_started'
+  final String?
+      arrivalStatus; // 'claimed', 'confirmed', 'denied', 'auto_started'
   final DateTime? arrivalClaimedAt;
   final double? arrivalLat;
   final double? arrivalLng;
@@ -206,12 +208,12 @@ class Booking {
     this.directions,
   });
 
-  bool get isAwaitingPriceConfirmation => priceStatus == 'awaiting_confirmation';
+  bool get isAwaitingPriceConfirmation =>
+      priceStatus == 'awaiting_confirmation';
   bool get isPriceProposed => priceStatus == 'proposed';
   bool get isPriceApproved => priceStatus == 'approved';
   bool get isPriceRejected => priceStatus == 'rejected';
   int get currentTotalLkr => approvedTotalLkr ?? agreedPrice?.round() ?? 0;
-
 
   bool get hasPendingReschedule =>
       rescheduleRequestedBy != null && rescheduleRequestedBy!.isNotEmpty;
@@ -242,7 +244,8 @@ class Booking {
         if (rating != null) 'rating': rating,
         if (providerAcceptedAt != null)
           'providerAcceptedAt': Timestamp.fromDate(providerAcceptedAt!),
-        if (cancellationReason != null) 'cancellationReason': cancellationReason,
+        if (cancellationReason != null)
+          'cancellationReason': cancellationReason,
         if (cancelledBy != null) 'cancelledBy': cancelledBy,
         if (completedAt != null)
           'completedAt': Timestamp.fromDate(completedAt!),
@@ -253,14 +256,15 @@ class Booking {
         if (providerMarkedPaidAt != null)
           'providerMarkedPaidAt': Timestamp.fromDate(providerMarkedPaidAt!),
         if (customerConfirmedPaidAt != null)
-          'customerConfirmedPaidAt': Timestamp.fromDate(customerConfirmedPaidAt!),
+          'customerConfirmedPaidAt':
+              Timestamp.fromDate(customerConfirmedPaidAt!),
         if (paymentDisputed != null) 'paymentDisputed': paymentDisputed,
-        if (paymentDisputeReason != null) 'paymentDisputeReason': paymentDisputeReason,
+        if (paymentDisputeReason != null)
+          'paymentDisputeReason': paymentDisputeReason,
         if (paymentDisputedAt != null)
           'paymentDisputedAt': Timestamp.fromDate(paymentDisputedAt!),
         'type': type,
-        if (expiresAt != null)
-          'expiresAt': Timestamp.fromDate(expiresAt!),
+        if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
         if (scheduledDate != null)
           'scheduledDate': Timestamp.fromDate(scheduledDate!),
         if (scheduledSlot != null) 'scheduledSlot': scheduledSlot,
@@ -289,7 +293,8 @@ class Booking {
         if (proposedPrice != null) 'proposedPrice': proposedPrice,
         if (approvedTotalLkr != null) 'approvedTotalLkr': approvedTotalLkr,
         if (approvedExtrasLkr != null) 'approvedExtrasLkr': approvedExtrasLkr,
-        if (lastApprovedExtraId != null) 'lastApprovedExtraId': lastApprovedExtraId,
+        if (lastApprovedExtraId != null)
+          'lastApprovedExtraId': lastApprovedExtraId,
         if (completionType != null) 'completionType': completionType,
         if (visitFeeLkr != null) 'visitFeeLkr': visitFeeLkr,
         if (travelCostLkr != null) 'travelCostLkr': travelCostLkr,
@@ -300,13 +305,19 @@ class Booking {
         if (priceUnit != null) 'priceUnit': priceUnit,
         if (unitRateLkr != null) 'unitRateLkr': unitRateLkr,
         if (quantity != null) 'quantity': quantity,
-        if (materialsEstimateLkr != null) 'materialsEstimateLkr': materialsEstimateLkr,
-        if (priceProposedAt != null) 'priceProposedAt': Timestamp.fromDate(priceProposedAt!),
-        if (priceApprovedAt != null) 'priceApprovedAt': Timestamp.fromDate(priceApprovedAt!),
-        if (priceRejectedAt != null) 'priceRejectedAt': Timestamp.fromDate(priceRejectedAt!),
-        if (priceConfirmedAt != null) 'priceConfirmedAt': Timestamp.fromDate(priceConfirmedAt!),
+        if (materialsEstimateLkr != null)
+          'materialsEstimateLkr': materialsEstimateLkr,
+        if (priceProposedAt != null)
+          'priceProposedAt': Timestamp.fromDate(priceProposedAt!),
+        if (priceApprovedAt != null)
+          'priceApprovedAt': Timestamp.fromDate(priceApprovedAt!),
+        if (priceRejectedAt != null)
+          'priceRejectedAt': Timestamp.fromDate(priceRejectedAt!),
+        if (priceConfirmedAt != null)
+          'priceConfirmedAt': Timestamp.fromDate(priceConfirmedAt!),
         if (arrivalStatus != null) 'arrivalStatus': arrivalStatus,
-        if (arrivalClaimedAt != null) 'arrivalClaimedAt': Timestamp.fromDate(arrivalClaimedAt!),
+        if (arrivalClaimedAt != null)
+          'arrivalClaimedAt': Timestamp.fromDate(arrivalClaimedAt!),
         if (arrivalLat != null) 'arrivalLat': arrivalLat,
         if (arrivalLng != null) 'arrivalLng': arrivalLng,
         if (arrivalAccuracyM != null) 'arrivalAccuracyM': arrivalAccuracyM,
@@ -315,12 +326,16 @@ class Booking {
         if (arrivalMocked) 'arrivalMocked': arrivalMocked,
         if (arrivalClaimCount > 0) 'arrivalClaimCount': arrivalClaimCount,
         if (arrivalDeniedCount > 0) 'arrivalDeniedCount': arrivalDeniedCount,
-        if (arrivalConfirmedBy != null) 'arrivalConfirmedBy': arrivalConfirmedBy,
+        if (arrivalConfirmedBy != null)
+          'arrivalConfirmedBy': arrivalConfirmedBy,
         if (arrivedAt != null) 'arrivedAt': Timestamp.fromDate(arrivedAt!),
         if (noShow) 'noShow': noShow,
-        if (enRouteStartedAt != null) 'enRouteStartedAt': Timestamp.fromDate(enRouteStartedAt!),
-        if (scheduledStartAt != null) 'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
-        if (scheduledEndAt != null) 'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
+        if (enRouteStartedAt != null)
+          'enRouteStartedAt': Timestamp.fromDate(enRouteStartedAt!),
+        if (scheduledStartAt != null)
+          'scheduledStartAt': Timestamp.fromDate(scheduledStartAt!),
+        if (scheduledEndAt != null)
+          'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
         if (scheduleMode != null) 'scheduleMode': scheduleMode,
         if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
         if (houseNo != null) 'houseNo': houseNo,
@@ -388,7 +403,9 @@ class Booking {
       paymentDisputed: map['paymentDisputed'] as bool?,
       paymentDisputeReason: map['paymentDisputeReason'] as String?,
       paymentDisputedAt: pda is Timestamp ? pda.toDate() : null,
-      type: map['type']?.toString() ?? map['bookingType']?.toString() ?? 'standard',
+      type: map['type']?.toString() ??
+          map['bookingType']?.toString() ??
+          'standard',
       expiresAt: expAt is Timestamp ? expAt.toDate() : null,
       scheduledDate: sdt is Timestamp ? sdt.toDate() : null,
       scheduledSlot: map['scheduledSlot'] as String?,
@@ -446,7 +463,8 @@ class Booking {
       arrivedAt: arrAt is Timestamp ? arrAt.toDate() : null,
       noShow: map['noShow'] as bool? ?? false,
       enRouteStartedAt: enRAt is Timestamp ? enRAt.toDate() : null,
-      scheduledStartAt: schedStartAt is Timestamp ? schedStartAt.toDate() : null,
+      scheduledStartAt:
+          schedStartAt is Timestamp ? schedStartAt.toDate() : null,
       scheduledEndAt: schedEndAt is Timestamp ? schedEndAt.toDate() : null,
       scheduleMode: map['scheduleMode'] as String?,
       accuracyMeters: (map['accuracyMeters'] as num?)?.toDouble(),
@@ -589,7 +607,8 @@ class Booking {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentNote: paymentNote ?? this.paymentNote,
       providerMarkedPaidAt: providerMarkedPaidAt ?? this.providerMarkedPaidAt,
-      customerConfirmedPaidAt: customerConfirmedPaidAt ?? this.customerConfirmedPaidAt,
+      customerConfirmedPaidAt:
+          customerConfirmedPaidAt ?? this.customerConfirmedPaidAt,
       paymentDisputed: paymentDisputed ?? this.paymentDisputed,
       paymentDisputeReason: paymentDisputeReason ?? this.paymentDisputeReason,
       paymentDisputedAt: paymentDisputedAt ?? this.paymentDisputedAt,
@@ -597,11 +616,15 @@ class Booking {
       expiresAt: expiresAt ?? this.expiresAt,
       scheduledDate: scheduledDate ?? this.scheduledDate,
       scheduledSlot: scheduledSlot ?? this.scheduledSlot,
-      rescheduleRequestedBy: rescheduleRequestedBy ?? this.rescheduleRequestedBy,
-      rescheduleProposedDate: rescheduleProposedDate ?? this.rescheduleProposedDate,
-      rescheduleProposedSlot: rescheduleProposedSlot ?? this.rescheduleProposedSlot,
+      rescheduleRequestedBy:
+          rescheduleRequestedBy ?? this.rescheduleRequestedBy,
+      rescheduleProposedDate:
+          rescheduleProposedDate ?? this.rescheduleProposedDate,
+      rescheduleProposedSlot:
+          rescheduleProposedSlot ?? this.rescheduleProposedSlot,
       rescheduleReason: rescheduleReason ?? this.rescheduleReason,
-      rescheduleRequestedAt: rescheduleRequestedAt ?? this.rescheduleRequestedAt,
+      rescheduleRequestedAt:
+          rescheduleRequestedAt ?? this.rescheduleRequestedAt,
       rescheduledAt: rescheduledAt ?? this.rescheduledAt,
       rescheduleDeclinedAt: rescheduleDeclinedAt ?? this.rescheduleDeclinedAt,
       rescheduleDeclinedBy: rescheduleDeclinedBy ?? this.rescheduleDeclinedBy,
@@ -654,10 +677,10 @@ class Booking {
     );
   }
 
-
   String formattedPrice(BuildContext context) {
     if (agreedPrice != null && agreedPrice! > 0) {
-      return NumberFormat.currency(symbol: 'LKR ', decimalDigits: 0).format(agreedPrice);
+      return NumberFormat.currency(symbol: 'LKR ', decimalDigits: 0)
+          .format(agreedPrice);
     }
     return estRate.isNotEmpty ? estRate : '';
   }
@@ -671,11 +694,16 @@ class Booking {
   }
 
   bool get isEligibleForNoShow {
-    if (status != JobStatus.confirmed && status != JobStatus.enRoute) return false;
+    if (status != JobStatus.confirmed && status != JobStatus.enRoute) {
+      return false;
+    }
     final now = DateTime.now();
     if (status == JobStatus.enRoute) {
       if (arrivalStatus == 'denied') return true;
-      if (enRouteStartedAt != null && now.difference(enRouteStartedAt!).inMinutes >= 90) return true;
+      if (enRouteStartedAt != null &&
+          now.difference(enRouteStartedAt!).inMinutes >= 90) {
+        return true;
+      }
       return false;
     }
     if (status == JobStatus.confirmed) {
@@ -702,4 +730,3 @@ class Booking {
     );
   }
 }
-

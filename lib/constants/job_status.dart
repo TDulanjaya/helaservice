@@ -11,7 +11,10 @@ class JobStatus {
   static const String expired = 'expired';
 
   static bool isTerminal(String status) =>
-      status == completed || status == cancelled || status == declined || status == expired;
+      status == completed ||
+      status == cancelled ||
+      status == declined ||
+      status == expired;
 
   static bool canCancel(String status) =>
       status == pending || status == confirmed || status == enRoute;

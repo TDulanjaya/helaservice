@@ -29,7 +29,8 @@ class NicValidator {
   }
 
   /// Returns translated error string if invalid, or null if valid.
-  static String? validateNic(String? input, AppLocalizations l10n, {bool isRequired = true}) {
+  static String? validateNic(String? input, AppLocalizations l10n,
+      {bool isRequired = true}) {
     if (input == null || input.trim().isEmpty) {
       return isRequired ? l10n.enterNicError : null;
     }

@@ -16,7 +16,8 @@ class BookingTimelineSheet extends StatelessWidget {
     required this.bookingTitle,
   });
 
-  static void show(BuildContext context, {required String bookingId, required String bookingTitle}) {
+  static void show(BuildContext context,
+      {required String bookingId, required String bookingTitle}) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -28,7 +29,8 @@ class BookingTimelineSheet extends StatelessWidget {
     );
   }
 
-  void _exportTimelineCsv(BuildContext context, List<BookingTimelineEvent> events) {
+  void _exportTimelineCsv(
+      BuildContext context, List<BookingTimelineEvent> events) {
     if (events.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.noEntriesToExport)),
@@ -37,7 +39,8 @@ class BookingTimelineSheet extends StatelessWidget {
     }
 
     final buffer = StringBuffer();
-    buffer.writeln('Event ID,Action,Title,Description,Actor Role,Actor UID,Timestamp');
+    buffer.writeln(
+        'Event ID,Action,Title,Description,Actor Role,Actor UID,Timestamp');
 
     for (final e in events) {
       final tsStr = e.timestamp != null
@@ -45,7 +48,8 @@ class BookingTimelineSheet extends StatelessWidget {
           : '';
       final desc = e.description.replaceAll('"', '""');
       final title = e.title.replaceAll('"', '""');
-      buffer.writeln('"${e.id}","${e.action}","$title","$desc","${e.actorRole}","${e.actorUid}","$tsStr"');
+      buffer.writeln(
+          '"${e.id}","${e.action}","$title","$desc","${e.actorRole}","${e.actorUid}","$tsStr"');
     }
 
     // copy to clipboard or show modal with csv preview
@@ -154,7 +158,8 @@ class BookingTimelineSheet extends StatelessWidget {
     }
   }
 
-  String _titleForAction(BuildContext context, String action, String fallbackTitle) {
+  String _titleForAction(
+      BuildContext context, String action, String fallbackTitle) {
     switch (action) {
       case 'created':
         return context.l10n.timelineBookingCreated;
@@ -206,7 +211,8 @@ class BookingTimelineSheet extends StatelessWidget {
     }
   }
 
-  String _descriptionForAction(BuildContext context, String action, String fallbackDescription) {
+  String _descriptionForAction(
+      BuildContext context, String action, String fallbackDescription) {
     switch (action) {
       case 'created':
         return context.l10n.timelineDescCreated;
@@ -302,7 +308,8 @@ class BookingTimelineSheet extends StatelessWidget {
                         color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.timeline_rounded, color: AppColors.primary, size: 20),
+                      child: const Icon(Icons.timeline_rounded,
+                          color: AppColors.primary, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -335,8 +342,10 @@ class BookingTimelineSheet extends StatelessWidget {
                       icon: const Icon(Icons.download_rounded, size: 16),
                       label: Text(context.l10n.exportCsv),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
@@ -350,7 +359,8 @@ class BookingTimelineSheet extends StatelessWidget {
                         ? Center(
                             child: Text(
                               context.l10n.noTimelineEvents,
-                              style: TextStyle(color: context.themeTextSecondary),
+                              style:
+                                  TextStyle(color: context.themeTextSecondary),
                             ),
                           )
                         : ListView.builder(
@@ -361,9 +371,11 @@ class BookingTimelineSheet extends StatelessWidget {
                               final isLast = index == events.length - 1;
                               final color = _colorForAction(event.action);
                               final icon = _iconForAction(event.action);
-                              final locale = Localizations.localeOf(context).languageCode;
+                              final locale =
+                                  Localizations.localeOf(context).languageCode;
                               final timeStr = event.timestamp != null
-                                  ? DateFormat('MMM d, hh:mm a', locale).format(event.timestamp!)
+                                  ? DateFormat('MMM d, hh:mm a', locale)
+                                      .format(event.timestamp!)
                                   : '';
 
                               return IntrinsicHeight(
@@ -376,18 +388,23 @@ class BookingTimelineSheet extends StatelessWidget {
                                           width: 32,
                                           height: 32,
                                           decoration: BoxDecoration(
-                                            color: color.withValues(alpha: 0.15),
+                                            color:
+                                                color.withValues(alpha: 0.15),
                                             shape: BoxShape.circle,
-                                            border: Border.all(color: color, width: 1.5),
+                                            border: Border.all(
+                                                color: color, width: 1.5),
                                           ),
-                                          child: Icon(icon, color: color, size: 16),
+                                          child: Icon(icon,
+                                              color: color, size: 16),
                                         ),
                                         if (!isLast)
                                           Expanded(
                                             child: Container(
                                               width: 2,
                                               color: context.themeBorder,
-                                              margin: const EdgeInsets.symmetric(vertical: 4),
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 4),
                                             ),
                                           ),
                                       ],
@@ -395,20 +412,29 @@ class BookingTimelineSheet extends StatelessWidget {
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.only(bottom: 20),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 20),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
                                               children: [
                                                 Expanded(
                                                   child: Text(
-                                                    _titleForAction(context, event.action, event.title),
+                                                    _titleForAction(
+                                                        context,
+                                                        event.action,
+                                                        event.title),
                                                     style: TextStyle(
                                                       fontSize: 14,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: context.themeTextPrimary,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: context
+                                                          .themeTextPrimary,
                                                     ),
                                                   ),
                                                 ),
@@ -416,33 +442,55 @@ class BookingTimelineSheet extends StatelessWidget {
                                                   timeStr,
                                                   style: TextStyle(
                                                     fontSize: 11,
-                                                    color: context.themeTextSecondary,
+                                                    color: context
+                                                        .themeTextSecondary,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              _descriptionForAction(context, event.action, event.description),
+                                              _descriptionForAction(
+                                                  context,
+                                                  event.action,
+                                                  event.description),
                                               style: TextStyle(
                                                 fontSize: 12.5,
-                                                color: context.themeTextSecondary,
+                                                color:
+                                                    context.themeTextSecondary,
                                               ),
                                             ),
                                             if (event.metadata != null &&
-                                                (event.metadata!['totalLkr'] != null ||
-                                                    event.metadata!['amountLkr'] != null ||
-                                                    event.metadata!['proposedTotalLkr'] != null ||
-                                                    event.metadata!['finalAmountLkr'] != null ||
-                                                    event.metadata!['agreedPrice'] != null ||
-                                                    event.metadata!['amount'] != null)) ...[
+                                                (event.metadata!['totalLkr'] !=
+                                                        null ||
+                                                    event.metadata![
+                                                            'amountLkr'] !=
+                                                        null ||
+                                                    event.metadata![
+                                                            'proposedTotalLkr'] !=
+                                                        null ||
+                                                    event.metadata![
+                                                            'finalAmountLkr'] !=
+                                                        null ||
+                                                    event.metadata![
+                                                            'agreedPrice'] !=
+                                                        null ||
+                                                    event.metadata!['amount'] !=
+                                                        null)) ...[
                                               const SizedBox(height: 5),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3),
                                                 decoration: BoxDecoration(
-                                                  color: color.withValues(alpha: 0.1),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                                                  color: color.withValues(
+                                                      alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                      color: color.withValues(
+                                                          alpha: 0.3)),
                                                 ),
                                                 child: Text(
                                                   'Amount: LKR ${event.metadata!['totalLkr'] ?? event.metadata!['amountLkr'] ?? event.metadata!['proposedTotalLkr'] ?? event.metadata!['finalAmountLkr'] ?? event.metadata!['agreedPrice'] ?? event.metadata!['amount']}',
@@ -456,11 +504,16 @@ class BookingTimelineSheet extends StatelessWidget {
                                             ],
                                             const SizedBox(height: 6),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2),
                                               decoration: BoxDecoration(
                                                 color: context.themeSurfaceLow,
-                                                borderRadius: BorderRadius.circular(6),
-                                                border: Border.all(color: context.themeBorder),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                    color: context.themeBorder),
                                               ),
                                               child: Text(
                                                 event.actorRole.toUpperCase(),
@@ -468,7 +521,8 @@ class BookingTimelineSheet extends StatelessWidget {
                                                   fontSize: 9.5,
                                                   fontWeight: FontWeight.w800,
                                                   letterSpacing: 0.5,
-                                                  color: context.themeTextSecondary,
+                                                  color: context
+                                                      .themeTextSecondary,
                                                 ),
                                               ),
                                             ),

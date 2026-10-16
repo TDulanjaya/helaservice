@@ -14,6 +14,19 @@ enum AppDestination {
   adminShell,
 }
 
+// check if user signup is incomplete
+bool isSignupUnfinished(UserProfile p) {
+  return !p.isProfileComplete;
+}
+
+// check if new provider is waiting for approval
+bool isLockedNewProvider(UserProfile p, bool isApproved) {
+  return p.role == AppRole.provider &&
+      !isApproved &&
+      !p.isVerified &&
+      p.initialRole != 'customer';
+}
+
 // pick screen from role and approval
 AppDestination resolveAppDestination({
   required UserProfile? profile,
@@ -25,17 +38,15 @@ AppDestination resolveAppDestination({
   if (!isEmailOtpVerified) return AppDestination.emailOtp;
   if (isAuthorizedAdmin) return AppDestination.adminShell;
   if (profile.role == null) return AppDestination.roleChoice;
-  if (!profile.isProfileComplete) return AppDestination.completeProfile;
+  if (isSignupUnfinished(profile)) return AppDestination.completeProfile;
 
   final isApproved = profile.isVerified || isTechnicianApproved;
-  final isNewProvider = profile.initialRole == 'provider' ||
-      (profile.initialRole == null && profile.role == AppRole.provider);
 
   if (profile.role == AppRole.provider) {
     if (isApproved) {
       return AppDestination.providerDashboard;
     }
-    if (isNewProvider) {
+    if (isLockedNewProvider(profile, isApproved)) {
       return AppDestination.providerPendingNew;
     } else {
       return AppDestination.providerPendingCustomer;

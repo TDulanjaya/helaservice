@@ -53,7 +53,9 @@ class ScheduleHelpers {
   /// Checks if a date is today in local time
   static bool isToday(DateTime date, [DateTime? nowOverride]) {
     final now = nowOverride ?? DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   /// Can "today" be chosen for date_only?
@@ -98,17 +100,21 @@ class ScheduleHelpers {
       return ScheduleWindowResult.error('Date cannot be in the past.');
     }
 
-    if (localDate.isAfter(DateTime(now.year, now.month, now.day).add(const Duration(days: 60)))) {
-      return ScheduleWindowResult.error('Date cannot be more than 60 days ahead.');
+    if (localDate.isAfter(
+        DateTime(now.year, now.month, now.day).add(const Duration(days: 60)))) {
+      return ScheduleWindowResult.error(
+          'Date cannot be more than 60 days ahead.');
     }
 
     if (mode == modeDateOnly) {
-      final endAt = DateTime(localDate.year, localDate.month, localDate.day, 20, 0);
+      final endAt =
+          DateTime(localDate.year, localDate.month, localDate.day, 20, 0);
       DateTime startAt;
 
       if (isToday(localDate, now)) {
         if (now.hour < 8) {
-          startAt = DateTime(localDate.year, localDate.month, localDate.day, 8, 0);
+          startAt =
+              DateTime(localDate.year, localDate.month, localDate.day, 8, 0);
         } else {
           startAt = roundUpToNext15Minutes(now);
           if (endAt.difference(startAt).inMinutes < 60) {
@@ -118,7 +124,8 @@ class ScheduleHelpers {
           }
         }
       } else {
-        startAt = DateTime(localDate.year, localDate.month, localDate.day, 8, 0);
+        startAt =
+            DateTime(localDate.year, localDate.month, localDate.day, 8, 0);
       }
 
       return ScheduleWindowResult.valid(
@@ -155,7 +162,8 @@ class ScheduleHelpers {
 
       final diffMinutes = endAt.difference(startAt).inMinutes;
       if (diffMinutes < 60) {
-        return ScheduleWindowResult.error('Time range must be at least 1 hour.');
+        return ScheduleWindowResult.error(
+            'Time range must be at least 1 hour.');
       }
       if (diffMinutes > 720) {
         return ScheduleWindowResult.error('Time range cannot exceed 12 hours.');
@@ -183,9 +191,13 @@ class ScheduleHelpers {
     final s = (slot ?? '').toLowerCase();
     if (s.contains('morning') || s.contains('උදෑසන') || s.contains('காலை')) {
       hour = 8;
-    } else if (s.contains('afternoon') || s.contains('දහවල්') || s.contains('மதியம்')) {
+    } else if (s.contains('afternoon') ||
+        s.contains('දහවල්') ||
+        s.contains('மதியம்')) {
       hour = 12;
-    } else if (s.contains('evening') || s.contains('සවස') || s.contains('மாலை')) {
+    } else if (s.contains('evening') ||
+        s.contains('සවස') ||
+        s.contains('மாலை')) {
       hour = 16;
     } else {
       final match = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(s);
@@ -224,7 +236,9 @@ class ScheduleHelpers {
         return '$dateStr · ${context.l10n.scheduleAnyTime}';
       }
 
-      if (scheduleMode == modeTimeRange && scheduledStartAt != null && scheduledEndAt != null) {
+      if (scheduleMode == modeTimeRange &&
+          scheduledStartAt != null &&
+          scheduledEndAt != null) {
         final startStr = DateFormat.jm(locale).format(scheduledStartAt);
         final endStr = DateFormat.jm(locale).format(scheduledEndAt);
         return '$dateStr · $startStr – $endStr';
@@ -234,11 +248,20 @@ class ScheduleHelpers {
       if (legacySlot != null && legacySlot.isNotEmpty) {
         final s = legacySlot.toLowerCase();
         String slotLabel = legacySlot;
-        if (s.contains('morning') || s.contains('8:00') || s.contains('උදෑසන') || s.contains('காலை')) {
+        if (s.contains('morning') ||
+            s.contains('8:00') ||
+            s.contains('උදෑසන') ||
+            s.contains('காலை')) {
           slotLabel = context.l10n.slotMorning;
-        } else if (s.contains('afternoon') || s.contains('12:00') || s.contains('දහවල්') || s.contains('மதியம்')) {
+        } else if (s.contains('afternoon') ||
+            s.contains('12:00') ||
+            s.contains('දහවල්') ||
+            s.contains('மதியம்')) {
           slotLabel = context.l10n.slotAfternoon;
-        } else if (s.contains('evening') || s.contains('4:00') || s.contains('සවස') || s.contains('மாலை')) {
+        } else if (s.contains('evening') ||
+            s.contains('4:00') ||
+            s.contains('සවස') ||
+            s.contains('மாலை')) {
           slotLabel = context.l10n.slotEvening;
         }
         return '$dateStr · $slotLabel';

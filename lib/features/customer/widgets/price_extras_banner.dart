@@ -25,7 +25,8 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
     }
 
     final total = b.proposedPrice!['totalLkr'] ?? b.agreedPrice ?? 0;
-    final desc = b.proposedPrice!['description'] as String? ?? context.l10n.revisedEstimateDefault;
+    final desc = b.proposedPrice!['description'] as String? ??
+        context.l10n.revisedEstimateDefault;
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -40,7 +41,8 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
         children: [
           Row(
             children: [
-              const Icon(Icons.price_change_outlined, color: AppColors.warning, size: 22),
+              const Icon(Icons.price_change_outlined,
+                  color: AppColors.warning, size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -79,22 +81,29 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
                     onPressed: () async {
                       setState(() => _responding = true);
                       try {
-                        final total = (b.proposedPrice?['totalLkr'] as num?)?.toInt() ?? 0;
-                        await BookingRepository().customerRespondToProposedPrice(
+                        final total =
+                            (b.proposedPrice?['totalLkr'] as num?)?.toInt() ??
+                                0;
+                        await BookingRepository()
+                            .customerRespondToProposedPrice(
                           b.id,
                           approve: false,
                           totalLkr: total,
                         );
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.priceProposalRejected)),
+                            SnackBar(
+                                content:
+                                    Text(context.l10n.priceProposalRejected)),
                           );
                         }
                       } catch (e) {
                         debugPrint('priceProposal reject error: $e');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                            SnackBar(
+                                content: Text(context.l10n.somethingWentWrong),
+                                backgroundColor: AppColors.error),
                           );
                         }
                       } finally {
@@ -104,9 +113,12 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
                       side: const BorderSide(color: AppColors.error),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text(context.l10n.reject, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    child: Text(context.l10n.reject,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 13)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -115,8 +127,11 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
                     onPressed: () async {
                       setState(() => _responding = true);
                       try {
-                        final total = (b.proposedPrice?['totalLkr'] as num?)?.toInt() ?? 0;
-                        await BookingRepository().customerRespondToProposedPrice(
+                        final total =
+                            (b.proposedPrice?['totalLkr'] as num?)?.toInt() ??
+                                0;
+                        await BookingRepository()
+                            .customerRespondToProposedPrice(
                           b.id,
                           approve: true,
                           totalLkr: total,
@@ -133,7 +148,9 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
                         debugPrint('priceProposal approve error: $e');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                            SnackBar(
+                                content: Text(context.l10n.somethingWentWrong),
+                                backgroundColor: AppColors.error),
                           );
                         }
                       } finally {
@@ -143,9 +160,12 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text(context.l10n.approve, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    child: Text(context.l10n.approve,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 13)),
                   ),
                 ),
               ],
@@ -171,8 +191,10 @@ class ExtrasCustomerBanner extends StatelessWidget {
         final extras = snap.data ?? [];
         if (extras.isEmpty) return const SizedBox.shrink();
 
-        final pendingExtras = extras.where((e) => e.status == 'proposed').toList();
-        final approvedExtras = extras.where((e) => e.status == 'approved').toList();
+        final pendingExtras =
+            extras.where((e) => e.status == 'proposed').toList();
+        final approvedExtras =
+            extras.where((e) => e.status == 'approved').toList();
 
         return Column(
           children: [
@@ -183,15 +205,18 @@ class ExtrasCustomerBanner extends StatelessWidget {
             if (approvedExtras.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+                  border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, color: AppColors.success, size: 16),
+                    const Icon(Icons.check_circle_outline,
+                        color: AppColors.success, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -244,12 +269,14 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
         children: [
           Row(
             children: [
-              const Icon(Icons.add_task_rounded, color: AppColors.primary, size: 20),
+              const Icon(Icons.add_task_rounded,
+                  color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '${context.l10n.extraWorkRequested}: LKR ${extra.amountLkr}',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 13.5),
                 ),
               ),
             ],
@@ -282,13 +309,16 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
                           extraAmountLkr: extra.amountLkr,
                           approve: false,
                           currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
-                          currentApprovedTotalLkr: b.approvedTotalLkr ?? b.agreedPriceLkr,
+                          currentApprovedTotalLkr:
+                              b.approvedTotalLkr ?? b.agreedPriceLkr,
                         );
                       } catch (e) {
                         debugPrint('extra reject error: $e');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                            SnackBar(
+                                content: Text(context.l10n.somethingWentWrong),
+                                backgroundColor: AppColors.error),
                           );
                         }
                       } finally {
@@ -298,10 +328,13 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
                       side: const BorderSide(color: AppColors.error),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
-                    child: Text(context.l10n.reject, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text(context.l10n.reject,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -316,13 +349,16 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
                           extraAmountLkr: extra.amountLkr,
                           approve: true,
                           currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
-                          currentApprovedTotalLkr: b.approvedTotalLkr ?? b.agreedPriceLkr,
+                          currentApprovedTotalLkr:
+                              b.approvedTotalLkr ?? b.agreedPriceLkr,
                         );
                       } catch (e) {
                         debugPrint('extra approve error: $e');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                            SnackBar(
+                                content: Text(context.l10n.somethingWentWrong),
+                                backgroundColor: AppColors.error),
                           );
                         }
                       } finally {
@@ -332,10 +368,13 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
-                    child: Text(context.l10n.approve, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text(context.l10n.approve,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

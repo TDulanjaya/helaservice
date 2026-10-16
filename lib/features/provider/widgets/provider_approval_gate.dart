@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -178,6 +179,10 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
         ? Icons.hourglass_top_rounded
         : (isRejected ? Icons.cancel_outlined : Icons.shield_outlined);
 
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final isCustomerHistory =
+        roleProvider.currentUser?.initialRole == 'customer';
+
     return Positioned.fill(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -208,148 +213,161 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
                     ],
                   ),
                   child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        icon: const Icon(Icons.close_rounded, size: 22),
-                        color: context.themeTextSecondary,
-                        tooltip: context.l10n.backToCustomerDashboard,
-                        onPressed: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                                builder: (_) => const HomeDiscoveryScreen()),
-                            (route) => false,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    // animated badge icon
-                    Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.35),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          statusIcon,
-                          size: 38,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // title
-                    Text(
-                      context.l10n.proApprovalRequiredTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: context.themeInk,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // status chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.28),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(statusIcon, size: 13, color: statusColor),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              statusLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // description
-                    Text(
-                      context.l10n.proApprovalRequiredDesc,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        height: 1.45,
-                        color: context.themeTextSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // submit button
-                    PrimaryButton(
-                      label: isPending
-                          ? context.l10n.proVerificationPendingReview
-                          : (isRejected
-                              ? context.l10n.resubmitVerification
-                              : context.l10n.proSubmitNicAction),
-                      leadingIcon: isPending
-                          ? Icons.hourglass_top_rounded
-                          : (isRejected
-                              ? Icons.refresh_rounded
-                              : Icons.badge_outlined),
-                      onPressed: isPending
-                          ? null
-                          : () {
-                              Navigator.of(context).push(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isCustomerHistory)
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.close_rounded, size: 22),
+                            color: context.themeTextSecondary,
+                            tooltip: context.l10n.backToCustomerDashboard,
+                            onPressed: () {
+                              if (kDebugMode) {
+                                debugPrint(
+                                    '[navdbg] -> customer home from provider_approval_gate.dart');
+                              }
+                              Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const NicVerificationScreen(),
-                                ),
+                                    builder: (_) =>
+                                        const HomeDiscoveryScreen()),
+                                (route) => false,
                               );
                             },
-                    ),
-                    const SizedBox(height: 12),
-                    AppOutlineButton(
-                      label: context.l10n.backToCustomerDashboard,
-                      icon: Icons.dashboard_outlined,
-                      onPressed: () {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (_) => const HomeDiscoveryScreen()),
-                          (route) => false,
-                        );
-                      },
-                    ),
-                  ],
+                          ),
+                        ),
+                      const SizedBox(height: 6),
+                      // animated badge icon
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.35),
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            statusIcon,
+                            size: 38,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // title
+                      Text(
+                        context.l10n.proApprovalRequiredTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: context.themeInk,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // status chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.28),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(statusIcon, size: 13, color: statusColor),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                statusLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // description
+                      Text(
+                        context.l10n.proApprovalRequiredDesc,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.45,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // submit button
+                      PrimaryButton(
+                        label: isPending
+                            ? context.l10n.proVerificationPendingReview
+                            : (isRejected
+                                ? context.l10n.resubmitVerification
+                                : context.l10n.proSubmitNicAction),
+                        leadingIcon: isPending
+                            ? Icons.hourglass_top_rounded
+                            : (isRejected
+                                ? Icons.refresh_rounded
+                                : Icons.badge_outlined),
+                        onPressed: isPending
+                            ? null
+                            : () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const NicVerificationScreen(),
+                                  ),
+                                );
+                              },
+                      ),
+                      if (isCustomerHistory) ...[
+                        const SizedBox(height: 12),
+                        AppOutlineButton(
+                          label: context.l10n.backToCustomerDashboard,
+                          icon: Icons.dashboard_outlined,
+                          onPressed: () {
+                            if (kDebugMode) {
+                              debugPrint(
+                                  '[navdbg] -> customer home from provider_approval_gate.dart');
+                            }
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (_) => const HomeDiscoveryScreen()),
+                              (route) => false,
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

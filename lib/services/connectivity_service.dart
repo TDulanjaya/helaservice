@@ -29,8 +29,8 @@ class ConnectivityService {
   }
 
   void _updateStatus(List<ConnectivityResult> results) {
-    final offline = results.isEmpty ||
-        results.every((r) => r == ConnectivityResult.none);
+    final offline =
+        results.isEmpty || results.every((r) => r == ConnectivityResult.none);
     if (isOfflineNotifier.value != offline) {
       isOfflineNotifier.value = offline;
       if (kDebugMode) {

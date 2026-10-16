@@ -92,7 +92,8 @@ class AdminTopBar extends StatelessWidget {
                 border: Border.all(color: context.themeBorder),
               ),
               child: IconButton(
-                icon: Icon(Icons.search, size: 18, color: context.themeTextPrimary),
+                icon: Icon(Icons.search,
+                    size: 18, color: context.themeTextPrimary),
                 onPressed: onSearchTap ?? () {},
                 tooltip: context.l10n.topBarSearch,
                 padding: EdgeInsets.zero,
@@ -161,7 +162,8 @@ class AdminTopBar extends StatelessWidget {
                 child: Text(
                   context.l10n.searchTechniciansNicJobs,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                  style: TextStyle(
+                      fontSize: 12, color: context.themeTextSecondary),
                 ),
               ),
             ]),
@@ -303,8 +305,7 @@ class AdminTopBar extends StatelessWidget {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Text(
-                              context.l10n.noActiveSystemAlerts,
+                          child: Text(context.l10n.noActiveSystemAlerts,
                               style: TextStyle(
                                   color: context.themeTextSecondary,
                                   fontSize: 13)),
@@ -349,8 +350,8 @@ class AdminTopBar extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: event.iconColor
-                                        .withValues(alpha: 0.1),
+                                    color:
+                                        event.iconColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(event.tagLabel,

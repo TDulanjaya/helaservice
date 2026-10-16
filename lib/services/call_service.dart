@@ -140,7 +140,8 @@ class CallService {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Icon(Icons.phone_in_talk, color: AppColors.primary, size: 22),
+                  const Icon(Icons.phone_in_talk,
+                      color: AppColors.primary, size: 22),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -222,7 +223,8 @@ class CallService {
     );
   }
 
-  Future<void> _resolveCall(BuildContext context, String logId, String outcome) async {
+  Future<void> _resolveCall(
+      BuildContext context, String logId, String outcome) async {
     Navigator.pop(context);
     try {
       await _col.doc(logId).update({
@@ -236,8 +238,13 @@ class CallService {
   }
 
   Stream<List<CallLog>> streamAllCallLogs() {
-    return _col.orderBy('startedAt', descending: true).limit(100).snapshots().map(
-          (snap) => snap.docs.map((d) => CallLog.fromMap(d.id, d.data())).toList(),
+    return _col
+        .orderBy('startedAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map(
+          (snap) =>
+              snap.docs.map((d) => CallLog.fromMap(d.id, d.data())).toList(),
         );
   }
 }

@@ -125,16 +125,19 @@ class ProviderNotificationsSheet extends StatelessWidget {
                       final queueData = queueSnap.data?.data();
                       final queueStatus = queueData?['status'] as String?;
                       final bool isRejected = queueStatus == 'rejected';
-                      final bool isApproved = techData?['nicVerified'] == true ||
-                          techData?['isVerified'] == true ||
-                          queueStatus == 'approved';
+                      final bool isApproved =
+                          techData?['nicVerified'] == true ||
+                              techData?['isVerified'] == true ||
+                              queueStatus == 'approved';
 
                       return StreamBuilder<List<Quote>>(
-                        stream: JobRequestRepository().streamProviderQuotes(uid),
+                        stream:
+                            JobRequestRepository().streamProviderQuotes(uid),
                         builder: (context, quotesSnap) {
                           final quotes = quotesSnap.data ?? [];
-                          final acceptedQuotes =
-                              quotes.where((q) => q.status == 'accepted').toList();
+                          final acceptedQuotes = quotes
+                              .where((q) => q.status == 'accepted')
+                              .toList();
 
                           return StreamBuilder<List<JobRequest>>(
                             stream: category.isNotEmpty
@@ -152,9 +155,11 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                   AppCard(
                                     margin: const EdgeInsets.only(bottom: 12),
                                     padding: const EdgeInsets.all(14),
-                                    borderColor: AppColors.error.withValues(alpha: 0.4),
+                                    borderColor:
+                                        AppColors.error.withValues(alpha: 0.4),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const Icon(
                                           Icons.cancel_outlined,
@@ -164,10 +169,12 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                context.l10n.verificationNotApprovedTitle,
+                                                context.l10n
+                                                    .verificationNotApprovedTitle,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 14,
@@ -176,10 +183,12 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                               ),
                                               const SizedBox(height: 3),
                                               Text(
-                                                context.l10n.verificationNotApprovedBody,
+                                                context.l10n
+                                                    .verificationNotApprovedBody,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: context.themeTextSecondary,
+                                                  color: context
+                                                      .themeTextSecondary,
                                                 ),
                                               ),
                                             ],
@@ -195,10 +204,13 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                     margin: const EdgeInsets.only(bottom: 12),
                                     padding: const EdgeInsets.all(14),
                                     borderColor: isApproved
-                                        ? const Color(0xFF22C55E).withValues(alpha: 0.4)
-                                        : AppColors.primary.withValues(alpha: 0.4),
+                                        ? const Color(0xFF22C55E)
+                                            .withValues(alpha: 0.4)
+                                        : AppColors.primary
+                                            .withValues(alpha: 0.4),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Icon(
                                           isApproved
@@ -212,12 +224,15 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 isApproved
-                                                    ? context.l10n.accountVerified
-                                                    : context.l10n.verificationUnderReview,
+                                                    ? context
+                                                        .l10n.accountVerified
+                                                    : context.l10n
+                                                        .verificationUnderReview,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 14,
@@ -226,11 +241,14 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                               const SizedBox(height: 3),
                                               Text(
                                                 isApproved
-                                                    ? context.l10n.nicApprovedMessage
-                                                    : context.l10n.nicUnderReviewMessage,
+                                                    ? context
+                                                        .l10n.nicApprovedMessage
+                                                    : context.l10n
+                                                        .nicUnderReviewMessage,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: context.themeTextSecondary,
+                                                  color: context
+                                                      .themeTextSecondary,
                                                 ),
                                               ),
                                             ],
@@ -242,147 +260,157 @@ class ProviderNotificationsSheet extends StatelessWidget {
                                 );
                               }
 
-                          // accepted quotes
-                          for (final q in acceptedQuotes.take(3)) {
-                            items.add(
-                              AppCard(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(14),
-                                borderColor:
-                                    const Color(0xFF22C55E).withValues(alpha: 0.4),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF22C55E)
-                                            .withValues(alpha: 0.12),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.check_circle_outline,
-                                          color: Color(0xFF22C55E), size: 20),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            context.l10n.quoteAcceptedTitle,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13.5,
-                                            ),
+                              // accepted quotes
+                              for (final q in acceptedQuotes.take(3)) {
+                                items.add(
+                                  AppCard(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(14),
+                                    borderColor: const Color(0xFF22C55E)
+                                        .withValues(alpha: 0.4),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF22C55E)
+                                                .withValues(alpha: 0.12),
+                                            shape: BoxShape.circle,
                                           ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'LKR ${q.quotedPrice.toStringAsFixed(0)} • ${context.l10n.customerConfirmedBooking}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: context.themeTextSecondary,
-                                            ),
+                                          child: const Icon(
+                                              Icons.check_circle_outline,
+                                              color: Color(0xFF22C55E),
+                                              size: 20),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                context.l10n.quoteAcceptedTitle,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'LKR ${q.quotedPrice.toStringAsFixed(0)} • ${context.l10n.customerConfirmedBooking}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: context
+                                                      .themeTextSecondary,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                              Icons.chat_bubble_outline,
+                                              size: 18),
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const ConversationsInboxScreen(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.chat_bubble_outline,
-                                          size: 18),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const ConversationsInboxScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
+                                  ),
+                                );
+                              }
 
-                          // open job alerts
-                          for (final job in openJobs.take(5)) {
-                            items.add(
-                              AppCard(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(14),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            AppColors.primary.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Icon(Icons.radar_rounded,
-                                          color: AppColors.primary, size: 20),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            job.title,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13.5,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                              // open job alerts
+                              for (final job in openJobs.take(5)) {
+                                items.add(
+                                  AppCard(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(14),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            '${CategoryService.instance.nameOf(job.category, context: context)} • ${job.address}',
-                                            style: TextStyle(
-                                              fontSize: 11.5,
-                                              color: context.themeTextSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                          child: const Icon(Icons.radar_rounded,
+                                              color: AppColors.primary,
+                                              size: 20),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                job.title,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13.5,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                '${CategoryService.instance.nameOf(job.category, context: context)} • ${job.address}',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  color: context
+                                                      .themeTextSecondary,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
+                                  ),
+                                );
+                              }
 
-                          if (items.isEmpty) {
-                            return Center(
-                              child: Text(
-                                context.l10n.proNoNotifications,
-                                style: TextStyle(
-                                  color: context.themeTextSecondary,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            );
-                          }
+                              if (items.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    context.l10n.proNoNotifications,
+                                    style: TextStyle(
+                                      color: context.themeTextSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                );
+                              }
 
-                          return ListView(
-                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                            children: items,
+                              return ListView(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                                children: items,
+                              );
+                            },
                           );
                         },
                       );
                     },
                   );
                 },
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  ),
-);
+      ),
+    );
   }
 }

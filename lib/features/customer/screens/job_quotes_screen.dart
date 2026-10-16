@@ -70,7 +70,9 @@ class JobQuotesScreen extends StatelessWidget {
                   child: StreamBuilder<List<Quote>>(
                     stream: repo.streamQuotesForRequest(requestId),
                     builder: (context, quotesSnap) {
-                      if (quotesSnap.connectionState == ConnectionState.waiting && !quotesSnap.hasData) {
+                      if (quotesSnap.connectionState ==
+                              ConnectionState.waiting &&
+                          !quotesSnap.hasData) {
                         return const Center(
                           child: CircularProgressIndicator(strokeWidth: 2.5),
                         );
@@ -125,7 +127,8 @@ class JobQuotesScreen extends StatelessWidget {
                           return _QuoteCard(
                             quote: quote,
                             request: request,
-                            onAccept: () => _acceptQuote(context, quote, request),
+                            onAccept: () =>
+                                _acceptQuote(context, quote, request),
                           );
                         },
                       );
@@ -309,8 +312,8 @@ class JobQuotesScreen extends StatelessWidget {
               Text(
                 '${acceptedQuote.first.providerName} • ${request.agreedPrice != null ? "LKR ${request.agreedPrice!.toStringAsFixed(0)}" : "LKR ${acceptedQuote.first.quotedPrice.toStringAsFixed(0)}"}',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 13, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 13, color: context.themeTextSecondary),
               ),
             const SizedBox(height: 24),
             PrimaryButton(
@@ -319,7 +322,9 @@ class JobQuotesScreen extends StatelessWidget {
               expand: false,
               onPressed: () async {
                 final providerId = request.selectedProviderId ??
-                    (acceptedQuote.isNotEmpty ? acceptedQuote.first.providerId : '');
+                    (acceptedQuote.isNotEmpty
+                        ? acceptedQuote.first.providerId
+                        : '');
                 final tech = await TechnicianRepository().getById(providerId);
 
                 Booking? booking;
@@ -330,7 +335,8 @@ class JobQuotesScreen extends StatelessWidget {
                       .limit(1)
                       .get();
                   if (bSnap.docs.isNotEmpty) {
-                    booking = Booking.fromMap(bSnap.docs.first.id, bSnap.docs.first.data());
+                    booking = Booking.fromMap(
+                        bSnap.docs.first.id, bSnap.docs.first.data());
                   }
                 } catch (_) {}
 
@@ -351,7 +357,9 @@ class JobQuotesScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () async {
                 final pId = request.selectedProviderId ??
-                    (acceptedQuote.isNotEmpty ? acceptedQuote.first.providerId : '');
+                    (acceptedQuote.isNotEmpty
+                        ? acceptedQuote.first.providerId
+                        : '');
                 final pName = acceptedQuote.isNotEmpty
                     ? acceptedQuote.first.providerName
                     : context.l10n.roleProvider;
@@ -373,17 +381,21 @@ class JobQuotesScreen extends StatelessWidget {
               icon: const Icon(Icons.chat_bubble_outline, size: 18),
               label: Text(context.l10n.chatWithProvider),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: () => _cancelJob(context, request),
-              icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.error),
+              icon: const Icon(Icons.cancel_outlined,
+                  size: 16, color: AppColors.error),
               label: Text(
                 context.l10n.cancelBookingOrQuote,
-                style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                    color: AppColors.error, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 12),
@@ -424,10 +436,12 @@ class JobQuotesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            if (request.cancellationReason != null && request.cancellationReason!.isNotEmpty) ...[
+            if (request.cancellationReason != null &&
+                request.cancellationReason!.isNotEmpty) ...[
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: context.themeSurface,
                   borderRadius: BorderRadius.circular(12),
@@ -466,12 +480,16 @@ class JobQuotesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => _deleteJob(context, request),
-              icon: const Icon(Icons.delete_forever, size: 18, color: AppColors.error),
-              label: Text(context.l10n.deleteJob, style: const TextStyle(color: AppColors.error)),
+              icon: const Icon(Icons.delete_forever,
+                  size: 18, color: AppColors.error),
+              label: Text(context.l10n.deleteJob,
+                  style: const TextStyle(color: AppColors.error)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.error),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
@@ -500,7 +518,8 @@ class JobQuotesScreen extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: ctx.themeSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             context.l10n.cancelBookingOrQuote,
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -519,11 +538,15 @@ class JobQuotesScreen extends StatelessWidget {
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: context.l10n.cancellationReasonPrompt,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 items: reasons
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .map((r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r, style: const TextStyle(fontSize: 13))))
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setDialogState(() => selectedReason = val);
@@ -541,7 +564,8 @@ class JobQuotesScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: Text(context.l10n.confirmCancellation),
             ),
@@ -569,7 +593,9 @@ class JobQuotesScreen extends StatelessWidget {
         debugPrint('[JobQuotesScreen] Cancel booking failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+            SnackBar(
+                content: Text(context.l10n.somethingWentWrong),
+                backgroundColor: AppColors.error),
           );
         }
       }
@@ -582,16 +608,21 @@ class JobQuotesScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.repostJob, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.repostJobConfirm, style: TextStyle(color: ctx.themeTextSecondary)),
+        title: Text(context.l10n.repostJob,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.repostJobConfirm,
+            style: TextStyle(color: ctx.themeTextSecondary)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(context.l10n.repostJob),
           ),
@@ -604,14 +635,18 @@ class JobQuotesScreen extends StatelessWidget {
         await JobRequestRepository().repostJobRequest(request.id);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.repostJobSuccess), backgroundColor: AppColors.primary),
+            SnackBar(
+                content: Text(context.l10n.repostJobSuccess),
+                backgroundColor: AppColors.primary),
           );
         }
       } catch (e) {
         debugPrint('[JobQuotesScreen] Repost job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+            SnackBar(
+                content: Text(context.l10n.somethingWentWrong),
+                backgroundColor: AppColors.error),
           );
         }
       }
@@ -624,16 +659,21 @@ class JobQuotesScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.deleteJob, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.deleteJobConfirm, style: TextStyle(color: ctx.themeTextSecondary)),
+        title: Text(context.l10n.deleteJob,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(context.l10n.deleteJobConfirm,
+            style: TextStyle(color: ctx.themeTextSecondary)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(context.l10n.deleteJob),
           ),
@@ -646,7 +686,9 @@ class JobQuotesScreen extends StatelessWidget {
         await JobRequestRepository().deleteJobRequest(request.id);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.deleteJobSuccess), backgroundColor: AppColors.primary),
+            SnackBar(
+                content: Text(context.l10n.deleteJobSuccess),
+                backgroundColor: AppColors.primary),
           );
           Navigator.of(context).pop();
         }
@@ -654,7 +696,9 @@ class JobQuotesScreen extends StatelessWidget {
         debugPrint('[JobQuotesScreen] Delete job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+            SnackBar(
+                content: Text(context.l10n.somethingWentWrong),
+                backgroundColor: AppColors.error),
           );
         }
       }
@@ -670,12 +714,14 @@ class JobQuotesScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.location_off_rounded, color: AppColors.warning, size: 24),
+            const Icon(Icons.location_off_rounded,
+                color: AppColors.warning, size: 24),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 context.l10n.locationRequiredTitle,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
             ),
           ],
@@ -737,7 +783,8 @@ class JobQuotesScreen extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.failedToUpdateJobLocation(e.toString())),
+              content:
+                  Text(context.l10n.failedToUpdateJobLocation(e.toString())),
               backgroundColor: AppColors.error,
             ),
           );
@@ -873,15 +920,18 @@ class JobQuotesScreen extends StatelessWidget {
         context: context,
         builder: (dialogCtx) => AlertDialog(
           backgroundColor: context.themeSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.primary, size: 24),
+              const Icon(Icons.check_circle,
+                  color: AppColors.primary, size: 24),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   context.l10n.providerHired(quote.providerName),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 17),
                 ),
               ),
             ],
@@ -1026,7 +1076,8 @@ class _JobSummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      CategoryService.instance.nameOf(request.category, context: context),
+                      CategoryService.instance
+                          .nameOf(request.category, context: context),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -1037,7 +1088,8 @@ class _JobSummaryCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: request.status == 'open'
                       ? AppColors.primary.withValues(alpha: 0.12)
@@ -1061,7 +1113,9 @@ class _JobSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          if (request.photos.isNotEmpty || request.video != null || request.photoUrls.isNotEmpty) ...[
+          if (request.photos.isNotEmpty ||
+              request.video != null ||
+              request.photoUrls.isNotEmpty) ...[
             const SizedBox(height: 12),
             JobMediaGallery(
               photos: request.photos,
@@ -1073,8 +1127,6 @@ class _JobSummaryCard extends StatelessWidget {
       ),
     );
   }
-
-
 }
 
 class _QuoteCard extends StatefulWidget {
@@ -1107,7 +1159,8 @@ class _QuoteCardState extends State<_QuoteCard> {
     if (mounted && tech != null) {
       setState(() {
         _technician = tech;
-        if (widget.quote.providerLocation.isEmpty && tech.serviceArea.isNotEmpty) {
+        if (widget.quote.providerLocation.isEmpty &&
+            tech.serviceArea.isNotEmpty) {
           _fallbackLocation = tech.serviceArea;
         }
       });
@@ -1116,7 +1169,8 @@ class _QuoteCardState extends State<_QuoteCard> {
 
   void _callProvider() async {
     final phone = _technician?.phone ??
-        (await TechnicianRepository().getById(widget.quote.providerId))?.phone ??
+        (await TechnicianRepository().getById(widget.quote.providerId))
+            ?.phone ??
         '';
     if (!mounted) return;
     if (phone.isNotEmpty) {
@@ -1201,7 +1255,8 @@ class _QuoteCardState extends State<_QuoteCard> {
   Widget build(BuildContext context) {
     final quote = widget.quote;
     final request = widget.request;
-    final isAccepted = request.status == 'assigned' && quote.status == 'accepted';
+    final isAccepted =
+        request.status == 'assigned' && quote.status == 'accepted';
 
     String? distanceLabel;
     if (quote.travelKm > 0) {
@@ -1256,14 +1311,16 @@ class _QuoteCardState extends State<_QuoteCard> {
                         ),
                         if (quote.providerNicVerified) ...[
                           const SizedBox(width: 4),
-                          const Icon(Icons.verified, size: 15, color: AppColors.primary),
+                          const Icon(Icons.verified,
+                              size: 15, color: AppColors.primary),
                         ],
                       ],
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.star, size: 13, color: AppColors.secondaryContainer),
+                        const Icon(Icons.star,
+                            size: 13, color: AppColors.secondaryContainer),
                         const SizedBox(width: 3),
                         Text(
                           '${quote.providerRating.toStringAsFixed(1)} (${quote.providerReviewCount})',
@@ -1275,7 +1332,9 @@ class _QuoteCardState extends State<_QuoteCard> {
                         if (displayLocation.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Icon(
-                            distanceLabel != null ? Icons.near_me : Icons.location_on_outlined,
+                            distanceLabel != null
+                                ? Icons.near_me
+                                : Icons.location_on_outlined,
                             size: 11,
                             color: context.themeTextSecondary,
                           ),
@@ -1328,7 +1387,8 @@ class _QuoteCardState extends State<_QuoteCard> {
             decoration: BoxDecoration(
               color: context.themeSurfaceLow,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: context.themeBorder.withValues(alpha: 0.5)),
+              border:
+                  Border.all(color: context.themeBorder.withValues(alpha: 0.5)),
             ),
             child: Column(
               children: [
@@ -1337,9 +1397,12 @@ class _QuoteCardState extends State<_QuoteCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(context.l10n.visitInspectionFee,
-                          style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary)),
+                          style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary)),
                       Text('${'LKR'} ${quote.visitFeeLkr}',
-                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                          style: const TextStyle(
+                              fontSize: 11.5, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ] else ...[
@@ -1349,23 +1412,30 @@ class _QuoteCardState extends State<_QuoteCard> {
                       children: [
                         Text(
                           '${'Base'} (${quote.quantity?.toStringAsFixed(quote.quantity! % 1 == 0 ? 0 : 1) ?? 1} ${quote.priceUnit ?? 'job'} @ ${'LKR'} ${quote.unitRateLkr}):',
-                          style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                          style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary),
                         ),
                         Text(
                           '${'LKR'} ${((quote.quantity ?? 1.0) * (quote.unitRateLkr ?? 0)).round()}',
-                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              fontSize: 11.5, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
-                  if (quote.materialsEstimateLkr != null && quote.materialsEstimateLkr! > 0) ...[
+                  if (quote.materialsEstimateLkr != null &&
+                      quote.materialsEstimateLkr! > 0) ...[
                     const SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(context.l10n.materialsEstimateColon,
-                            style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary)),
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                color: context.themeTextSecondary)),
                         Text('${'LKR'} ${quote.materialsEstimateLkr}',
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                            style: const TextStyle(
+                                fontSize: 11.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ],
@@ -1377,10 +1447,12 @@ class _QuoteCardState extends State<_QuoteCard> {
                     children: [
                       Text(
                         '${context.l10n.travelTitle} (${quote.travelKm.toStringAsFixed(1)} km @ LKR ${quote.travelRateLkr}/km):',
-                        style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                        style: TextStyle(
+                            fontSize: 11.5, color: context.themeTextSecondary),
                       ),
                       Text('LKR ${quote.travelCostLkr}',
-                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                          style: const TextStyle(
+                              fontSize: 11.5, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ] else ...[
@@ -1390,11 +1462,15 @@ class _QuoteCardState extends State<_QuoteCard> {
                     children: [
                       Text(
                         '${context.l10n.travelTitle}:',
-                        style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+                        style: TextStyle(
+                            fontSize: 11.5, color: context.themeTextSecondary),
                       ),
                       Text(
                         context.l10n.travelIncluded,
-                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.primary),
+                        style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -1410,17 +1486,20 @@ class _QuoteCardState extends State<_QuoteCard> {
               decoration: BoxDecoration(
                 color: context.themeSurfaceLow,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.themeBorder.withValues(alpha: 0.5)),
+                border: Border.all(
+                    color: context.themeBorder.withValues(alpha: 0.5)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.format_quote, size: 14, color: context.themeTextSecondary),
+                  Icon(Icons.format_quote,
+                      size: 14, color: context.themeTextSecondary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       quote.notes,
-                      style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                      style: TextStyle(
+                          fontSize: 12, color: context.themeTextSecondary),
                     ),
                   ),
                 ],
@@ -1436,8 +1515,10 @@ class _QuoteCardState extends State<_QuoteCard> {
                   icon: const Icon(Icons.call_rounded, size: 16),
                   label: Text(context.l10n.callTech),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1446,8 +1527,10 @@ class _QuoteCardState extends State<_QuoteCard> {
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
                   label: Text(context.l10n.chat),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1457,11 +1540,13 @@ class _QuoteCardState extends State<_QuoteCard> {
                           onPressed: null,
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                           child: Text(
                             context.l10n.expiredPill,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 12),
                           ),
                         )
                       : PrimaryButton(
@@ -1483,7 +1568,8 @@ class _QuoteCardState extends State<_QuoteCard> {
                     label: Text(context.l10n.callTech),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
@@ -1491,11 +1577,13 @@ class _QuoteCardState extends State<_QuoteCard> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _chatProvider,
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                    icon:
+                        const Icon(Icons.chat_bubble_outline_rounded, size: 16),
                     label: Text(context.l10n.chat),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),

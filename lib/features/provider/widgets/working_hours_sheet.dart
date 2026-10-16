@@ -71,13 +71,20 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
   void _applyPresetWeekdays() {
     setState(() {
       _schedule = {
-        'monday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '18:00'),
-        'tuesday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '18:00'),
-        'wednesday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '18:00'),
-        'thursday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '18:00'),
-        'friday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '18:00'),
-        'saturday': const WorkingDaySchedule(enabled: false, start: '08:00', end: '18:00'),
-        'sunday': const WorkingDaySchedule(enabled: false, start: '08:00', end: '18:00'),
+        'monday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '18:00'),
+        'tuesday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '18:00'),
+        'wednesday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '18:00'),
+        'thursday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '18:00'),
+        'friday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '18:00'),
+        'saturday': const WorkingDaySchedule(
+            enabled: false, start: '08:00', end: '18:00'),
+        'sunday': const WorkingDaySchedule(
+            enabled: false, start: '08:00', end: '18:00'),
       };
     });
   }
@@ -85,13 +92,20 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
   void _applyPresetAllDays() {
     setState(() {
       _schedule = {
-        'monday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'tuesday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'wednesday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'thursday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'friday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'saturday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
-        'sunday': const WorkingDaySchedule(enabled: true, start: '08:00', end: '20:00'),
+        'monday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'tuesday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'wednesday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'thursday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'friday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'saturday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
+        'sunday': const WorkingDaySchedule(
+            enabled: true, start: '08:00', end: '20:00'),
       };
     });
   }
@@ -99,22 +113,31 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
   void _applyPreset247() {
     setState(() {
       _schedule = {
-        'monday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'tuesday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'wednesday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'thursday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'friday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'saturday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
-        'sunday': const WorkingDaySchedule(enabled: true, start: '00:00', end: '23:59'),
+        'monday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'tuesday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'wednesday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'thursday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'friday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'saturday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
+        'sunday': const WorkingDaySchedule(
+            enabled: true, start: '00:00', end: '23:59'),
       };
     });
   }
 
-  Future<void> _pickTime(BuildContext context, String dayKey, bool isStart) async {
+  Future<void> _pickTime(
+      BuildContext context, String dayKey, bool isStart) async {
     final currentDay = _schedule[dayKey] ?? const WorkingDaySchedule();
     final timeStr = isStart ? currentDay.start : currentDay.end;
     final parts = timeStr.split(':').map(int.parse).toList();
-    final initialTime = TimeOfDay(hour: parts[0], minute: parts.length > 1 ? parts[1] : 0);
+    final initialTime =
+        TimeOfDay(hour: parts[0], minute: parts.length > 1 ? parts[1] : 0);
 
     final picked = await showTimePicker(
       context: context,
@@ -243,12 +266,14 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
             Expanded(
               child: ListView(
                 children: _daysOrder.map((dayKey) {
-                  final daySched = _schedule[dayKey] ?? const WorkingDaySchedule();
+                  final daySched =
+                      _schedule[dayKey] ?? const WorkingDaySchedule();
                   final isEnabled = daySched.enabled;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: isEnabled
                           ? context.themeSurfaceLow
@@ -298,7 +323,8 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
                           ),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 4),
-                            child: Text('-', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text('-',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                           InkWell(
                             onTap: () => _pickTime(context, dayKey, false),

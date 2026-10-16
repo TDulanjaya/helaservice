@@ -18,9 +18,11 @@ class Responsive {
 
   static double height(BuildContext context) => sizeOf(context).height;
 
-  static double shortestSide(BuildContext context) => sizeOf(context).shortestSide;
+  static double shortestSide(BuildContext context) =>
+      sizeOf(context).shortestSide;
 
-  static Orientation orientation(BuildContext context) => MediaQuery.orientationOf(context);
+  static Orientation orientation(BuildContext context) =>
+      MediaQuery.orientationOf(context);
 
   static bool isLandscape(BuildContext context) =>
       orientation(context) == Orientation.landscape;
@@ -31,7 +33,8 @@ class Responsive {
 
   // desktop requires wide screen and large shortest side
   static bool isDesktop(BuildContext context) =>
-      width(context) >= desktopWidth && shortestSide(context) >= tabletShortestSide;
+      width(context) >= desktopWidth &&
+      shortestSide(context) >= tabletShortestSide;
 
   // phone in landscape: landscape orientation with phone-sized shortest side (< 600)
   static bool isPhoneLandscape(BuildContext context) =>

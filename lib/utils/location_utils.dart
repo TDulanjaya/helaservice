@@ -213,14 +213,16 @@ class ArrivalZoneUtils {
   /// Calculates effective distance taking accuracy into account:
   /// distanceM - min(accuracyM, 100)
   static int effectiveDistance(int distanceM, int accuracyM) {
-    final clampedAccuracy = accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
+    final clampedAccuracy =
+        accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
     final diff = distanceM - clampedAccuracy;
     return diff > 0 ? diff : 0;
   }
 
   /// Inside arrival zone if: distanceM - min(accuracyM, 100) <= 200
   static bool isInsideZone(int distanceM, int accuracyM) {
-    final clampedAccuracy = accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
+    final clampedAccuracy =
+        accuracyM < 100 ? (accuracyM > 0 ? accuracyM : 0) : 100;
     return (distanceM - clampedAccuracy) <= 200;
   }
 
@@ -239,7 +241,9 @@ class ArrivalZoneUtils {
   }) {
     final currentTime = now ?? DateTime.now();
     Position? resolvedPosition = currentPosition;
-    if (resolvedPosition == null && cachedPosition != null && cachedTimestamp != null) {
+    if (resolvedPosition == null &&
+        cachedPosition != null &&
+        cachedTimestamp != null) {
       if (currentTime.difference(cachedTimestamp) <= maxFreshness) {
         resolvedPosition = cachedPosition;
       }

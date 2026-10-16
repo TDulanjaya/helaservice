@@ -59,14 +59,28 @@ class _AdminShellState extends State<AdminShell> {
 
             final navDefinitions = [
               (NavItem(Icons.grid_view_rounded, context.l10n.navOverview), 0),
-              (NavItem(Icons.badge_outlined, context.l10n.navVerify, badge: verifyBadge), 1),
-              (NavItem(Icons.manage_accounts_outlined, context.l10n.navUserManagement), 2),
+              (
+                NavItem(Icons.badge_outlined, context.l10n.navVerify,
+                    badge: verifyBadge),
+                1
+              ),
+              (
+                NavItem(Icons.manage_accounts_outlined,
+                    context.l10n.navUserManagement),
+                2
+              ),
               (NavItem(Icons.layers_outlined, context.l10n.navCoverage), 3),
               (NavItem(Icons.people_outline, context.l10n.navTeam), 4),
-              (NavItem(Icons.format_list_bulleted, context.l10n.jobLedgerNav), 5),
+              (
+                NavItem(Icons.format_list_bulleted, context.l10n.jobLedgerNav),
+                5
+              ),
               if (canHandleSupport)
-                (NavItem(Icons.warning_amber_rounded, context.l10n.navDisputes,
-                    badge: complaintsBadge), 6),
+                (
+                  NavItem(Icons.warning_amber_rounded, context.l10n.navDisputes,
+                      badge: complaintsBadge),
+                  6
+                ),
               (NavItem(Icons.tune, context.l10n.navSettings), 7),
             ];
 
@@ -93,15 +107,19 @@ class _AdminShellState extends State<AdminShell> {
               if (roleProvider.isSuperAdmin) return true;
               switch (i) {
                 case 1:
-                  return roleProvider.hasAdminPermission(AdminPermission.verifyNic);
+                  return roleProvider
+                      .hasAdminPermission(AdminPermission.verifyNic);
                 case 3:
-                  return roleProvider.hasAdminPermission(AdminPermission.manageCategories);
+                  return roleProvider
+                      .hasAdminPermission(AdminPermission.manageCategories);
                 case 4:
                   return roleProvider.isSuperAdmin;
                 case 5:
-                  return roleProvider.hasAdminPermission(AdminPermission.viewFinances);
+                  return roleProvider
+                      .hasAdminPermission(AdminPermission.viewFinances);
                 case 6:
-                  return roleProvider.hasAdminPermission(AdminPermission.handleSupport);
+                  return roleProvider
+                      .hasAdminPermission(AdminPermission.handleSupport);
                 default:
                   return true;
               }
@@ -145,8 +163,7 @@ class _AdminShellState extends State<AdminShell> {
                       currentIndex: currentBottomNavIndex,
                       compact: true,
                       onTap: (navItemIndex) {
-                        final targetIndex =
-                            navDefinitions[navItemIndex].$2;
+                        final targetIndex = navDefinitions[navItemIndex].$2;
                         handleTabSelect(targetIndex);
                       },
                     ),

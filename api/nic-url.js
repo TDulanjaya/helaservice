@@ -88,56 +88,82 @@ module.exports = async function handler(req, res) {
     }
 
     const payload = req.method === 'POST' ? (req.body || {}) : (req.query || {});
-    const { providerId, side } = payload;
+    const { providerId, side, key: certKey } = payload;
 
-    if (!providerId || (side !== 'front' && side !== 'back')) {
-      return res.status(400).json({ error: 'providerId and side are required' });
+    if (!providerId) {
+      return res.status(400).json({ error: 'providerId is required' });
     }
 
-    // find document key
     let key = null;
-    const kycDoc = await db
-      .collection('technicians')
-      .doc(providerId)
-      .collection('private')
-      .doc('kyc')
-      .get();
 
-    if (kycDoc.exists) {
-      const data = kycDoc.data() || {};
-      key = side === 'front'
-        ? (data.nicFrontKey || data.nicFrontUrl)
-        : (data.nicBackKey || data.nicBackUrl);
-    }
+    if (certKey && typeof certKey === 'string') {
+      if (!certKey.startsWith(`certs/${providerId}/`)) {
+        return res.status(400).json({ error: 'invalid_cert_key' });
+      }
 
-    if (!key) {
-      const queueDoc = await db.collection('verificationQueue').doc(providerId).get();
-      if (queueDoc.exists) {
-        const data = queueDoc.data() || {};
+      // verify that certificates doc with that key exists for this provider
+      const certSnap = await db
+        .collection('technicians')
+        .doc(providerId)
+        .collection('certificates')
+        .where('key', '==', certKey)
+        .limit(1)
+        .get();
+
+      if (certSnap.empty) {
+        return res.status(404).json({ error: 'certificate_not_found' });
+      }
+
+      key = certKey;
+    } else {
+      if (side !== 'front' && side !== 'back') {
+        return res.status(400).json({ error: 'providerId and valid side (front/back) or key are required' });
+      }
+
+      // find document key
+      const kycDoc = await db
+        .collection('technicians')
+        .doc(providerId)
+        .collection('private')
+        .doc('kyc')
+        .get();
+
+      if (kycDoc.exists) {
+        const data = kycDoc.data() || {};
         key = side === 'front'
           ? (data.nicFrontKey || data.nicFrontUrl)
           : (data.nicBackKey || data.nicBackUrl);
       }
-    }
 
-    if (!key) {
-      const techDoc = await db.collection('technicians').doc(providerId).get();
-      if (techDoc.exists) {
-        const data = techDoc.data() || {};
-        key = side === 'front' ? data.nicFrontUrl : data.nicBackUrl;
+      if (!key) {
+        const queueDoc = await db.collection('verificationQueue').doc(providerId).get();
+        if (queueDoc.exists) {
+          const data = queueDoc.data() || {};
+          key = side === 'front'
+            ? (data.nicFrontKey || data.nicFrontUrl)
+            : (data.nicBackKey || data.nicBackUrl);
+        }
       }
-    }
 
-    if (!key || typeof key !== 'string') {
-      return res.status(404).json({ error: 'NIC key not found for provider' });
-    }
+      if (!key) {
+        const techDoc = await db.collection('technicians').doc(providerId).get();
+        if (techDoc.exists) {
+          const data = techDoc.data() || {};
+          key = side === 'front' ? data.nicFrontUrl : data.nicBackUrl;
+        }
+      }
 
-    if (key.startsWith('http://') || key.startsWith('https://')) {
-      return res.status(409).json({ error: 'legacy_nic_url' });
-    }
+      if (!key || typeof key !== 'string') {
+        return res.status(404).json({ error: 'NIC key not found for provider' });
+      }
 
-    if (!key.startsWith(`nic/${providerId}/`)) {
-      return res.status(400).json({ error: 'invalid_nic_key' });
+      if (key.startsWith('http://') || key.startsWith('https://')) {
+        return res.status(409).json({ error: 'legacy_nic_url' });
+      }
+
+      if (!key.startsWith(`nic/${providerId}/`)) {
+        return res.status(400).json({ error: 'invalid_nic_key' });
+      }
     }
 
     const s3 = getPrivateS3Client();
@@ -156,10 +182,10 @@ module.exports = async function handler(req, res) {
 
     // log view event to admin audit logs
     await db.collection('adminLogs').add({
-      action: 'nic_viewed',
+      action: certKey ? 'cert_viewed' : 'nic_viewed',
       adminUid: callerUid,
       providerId,
-      side,
+      side: side || null,
       key,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: Date.now(),

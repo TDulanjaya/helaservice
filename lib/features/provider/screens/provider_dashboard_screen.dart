@@ -132,8 +132,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ? user!.displayName
         : context.l10n.roleProvider;
     final tradeLabel = user?.serviceCategory?.isNotEmpty == true
-        ? context.l10n.categorySpecialist(
-            CategoryService.instance.nameOf(user!.serviceCategory!, context: context))
+        ? context.l10n.categorySpecialist(CategoryService.instance
+            .nameOf(user!.serviceCategory!, context: context))
         : context.l10n.certifiedArtisan;
     final providerCategory = user?.serviceCategory ?? '';
 
@@ -217,7 +217,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             const SizedBox(height: 16),
             if (roleProvider.isAuthorizedAdmin) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: context.themeAmberTint,
                   borderRadius: BorderRadius.circular(14),
@@ -850,8 +851,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                   request: req,
                                   providerLat: pLat,
                                   providerLng: pLng,
-                                  onSendQuote: () =>
-                                      _openSubmitQuoteSheet(req),
+                                  onSendQuote: () => _openSubmitQuoteSheet(req),
                                 );
                               }).toList(),
                             ),
@@ -927,7 +927,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                   children: [
                                     RescheduleProposalBanner(
                                       booking: b,
-                                      currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                      currentUid: FirebaseAuth
+                                              .instance.currentUser?.uid ??
+                                          '',
                                       actorRole: 'provider',
                                     ),
                                     Row(
@@ -943,7 +945,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                           ),
                                           child: Text(
                                             b.scheduledDate != null
-                                                ? b.formattedScheduledSummary(context)
+                                                ? b.formattedScheduledSummary(
+                                                    context)
                                                 : b.time,
                                             style: const TextStyle(
                                               fontSize: 11.5,
@@ -985,7 +988,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               CallService.instance.startCall(
                                                 context: context,
                                                 calleePhone: b.customerPhone,
-                                                calleeName: b.customerName.isNotEmpty
+                                                calleeName: b
+                                                        .customerName.isNotEmpty
                                                     ? b.customerName
                                                     : context.l10n.roleCustomer,
                                                 bookingId: b.id,
@@ -1059,32 +1063,45 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               size: 16,
                                               color: AppColors.primary),
                                         ),
-                                        if (b.status == JobStatus.pending || b.status == JobStatus.confirmed) ...[
+                                        if (b.status == JobStatus.pending ||
+                                            b.status ==
+                                                JobStatus.confirmed) ...[
                                           const SizedBox(width: 6),
                                           IconButton(
-                                            tooltip: context.l10n.rescheduleBooking,
-                                            onPressed: () => RescheduleSheet.show(
+                                            tooltip:
+                                                context.l10n.rescheduleBooking,
+                                            onPressed: () =>
+                                                RescheduleSheet.show(
                                               context: context,
                                               booking: b,
-                                              currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                                              currentUid: FirebaseAuth.instance
+                                                      .currentUser?.uid ??
+                                                  '',
                                               actorRole: 'provider',
                                             ),
                                             style: IconButton.styleFrom(
-                                              backgroundColor: context.themeSurfaceLow,
+                                              backgroundColor:
+                                                  context.themeSurfaceLow,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(10),
-                                                side: BorderSide(color: context.themeBorder),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                side: BorderSide(
+                                                    color: context.themeBorder),
                                               ),
                                               padding: const EdgeInsets.all(8),
                                             ),
-                                            icon: const Icon(Icons.calendar_month_outlined,
-                                                size: 16, color: AppColors.primary),
+                                            icon: const Icon(
+                                                Icons.calendar_month_outlined,
+                                                size: 16,
+                                                color: AppColors.primary),
                                           ),
                                         ],
                                         const SizedBox(width: 6),
                                         IconButton(
-                                          tooltip: context.l10n.reportProblemTitle,
-                                          onPressed: () => ReportProblemDialog.show(
+                                          tooltip:
+                                              context.l10n.reportProblemTitle,
+                                          onPressed: () =>
+                                              ReportProblemDialog.show(
                                             context,
                                             bookingId: b.id,
                                             otherPartyId: b.customerId,
@@ -1103,8 +1120,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                             padding: const EdgeInsets.all(8),
                                           ),
                                           icon: const Icon(Icons.flag_outlined,
-                                              size: 16,
-                                              color: AppColors.error),
+                                              size: 16, color: AppColors.error),
                                         ),
                                       ],
                                     ),
@@ -1114,9 +1130,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                         children: [
                                           Expanded(
                                             child: PrimaryButton(
-                                              label: context.l10n.acceptDirectBooking,
-                                              leadingIcon:
-                                                  Icons.check_circle_outline_rounded,
+                                              label: context
+                                                  .l10n.acceptDirectBooking,
+                                              leadingIcon: Icons
+                                                  .check_circle_outline_rounded,
                                               onPressed: () async {
                                                 await BookingRepository()
                                                     .acceptBookingByProvider(
@@ -1135,10 +1152,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                                               foregroundColor: AppColors.error,
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(12)),
+                                                      BorderRadius.circular(
+                                                          12)),
                                               padding: const EdgeInsets.all(12),
                                             ),
-                                            icon: const Icon(Icons.close_rounded,
+                                            icon: const Icon(
+                                                Icons.close_rounded,
                                                 size: 20),
                                             onPressed: () async {
                                               await BookingRepository()
@@ -1335,9 +1354,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? AppColors.primary
-                : context.themeTextSecondary,
+            color: isSelected ? AppColors.primary : context.themeTextSecondary,
           ),
         ),
       ),
@@ -1350,9 +1367,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     EffectiveProviderLocation effectiveLoc,
   ) {
     final isCurrent = effectiveLoc.source == ProviderLocationSource.current;
-    final areaName = (tech?.baseArea != null && tech!.baseArea!.trim().isNotEmpty)
-        ? tech.baseArea!.trim()
-        : extractBaseArea(address: tech?.baseAddress);
+    final areaName =
+        (tech?.baseArea != null && tech!.baseArea!.trim().isNotEmpty)
+            ? tech.baseArea!.trim()
+            : extractBaseArea(address: tech?.baseAddress);
 
     final title = isCurrent
         ? context.l10n.showingJobsNearYouNow
@@ -1661,7 +1679,9 @@ class _JobRequestCard extends StatelessWidget {
               color: context.themeTextSecondary,
             ),
           ),
-          if (request.photos.isNotEmpty || request.video != null || request.photoUrls.isNotEmpty) ...[
+          if (request.photos.isNotEmpty ||
+              request.video != null ||
+              request.photoUrls.isNotEmpty) ...[
             const SizedBox(height: 12),
             JobMediaGallery(
               photos: request.photos,
@@ -1831,8 +1851,6 @@ class _JobRequestCard extends StatelessWidget {
       ),
     );
   }
-
-
 }
 
 class _QuoteHistoryTile extends StatelessWidget {
@@ -1914,11 +1932,15 @@ class _QuoteHistoryTile extends StatelessWidget {
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: context.l10n.cancellationReasonPrompt,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 items: reasons
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .map((r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r, style: const TextStyle(fontSize: 13))))
                     .toList(),
                 onChanged: (val) {
                   if (val != null) {

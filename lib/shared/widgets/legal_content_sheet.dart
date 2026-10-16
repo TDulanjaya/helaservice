@@ -45,7 +45,8 @@ class LegalContentSheet extends StatelessWidget {
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: context.themeTextSecondary,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+              labelStyle:
+                  const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
               tabs: [
                 Tab(text: context.l10n.privacyPolicy),
                 Tab(text: context.l10n.termsOfService),
@@ -77,25 +78,29 @@ class LegalContentSheet extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'HelaService values your privacy. We collect personal data such as contact numbers, service locations, and artisan identity verification documents strictly to facilitate direct home service connections in Sri Lanka.',
-          style: TextStyle(fontSize: 13.5, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13.5, height: 1.5, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('1. Information We Collect'),
         Text(
           context.l10n.privacyDataCollectionPoints,
-          style: TextStyle(fontSize: 13, height: 1.6, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.6, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('2. Data Usage & Security'),
         Text(
           'Your data is encrypted in transit and securely stored. We never sell your personal information to third parties. Contact numbers are only shared between parties after a quote is accepted.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.5, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('3. Account Deletion'),
         Text(
           'You may request complete account deletion at any time in app settings. All identification records and account data will be permanently removed.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.5, color: context.themeTextSecondary),
         ),
       ],
     );
@@ -112,25 +117,29 @@ class LegalContentSheet extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'By using HelaService, you agree to these Terms of Service. Please read them carefully.',
-          style: TextStyle(fontSize: 13.5, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13.5, height: 1.5, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('1. Direct Cash Settlements'),
         Text(
           'HelaService connects customers with independent service artisans. All service payments are made directly in cash upon job completion and PIN verification.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.5, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('2. Safety & Verification'),
         Text(
           'Artisans undergo identity verification. Customers and providers must treat each other with respect. Fraudulent behavior or harassment will lead to immediate account termination.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.5, color: context.themeTextSecondary),
         ),
         const SizedBox(height: 16),
         _buildSectionHeader('3. Disclaimers'),
         Text(
           'HelaService provides a coordination platform. While we enforce verification checks, services are contracted directly between customer and artisan.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: context.themeTextSecondary),
+          style: TextStyle(
+              fontSize: 13, height: 1.5, color: context.themeTextSecondary),
         ),
       ],
     );

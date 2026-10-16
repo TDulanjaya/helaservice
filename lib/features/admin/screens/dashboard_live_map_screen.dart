@@ -86,8 +86,7 @@ class DashboardLiveMapScreen extends StatelessWidget {
                 }
 
                 return Column(
-                  children:
-                      roster.map((r) => _MobileRosterCard(r: r)).toList(),
+                  children: roster.map((r) => _MobileRosterCard(r: r)).toList(),
                 );
               },
             ),
@@ -126,113 +125,120 @@ class DashboardLiveMapScreen extends StatelessWidget {
                         );
                       }
 
-                    return Table(
-                      columnWidths: const {
-                        0: FlexColumnWidth(2.2),
-                        1: FlexColumnWidth(1.6),
-                        2: FlexColumnWidth(1.4),
-                        3: FlexColumnWidth(1.4),
-                        4: FlexColumnWidth(1.4),
-                        5: FlexColumnWidth(1.2),
-                      },
-                      children: [
-                        TableRow(children: [
-                          _TableHeaderCell(context.l10n.liveMapColArtisan),
-                          _TableHeaderCell(context.l10n.liveMapColAssignedZone),
-                          _TableHeaderCell(context.l10n.ocrStatus),
-                          _TableHeaderCell(context.l10n.liveMapColPayout),
-                          _TableHeaderCell(context.l10n.rating),
-                          _TableHeaderCell(context.l10n.liveMapColQuickDispatch),
-                        ]),
-                        ...roster.map((r) => TableRow(children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                child: Row(children: [
-                                  Icon(r.tradeIcon,
-                                      size: 16, color: AppColors.primary),
-                                  const SizedBox(width: 8),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                      return Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2.2),
+                          1: FlexColumnWidth(1.6),
+                          2: FlexColumnWidth(1.4),
+                          3: FlexColumnWidth(1.4),
+                          4: FlexColumnWidth(1.4),
+                          5: FlexColumnWidth(1.2),
+                        },
+                        children: [
+                          TableRow(children: [
+                            _TableHeaderCell(context.l10n.liveMapColArtisan),
+                            _TableHeaderCell(
+                                context.l10n.liveMapColAssignedZone),
+                            _TableHeaderCell(context.l10n.ocrStatus),
+                            _TableHeaderCell(context.l10n.liveMapColPayout),
+                            _TableHeaderCell(context.l10n.rating),
+                            _TableHeaderCell(
+                                context.l10n.liveMapColQuickDispatch),
+                          ]),
+                          ...roster.map((r) => TableRow(children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  child: Row(children: [
+                                    Icon(r.tradeIcon,
+                                        size: 16, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(r.name,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 12.5)),
+                                        Text(r.nic,
+                                            style: const TextStyle(
+                                                fontSize: 10,
+                                                color: AppColors.outline)),
+                                      ],
+                                    ),
+                                  ]),
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Text(r.zone,
+                                        style: const TextStyle(fontSize: 12))),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                        color: r.statusColor
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(999)),
+                                    child: Text(r.status,
+                                        style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: r.statusColor,
+                                            fontWeight: FontWeight.w700)),
+                                  ),
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    child: Text(
+                                        context.l10n
+                                            .liveMapPayoutToday(r.payoutToday),
+                                        style: const TextStyle(fontSize: 12))),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(r.name,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 12.5)),
-                                      Text(r.nic,
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: AppColors.outline)),
+                                      const Icon(Icons.star,
+                                          size: 13,
+                                          color: AppColors.secondaryContainer),
+                                      const SizedBox(width: 3),
+                                      Flexible(
+                                        child: Text(
+                                            '${r.rating} (${r.reviews})',
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                const TextStyle(fontSize: 11)),
+                                      ),
                                     ],
                                   ),
-                                ]),
-                              ),
-                              Padding(
+                                ),
+                                Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 10),
-                                  child: Text(r.zone,
-                                      style: const TextStyle(fontSize: 12))),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                      color:
-                                          r.statusColor.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(999)),
-                                  child: Text(r.status,
-                                      style: TextStyle(
-                                          fontSize: 10.5,
-                                          color: r.statusColor,
-                                          fontWeight: FontWeight.w700)),
+                                  child: TextButton(
+                                      onPressed: () =>
+                                          _showDispatchDialog(context, r),
+                                      child: Text(
+                                          _actionLabelText(
+                                              context, r.actionLabel),
+                                          style:
+                                              const TextStyle(fontSize: 11))),
                                 ),
-                              ),
-                              Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: Text(
-                                      context.l10n
-                                          .liveMapPayoutToday(r.payoutToday),
-                                      style: const TextStyle(fontSize: 12))),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.star,
-                                        size: 13,
-                                        color: AppColors.secondaryContainer),
-                                    const SizedBox(width: 3),
-                                    Flexible(
-                                      child: Text('${r.rating} (${r.reviews})',
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 11)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                child: TextButton(
-                                    onPressed: () =>
-                                        _showDispatchDialog(context, r),
-                                    child: Text(
-                                        _actionLabelText(context, r.actionLabel),
-                                        style: const TextStyle(fontSize: 11))),
-                              ),
-                            ])),
-                      ],
-                    );
-                  },
-                ),
-              ],
+                              ])),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -275,9 +281,8 @@ ArtisanRosterRow _technicianToRosterRow(BuildContext context, Technician t) {
     nic: t.nicVerified ? l10n.liveMapNicVerified : l10n.liveMapNicPending,
     trade: t.title,
     tradeIcon: getTradeIcon(t.title),
-    zone: t.serviceArea.isNotEmpty
-        ? t.serviceArea
-        : l10n.liveMapZoneColomboMetro,
+    zone:
+        t.serviceArea.isNotEmpty ? t.serviceArea : l10n.liveMapZoneColomboMetro,
     status: statusStr,
     statusColor: statusCol,
     // base rate in ui
@@ -370,7 +375,8 @@ void _showDispatchDialog(BuildContext context, ArtisanRosterRow r) {
                                 .collection(FirestorePaths.dispatchEvents)
                                 .add({
                               'title': 'MANUAL_DISPATCH_ASSIGNED',
-                              'detail': context.l10n.manualDispatchAssignedDesc(r.name, req.title, addr),
+                              'detail': context.l10n.manualDispatchAssignedDesc(
+                                  r.name, req.title, addr),
                               'tagLabel': 'DISPATCHED',
                               'timeAgo': '',
                               'iconKey': 'bolt',
@@ -464,7 +470,8 @@ class _MobileRosterCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: r.statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
@@ -549,10 +556,13 @@ class _MobileRosterCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => _showDispatchDialog(context, r),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: context.isDark ? Colors.white : AppColors.ink,
-                    foregroundColor: context.isDark ? AppColors.ink : Colors.white,
+                    backgroundColor:
+                        context.isDark ? Colors.white : AppColors.ink,
+                    foregroundColor:
+                        context.isDark ? AppColors.ink : Colors.white,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                     minimumSize: const Size(80, 38),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -572,7 +582,8 @@ class _MobileRosterCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: context.themeBorder, width: 1.2),
                     foregroundColor: context.themeTextPrimary,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     minimumSize: const Size(80, 38),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -759,10 +770,9 @@ class _LiveDashboardStats extends StatelessWidget {
                   icon: Icons.receipt_long,
                   label: context.l10n.totalBookingsTitle,
                   value: '$totalBookings',
-                  trailingBadge:
-                      activeBookings > 0
-                          ? context.l10n.liveMapActiveCount(activeBookings)
-                          : null,
+                  trailingBadge: activeBookings > 0
+                      ? context.l10n.liveMapActiveCount(activeBookings)
+                      : null,
                   subtitle: context.l10n.completedInProgressSummary(
                     '$completedBookings',
                     '$activeBookings',
@@ -815,13 +825,13 @@ class _LiveDashboardStats extends StatelessWidget {
   }
 }
 
-
 class _LiveTrafficHeatmapCard extends StatefulWidget {
   final bool isMobile;
   const _LiveTrafficHeatmapCard({required this.isMobile});
 
   @override
-  State<_LiveTrafficHeatmapCard> createState() => _LiveTrafficHeatmapCardState();
+  State<_LiveTrafficHeatmapCard> createState() =>
+      _LiveTrafficHeatmapCardState();
 }
 
 class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
@@ -865,8 +875,14 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
 
     for (final d in docs) {
       final data = d.data();
-      final lat = (data['currentLat'] ?? data['baseLat'] ?? data['latitude'] ?? data['lat']) as num?;
-      final lng = (data['currentLng'] ?? data['baseLng'] ?? data['longitude'] ?? data['lng']) as num?;
+      final lat = (data['currentLat'] ??
+          data['baseLat'] ??
+          data['latitude'] ??
+          data['lat']) as num?;
+      final lng = (data['currentLng'] ??
+          data['baseLng'] ??
+          data['longitude'] ??
+          data['lng']) as num?;
       final districtStr = data['district'] as String?;
       final serviceAreaStr = data['serviceArea'] as String?;
 
@@ -1009,8 +1025,7 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
         border: Border.all(color: context.themeBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black
-                .withValues(alpha: context.isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: 12,
           ),
         ],

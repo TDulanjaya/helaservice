@@ -173,7 +173,8 @@ class AppMapMarker {
     final isZero = count == 0;
     final size = isZero ? 24.0 : (isLarge ? 42.0 : 32.0);
     final totalHeight = size + 18.0; // height with label
-    final markerColor = color ?? (isZero ? const Color(0xFF9E9E9E) : AppColors.primary);
+    final markerColor =
+        color ?? (isZero ? const Color(0xFF9E9E9E) : AppColors.primary);
 
     return AppMapMarker(
       point: point,
@@ -202,7 +203,8 @@ class AppMapMarker {
                           offset: const Offset(0, 3),
                         ),
                       ],
-                border: Border.all(color: Colors.white, width: isZero ? 1.5 : 2),
+                border:
+                    Border.all(color: Colors.white, width: isZero ? 1.5 : 2),
               ),
               alignment: Alignment.center,
               child: Text(

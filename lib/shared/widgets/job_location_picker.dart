@@ -140,8 +140,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   Map<String, String> get _networkHeaders => kIsWeb
       ? const <String, String>{}
       : const <String, String>{
-          'User-Agent':
-              'HelaService-App/1.0 (https://helaservice.vercel.app)',
+          'User-Agent': 'HelaService-App/1.0 (https://helaservice.vercel.app)',
           'Referer': 'https://helaservice.vercel.app',
         };
 
@@ -159,11 +158,8 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
   // format short address text
   String _formatShortAddress(String raw) {
     if (raw.trim().isEmpty) return '';
-    final parts = raw
-        .split(',')
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
+    final parts =
+        raw.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
     if (parts.length <= 3) {
       final joined = parts.join(', ');
       return joined.length > 60 ? '${joined.substring(0, 57)}...' : joined;
@@ -715,8 +711,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
 
     final noteText = _noteController.text.trim();
     final houseNoText = _houseNoController.text.trim();
-    final finalAddress =
-        _fullAddress.isNotEmpty ? _fullAddress : _shortAddress;
+    final finalAddress = _fullAddress.isNotEmpty ? _fullAddress : _shortAddress;
 
     final location = JobLocation(
       latitude: _latitude!,
@@ -983,8 +978,8 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(
-                              alpha: context.isDark ? 0.3 : 0.05),
+                          color: Colors.black
+                              .withValues(alpha: context.isDark ? 0.3 : 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -1111,8 +1106,8 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
-                                    context.l10n
-                                        .accuracyBadge(_accuracyMeters!.round()),
+                                    context.l10n.accuracyBadge(
+                                        _accuracyMeters!.round()),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
@@ -1294,8 +1289,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                               // hide settings on web
                               if (!kIsWeb && _permissionPermanentlyDenied)
                                 OutlinedButton.icon(
-                                  onPressed: () =>
-                                      Geolocator.openAppSettings(),
+                                  onPressed: () => Geolocator.openAppSettings(),
                                   icon: const Icon(Icons.settings_outlined,
                                       size: 16),
                                   label: Text(context.l10n.openSettings),

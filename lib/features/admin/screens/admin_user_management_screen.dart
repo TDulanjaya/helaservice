@@ -61,7 +61,9 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     }
     _reasonController.clear();
     final String roleLabel;
-    if (user.adminRole == AdminRole.superAdmin || isSuper || user.isSuperAdmin) {
+    if (user.adminRole == AdminRole.superAdmin ||
+        isSuper ||
+        user.isSuperAdmin) {
       roleLabel = context.l10n.roleSuperAdminBadge;
     } else if (user.adminRole == AdminRole.opsAdmin) {
       roleLabel = context.l10n.roleOpsAdminBadge;
@@ -121,100 +123,101 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.suspendUserConfirmDesc,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.themeTextSecondary,
-                        height: 1.4,
+                    children: [
+                      Text(
+                        context.l10n.suspendUserConfirmDesc,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.themeTextSecondary,
+                          height: 1.4,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.l10n.enterBanReason,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _reasonController,
-                      maxLines: 3,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        color: context.themeTextPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: context.l10n.banReasonHint,
-                        hintStyle: TextStyle(
+                      const SizedBox(height: 16),
+                      Text(
+                        context.l10n.enterBanReason,
+                        style: TextStyle(
                           fontSize: 12.5,
-                          color: context.themeTextSecondary.withValues(alpha: 0.6),
-                        ),
-                        filled: true,
-                        fillColor: context.isDark
-                            ? context.themeSurfaceLow
-                            : const Color(0xFFF7F8FA),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: context.themeBorder),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: context.themeBorder),
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                          borderSide:
-                              BorderSide(color: AppColors.error, width: 1.5),
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextPrimary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        context.l10n.presetAbusiveComm,
-                        context.l10n.presetFraudActivity,
-                        context.l10n.presetFailedDispute,
-                        context.l10n.presetPolicyViolation,
-                      ].map((preset) {
-                        return InkWell(
-                          onTap: () {
-                            setDialogState(() {
-                              _reasonController.text = preset;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: context.isDark
-                                  ? context.themeSurfaceLow
-                                  : const Color(0xFFF1F3F5),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: context.themeBorder),
-                            ),
-                            child: Text(
-                              preset,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: context.themeTextSecondary,
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _reasonController,
+                        maxLines: 3,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: context.themeTextPrimary,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: context.l10n.banReasonHint,
+                          hintStyle: TextStyle(
+                            fontSize: 12.5,
+                            color: context.themeTextSecondary
+                                .withValues(alpha: 0.6),
+                          ),
+                          filled: true,
+                          fillColor: context.isDark
+                              ? context.themeSurfaceLow
+                              : const Color(0xFFF7F8FA),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: context.themeBorder),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: context.themeBorder),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide:
+                                BorderSide(color: AppColors.error, width: 1.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          context.l10n.presetAbusiveComm,
+                          context.l10n.presetFraudActivity,
+                          context.l10n.presetFailedDispute,
+                          context.l10n.presetPolicyViolation,
+                        ].map((preset) {
+                          return InkWell(
+                            onTap: () {
+                              setDialogState(() {
+                                _reasonController.text = preset;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: context.isDark
+                                    ? context.themeSurfaceLow
+                                    : const Color(0xFFF1F3F5),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: context.themeBorder),
+                              ),
+                              child: Text(
+                                preset,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.themeTextSecondary,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
+              actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogCtx).pop(),
                   child: Text(
@@ -247,7 +250,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     if (reason.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(context.l10n.pleaseEnterSuspensionReason),
+                          content:
+                              Text(context.l10n.pleaseEnterSuspensionReason),
                           backgroundColor: AppColors.error,
                         ),
                       );
@@ -475,7 +479,9 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? effectiveActiveColor
-              : (context.isDark ? context.themeSurfaceLow : const Color(0xFFF1F3F5)),
+              : (context.isDark
+                  ? context.themeSurfaceLow
+                  : const Color(0xFFF1F3F5)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? effectiveActiveColor : context.themeBorder,
@@ -568,7 +574,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
             Icon(
               icon,
               size: 16,
-              color: isFiltered ? AppColors.primary : context.themeTextSecondary,
+              color:
+                  isFiltered ? AppColors.primary : context.themeTextSecondary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -604,7 +611,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
             Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 18,
-              color: isFiltered ? AppColors.primary : context.themeTextSecondary,
+              color:
+                  isFiltered ? AppColors.primary : context.themeTextSecondary,
             ),
           ],
         ),
@@ -970,18 +978,22 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
         if (_selectedRoleFilter != 'all')
           Chip(
             avatar: const Icon(Icons.badge_outlined, size: 14),
-            label: Text(_getRoleFilterDisplayLabel(context, _selectedRoleFilter)),
+            label:
+                Text(_getRoleFilterDisplayLabel(context, _selectedRoleFilter)),
             deleteIcon: const Icon(Icons.close_rounded, size: 14),
             onDeleted: () => setState(() => _selectedRoleFilter = 'all'),
             backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             labelStyle: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary),
             side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
         if (_selectedStatusFilter != 'all')
           Chip(
             avatar: const Icon(Icons.toggle_on_outlined, size: 14),
-            label: Text(_getStatusFilterDisplayLabel(context, _selectedStatusFilter)),
+            label: Text(
+                _getStatusFilterDisplayLabel(context, _selectedStatusFilter)),
             deleteIcon: const Icon(Icons.close_rounded, size: 14),
             onDeleted: () => setState(() => _selectedStatusFilter = 'all'),
             backgroundColor: _selectedStatusFilter == 'suspended'
@@ -1003,7 +1015,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
         if (_selectedDistrictFilter != 'all')
           Chip(
             avatar: const Icon(Icons.location_on_outlined, size: 14),
-            label: Text(LocalizedData.getDistrict(context, _selectedDistrictFilter)),
+            label: Text(
+                LocalizedData.getDistrict(context, _selectedDistrictFilter)),
             deleteIcon: const Icon(Icons.close_rounded, size: 14),
             onDeleted: () => setState(() => _selectedDistrictFilter = 'all'),
             backgroundColor: context.themeSurfaceLow,
@@ -1038,7 +1051,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance.collection('superAdmins').snapshots(),
       builder: (context, superAdminSnap) {
-        final superAdminUids = superAdminSnap.data?.docs.map((d) => d.id).toSet() ?? <String>{};
+        final superAdminUids =
+            superAdminSnap.data?.docs.map((d) => d.id).toSet() ?? <String>{};
 
         bool checkIsSuperAdmin(UserProfile u) {
           return u.isSuperAdmin || superAdminUids.contains(u.id);
@@ -1049,27 +1063,40 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
           builder: (context, snapshot) {
             final allUsers = snapshot.data ?? [];
             final totalCount = allUsers.length;
-            final customerCount = allUsers.where((u) => u.role == AppRole.customer).length;
-            final providerCount = allUsers.where((u) => u.role == AppRole.provider).length;
+            final customerCount =
+                allUsers.where((u) => u.role == AppRole.customer).length;
+            final providerCount =
+                allUsers.where((u) => u.role == AppRole.provider).length;
             final suspendedCount = allUsers.where((u) => u.isBanned).length;
             final activeCount = allUsers.where((u) => !u.isBanned).length;
-            final adminCount = allUsers.where((u) => u.role == AppRole.admin || checkIsSuperAdmin(u)).length;
-            final superAdminCount = allUsers.where((u) => checkIsSuperAdmin(u) || u.adminRole == AdminRole.superAdmin).length;
-            final opsAdminCount = allUsers.where((u) => u.adminRole == AdminRole.opsAdmin).length;
-            final supportAdminCount = allUsers.where((u) => u.adminRole == AdminRole.supportAdmin).length;
+            final adminCount = allUsers
+                .where((u) => u.role == AppRole.admin || checkIsSuperAdmin(u))
+                .length;
+            final superAdminCount = allUsers
+                .where((u) =>
+                    checkIsSuperAdmin(u) || u.adminRole == AdminRole.superAdmin)
+                .length;
+            final opsAdminCount =
+                allUsers.where((u) => u.adminRole == AdminRole.opsAdmin).length;
+            final supportAdminCount = allUsers
+                .where((u) => u.adminRole == AdminRole.supportAdmin)
+                .length;
 
             // apply filters
             final filteredUsers = allUsers.where((user) {
-              final isSuper = checkIsSuperAdmin(user) || user.adminRole == AdminRole.superAdmin;
+              final isSuper = checkIsSuperAdmin(user) ||
+                  user.adminRole == AdminRole.superAdmin;
               final isOps = user.adminRole == AdminRole.opsAdmin;
               final isSupport = user.adminRole == AdminRole.supportAdmin;
               final isAdmin = user.role == AppRole.admin || isSuper;
 
               // role filter
-              if (_selectedRoleFilter == 'customer' && user.role != AppRole.customer) {
+              if (_selectedRoleFilter == 'customer' &&
+                  user.role != AppRole.customer) {
                 return false;
               }
-              if (_selectedRoleFilter == 'provider' && user.role != AppRole.provider) {
+              if (_selectedRoleFilter == 'provider' &&
+                  user.role != AppRole.provider) {
                 return false;
               }
               if (_selectedRoleFilter == 'admin' && !isAdmin) {
@@ -1088,7 +1115,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
               // district filter
               if (_selectedDistrictFilter != 'all') {
                 if (user.district == null ||
-                    user.district!.toLowerCase() != _selectedDistrictFilter.toLowerCase()) {
+                    user.district!.toLowerCase() !=
+                        _selectedDistrictFilter.toLowerCase()) {
                   return false;
                 }
               }
@@ -1257,7 +1285,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                       decoration: BoxDecoration(
                         color: context.themeSurface,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: context.themeBorder, width: 1.5),
+                        border:
+                            Border.all(color: context.themeBorder, width: 1.5),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1274,7 +1303,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                             decoration: InputDecoration(
                               hintText: context.l10n.searchUsersHint,
                               hintStyle: TextStyle(
-                                color: context.themeTextSecondary.withValues(alpha: 0.6),
+                                color: context.themeTextSecondary
+                                    .withValues(alpha: 0.6),
                                 fontSize: 13.5,
                               ),
                               prefixIcon: Icon(
@@ -1284,7 +1314,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                               ),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear_rounded, size: 18),
+                                      icon: const Icon(Icons.clear_rounded,
+                                          size: 18),
                                       onPressed: () {
                                         _searchController.clear();
                                         setState(() => _searchQuery = '');
@@ -1301,14 +1332,17 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide(color: context.themeBorder),
+                                borderSide:
+                                    BorderSide(color: context.themeBorder),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide(color: context.themeBorder),
+                                borderSide:
+                                    BorderSide(color: context.themeBorder),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(14)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(14)),
                                 borderSide: BorderSide(
                                   color: AppColors.primary,
                                   width: 1.5,
@@ -1363,8 +1397,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                             ),
                             const SizedBox(height: 12),
                             ConstrainedBox(
-                              constraints:
-                                  const BoxConstraints(maxWidth: double.infinity),
+                              constraints: const BoxConstraints(
+                                  maxWidth: double.infinity),
                               child: SearchableSelectPicker<String>(
                                 label: '',
                                 selectedValue: _selectedDistrictFilter,
@@ -1394,8 +1428,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                     );
                                   }),
                                 ],
-                                onSelected: (val) =>
-                                    setState(() => _selectedDistrictFilter = val),
+                                onSelected: (val) => setState(
+                                    () => _selectedDistrictFilter = val),
                               ),
                             ),
                           ] else ...[
@@ -1432,7 +1466,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         context: context,
                                         label: context.l10n.allRoles,
                                         icon: Icons.grid_view_rounded,
-                                        isSelected: _selectedRoleFilter == 'all',
+                                        isSelected:
+                                            _selectedRoleFilter == 'all',
                                         onTap: () => setState(
                                             () => _selectedRoleFilter = 'all'),
                                       ),
@@ -1443,8 +1478,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         icon: Icons.person_outline_rounded,
                                         isSelected:
                                             _selectedRoleFilter == 'customer',
-                                        onTap: () => setState(
-                                            () => _selectedRoleFilter = 'customer'),
+                                        onTap: () => setState(() =>
+                                            _selectedRoleFilter = 'customer'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
@@ -1453,28 +1488,30 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         icon: Icons.handyman_outlined,
                                         isSelected:
                                             _selectedRoleFilter == 'provider',
-                                        onTap: () => setState(
-                                            () => _selectedRoleFilter = 'provider'),
+                                        onTap: () => setState(() =>
+                                            _selectedRoleFilter = 'provider'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
                                         context: context,
                                         label: context.l10n.roleAllAdmins,
                                         icon: Icons.shield_outlined,
-                                        isSelected: _selectedRoleFilter == 'admin',
-                                        onTap: () => setState(
-                                            () => _selectedRoleFilter = 'admin'),
+                                        isSelected:
+                                            _selectedRoleFilter == 'admin',
+                                        onTap: () => setState(() =>
+                                            _selectedRoleFilter = 'admin'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
                                         context: context,
                                         label: context.l10n.roleSuperAdminBadge,
                                         icon: Icons.shield_rounded,
-                                        isSelected:
-                                            _selectedRoleFilter == 'super_admin',
+                                        isSelected: _selectedRoleFilter ==
+                                            'super_admin',
                                         activeColor: Colors.amber.shade800,
                                         onTap: () => setState(() =>
-                                            _selectedRoleFilter = 'super_admin'),
+                                            _selectedRoleFilter =
+                                                'super_admin'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
@@ -1484,19 +1521,21 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         isSelected:
                                             _selectedRoleFilter == 'ops_admin',
                                         activeColor: Colors.indigo,
-                                        onTap: () => setState(
-                                            () => _selectedRoleFilter = 'ops_admin'),
+                                        onTap: () => setState(() =>
+                                            _selectedRoleFilter = 'ops_admin'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
                                         context: context,
-                                        label: context.l10n.roleSupportAdminBadge,
+                                        label:
+                                            context.l10n.roleSupportAdminBadge,
                                         icon: Icons.support_agent_rounded,
-                                        isSelected:
-                                            _selectedRoleFilter == 'support_admin',
+                                        isSelected: _selectedRoleFilter ==
+                                            'support_admin',
                                         activeColor: const Color(0xFF0D9488),
                                         onTap: () => setState(() =>
-                                            _selectedRoleFilter = 'support_admin'),
+                                            _selectedRoleFilter =
+                                                'support_admin'),
                                       ),
                                     ],
                                   ),
@@ -1537,31 +1576,34 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         context: context,
                                         label: context.l10n.filterAll,
                                         icon: Icons.tune_rounded,
-                                        isSelected: _selectedStatusFilter == 'all',
-                                        onTap: () => setState(
-                                            () => _selectedStatusFilter = 'all'),
+                                        isSelected:
+                                            _selectedStatusFilter == 'all',
+                                        onTap: () => setState(() =>
+                                            _selectedStatusFilter = 'all'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
                                         context: context,
                                         label: context.l10n.statusActive,
-                                        icon: Icons.check_circle_outline_rounded,
+                                        icon:
+                                            Icons.check_circle_outline_rounded,
                                         isSelected:
                                             _selectedStatusFilter == 'active',
                                         activeColor: const Color(0xFF2E7D32),
-                                        onTap: () => setState(
-                                            () => _selectedStatusFilter = 'active'),
+                                        onTap: () => setState(() =>
+                                            _selectedStatusFilter = 'active'),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildFilterChip(
                                         context: context,
                                         label: context.l10n.statusSuspended,
                                         icon: Icons.block_flipped,
-                                        isSelected:
-                                            _selectedStatusFilter == 'suspended',
+                                        isSelected: _selectedStatusFilter ==
+                                            'suspended',
                                         activeColor: AppColors.error,
                                         onTap: () => setState(() =>
-                                            _selectedStatusFilter = 'suspended'),
+                                            _selectedStatusFilter =
+                                                'suspended'),
                                       ),
                                     ],
                                   ),
@@ -1601,8 +1643,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                     );
                                   }),
                                 ],
-                                onSelected: (val) =>
-                                    setState(() => _selectedDistrictFilter = val),
+                                onSelected: (val) => setState(
+                                    () => _selectedDistrictFilter = val),
                               ),
                             ),
                           ],
@@ -1656,7 +1698,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                           final isBanned = user.isBanned;
                           final isSuper = checkIsSuperAdmin(user) ||
                               user.adminRole == AdminRole.superAdmin;
-                          final isOpsAdmin = user.adminRole == AdminRole.opsAdmin;
+                          final isOpsAdmin =
+                              user.adminRole == AdminRole.opsAdmin;
                           final isSupportAdmin =
                               user.adminRole == AdminRole.supportAdmin;
                           final isOtherAdmin = user.role == AppRole.admin &&
@@ -1664,8 +1707,10 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                               !isOpsAdmin &&
                               !isSupportAdmin;
                           final isProvider = user.role == AppRole.provider;
-                          final isAdmin =
-                              isSuper || isOpsAdmin || isSupportAdmin || isOtherAdmin;
+                          final isAdmin = isSuper ||
+                              isOpsAdmin ||
+                              isSupportAdmin ||
+                              isOtherAdmin;
 
                           Color roleColor;
                           Color roleBgColor;
@@ -1748,7 +1793,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                         children: [
                                           () {
                                             final roleBadge = Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 8,
                                                 vertical: 3,
                                               ),
@@ -1761,13 +1807,15 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(roleIcon,
-                                                      size: 12, color: roleColor),
+                                                      size: 12,
+                                                      color: roleColor),
                                                   const SizedBox(width: 4),
                                                   Text(
                                                     roleLabel,
                                                     style: TextStyle(
                                                       fontSize: 11,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       color: roleColor,
                                                     ),
                                                   ),
@@ -1776,7 +1824,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                             );
 
                                             final statusBadge = Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 8,
                                                 vertical: 3,
                                               ),
@@ -1785,13 +1834,15 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                                     ? AppColors.error
                                                         .withValues(alpha: 0.12)
                                                     : AppColors.success
-                                                        .withValues(alpha: 0.12),
+                                                        .withValues(
+                                                            alpha: 0.12),
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 isBanned
-                                                    ? context.l10n.statusSuspended
+                                                    ? context
+                                                        .l10n.statusSuspended
                                                     : context.l10n.statusActive,
                                                 style: TextStyle(
                                                   fontSize: 11,
@@ -1808,15 +1859,19 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                                 children: [
                                                   Expanded(
                                                     child: Text(
-                                                      user.displayName.isNotEmpty
+                                                      user.displayName
+                                                              .isNotEmpty
                                                           ? user.displayName
                                                           : user.email,
                                                       style: TextStyle(
                                                         fontSize: 16,
-                                                        fontWeight: FontWeight.w800,
-                                                        color: context.themeTextPrimary,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        color: context
+                                                            .themeTextPrimary,
                                                       ),
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                   const SizedBox(width: 8),
@@ -1827,7 +1882,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                               );
                                             } else {
                                               return Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     user.displayName.isNotEmpty
@@ -1835,11 +1891,14 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                                         : user.email,
                                                     style: TextStyle(
                                                       fontSize: 15.5,
-                                                      fontWeight: FontWeight.w800,
-                                                      color: context.themeTextPrimary,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color: context
+                                                          .themeTextPrimary,
                                                     ),
                                                     maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                   const SizedBox(height: 6),
                                                   Wrap(
@@ -1854,314 +1913,346 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                               );
                                             }
                                           }(),
-                                      const SizedBox(height: 6),
-                                      // contact details
-                                      Wrap(
-                                        spacing: 12,
-                                        runSpacing: 4,
-                                        children: [
-                                          if (user.email.isNotEmpty)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.email_outlined,
-                                                  size: 14,
-                                                  color: context
-                                                      .themeTextSecondary,
+                                          const SizedBox(height: 6),
+                                          // contact details
+                                          Wrap(
+                                            spacing: 12,
+                                            runSpacing: 4,
+                                            children: [
+                                              if (user.email.isNotEmpty)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.email_outlined,
+                                                      size: 14,
+                                                      color: context
+                                                          .themeTextSecondary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      user.email,
+                                                      style: TextStyle(
+                                                        fontSize: 12.5,
+                                                        color: context
+                                                            .themeTextSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  user.email,
-                                                  style: TextStyle(
-                                                    fontSize: 12.5,
-                                                    color: context
-                                                        .themeTextSecondary,
-                                                  ),
+                                              if (user.phone != null &&
+                                                  user.phone!.isNotEmpty)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.phone_outlined,
+                                                      size: 14,
+                                                      color: context
+                                                          .themeTextSecondary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      user.phone!,
+                                                      style: TextStyle(
+                                                        fontSize: 12.5,
+                                                        color: context
+                                                            .themeTextSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          if (user.phone != null &&
-                                              user.phone!.isNotEmpty)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.phone_outlined,
-                                                  size: 14,
-                                                  color: context
-                                                      .themeTextSecondary,
+                                              if (user.district != null &&
+                                                  user.district!.isNotEmpty)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .location_on_outlined,
+                                                      size: 14,
+                                                      color: context
+                                                          .themeTextSecondary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      LocalizedData.getDistrict(
+                                                          context,
+                                                          user.district!),
+                                                      style: TextStyle(
+                                                        fontSize: 12.5,
+                                                        color: context
+                                                            .themeTextSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  user.phone!,
-                                                  style: TextStyle(
-                                                    fontSize: 12.5,
-                                                    color: context
-                                                        .themeTextSecondary,
-                                                  ),
+                                              if (isProvider &&
+                                                  user.serviceCategory !=
+                                                      null &&
+                                                  user.serviceCategory!
+                                                      .isNotEmpty)
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.handyman_outlined,
+                                                      size: 14,
+                                                      color: context
+                                                          .themeTextSecondary,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      CategoryService.instance
+                                                          .nameOf(
+                                                              user.serviceCategory!,
+                                                              context: context),
+                                                      style: TextStyle(
+                                                        fontSize: 12.5,
+                                                        color: context
+                                                            .themeTextSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          if (user.district != null &&
-                                              user.district!.isNotEmpty)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.location_on_outlined,
-                                                  size: 14,
-                                                  color: context
-                                                      .themeTextSecondary,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  LocalizedData.getDistrict(
-                                                      context, user.district!),
-                                                  style: TextStyle(
-                                                    fontSize: 12.5,
-                                                    color: context
-                                                        .themeTextSecondary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          if (isProvider &&
-                                              user.serviceCategory != null &&
-                                              user.serviceCategory!.isNotEmpty)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.handyman_outlined,
-                                                  size: 14,
-                                                  color: context
-                                                      .themeTextSecondary,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  CategoryService.instance
-                                                      .nameOf(
-                                                          user.serviceCategory!,
-                                                          context: context),
-                                                  style: TextStyle(
-                                                    fontSize: 12.5,
-                                                    color: context
-                                                        .themeTextSecondary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                            ],
+                                          ),
                                         ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (isProvider)
-                              _ProviderArrivalStatsWidget(providerId: user.id),
-
-                            // ban reason banner
-                            if (isBanned) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.error.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: AppColors.error.withValues(alpha: 0.25),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline,
-                                      size: 16,
-                                      color: AppColors.error,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        '${context.l10n.reasonLabel}: ${user.banReason?.isNotEmpty == true ? user.banReason : context.l10n.suspendedByAdmin}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.error,
-                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
+                                if (isProvider)
+                                  _ProviderArrivalStatsWidget(
+                                      providerId: user.id),
 
-                            const SizedBox(height: 14),
-                            Divider(
-                              color: context.themeBorder,
-                              thickness: 1,
-                              height: 1,
-                            ),
-                            const SizedBox(height: 12),
-
-                            // action bar
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                if (user.phone != null &&
-                                    user.phone!.trim().isNotEmpty) ...[
-                                  OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: context.themeTextPrimary,
-                                      side: BorderSide(
-                                          color: context.themeBorder),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    onPressed: () =>
-                                        MapLauncher.openPhoneCall(user.phone!),
-                                    icon: const Icon(Icons.phone_outlined,
-                                        size: 15),
-                                    label: Text(context.l10n.call),
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                                if (isSuper)
+                                // ban reason banner
+                                if (isBanned) ...[
+                                  const SizedBox(height: 12),
                                   Container(
+                                    width: double.infinity,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 7),
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber.withValues(alpha: 0.12),
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
-                                        color: Colors.amber.withValues(alpha: 0.35),
+                                        color: AppColors.error
+                                            .withValues(alpha: 0.25),
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.shield_rounded,
-                                            size: 15,
-                                            color: Colors.amber.shade800),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          '${context.l10n.teamProtected} (${context.l10n.roleSuperAdminBadge})',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.amber.shade800,
+                                        const Icon(
+                                          Icons.info_outline,
+                                          size: 16,
+                                          color: AppColors.error,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            '${context.l10n.reasonLabel}: ${user.banReason?.isNotEmpty == true ? user.banReason : context.l10n.suspendedByAdmin}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.error,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  )
-                                else if (isBanned)
-                                  () {
-                                    final roleProvider =
-                                        Provider.of<RoleProvider>(context, listen: false);
-                                    final canManageUsers = roleProvider
-                                        .hasAdminPermission(AdminPermission.manageUsers);
-                                    return ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: canManageUsers
-                                            ? AppColors.success
-                                            : (context.isDark
-                                                ? Colors.white12
-                                                : Colors.grey.shade300),
-                                        foregroundColor: canManageUsers
-                                            ? Colors.white
-                                            : (context.isDark
-                                                ? Colors.white38
-                                                : Colors.grey.shade600),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ],
+
+                                const SizedBox(height: 14),
+                                Divider(
+                                  color: context.themeBorder,
+                                  thickness: 1,
+                                  height: 1,
+                                ),
+                                const SizedBox(height: 12),
+
+                                // action bar
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (user.phone != null &&
+                                        user.phone!.trim().isNotEmpty) ...[
+                                      OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor:
+                                              context.themeTextPrimary,
+                                          side: BorderSide(
+                                              color: context.themeBorder),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
                                         ),
+                                        onPressed: () =>
+                                            MapLauncher.openPhoneCall(
+                                                user.phone!),
+                                        icon: const Icon(Icons.phone_outlined,
+                                            size: 15),
+                                        label: Text(context.l10n.call),
                                       ),
-                                      onPressed: () {
-                                        if (!canManageUsers) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(context.l10n.noPermissionForAction),
-                                              backgroundColor: AppColors.error,
-                                            ),
-                                          );
-                                          return;
-                                        }
-                                        _showUnbanDialog(user);
-                                      },
-                                      icon: Icon(
-                                        canManageUsers
-                                            ? Icons.lock_open_rounded
-                                            : Icons.lock_outline,
-                                        size: 15,
-                                      ),
-                                      label: Text(context.l10n.unbanAccount),
-                                    );
-                                  }()
-                                else
-                                  () {
-                                    final roleProvider =
-                                        Provider.of<RoleProvider>(context, listen: false);
-                                    final canManageUsers = roleProvider
-                                        .hasAdminPermission(AdminPermission.manageUsers);
-                                    return ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: canManageUsers
-                                            ? AppColors.error
-                                            : (context.isDark
-                                                ? Colors.white12
-                                                : Colors.grey.shade300),
-                                        foregroundColor: canManageUsers
-                                            ? Colors.white
-                                            : (context.isDark
-                                                ? Colors.white38
-                                                : Colors.grey.shade600),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    if (isSuper)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 7),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: Colors.amber
+                                                .withValues(alpha: 0.35),
+                                          ),
                                         ),
-                                      ),
-                                      onPressed: () {
-                                        if (!canManageUsers) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(context.l10n.noPermissionForAction),
-                                              backgroundColor: AppColors.error,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.shield_rounded,
+                                                size: 15,
+                                                color: Colors.amber.shade800),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${context.l10n.teamProtected} (${context.l10n.roleSuperAdminBadge})',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.amber.shade800,
+                                              ),
                                             ),
-                                          );
-                                          return;
-                                        }
-                                        _showSuspendDialog(user, isSuper: isSuper);
-                                      },
-                                      icon: Icon(
-                                        canManageUsers
-                                            ? Icons.block_flipped
-                                            : Icons.lock_outline,
-                                        size: 15,
-                                      ),
-                                      label: Text(context.l10n.suspendAccount),
-                                    );
-                                  }(),
+                                          ],
+                                        ),
+                                      )
+                                    else if (isBanned)
+                                      () {
+                                        final roleProvider =
+                                            Provider.of<RoleProvider>(context,
+                                                listen: false);
+                                        final canManageUsers =
+                                            roleProvider.hasAdminPermission(
+                                                AdminPermission.manageUsers);
+                                        return ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: canManageUsers
+                                                ? AppColors.success
+                                                : (context.isDark
+                                                    ? Colors.white12
+                                                    : Colors.grey.shade300),
+                                            foregroundColor: canManageUsers
+                                                ? Colors.white
+                                                : (context.isDark
+                                                    ? Colors.white38
+                                                    : Colors.grey.shade600),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            if (!canManageUsers) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(context.l10n
+                                                      .noPermissionForAction),
+                                                  backgroundColor:
+                                                      AppColors.error,
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            _showUnbanDialog(user);
+                                          },
+                                          icon: Icon(
+                                            canManageUsers
+                                                ? Icons.lock_open_rounded
+                                                : Icons.lock_outline,
+                                            size: 15,
+                                          ),
+                                          label:
+                                              Text(context.l10n.unbanAccount),
+                                        );
+                                      }()
+                                    else
+                                      () {
+                                        final roleProvider =
+                                            Provider.of<RoleProvider>(context,
+                                                listen: false);
+                                        final canManageUsers =
+                                            roleProvider.hasAdminPermission(
+                                                AdminPermission.manageUsers);
+                                        return ElevatedButton.icon(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: canManageUsers
+                                                ? AppColors.error
+                                                : (context.isDark
+                                                    ? Colors.white12
+                                                    : Colors.grey.shade300),
+                                            foregroundColor: canManageUsers
+                                                ? Colors.white
+                                                : (context.isDark
+                                                    ? Colors.white38
+                                                    : Colors.grey.shade600),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            if (!canManageUsers) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(context.l10n
+                                                      .noPermissionForAction),
+                                                  backgroundColor:
+                                                      AppColors.error,
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            _showSuspendDialog(user,
+                                                isSuper: isSuper);
+                                          },
+                                          icon: Icon(
+                                            canManageUsers
+                                                ? Icons.block_flipped
+                                                : Icons.lock_outline,
+                                            size: 15,
+                                          ),
+                                          label:
+                                              Text(context.l10n.suspendAccount),
+                                        );
+                                      }(),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
-          ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
-  },
-);
   }
 }
 
@@ -2178,7 +2269,8 @@ class _ProviderArrivalStatsWidget extends StatefulWidget {
 
 class _ProviderArrivalStatsWidgetState
     extends State<_ProviderArrivalStatsWidget> {
-  late Future<({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
+  late Future<
+          ({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
       _statsFuture;
 
   @override
@@ -2373,4 +2465,3 @@ class _ProviderArrivalStatsWidgetState
     );
   }
 }
-

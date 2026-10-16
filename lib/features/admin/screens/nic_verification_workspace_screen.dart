@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../constants/app_config.dart';
 import '../../../constants/firestore_paths.dart';
@@ -156,11 +157,144 @@ class _NicVerificationWorkspaceScreenState
     }
   }
 
-  // approve trade certificates
-  Future<void> _handleApproveCerts(VerificationQueueItem item) async {
+  Future<String?> _getCertificatePresignedUrl({
+    required String providerId,
+    required String key,
+  }) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+      final token = await user.getIdToken();
+      final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+      final uri = Uri.parse('$cleanBase/nic-url');
+
+      final response = await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'x-helaservice-key': AppConfig.apiSecretKey,
+            },
+            body: jsonEncode({
+              'providerId': providerId,
+              'key': key,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data['url'] as String?;
+      }
+    } catch (e) {
+      debugPrint('[AdminWorkspace] fetch cert url error: $e');
+    }
+    return null;
+  }
+
+  Future<void> _openCertFile(
+    BuildContext context, {
+    required String providerId,
+    required String key,
+    required String title,
+    required bool isPdf,
+  }) async {
     setState(() => _isProcessing = true);
     try {
+      final presignedUrl = await _getCertificatePresignedUrl(
+        providerId: providerId,
+        key: key,
+      );
+
+      if (!context.mounted) return;
+
+      if (presignedUrl == null || presignedUrl.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.nicDeskNoImage),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      if (isPdf) {
+        final uri = Uri.parse(presignedUrl);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showZoomDialog(context, presignedUrl, title);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  // approve single certificate in one batch
+  Future<void> _handleApproveSingleCert({
+    required VerificationQueueItem item,
+    required String certDocId,
+    required String certTitle,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> allCerts,
+  }) async {
+    setState(() => _isProcessing = true);
+    try {
+      final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
       final batch = FirebaseFirestore.instance.batch();
+
+      final defaultTitle = context.l10n.certDefaultTitle;
+      final approvedTitles = <String>[];
+
+      for (final doc in allCerts) {
+        if (doc.id == certDocId) {
+          final t = certTitle.trim();
+          approvedTitles.add(t.isNotEmpty ? t : defaultTitle);
+        } else if (doc.data()['status'] == 'approved') {
+          final rawT = (doc.data()['title'] as String?)?.trim() ?? '';
+          approvedTitles.add(rawT.isNotEmpty ? rawT : defaultTitle);
+        }
+      }
+
+      final certRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId)
+          .collection('certificates')
+          .doc(certDocId);
+
+      batch.set(
+        certRef,
+        {
+          'status': 'approved',
+          'reviewedAt': FieldValue.serverTimestamp(),
+          'reviewedBy': adminUid,
+          'rejectReason': FieldValue.delete(),
+        },
+        SetOptions(merge: true),
+      );
+
+      final techRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId);
+
+      batch.set(
+        techRef,
+        {
+          'certificateTitles': approvedTitles,
+          'hasApprovedCertificates': approvedTitles.isNotEmpty,
+          'certificationsStatus': 'approved',
+        },
+        SetOptions(merge: true),
+      );
+
       if (item.id.isNotEmpty) {
         batch.set(
           FirebaseFirestore.instance
@@ -170,35 +304,20 @@ class _NicVerificationWorkspaceScreenState
           SetOptions(merge: true),
         );
       }
-      if (item.providerId.isNotEmpty) {
-        batch.set(
-          FirebaseFirestore.instance
-              .collection(FirestorePaths.technicians)
-              .doc(item.providerId),
-          {'certificationsStatus': 'approved', 'isVerified': true},
-          SetOptions(merge: true),
-        );
-        batch.set(
-          FirebaseFirestore.instance
-              .collection(FirestorePaths.users)
-              .doc(item.providerId),
-          {'certificationsStatus': 'approved'},
-          SetOptions(merge: true),
-        );
-      }
+
       await batch.commit();
 
       await AdminLogService.instance.logAction(
-        action: 'approve_certifications',
-        targetType: 'technician_verification',
-        targetId: item.providerId,
-        details: 'Approved trade certifications and licenses',
+        action: 'approve_single_certificate',
+        targetType: 'technician_certificate',
+        targetId: certDocId,
+        details: 'Approved certificate: $certTitle',
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.tradeCertificationsApproved),
+            content: Text(context.l10n.certApprovedNotice),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -207,7 +326,229 @@ class _NicVerificationWorkspaceScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.errorApprovingCertifications(e.toString())),
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  // reject single certificate in one batch
+  Future<void> _handleRejectSingleCert({
+    required VerificationQueueItem item,
+    required String certDocId,
+    required String certTitle,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> allCerts,
+  }) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dlgCtx) => AlertDialog(
+        title: Text(context.l10n.certRejectReasonTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.certRejectReasonPrompt,
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              autofocus: true,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: context.l10n.certRejectReasonPrompt,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dlgCtx),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = reasonController.text.trim();
+              if (text.isEmpty) return;
+              Navigator.pop(dlgCtx, text);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: Text(context.l10n.rejectAction),
+          ),
+        ],
+      ),
+    );
+
+    if (reason == null || reason.trim().isEmpty) return;
+    if (!mounted) return;
+
+    final defaultTitle = context.l10n.certDefaultTitle;
+    setState(() => _isProcessing = true);
+    try {
+      final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
+      final batch = FirebaseFirestore.instance.batch();
+
+      final approvedTitles = <String>[];
+
+      for (final doc in allCerts) {
+        if (doc.id == certDocId) {
+          // rejected
+          continue;
+        } else if (doc.data()['status'] == 'approved') {
+          final rawT = (doc.data()['title'] as String?)?.trim() ?? '';
+          approvedTitles.add(rawT.isNotEmpty ? rawT : defaultTitle);
+        }
+      }
+
+      final certRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId)
+          .collection('certificates')
+          .doc(certDocId);
+
+      batch.set(
+        certRef,
+        {
+          'status': 'rejected',
+          'rejectReason': reason.trim(),
+          'reviewedAt': FieldValue.serverTimestamp(),
+          'reviewedBy': adminUid,
+        },
+        SetOptions(merge: true),
+      );
+
+      final techRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId);
+
+      batch.set(
+        techRef,
+        {
+          'certificateTitles': approvedTitles,
+          'hasApprovedCertificates': approvedTitles.isNotEmpty,
+        },
+        SetOptions(merge: true),
+      );
+
+      await batch.commit();
+
+      await AdminLogService.instance.logAction(
+        action: 'reject_single_certificate',
+        targetType: 'technician_certificate',
+        targetId: certDocId,
+        details: 'Rejected certificate ($certTitle): $reason',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.certRejectedNotice),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  // approve all certificates in one batch
+  Future<void> _handleApproveAllCerts({
+    required VerificationQueueItem item,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> allCerts,
+  }) async {
+    setState(() => _isProcessing = true);
+    try {
+      final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
+      final batch = FirebaseFirestore.instance.batch();
+
+      final defaultTitle = context.l10n.certDefaultTitle;
+      final approvedTitles = <String>[];
+
+      for (final doc in allCerts) {
+        final rawT = (doc.data()['title'] as String?)?.trim() ?? '';
+        approvedTitles.add(rawT.isNotEmpty ? rawT : defaultTitle);
+
+        final certRef = FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
+            .doc(item.providerId)
+            .collection('certificates')
+            .doc(doc.id);
+
+        batch.set(
+          certRef,
+          {
+            'status': 'approved',
+            'reviewedAt': FieldValue.serverTimestamp(),
+            'reviewedBy': adminUid,
+            'rejectReason': FieldValue.delete(),
+          },
+          SetOptions(merge: true),
+        );
+      }
+
+      final techRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId);
+
+      batch.set(
+        techRef,
+        {
+          'certificateTitles': approvedTitles,
+          'hasApprovedCertificates': approvedTitles.isNotEmpty,
+          'certificationsStatus': 'approved',
+        },
+        SetOptions(merge: true),
+      );
+
+      if (item.id.isNotEmpty) {
+        batch.set(
+          FirebaseFirestore.instance
+              .collection(FirestorePaths.verificationQueue)
+              .doc(item.id),
+          {'certsApproved': true},
+          SetOptions(merge: true),
+        );
+      }
+
+      await batch.commit();
+
+      await AdminLogService.instance.logAction(
+        action: 'approve_all_certificates',
+        targetType: 'technician_verification',
+        targetId: item.providerId,
+        details: 'Approved all ${allCerts.length} certificates',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.certAllApprovedNotice),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -242,21 +583,27 @@ class _NicVerificationWorkspaceScreenState
         final tDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
             .doc(item.providerId);
-        batch.set(tDoc, {
-          'nicVerified': true,
-          'isVerified': true,
-          'status': 'active',
-          'photoStatus': 'approved',
-        }, SetOptions(merge: true));
+        batch.set(
+            tDoc,
+            {
+              'nicVerified': true,
+              'isVerified': true,
+              'status': 'active',
+              'photoStatus': 'approved',
+            },
+            SetOptions(merge: true));
 
         final uDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.users)
             .doc(item.providerId);
-        batch.set(uDoc, {
-          'role': 'provider',
-          'isVerified': true,
-          'photoStatus': 'approved',
-        }, SetOptions(merge: true));
+        batch.set(
+            uDoc,
+            {
+              'role': 'provider',
+              'isVerified': true,
+              'photoStatus': 'approved',
+            },
+            SetOptions(merge: true));
 
         // notify provider of approval
         final notifCol = FirebaseFirestore.instance
@@ -289,7 +636,8 @@ class _NicVerificationWorkspaceScreenState
         action: 'approve_verification',
         targetType: 'technician_verification',
         targetId: item.providerId,
-        details: 'Approved provider identity after 5-point verification checklist',
+        details:
+            'Approved provider identity after 5-point verification checklist',
       );
 
       if (mounted) {
@@ -332,7 +680,8 @@ class _NicVerificationWorkspaceScreenState
       context: context,
       builder: (dlgCtx) => StatefulBuilder(
         builder: (context, setDlgState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             context.l10n.rejectionReasonDialogTitle,
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
@@ -365,7 +714,8 @@ class _NicVerificationWorkspaceScreenState
                       items: reasons
                           .map((r) => DropdownMenuItem(
                                 value: r,
-                                child: Text(r, style: const TextStyle(fontSize: 13)),
+                                child: Text(r,
+                                    style: const TextStyle(fontSize: 13)),
                               ))
                           .toList(),
                       onChanged: (val) {
@@ -384,7 +734,8 @@ class _NicVerificationWorkspaceScreenState
                   style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     labelText: context.l10n.optionalReviewerNote,
-                    labelStyle: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                    labelStyle: TextStyle(
+                        fontSize: 12, color: context.themeTextSecondary),
                     filled: true,
                     fillColor: context.themeSoft,
                     border: OutlineInputBorder(
@@ -417,7 +768,8 @@ class _NicVerificationWorkspaceScreenState
               },
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFD6900F)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: Text(
                 context.l10n.requestResubmission,
@@ -441,11 +793,13 @@ class _NicVerificationWorkspaceScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: Text(
                 context.l10n.rejectApplication,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
               ),
             ),
           ],
@@ -484,11 +838,14 @@ class _NicVerificationWorkspaceScreenState
         final tDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
             .doc(item.providerId);
-        batch.set(tDoc, {
-          'rejectionReason': reason,
-          'rejectionNote': note,
-          if (status == 'rejected') 'status': 'rejected',
-        }, SetOptions(merge: true));
+        batch.set(
+            tDoc,
+            {
+              'rejectionReason': reason,
+              'rejectionNote': note,
+              if (status == 'rejected') 'status': 'rejected',
+            },
+            SetOptions(merge: true));
 
         final notifTitle = status == 'resubmit'
             ? context.l10n.providerResubmitTitle
@@ -514,7 +871,9 @@ class _NicVerificationWorkspaceScreenState
       await batch.commit();
 
       await AdminLogService.instance.logAction(
-        action: status == 'resubmit' ? 'request_resubmission' : 'reject_verification',
+        action: status == 'resubmit'
+            ? 'request_resubmission'
+            : 'reject_verification',
         targetType: 'technician_verification',
         targetId: item.providerId,
         details: 'Decision: $status. Reason: $reason. Note: $note',
@@ -569,11 +928,14 @@ class _NicVerificationWorkspaceScreenState
           return a.submittedAt!.compareTo(b.submittedAt!);
         });
 
-        final pendingCount = allItems.where((i) => i.status == 'pending').length;
+        final pendingCount =
+            allItems.where((i) => i.status == 'pending').length;
         final resubmitCount =
             allItems.where((i) => i.status == 'resubmit' || i.flagged).length;
-        final rejectedCount = allItems.where((i) => i.status == 'rejected').length;
-        final approvedCount = allItems.where((i) => i.status == 'approved').length;
+        final rejectedCount =
+            allItems.where((i) => i.status == 'rejected').length;
+        final approvedCount =
+            allItems.where((i) => i.status == 'approved').length;
 
         // filter items
         final filteredItems = allItems.where((item) {
@@ -581,7 +943,8 @@ class _NicVerificationWorkspaceScreenState
             case _QueueFilter.pending:
               return item.status == 'pending';
             case _QueueFilter.resubmit:
-              return item.status == 'resubmit' || (item.flagged && item.status != 'rejected');
+              return item.status == 'resubmit' ||
+                  (item.flagged && item.status != 'rejected');
             case _QueueFilter.rejected:
               return item.status == 'rejected';
             case _QueueFilter.approved:
@@ -605,7 +968,11 @@ class _NicVerificationWorkspaceScreenState
           (i) => i.id == _selectedId,
           orElse: () => allItems.firstWhere(
             (i) => i.id == _selectedId,
-            orElse: () => filteredItems.isNotEmpty ? filteredItems.first : allItems.firstOrNull ?? const VerificationQueueItem(name: '', trade: '', location: '', nicNumber: ''),
+            orElse: () => filteredItems.isNotEmpty
+                ? filteredItems.first
+                : allItems.firstOrNull ??
+                    const VerificationQueueItem(
+                        name: '', trade: '', location: '', nicNumber: ''),
           ),
         );
 
@@ -685,7 +1052,8 @@ class _NicVerificationWorkspaceScreenState
                       ),
                       const SizedBox(width: 16),
                       if (hasSelection)
-                        Expanded(child: _buildDetailCard(selectedItem, isMobile)),
+                        Expanded(
+                            child: _buildDetailCard(selectedItem, isMobile)),
                     ],
                   ),
                 ),
@@ -713,7 +1081,8 @@ class _NicVerificationWorkspaceScreenState
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : context.themeSurface,
+          color:
+              isSelected ? color.withValues(alpha: 0.15) : context.themeSurface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected ? color : context.themeBorder,
@@ -834,7 +1203,8 @@ class _NicVerificationWorkspaceScreenState
                           ? AppColors.primary.withValues(alpha: 0.12)
                           : context.themeSurfaceLow,
                       border: Border.all(
-                        color: selected ? AppColors.primary : context.themeBorder,
+                        color:
+                            selected ? AppColors.primary : context.themeBorder,
                         width: selected ? 1.5 : 1,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -939,8 +1309,8 @@ class _NicVerificationWorkspaceScreenState
                 ? Image.network(
                     item.photoUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(item.tradeIcon, size: 20, color: AppColors.primary),
+                    errorBuilder: (_, __, ___) => Icon(item.tradeIcon,
+                        size: 20, color: AppColors.primary),
                   )
                 : Icon(item.tradeIcon, size: 20, color: AppColors.primary),
           ),
@@ -965,7 +1335,8 @@ class _NicVerificationWorkspaceScreenState
                     ),
                   ),
                   Text(
-                    timeAgoL10n(context, item.submittedAt, fallback: item.timeAgo),
+                    timeAgoL10n(context, item.submittedAt,
+                        fallback: item.timeAgo),
                     style: TextStyle(
                       fontSize: 9.5,
                       color: context.themeTextSecondary,
@@ -987,7 +1358,9 @@ class _NicVerificationWorkspaceScreenState
                 children: [
                   Expanded(
                     child: Text(
-                      item.nicNumber.isNotEmpty ? item.nicNumber : 'NIC Pending',
+                      item.nicNumber.isNotEmpty
+                          ? item.nicNumber
+                          : 'NIC Pending',
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 9.5,
@@ -1115,9 +1488,10 @@ class _NicVerificationWorkspaceScreenState
         final realPhone = (userData?['phone'] as String?)?.isNotEmpty == true
             ? userData!['phone'] as String
             : (techData?['phone'] as String? ?? selectedItem.phone);
-        final realLang = (userData?['preferredLanguage'] as String?)?.isNotEmpty == true
-            ? userData!['preferredLanguage'] as String
-            : selectedItem.preferredLanguage;
+        final realLang =
+            (userData?['preferredLanguage'] as String?)?.isNotEmpty == true
+                ? userData!['preferredLanguage'] as String
+                : selectedItem.preferredLanguage;
 
         final decodedNic = NicDecoder.decode(realNic);
 
@@ -1138,7 +1512,8 @@ class _NicVerificationWorkspaceScreenState
                     child: Text(
                       selectedItem.name.isNotEmpty
                           ? selectedItem.name
-                          : (userData?['name'] ?? 'Provider #${selectedItem.providerId.length > 6 ? selectedItem.providerId.substring(0, 6) : selectedItem.providerId}'),
+                          : (userData?['name'] ??
+                              'Provider #${selectedItem.providerId.length > 6 ? selectedItem.providerId.substring(0, 6) : selectedItem.providerId}'),
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: isMobile ? 16 : 18,
@@ -1160,7 +1535,9 @@ class _NicVerificationWorkspaceScreenState
                 children: [
                   _InfoRow(
                     icon: Icons.call,
-                    text: realPhone.isNotEmpty ? realPhone : context.l10n.notProvided,
+                    text: realPhone.isNotEmpty
+                        ? realPhone
+                        : context.l10n.notProvided,
                   ),
                   _InfoRow(
                     icon: Icons.home,
@@ -1170,7 +1547,9 @@ class _NicVerificationWorkspaceScreenState
                   ),
                   _InfoRow(
                     icon: Icons.translate,
-                    text: realLang.isNotEmpty ? realLang : context.l10n.notProvided,
+                    text: realLang.isNotEmpty
+                        ? realLang
+                        : context.l10n.notProvided,
                   ),
                 ],
               ),
@@ -1423,7 +1802,8 @@ class _NicVerificationWorkspaceScreenState
                   ),
                   if (hasNoHash && !hasDanger && !hasFormatError)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2.5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFD6900F).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(999),
@@ -1447,7 +1827,9 @@ class _NicVerificationWorkspaceScreenState
                   Icon(
                     decodedNic.isValid ? Icons.check : Icons.close,
                     size: 14,
-                    color: decodedNic.isValid ? context.themeSuccess : context.themeDanger,
+                    color: decodedNic.isValid
+                        ? context.themeSuccess
+                        : context.themeDanger,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -1457,7 +1839,9 @@ class _NicVerificationWorkspaceScreenState
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
-                      color: decodedNic.isValid ? context.themeTextPrimary : context.themeDanger,
+                      color: decodedNic.isValid
+                          ? context.themeTextPrimary
+                          : context.themeDanger,
                     ),
                   ),
                 ],
@@ -1468,7 +1852,8 @@ class _NicVerificationWorkspaceScreenState
               if (decodedNic.isValid) ...[
                 Row(
                   children: [
-                    const Icon(Icons.cake_outlined, size: 14, color: AppColors.primary),
+                    const Icon(Icons.cake_outlined,
+                        size: 14, color: AppColors.primary),
                     const SizedBox(width: 6),
                     Text(
                       decodedNic.summary,
@@ -1487,7 +1872,8 @@ class _NicVerificationWorkspaceScreenState
               if (hasUnder18) ...[
                 Row(
                   children: [
-                    Icon(Icons.person_off_rounded, size: 14, color: context.themeDanger),
+                    Icon(Icons.person_off_rounded,
+                        size: 14, color: context.themeDanger),
                     const SizedBox(width: 6),
                     Text(
                       context.l10n.nicWarningUnder18(decodedNic.age ?? 0),
@@ -1507,7 +1893,8 @@ class _NicVerificationWorkspaceScreenState
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.copy_rounded, size: 14, color: context.themeDanger),
+                    Icon(Icons.copy_rounded,
+                        size: 14, color: context.themeDanger),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -1638,7 +2025,8 @@ class _NicVerificationWorkspaceScreenState
             TextButton.icon(
               onPressed: () => setState(() => _refreshCounter++),
               icon: const Icon(Icons.refresh, size: 14),
-              label: Text(context.l10n.refreshImages, style: const TextStyle(fontSize: 11)),
+              label: Text(context.l10n.refreshImages,
+                  style: const TextStyle(fontSize: 11)),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 minimumSize: const Size(0, 28),
@@ -1689,89 +2077,307 @@ class _NicVerificationWorkspaceScreenState
   }) {
     final certsRaw =
         techData?['certificationUrls'] ?? selectedItem.certificationUrls;
-    final certs = (certsRaw is List)
+    final legacyCerts = (certsRaw is List)
         ? certsRaw.map((e) => e.toString()).toList()
         : <String>[];
-    if (certs.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(selectedItem.providerId)
+          .collection('certificates')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final docs = snapshot.data?.docs ?? [];
+        final totalCount = docs.length + legacyCerts.length;
+        if (totalCount == 0) return const SizedBox.shrink();
+
+        final hasPending =
+            docs.any((d) => (d.data()['status'] ?? 'pending') == 'pending');
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Trade Certifications & Licenses (${certs.length})',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: context.themeTextPrimary,
-              ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    context.l10n.certTradeLicensesTitle(totalCount),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                ),
+                if (hasPending && canVerifyNic && docs.isNotEmpty)
+                  TextButton(
+                    onPressed: () => _handleApproveAllCerts(
+                      item: selectedItem,
+                      allCerts: docs,
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      minimumSize: const Size(0, 30),
+                    ),
+                    child: Text(
+                      context.l10n.certApproveAll,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else if (selectedItem.certsApproved)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: context.themeSuccessTint,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      context.l10n.statusApproved,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.success,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            if (selectedItem.certsApproved)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: context.themeSuccessTint,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  context.l10n.statusApproved,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.success,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              )
-            else if (canVerifyNic)
-              TextButton(
-                onPressed: () => _handleApproveCerts(selectedItem),
-                child: Text(
-                  context.l10n.approveCerts,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            const SizedBox(height: 8),
+
+            // subcollection certificates list
+            if (docs.isNotEmpty)
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: docs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final doc = docs[index];
+                  final data = doc.data();
+                  final key = (data['key'] as String?) ?? '';
+                  final title = (data['title'] as String?)?.trim() ?? '';
+                  final displayTitle =
+                      title.isNotEmpty ? title : context.l10n.certDefaultTitle;
+                  final status = (data['status'] as String?) ?? 'pending';
+                  final isPdf = data['type'] == 'pdf';
+                  final rejectReason = data['rejectReason'] as String?;
+
+                  Color statusColor = const Color(0xFFD6900F);
+                  Color statusBg =
+                      const Color(0xFFD6900F).withValues(alpha: 0.12);
+                  String statusLabel = context.l10n.statusPending;
+
+                  if (status == 'approved') {
+                    statusColor = AppColors.success;
+                    statusBg = context.themeSuccessTint;
+                    statusLabel = context.l10n.statusApproved;
+                  } else if (status == 'rejected') {
+                    statusColor = AppColors.error;
+                    statusBg = AppColors.error.withValues(alpha: 0.12);
+                    statusLabel = context.l10n.rejectedStatus;
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            // clickable thumbnail or pdf icon
+                            InkWell(
+                              onTap: key.isNotEmpty
+                                  ? () => _openCertFile(
+                                        context,
+                                        providerId: selectedItem.providerId,
+                                        key: key,
+                                        title: displayTitle,
+                                        isPdf: isPdf,
+                                      )
+                                  : null,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: context.themeSoft,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    isPdf
+                                        ? Icons.picture_as_pdf_rounded
+                                        : Icons.image_rounded,
+                                    color: isPdf
+                                        ? const Color(0xFFEF4444)
+                                        : AppColors.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayTitle,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: statusBg,
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      statusLabel,
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (canVerifyNic) ...[
+                              if (status != 'approved')
+                                TextButton(
+                                  onPressed: () => _handleApproveSingleCert(
+                                    item: selectedItem,
+                                    certDocId: doc.id,
+                                    certTitle: displayTitle,
+                                    allCerts: docs,
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    minimumSize: const Size(0, 30),
+                                  ),
+                                  child: Text(
+                                    context.l10n.statusApproved,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              if (status != 'rejected')
+                                TextButton(
+                                  onPressed: () => _handleRejectSingleCert(
+                                    item: selectedItem,
+                                    certDocId: doc.id,
+                                    certTitle: displayTitle,
+                                    allCerts: docs,
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    minimumSize: const Size(0, 30),
+                                  ),
+                                  child: Text(
+                                    context.l10n.rejectAction,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ],
+                        ),
+                        if (status == 'rejected' &&
+                            rejectReason != null &&
+                            rejectReason.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 58),
+                            child: Text(
+                              rejectReason,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.error,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+            // legacy certificationUrls if any (read-only)
+            if (legacyCerts.isNotEmpty) ...[
+              if (docs.isNotEmpty) const SizedBox(height: 10),
+              SizedBox(
+                height: 76,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: legacyCerts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (c, idx) {
+                    final certUrl = legacyCerts[idx];
+                    final label = context.l10n.certNumberTitle(idx + 1);
+                    return GestureDetector(
+                      onTap: () => _showZoomDialog(context, certUrl, label),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          color: context.themeSurfaceLow,
+                          child: certUrl.startsWith('data:')
+                              ? Image.memory(
+                                  base64Decode(certUrl.split(',').last),
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.network(
+                                  certUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 24,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
+            ],
           ],
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 76,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: certs.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (c, idx) {
-              final certUrl = certs[idx];
-              return GestureDetector(
-                onTap: () => _showZoomDialog(
-                    context, certUrl, 'Certificate #${idx + 1}'),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    color: context.themeSurfaceLow,
-                    child: certUrl.startsWith('data:')
-                        ? Image.memory(
-                            base64Decode(certUrl.split(',').last),
-                            fit: BoxFit.cover,
-                          )
-                        : Image.network(
-                            certUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                                Icons.broken_image_outlined,
-                                size: 24),
-                          ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -1941,7 +2547,8 @@ class _NicVerificationWorkspaceScreenState
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.circle, size: 6, color: AppColors.primary),
+                          const Icon(Icons.circle,
+                              size: 6, color: AppColors.primary),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -2048,8 +2655,10 @@ class _NicVerificationWorkspaceScreenState
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _isProcessing ? null : () => _openDecisionDialog(item),
-                  icon: Icon(Icons.cancel_outlined, size: 16, color: context.themeDanger),
+                  onPressed:
+                      _isProcessing ? null : () => _openDecisionDialog(item),
+                  icon: Icon(Icons.cancel_outlined,
+                      size: 16, color: context.themeDanger),
                   label: Text(
                     context.l10n.rejectAction,
                     style: TextStyle(
@@ -2060,7 +2669,8 @@ class _NicVerificationWorkspaceScreenState
                   ),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(64, 44),
-                    side: BorderSide(color: context.themeDanger.withValues(alpha: 0.5)),
+                    side: BorderSide(
+                        color: context.themeDanger.withValues(alpha: 0.5)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -2070,8 +2680,10 @@ class _NicVerificationWorkspaceScreenState
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _isProcessing ? null : () => _openDecisionDialog(item),
-                  icon: const Icon(Icons.replay, size: 16, color: Color(0xFFD6900F)),
+                  onPressed:
+                      _isProcessing ? null : () => _openDecisionDialog(item),
+                  icon: const Icon(Icons.replay,
+                      size: 16, color: Color(0xFFD6900F)),
                   label: Text(
                     context.l10n.requestResubmission,
                     style: const TextStyle(
@@ -2102,8 +2714,10 @@ class _NicVerificationWorkspaceScreenState
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _isProcessing ? null : () => _openDecisionDialog(item),
-                icon: Icon(Icons.cancel_outlined, size: 16, color: context.themeDanger),
+                onPressed:
+                    _isProcessing ? null : () => _openDecisionDialog(item),
+                icon: Icon(Icons.cancel_outlined,
+                    size: 16, color: context.themeDanger),
                 label: Text(
                   context.l10n.rejectAction,
                   style: TextStyle(
@@ -2114,7 +2728,8 @@ class _NicVerificationWorkspaceScreenState
                 ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(64, 46),
-                  side: BorderSide(color: context.themeDanger.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: context.themeDanger.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -2124,8 +2739,10 @@ class _NicVerificationWorkspaceScreenState
             const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _isProcessing ? null : () => _openDecisionDialog(item),
-                icon: const Icon(Icons.replay, size: 16, color: Color(0xFFD6900F)),
+                onPressed:
+                    _isProcessing ? null : () => _openDecisionDialog(item),
+                icon: const Icon(Icons.replay,
+                    size: 16, color: Color(0xFFD6900F)),
                 label: Text(
                   context.l10n.requestResubmission,
                   style: const TextStyle(
@@ -2253,7 +2870,8 @@ class _ZoomableDocDialogState extends State<_ZoomableDocDialog> {
                 children: [
                   // header with title and rotate button
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     color: Colors.black54,
                     child: Row(
                       children: [
@@ -2268,11 +2886,14 @@ class _ZoomableDocDialogState extends State<_ZoomableDocDialog> {
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: () => setState(() => _quarterTurns = (_quarterTurns + 1) % 4),
-                          icon: const Icon(Icons.rotate_90_degrees_cw, color: Colors.white, size: 16),
+                          onPressed: () => setState(
+                              () => _quarterTurns = (_quarterTurns + 1) % 4),
+                          icon: const Icon(Icons.rotate_90_degrees_cw,
+                              color: Colors.white, size: 16),
                           label: Text(
                             context.l10n.rotatePhoto,
-                            style: const TextStyle(color: Colors.white, fontSize: 11.5),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 11.5),
                           ),
                         ),
                         const SizedBox(width: 36),
@@ -2294,12 +2915,13 @@ class _ZoomableDocDialogState extends State<_ZoomableDocDialog> {
                               : Image.network(
                                   widget.imageUrl,
                                   fit: BoxFit.contain,
-                                  loadingBuilder: (_, child, prog) => prog == null
-                                      ? child
-                                      : const Center(
-                                          child: CircularProgressIndicator(
-                                              color: AppColors.primary),
-                                        ),
+                                  loadingBuilder: (_, child, prog) =>
+                                      prog == null
+                                          ? child
+                                          : const Center(
+                                              child: CircularProgressIndicator(
+                                                  color: AppColors.primary),
+                                            ),
                                   errorBuilder: (_, __, ___) => const Center(
                                     child: Icon(
                                       Icons.broken_image_outlined,
@@ -2375,18 +2997,20 @@ class _NicDocImagePreview extends StatelessWidget {
         final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
         final uri = Uri.parse('$cleanBase/nic-url');
 
-        final response = await http.post(
-          uri,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-            'x-helaservice-key': AppConfig.apiSecretKey,
-          },
-          body: jsonEncode({
-            'providerId': providerId,
-            'side': docType,
-          }),
-        ).timeout(const Duration(seconds: 10));
+        final response = await http
+            .post(
+              uri,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+                'x-helaservice-key': AppConfig.apiSecretKey,
+              },
+              body: jsonEncode({
+                'providerId': providerId,
+                'side': docType,
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -2474,14 +3098,14 @@ class _NicDocImagePreview extends StatelessWidget {
                       ? Image.memory(
                           base64Decode(url.split(',').last),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Icon(fallbackIcon, color: context.themeTextSecondary),
+                          errorBuilder: (_, __, ___) => Icon(fallbackIcon,
+                              color: context.themeTextSecondary),
                         )
                       : Image.network(
                           url,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Icon(fallbackIcon, color: context.themeTextSecondary),
+                          errorBuilder: (_, __, ___) => Icon(fallbackIcon,
+                              color: context.themeTextSecondary),
                         ),
                 ),
               ),
@@ -2490,7 +3114,8 @@ class _NicDocImagePreview extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
               ),
               Text(
                 context.l10n.nicDeskTapToZoom,

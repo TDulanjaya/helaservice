@@ -33,7 +33,8 @@ class ProviderTrackingService {
     // push update if provider moved at least 500m
     try {
       final perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+      if (perm == LocationPermission.denied ||
+          perm == LocationPermission.deniedForever) {
         return;
       }
 

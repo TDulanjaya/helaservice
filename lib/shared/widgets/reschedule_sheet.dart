@@ -183,14 +183,16 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
               const SizedBox(height: 16),
               Text(
                 context.l10n.selectScheduledDate,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               InkWell(
                 onTap: () => _pickDate(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: context.themeSurfaceLow,
                     borderRadius: BorderRadius.circular(12),
@@ -198,14 +200,17 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.event_outlined, size: 20, color: AppColors.primary),
+                      const Icon(Icons.event_outlined,
+                          size: 20, color: AppColors.primary),
                       const SizedBox(width: 10),
                       Text(
                         formattedDate,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const Spacer(),
-                      const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                      const Icon(Icons.arrow_drop_down,
+                          color: AppColors.primary),
                     ],
                   ),
                 ),
@@ -213,7 +218,8 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
               const SizedBox(height: 16),
               Text(
                 context.l10n.selectTimeSlot,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Column(
@@ -225,14 +231,17 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
                       onTap: () => setState(() => _selectedSlot = slot),
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary.withValues(alpha: 0.1)
                               : context.themeSurfaceLow,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : context.themeBorder,
+                            color: isSelected
+                                ? AppColors.primary
+                                : context.themeBorder,
                             width: isSelected ? 1.5 : 1,
                           ),
                         ),
@@ -242,7 +251,9 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
                               isSelected
                                   ? Icons.radio_button_checked
                                   : Icons.radio_button_unchecked,
-                              color: isSelected ? AppColors.primary : context.themeTextSecondary,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : context.themeTextSecondary,
                               size: 18,
                             ),
                             const SizedBox(width: 10),
@@ -251,8 +262,12 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
                                 _getSlotLabel(context, slot),
                                 style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? AppColors.primary : context.themeTextPrimary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : context.themeTextPrimary,
                                 ),
                               ),
                             ),
@@ -266,16 +281,19 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
               const SizedBox(height: 12),
               Text(
                 context.l10n.rescheduleReasonPrompt,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _reasonController,
                 maxLines: 2,
-                style: TextStyle(color: context.themeTextPrimary, fontSize: 13.5),
+                style:
+                    TextStyle(color: context.themeTextPrimary, fontSize: 13.5),
                 decoration: InputDecoration(
                   hintText: context.l10n.rescheduleReasonHint,
-                  hintStyle: TextStyle(color: context.themeTextSecondary, fontSize: 13),
+                  hintStyle: TextStyle(
+                      color: context.themeTextSecondary, fontSize: 13),
                   filled: true,
                   fillColor: context.themeSurfaceLow,
                   border: OutlineInputBorder(
@@ -288,7 +306,8 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                 ),
               ),
@@ -326,7 +345,8 @@ class RescheduleProposalBanner extends StatelessWidget {
     final isRequester = booking.rescheduleRequestedBy == currentUid;
     final proposedDate = booking.rescheduleProposedDate;
     final dateStr = proposedDate != null
-        ? DateFormat('yyyy-MM-dd', Localizations.localeOf(context).languageCode).format(proposedDate)
+        ? DateFormat('yyyy-MM-dd', Localizations.localeOf(context).languageCode)
+            .format(proposedDate)
         : '';
     final slotStr = booking.rescheduleProposedSlot ?? '';
     final reasonStr = booking.rescheduleReason ?? '';
@@ -344,7 +364,8 @@ class RescheduleProposalBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.schedule_rounded, color: AppColors.primary, size: 18),
+              const Icon(Icons.schedule_rounded,
+                  color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -400,7 +421,8 @@ class RescheduleProposalBanner extends StatelessWidget {
                     ),
                     child: Text(
                       context.l10n.declineReschedule,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -424,7 +446,8 @@ class RescheduleProposalBanner extends StatelessWidget {
                     ),
                     child: Text(
                       context.l10n.acceptReschedule,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../theme/app_theme.dart';
@@ -7,6 +8,7 @@ import '../../features/provider/screens/provider_dashboard_screen.dart';
 import '../../features/provider/screens/provider_pending_screen.dart';
 import '../../features/admin/admin_shell.dart';
 import '../../utils/l10n_extension.dart';
+import '../../utils/provider_routing_helper.dart';
 
 void showRoleSwitchSheet(BuildContext context) {
   final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
@@ -60,7 +62,9 @@ void showRoleSwitchSheet(BuildContext context) {
             AppRole.customer,
           ),
         ),
-        if (isAuthorizedAdmin || isApprovedProvider || roleProvider.isRegisteredProvider) ...[
+        if (isAuthorizedAdmin ||
+            isApprovedProvider ||
+            roleProvider.isRegisteredProvider) ...[
           const SizedBox(height: 10),
           _RoleTile(
             icon: Icons.build_outlined,
@@ -150,12 +154,30 @@ void _switchTo(
     return;
   }
 
+  if (role == AppRole.customer) {
+    final user = roleProvider.currentUser;
+    if (user != null &&
+        isLockedNewProvider(user, roleProvider.isApprovedProvider)) {
+      Navigator.of(sheetContext).pop();
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        SnackBar(
+          content: Text(rootContext.l10n.roleSwitchLockedProviderBlocked),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+  }
+
   if (role == AppRole.provider &&
       !roleProvider.isAuthorizedAdmin &&
       !roleProvider.isApprovedProvider) {
     Navigator.of(sheetContext).pop();
     final isExistingCustomer =
         roleProvider.currentUser?.initialRole == 'customer';
+    if (kDebugMode) {
+      debugPrint('[navdbg] -> pending from role_switch_sheet.dart');
+    }
     Navigator.of(rootContext).push(
       MaterialPageRoute(
         builder: (_) => ProviderPendingScreen(
@@ -172,9 +194,15 @@ void _switchTo(
   Widget destination;
   switch (role) {
     case AppRole.customer:
+      if (kDebugMode) {
+        debugPrint('[navdbg] -> customer home from role_switch_sheet.dart');
+      }
       destination = const HomeDiscoveryScreen();
       break;
     case AppRole.provider:
+      if (kDebugMode) {
+        debugPrint('[navdbg] -> dashboard from role_switch_sheet.dart');
+      }
       destination = const ProviderDashboardScreen();
       break;
     case AppRole.admin:

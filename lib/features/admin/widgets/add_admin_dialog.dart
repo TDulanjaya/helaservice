@@ -200,7 +200,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+              const Icon(Icons.info_outline,
+                  size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -227,9 +228,11 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(context.l10n.done, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(context.l10n.done,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -281,7 +284,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close, size: 20, color: context.themeTextSecondary),
+                icon: Icon(Icons.close,
+                    size: 20, color: context.themeTextSecondary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -289,7 +293,6 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
           const SizedBox(height: 18),
           Divider(height: 1, color: context.themeBorder),
           const SizedBox(height: 16),
-
           Flexible(
             child: SingleChildScrollView(
               child: Column(
@@ -310,7 +313,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     decoration: InputDecoration(
                       hintText: context.l10n.hintFullName,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
-                      prefixIcon: Icon(Icons.person_outline, size: 20, color: context.themeTextSecondary),
+                      prefixIcon: Icon(Icons.person_outline,
+                          size: 20, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
                       border: OutlineInputBorder(
@@ -328,7 +332,6 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     },
                   ),
                   const SizedBox(height: 14),
-
                   Text(
                     context.l10n.addAdminWorkEmail,
                     style: TextStyle(
@@ -345,7 +348,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     decoration: InputDecoration(
                       hintText: context.l10n.hintEmail,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
-                      prefixIcon: Icon(Icons.email_outlined, size: 20, color: context.themeTextSecondary),
+                      prefixIcon: Icon(Icons.email_outlined,
+                          size: 20, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
                       border: OutlineInputBorder(
@@ -366,7 +370,6 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     },
                   ),
                   const SizedBox(height: 14),
-
                   Text(
                     context.l10n.addAdminMobileOptional,
                     style: TextStyle(
@@ -383,7 +386,8 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     decoration: InputDecoration(
                       hintText: context.l10n.hintPhone,
                       hintStyle: TextStyle(color: context.themeTextSecondary),
-                      prefixIcon: Icon(Icons.phone_outlined, size: 20, color: context.themeTextSecondary),
+                      prefixIcon: Icon(Icons.phone_outlined,
+                          size: 20, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
                       border: OutlineInputBorder(
@@ -395,7 +399,6 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   Text(
                     context.l10n.addAdminTier,
                     style: TextStyle(
@@ -419,13 +422,13 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                         child: _RoleSelectCard(
                           role: AdminRole.supportAdmin,
                           isSelected: _selectedRole == AdminRole.supportAdmin,
-                          onSelect: () => _onRoleChanged(AdminRole.supportAdmin),
+                          onSelect: () =>
+                              _onRoleChanged(AdminRole.supportAdmin),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-
                   Text(
                     context.l10n.addAdminOperationalPermissions,
                     style: TextStyle(
@@ -435,7 +438,6 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                     ),
                   ),
                   const SizedBox(height: 8),
-
                   ...AdminPermission.values
                       .where((p) => p != AdminPermission.manageAdmins)
                       .map((permission) {
@@ -492,17 +494,17 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
               ),
             ),
           ),
-
           const SizedBox(height: 18),
           Divider(height: 1, color: context.themeBorder),
           const SizedBox(height: 16),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                child: Text(context.l10n.cancel, style: TextStyle(color: context.themeTextSecondary)),
+                onPressed:
+                    _isLoading ? null : () => Navigator.of(context).pop(),
+                child: Text(context.l10n.cancel,
+                    style: TextStyle(color: context.themeTextSecondary)),
               ),
               const SizedBox(width: 10),
               ElevatedButton.icon(
@@ -518,14 +520,16 @@ class _AddAdminDialogState extends State<AddAdminDialog> {
                       )
                     : const Icon(Icons.send_rounded, size: 18),
                 label: Text(
-                  _isLoading ? context.l10n.addAdminAdding : context.l10n.addAdminGrantRole,
+                  _isLoading
+                      ? context.l10n.addAdminAdding
+                      : context.l10n.addAdminGrantRole,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -571,7 +575,9 @@ class _RoleSelectCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : context.themeSurfaceLow,
+          color: isSelected
+              ? color.withValues(alpha: 0.12)
+              : context.themeSurfaceLow,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : context.themeBorder,
@@ -581,7 +587,9 @@ class _RoleSelectCard extends StatelessWidget {
         child: Column(
           children: [
             Icon(
-              role == AdminRole.opsAdmin ? Icons.verified_user : Icons.support_agent,
+              role == AdminRole.opsAdmin
+                  ? Icons.verified_user
+                  : Icons.support_agent,
               size: 20,
               color: isSelected ? color : context.themeTextSecondary,
             ),

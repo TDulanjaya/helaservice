@@ -1793,13 +1793,17 @@
   "locationAccuracy": "துல்லியம்: ±{meters} மீ",
   "@locationAccuracy": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "locationAccuracyLowWarning": "இருப்பிடத் துல்லியம் குறைவாக உள்ளது (±{meters} மீ). வரைபட ஊசியைச் சரியான வாயில் அல்லது வீட்டிற்கு நகர்த்தவும்.",
   "@locationAccuracyLowWarning": {
     "placeholders": {
-      "meters": { "type": "int" }
+      "meters": {
+        "type": "int"
+      }
     }
   },
   "fineTunePinInstruction": "சரியான கேட் அல்லது வீட்டிற்கு ஊசியை இழுக்கவும்",
@@ -1825,7 +1829,7 @@
   "admin2faTitle": "நிர்வாகி சரிபார்ப்பு",
   "admin2faSubtitle": "உங்கள் அமர்வை அங்கீகரிக்க உங்கள் நிர்வாகி மின்னஞ்சலுக்கு அனுப்பப்பட்ட 6 இலக்கக் குறியீட்டை உள்ளிடவும்.",
   "useDifferentAccount": "வேறு கணக்கைப் பயன்படுத்தவும்",
-  "continueAsCustomer": "வாடிக்கையாளர் / வழங்குநராக தொடரவும்",
+  "continueAsCustomer": "வாடிக்கையாளராக தொடரவும்",
   "otpNoSession": "இன்னும் குறியீடு அனுப்பப்படவில்லை — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
   "otpExpiredResend": "குறியீடு காலாவதியானது — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
   "otpMaxAttemptsResend": "தவறான முயற்சிகள் அதிகம் — மீண்டும் அனுப்பு என்பதைத் தட்டவும்",
@@ -1842,7 +1846,6 @@
   "notHereChooseAnother": "இங்கே இல்லையா? மற்றொரு இடத்தைத் தேர்வுசெய்க",
   "couldNotGetLocationFallback": "உங்கள் இருப்பிடத்தைப் பெற முடியவில்லை — ஒரு இடத்தைத் தேர்ந்தெடுக்கவும் அல்லது வரைபடத்தில் தேடவும்",
   "tryGpsAgain": "மீண்டும் GPS முயற்சிக்கவும்",
-  "openSettings": "அமைப்புகளைத் திறக்கவும்",
   "addDetailsForProvider": "வழங்குநருக்கான விவரங்களைச் சேர்க்கவும்",
   "providerNoteLabel": "வழங்குநருக்கான குறிப்பு",
   "providerNoteHint": "எ.கா. நீல வாயில், பேருந்து நிறுத்தம் அருகில் வெள்ளை டொயோட்டா",
@@ -1869,7 +1872,6 @@
   "serviceCategoryLabel": "சேவை வகை",
   "applicantNameLabel": "விண்ணப்பதாரர் பெயர்",
   "fixAndResubmit": "சரிசெய்து மீண்டும் சமர்ப்பிக்கவும்",
-  "continueAsCustomer": "வாடிக்கையாளராக தொடரவும்",
   "providerPendingCustomerToast": "உங்கள் சேவை வழங்குநர் விண்ணப்பம் பரிசீலனையில் உள்ளது. இதற்கிடையில் நீங்கள் வாடிக்கையாளர் அம்சங்களைப் பயன்படுத்தலாம்.",
   "providerApprovedCelebration": "வாழ்த்துக்கள்! உங்கள் சேவை வழங்குநர் கணக்கு அங்கீகரிக்கப்பட்டு செயலில் உள்ளது.",
   "providerApplicationStatusBadge": "வழங்குநர் விண்ணப்பம்",
@@ -1905,7 +1907,6 @@
   "reasonFaceMismatch": "முகம் அடையாள அட்டை புகைப்படத்துடன் பொருந்தவில்லை",
   "reasonOther": "வேறு காரணம்",
   "optionalReviewerNote": "கூடுதல் வழிமுறைகள் (விருப்பத்தேர்வு, அதிகபட்சம் 300 எழுத்துக்கள்)",
-  "filterAll": "அனைத்தும்",
   "filterPending": "பரிசீலனையில்",
   "filterResubmitted": "மீண்டும் சமர்ப்பிக்கப்பட்டது",
   "filterRejected": "நிராகரிக்கப்பட்டது",
@@ -1916,7 +1917,6 @@
   "nicBackLabel": "அடையாள அட்டை பின்பக்கம்",
   "rotatePhoto": "90° சுழற்று",
   "zoomHint": "பெரிதாக்க விரல்களால் இழுக்கவும்",
-  "notProvided": "வழங்கப்படவில்லை",
   "auditHistoryTitle": "மதிப்பாய்வு மற்றும் சமர்ப்பிப்பு வரலாறு",
   "submissionAttempt": "சமர்ப்பிப்பு #{number}",
   "noSearchResults": "முடிவுகள் எதுவும் கிடைக்கவில்லை",
@@ -1934,8 +1934,8 @@
   "estimatedLabel": "மதிப்பிடப்பட்டது",
   "baseLocationTitle": "அடிப்படை இருப்பிடம்",
   "baseLocationDesc": "நீங்கள் வழக்கமாக பணியைத் தொடங்கும் இடம்",
-  "howDoYouChargeTitle": "நீங்கள் எவ்வாறு கட்டணம் வசூலிக்கிறீர்கள்?",
-  "howDoYouChargeSubtitle": "குறைந்தது ஒரு கட்டண முறையைத் தேர்ந்தெடுக்கவும் (மணிநேரத்திற்கு, நாளுக்கு, அல்லது வேலைக்கு).",
+  "howDoYouChargeTitle": "உங்கள் வழக்கமான கட்டணங்கள்",
+  "howDoYouChargeSubtitle": "வாடிக்கையாளர்கள் இவற்றை உங்கள் சுயவிவரத்தில் காண்பார்கள். மதிப்பீட்டை அனுப்பும்போது ஒவ்வொரு வேலைக்கும் வேறு விலை வகையைத் தேர்ந்தெடுக்கலாம்.",
   "pricingModePerHour": "மணிநேரத்திற்கு",
   "pricingModePerDay": "நாளுக்கு",
   "pricingModePricePerJob": "வேலைக்கான விலை (ஒவ்வொரு வேலைக்கும் விலை குறிப்பிடவும்)",
@@ -2011,5 +2011,34 @@
   "timelineDescAfterPhotoAdded": "சேவை வழங்குநர் நிறைவடைந்த பணிப் புகைப்படத்தைப் பதிவேற்றினார்",
   "timelineDescRescheduleRequested": "மறுஅட்டவணை கோரப்பட்டது",
   "timelineDescRescheduleAccepted": "மறுஅட்டவணை ஏற்றுக்கொள்ளப்பட்டது",
-  "timelineDescRescheduleDeclined": "மறுஅட்டவணை நிராகரிக்கப்பட்டது"
+  "timelineDescRescheduleDeclined": "மறுஅட்டவணை நிராகரிக்கப்பட்டது",
+  "failedToSetRoleGeneric": "பங்கை அமைக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+  "roleSwitchLockedProviderBlocked": "உங்கள் சேவை வழங்குநர் கணக்கு ஒப்புதலுக்காக காத்திருக்கும் போது வாடிக்கையாளர் பயன்முறையைப் பயன்படுத்த முடியாது.",
+  "certUploadSectionTitle": "சான்றிதழ்கள் மற்றும் ஆவணங்கள் (விருப்பத்திற்குரியது)",
+  "certUploadSectionHint": "சான்றிதழ்கள், உரிமங்கள் அல்லது பயிற்சி கடிதங்களைச் சேர்க்கவும். புகைப்படங்கள் அல்லது PDF.",
+  "certUploadButton": "ஆவணங்களைப் பதிவேற்றவும்",
+  "certUploadChooseFiles": "கோப்புகளைத் தேர்ந்தெடுக்கவும்",
+  "certUploadMaxFilesError": "அதிகபட்சம் 10 ஆவணங்களை மட்டுமே பதிவேற்ற முடியும்.",
+  "certUploadFileTooLargeError": "{fileName} 10 MB அளவு வரம்பை மீறுகிறது.",
+  "certUploadUnsupportedTypeError": "{fileName} ஆதரிக்கப்படாத கோப்பு வடிவம். அனுமதிக்கப்பட்டவை: JPG, PNG, WEBP, PDF.",
+  "certUploadTitleHint": "ஆவணத்தின் தலைப்பு (எ.கா. NVQ Level 4)",
+  "certDefaultTitle": "சான்றிதழ்",
+  "certCertifiedBadge": "சான்றிதழ் பெற்றது",
+  "certApprovedSectionTitle": "தொழில் சான்றிதழ்கள் மற்றும் உரிமங்கள்",
+  "certAddMore": "சான்றிதழ்களைச் சேர்க்கவும்",
+  "certSaveButton": "சான்றிதழ்களைச் சேமிக்கவும்",
+  "certSubmittedSuccess": "சான்றிதழ்கள் சரிபார்ப்புக்கு சமர்ப்பிக்கப்பட்டன.",
+  "certTradeLicensesTitle": "தொழில் சான்றிதழ்கள் மற்றும் உரிமங்கள் ({count})",
+  "certNumberTitle": "சான்றிதழ் #{number}",
+  "certApproveAll": "அனைத்தையும் அங்கீகரிக்கவும்",
+  "certRejectReasonTitle": "சான்றிதழை நிராகரிக்கவும்",
+  "certRejectReasonPrompt": "இந்த சான்றிதழை நிராகரிப்பதற்கான காரணத்தை உள்ளிடவும்",
+  "certRejectReasonRequired": "நிராகரிப்பதற்கான காரணத்தை உள்ளிடவும்.",
+  "certApprovedNotice": "சான்றிதழ் அங்கீகரிக்கப்பட்டது",
+  "certRejectedNotice": "சான்றிதழ் நிராகரிக்கப்பட்டது",
+  "certAllApprovedNotice": "அனைத்து சான்றிதழ்களும் அங்கீகரிக்கப்பட்டன",
+  "quoteRateForJobHint": "இந்த வேலைக்கான உங்கள் கட்டணத்தை உள்ளிடவும்",
+  "quoteInspectVisitFeePrompt": "பரிசோதனைக்கான வருகைக் கட்டணத்தை உள்ளிடவும்",
+  "quoteIncludeVisitCostHint": "வருகைக் கட்டணம் ஏதேனும் இருந்தால் அதை உங்கள் விலையில் சேர்க்கவும்.",
+  "quoteAddTravelCost": "பயணச் செலவைச் சேர்க்கவும்"
 }

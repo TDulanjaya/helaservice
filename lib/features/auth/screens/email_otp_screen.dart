@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart' as pv;
@@ -47,6 +48,9 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
       List.generate(_codeLength, (_) => TextEditingController());
   final List<FocusNode> _focusNodes =
       List.generate(_codeLength, (_) => FocusNode());
+  // backspace focus nodes
+  final List<FocusNode> _keyListenerNodes =
+      List.generate(_codeLength, (_) => FocusNode(skipTraversal: true));
 
   Timer? _timer;
   int _secondsRemaining = 60;
@@ -97,7 +101,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
 
   void _startCountdown([int? initialSeconds]) {
     _timer?.cancel();
-    final remaining = initialSeconds ?? _effectiveOtpService.remainingCooldownSeconds;
+    final remaining =
+        initialSeconds ?? _effectiveOtpService.remainingCooldownSeconds;
     setState(() {
       _secondsRemaining = remaining > 0 ? remaining : 60;
     });
@@ -133,11 +138,13 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     for (final f in _focusNodes) {
       f.dispose();
     }
+    for (final f in _keyListenerNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
-  String get _currentCode =>
-      _controllers.map((c) => c.text.trim()).join();
+  String get _currentCode => _controllers.map((c) => c.text.trim()).join();
 
   void _onDigitChanged(int index, String value) {
     setState(() => _errorMessage = null);
@@ -151,7 +158,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
             _controllers[i].text = digits[i];
           }
         }
-        final targetIndex = (digits.length < _codeLength) ? digits.length : _codeLength - 1;
+        final targetIndex =
+            (digits.length < _codeLength) ? digits.length : _codeLength - 1;
         _focusNodes[targetIndex].requestFocus();
         if (digits.length >= _codeLength) {
           _handleVerify();
@@ -266,7 +274,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
         }
       } catch (_) {}
 
-      // verified, reload profile and route from splash
+      // reload profile and route from splash
       if (widget.onVerified != null) {
         await widget.onVerified!();
       }
@@ -434,7 +442,10 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final gap = constraints.maxWidth < 340 ? 6.0 : 8.0;
-                    final boxWidth = ((constraints.maxWidth - ((_codeLength - 1) * gap)) / _codeLength).clamp(36.0, 48.0);
+                    final boxWidth =
+                        ((constraints.maxWidth - ((_codeLength - 1) * gap)) /
+                                _codeLength)
+                            .clamp(36.0, 48.0);
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(_codeLength, (index) {
@@ -442,11 +453,13 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                           width: boxWidth,
                           height: 56,
                           child: KeyboardListener(
-                            focusNode: FocusNode(),
+                            focusNode: _keyListenerNodes[index],
                             onKeyEvent: (event) {
                               if (event is KeyDownEvent &&
-                                  event.logicalKey == LogicalKeyboardKey.backspace) {
-                                if (_controllers[index].text.isEmpty && index > 0) {
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.backspace) {
+                                if (_controllers[index].text.isEmpty &&
+                                    index > 0) {
                                   _controllers[index - 1].clear();
                                   _focusNodes[index - 1].requestFocus();
                                 }
@@ -497,171 +510,180 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                   },
                 ),
 
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.errorContainer
+                          .withValues(alpha: isDark ? 0.2 : 0.8),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 18, color: AppColors.error),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 32),
+
+                PrimaryButton(
+                  label: context.l10n.verifyAndContinue,
+                  loading: _isVerifying,
+                  onPressed:
+                      _currentCode.length == _codeLength ? _handleVerify : null,
+                ),
+
+                const SizedBox(height: 24),
+
+                // resend button
+                if (_secondsRemaining > 0)
+                  Text(
+                    context.l10n.resendCodeIn(_secondsRemaining),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.themeMuted,
+                    ),
+                  )
+                else
+                  TextButton(
+                    onPressed: _isResending ? null : _handleResend,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                    child: _isResending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : Text(
+                            context.l10n.resendCode,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                const SizedBox(height: 24),
+                // spam folder notice
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.errorContainer.withValues(alpha: isDark ? 0.2 : 0.8),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: AppColors.error.withValues(alpha: 0.4),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.error_outline, size: 18, color: AppColors.error),
-                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.mark_email_unread_outlined,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.otpCheckSpamHintTitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              context.l10n.otpCheckSpamHintDesc,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeMuted,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-
-              const SizedBox(height: 32),
-
-              PrimaryButton(
-                label: context.l10n.verifyAndContinue,
-                loading: _isVerifying,
-                onPressed: _currentCode.length == _codeLength ? _handleVerify : null,
-              ),
-
-              const SizedBox(height: 24),
-
-              // resend button
-              if (_secondsRemaining > 0)
-                Text(
-                  context.l10n.resendCodeIn(_secondsRemaining),
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: context.themeMuted,
-                  ),
-                )
-              else
-                TextButton(
-                  onPressed: _isResending ? null : _handleResend,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                  ),
-                  child: _isResending
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : Text(
-                          context.l10n.resendCode,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-              const SizedBox(height: 24),
-              // spam folder notice
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.mark_email_unread_outlined,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.otpCheckSpamHintTitle,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.l10n.otpCheckSpamHintDesc,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.themeMuted,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
+                if (widget.allowSignOut) ...[
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () async {
+                      await AuthService().signOut();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    },
+                    child: Text(
+                      context.l10n.useDifferentAccount,
+                      style: TextStyle(
+                        color: context.themeMuted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              if (widget.allowSignOut) ...[
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () async {
-                    await AuthService().signOut();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                    );
-                  },
-                  child: Text(
-                    context.l10n.useDifferentAccount,
-                    style: TextStyle(
-                      color: context.themeMuted,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  ),
+                ],
+                if (widget.purpose == 'admin_login') ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      if (kDebugMode) {
+                        debugPrint(
+                            '[navdbg] -> customer home from email_otp_screen.dart');
+                      }
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (_) => const HomeDiscoveryScreen()),
+                        (route) => false,
+                      );
+                    },
+                    child: Text(
+                      context.l10n.continueAsCustomer,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-              if (widget.purpose == 'admin_login') ...[
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-                      (route) => false,
-                    );
-                  },
-                  child: Text(
-                    context.l10n.continueAsCustomer,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

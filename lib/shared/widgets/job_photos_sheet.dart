@@ -88,8 +88,8 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
       final stage = isBefore ? 'before' : 'after';
       final filename =
           'job_${widget.booking.id}_${stage}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final photoUrl = await StorageService.instance
-          .uploadBytes(bytes, filename: filename);
+      final photoUrl =
+          await StorageService.instance.uploadBytes(bytes, filename: filename);
 
       if (isBefore) {
         await BookingRepository().addBeforePhoto(
@@ -212,7 +212,8 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
                         title: context.l10n.beforePhotos,
                         photos: beforeList,
                         canAdd: canUpload,
-                        isUploading: _isUploading && _uploadingSection == 'before',
+                        isUploading:
+                            _isUploading && _uploadingSection == 'before',
                         emptyLabel: context.l10n.noBeforePhotos,
                         onAdd: () => _pickAndUploadPhoto(true),
                         badgeColor: Colors.amber,
@@ -223,7 +224,8 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
                         title: context.l10n.afterPhotos,
                         photos: afterList,
                         canAdd: canUpload,
-                        isUploading: _isUploading && _uploadingSection == 'after',
+                        isUploading:
+                            _isUploading && _uploadingSection == 'after',
                         emptyLabel: context.l10n.noAfterPhotos,
                         onAdd: () => _pickAndUploadPhoto(false),
                         badgeColor: const Color(0xFF22C55E),
@@ -384,8 +386,8 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
                                 height: 110,
                                 color: context.themeSurface,
                                 child: const Center(
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
                               );
                             },

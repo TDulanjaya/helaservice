@@ -13,7 +13,8 @@ class AppVersionService {
     try {
       int minBuildNumber = 0;
       String latestVersion = '0.1.0';
-      String updateUrl = 'https://play.google.com/store/apps/details?id=com.helaservice.app';
+      String updateUrl =
+          'https://play.google.com/store/apps/details?id=com.helaservice.app';
 
       // 1. Check Firebase Remote Config
       try {
@@ -41,9 +42,15 @@ class AppVersionService {
         if (doc.exists && doc.data() != null) {
           final data = doc.data()!;
           final fsMin = data['minBuildNumber'] as int? ?? 0;
-          if (fsMin > minBuildNumber) minBuildNumber = fsMin;
-          if (data['latestVersion'] != null) latestVersion = data['latestVersion'] as String;
-          if (data['updateUrl'] != null) updateUrl = data['updateUrl'] as String;
+          if (fsMin > minBuildNumber) {
+            minBuildNumber = fsMin;
+          }
+          if (data['latestVersion'] != null) {
+            latestVersion = data['latestVersion'] as String;
+          }
+          if (data['updateUrl'] != null) {
+            updateUrl = data['updateUrl'] as String;
+          }
         }
       } catch (_) {}
 

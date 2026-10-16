@@ -5,7 +5,8 @@ import '../utils/provider_location_helper.dart';
 import '../utils/provider_pricing_helper.dart';
 
 class TechnicianRepository {
-  final _col = FirebaseFirestore.instance.collection(FirestorePaths.technicians);
+  final _col =
+      FirebaseFirestore.instance.collection(FirestorePaths.technicians);
 
   Stream<List<Technician>> streamTechnicians() {
     return _col.snapshots().map((snap) {
@@ -88,7 +89,9 @@ class TechnicianRepository {
 
   Future<void> updateEmergencyStatus(String id, bool emergencyAvailable) async {
     if (id.isEmpty) return;
-    await _col.doc(id).update({'emergencyAvailable': emergencyAvailable}).catchError((_) {});
+    await _col
+        .doc(id)
+        .update({'emergencyAvailable': emergencyAvailable}).catchError((_) {});
   }
 
   // update provider working hours schedule
@@ -105,7 +108,8 @@ class TechnicianRepository {
     await _col.doc(id).update({'serviceRadiusKm': radiusKm}).catchError((_) {});
   }
 
-  Future<void> toggleBanStatus(String id, bool isBanned, {String? reason}) async {
+  Future<void> toggleBanStatus(String id, bool isBanned,
+      {String? reason}) async {
     if (id.isEmpty) return;
     final batch = FirebaseFirestore.instance.batch();
     final techDoc = _col.doc(id);
@@ -117,12 +121,16 @@ class TechnicianRepository {
       'statusUpdatedAt': FieldValue.serverTimestamp(),
     });
 
-    final userDoc = FirebaseFirestore.instance.collection(FirestorePaths.users).doc(id);
-    batch.set(userDoc, {
-      'banned': isBanned,
-      'status': isBanned ? 'suspended' : 'active',
-      if (reason != null) 'banReason': reason,
-    }, SetOptions(merge: true));
+    final userDoc =
+        FirebaseFirestore.instance.collection(FirestorePaths.users).doc(id);
+    batch.set(
+        userDoc,
+        {
+          'banned': isBanned,
+          'status': isBanned ? 'suspended' : 'active',
+          if (reason != null) 'banReason': reason,
+        },
+        SetOptions(merge: true));
 
     await batch.commit();
   }
@@ -145,7 +153,9 @@ class TechnicianRepository {
       techUpdates['pricingModes'] = pricingModes;
       userUpdates['pricingModes'] = pricingModes;
 
-      if (pricingModes.contains(ProviderPricingHelper.modeHour) && hourlyRateLkr != null && hourlyRateLkr > 0) {
+      if (pricingModes.contains(ProviderPricingHelper.modeHour) &&
+          hourlyRateLkr != null &&
+          hourlyRateLkr > 0) {
         techUpdates['hourlyRateLkr'] = hourlyRateLkr;
         userUpdates['hourlyRateLkr'] = hourlyRateLkr;
       } else {
@@ -153,7 +163,9 @@ class TechnicianRepository {
         userUpdates['hourlyRateLkr'] = FieldValue.delete();
       }
 
-      if (pricingModes.contains(ProviderPricingHelper.modeDay) && dailyRateLkr != null && dailyRateLkr > 0) {
+      if (pricingModes.contains(ProviderPricingHelper.modeDay) &&
+          dailyRateLkr != null &&
+          dailyRateLkr > 0) {
         techUpdates['dailyRateLkr'] = dailyRateLkr;
         userUpdates['dailyRateLkr'] = dailyRateLkr;
       } else {
@@ -161,7 +173,9 @@ class TechnicianRepository {
         userUpdates['dailyRateLkr'] = FieldValue.delete();
       }
 
-      if (pricingModes.contains(ProviderPricingHelper.modeTravel) && perKmRateLkr != null && perKmRateLkr > 0) {
+      if (pricingModes.contains(ProviderPricingHelper.modeTravel) &&
+          perKmRateLkr != null &&
+          perKmRateLkr > 0) {
         techUpdates['perKmRateLkr'] = perKmRateLkr;
         userUpdates['perKmRateLkr'] = perKmRateLkr;
       } else {
@@ -169,7 +183,9 @@ class TechnicianRepository {
         userUpdates['perKmRateLkr'] = FieldValue.delete();
       }
 
-      if (pricingModes.contains(ProviderPricingHelper.modeVisit) && visitFeeLkr != null && visitFeeLkr > 0) {
+      if (pricingModes.contains(ProviderPricingHelper.modeVisit) &&
+          visitFeeLkr != null &&
+          visitFeeLkr > 0) {
         techUpdates['visitFeeLkr'] = visitFeeLkr;
         userUpdates['visitFeeLkr'] = visitFeeLkr;
       } else {
@@ -237,4 +253,3 @@ class TechnicianRepository {
     await _col.doc(id).delete();
   }
 }
-

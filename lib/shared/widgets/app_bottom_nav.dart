@@ -44,7 +44,8 @@ class AppBottomNav extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(16, 4, 16, bottomMargin),
         child: Container(
-          height: navHeight * MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4),
+          height: navHeight *
+              MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4),
           decoration: BoxDecoration(
             color: navBg,
             borderRadius: BorderRadius.circular(24),
@@ -57,7 +58,8 @@ class AppBottomNav extends StatelessWidget {
               ),
             ],
           ),
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 4 : 6),
+          padding:
+              EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 4 : 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
@@ -269,4 +271,3 @@ class AppBottomNav extends StatelessWidget {
     );
   }
 }
-

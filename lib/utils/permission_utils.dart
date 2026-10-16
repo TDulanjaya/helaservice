@@ -9,7 +9,8 @@ class PermissionUtils {
   // location permission sheet
   static Future<bool> requestLocationWithRationale(BuildContext context) async {
     final current = await Geolocator.checkPermission();
-    if (current == LocationPermission.always || current == LocationPermission.whileInUse) {
+    if (current == LocationPermission.always ||
+        current == LocationPermission.whileInUse) {
       return true;
     }
 
@@ -49,7 +50,8 @@ class PermissionUtils {
     if (agreed != true) return false;
 
     final requested = await Geolocator.requestPermission();
-    return requested == LocationPermission.always || requested == LocationPermission.whileInUse;
+    return requested == LocationPermission.always ||
+        requested == LocationPermission.whileInUse;
   }
 
   // camera permission sheet
@@ -152,7 +154,8 @@ class PermissionUtils {
     if (agreed != true) return false;
 
     // request photos or storage
-    final statuses = await [ph.Permission.photos, ph.Permission.storage].request();
+    final statuses =
+        await [ph.Permission.photos, ph.Permission.storage].request();
     final isAllowed = statuses[ph.Permission.photos]?.isGranted == true ||
         statuses[ph.Permission.storage]?.isGranted == true;
 
@@ -218,7 +221,8 @@ class PermissionUtils {
   }
 
   // check notifications on login
-  static Future<void> checkAndPromptInitialPermissions(BuildContext context) async {
+  static Future<void> checkAndPromptInitialPermissions(
+      BuildContext context) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final hasPrompted = prefs.getBool('has_prompted_notifications') ?? false;
@@ -247,10 +251,13 @@ class PermissionUtils {
           children: [
             const Icon(Icons.settings_outlined, color: AppColors.primary),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text(description, style: const TextStyle(fontSize: 13, height: 1.4)),
+        content: Text(description,
+            style: const TextStyle(fontSize: 13, height: 1.4)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -260,7 +267,8 @@ class PermissionUtils {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
               Navigator.pop(ctx);

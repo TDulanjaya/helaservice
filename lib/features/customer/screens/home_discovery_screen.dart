@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -24,6 +25,10 @@ import '../../../shared/widgets/hero_card.dart';
 import '../../../shared/widgets/status_pill.dart';
 import '../../../shared/widgets/notification_bell_icon.dart';
 import '../../../utils/provider_pricing_helper.dart';
+import '../../../utils/provider_routing_helper.dart';
+import '../../auth/screens/complete_profile_screen.dart';
+import '../../auth/screens/role_choice_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 
 class HomeDiscoveryScreen extends StatefulWidget {
   final int initialIndex;
@@ -56,9 +61,66 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
     super.initState();
     _navIndex = widget.initialIndex > 2 ? 2 : widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        PermissionUtils.checkAndPromptInitialPermissions(context);
+      if (!mounted) return;
+
+      // check signup status and pending provider
+      final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+      final user = roleProvider.currentUser;
+      if (user != null) {
+        if (user.role == null) {
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] home guard: branch user.role == null -> RoleChoiceScreen');
+          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => RoleChoiceScreen(user: user)),
+            (route) => false,
+          );
+          return;
+        }
+
+        if (isSignupUnfinished(user)) {
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] home guard: branch isSignupUnfinished -> CompleteProfileScreen');
+          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => CompleteProfileScreen(initialProfile: user),
+            ),
+            (route) => false,
+          );
+          return;
+        }
+
+        if (isLockedNewProvider(user, roleProvider.isApprovedProvider)) {
+          if (kDebugMode) {
+            debugPrint(
+                '[navdbg] home guard: branch isLockedNewProvider -> ProviderPendingScreen');
+            debugPrint('[navdbg] -> pending from home_discovery_screen.dart');
+          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const ProviderPendingScreen(
+                isExistingCustomer: false,
+              ),
+            ),
+            (route) => false,
+          );
+          return;
+        }
+
+        if (kDebugMode) {
+          debugPrint(
+              '[navdbg] home guard: branch passed guard -> HomeDiscoveryScreen active');
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('[navdbg] home guard: branch user is null');
+        }
       }
+
+      PermissionUtils.checkAndPromptInitialPermissions(context);
     });
   }
 
@@ -761,9 +823,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                           _selectedCategoryIndex = i;
                                           _selectedCategoryId = cat.id;
                                           _selectedCategoryName =
-                                              CategoryService.instance
-                                                  .nameOf(cat.id,
-                                                      context: context);
+                                              CategoryService.instance.nameOf(
+                                                  cat.id,
+                                                  context: context);
                                         }
                                       });
                                     },
@@ -871,10 +933,12 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                       technicians.where((t) => t.emergencyRateLkr > 0).toList();
                 }
                 if (_minRating > 0.0) {
-                  technicians =
-                      technicians.where((t) => (t.rating ?? 0.0) >= _minRating).toList();
+                  technicians = technicians
+                      .where((t) => (t.rating ?? 0.0) >= _minRating)
+                      .toList();
                 }
-                technicians.sort((a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
+                technicians.sort(
+                    (a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
 
                 if (technicians.isEmpty) {
                   return Container(
@@ -1071,15 +1135,20 @@ class _ArtisanCard extends StatelessWidget {
                     StatusPill(
                       type: tech.isAvailableNow
                           ? StatusPillType.online
-                          : (tech.online ? StatusPillType.pending : StatusPillType.offline),
+                          : (tech.online
+                              ? StatusPillType.pending
+                              : StatusPillType.offline),
                       label: tech.isAvailableNow
                           ? context.l10n.availableNow
-                          : (tech.online ? context.l10n.outsideWorkingHours : context.l10n.statusOffline),
+                          : (tech.online
+                              ? context.l10n.outsideWorkingHours
+                              : context.l10n.statusOffline),
                       showDot: true,
                     ),
                     if (!tech.hasPricingMode(ProviderPricingHelper.modeTravel))
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2.5),
                         decoration: BoxDecoration(
                           color: AppColors.success.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),

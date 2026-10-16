@@ -84,8 +84,6 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     }
   }
 
-
-
   void _confirmRevoke(AdminUser admin) {
     showDialog(
       context: context,
@@ -218,31 +216,31 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               ),
                               if (isSuperAdmin) ...[
                                 const SizedBox(height: 12),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 52,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () =>
-                                          _openAddAdminDialog(context),
-                                      icon: const Icon(Icons.add_rounded, size: 18),
-                                      label: Text(
-                                        context.l10n.addNewAdminAction,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                        ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 52,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _openAddAdminDialog(context),
+                                    icon:
+                                        const Icon(Icons.add_rounded, size: 18),
+                                    label: Text(
+                                      context.l10n.addNewAdminAction,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
                                       ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: AppColors.ink,
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: AppColors.ink,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
                                   ),
+                                ),
                               ],
                             ],
                           )
@@ -252,8 +250,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.12),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
@@ -280,7 +278,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                 ),
                               ),
                               OutlinedButton.icon(
-                                onPressed: () => AdminCallLogsSheet.show(context),
+                                onPressed: () =>
+                                    AdminCallLogsSheet.show(context),
                                 icon: const Icon(Icons.phone_in_talk, size: 18),
                                 label: Text(context.l10n.callLogsTitle),
                                 style: OutlinedButton.styleFrom(
@@ -293,8 +292,10 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               ),
                               const SizedBox(width: 8),
                               OutlinedButton.icon(
-                                onPressed: () => AdminActionLogsSheet.show(context),
-                                icon: const Icon(Icons.history_edu_rounded, size: 18),
+                                onPressed: () =>
+                                    AdminActionLogsSheet.show(context),
+                                icon: const Icon(Icons.history_edu_rounded,
+                                    size: 18),
                                 label: Text(context.l10n.adminActionLogsTitle),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
@@ -307,11 +308,11 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               if (isSuperAdmin) ...[
                                 const SizedBox(width: 12),
                                 ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _openAddAdminDialog(context),
+                                  onPressed: () => _openAddAdminDialog(context),
                                   icon: const Icon(Icons.add_rounded, size: 18),
                                   label: Text(context.l10n.addNewAdminAction,
-                                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w800)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: AppColors.ink,
@@ -381,7 +382,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                               child: _MetricCard(
                                 title: context.l10n.totalAdminsCount,
                                 value: '$totalCount',
-                                subtitle: context.l10n.registeredPlatformAccounts,
+                                subtitle:
+                                    context.l10n.registeredPlatformAccounts,
                                 icon: Icons.badge_outlined,
                                 color: AppColors.primary,
                               ),
@@ -541,14 +543,16 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                     setState(() => _statusFilter = null),
                               ),
                               _FilterChip(
-                                label: adminStatusLabel(context, AdminStatus.active),
+                                label: adminStatusLabel(
+                                    context, AdminStatus.active),
                                 isSelected: _statusFilter == AdminStatus.active,
                                 color: const Color(0xFF2E7D32),
                                 onSelected: () => setState(
                                     () => _statusFilter = AdminStatus.active),
                               ),
                               _FilterChip(
-                                label: adminStatusLabel(context, AdminStatus.invited),
+                                label: adminStatusLabel(
+                                    context, AdminStatus.invited),
                                 isSelected:
                                     _statusFilter == AdminStatus.invited,
                                 color: AppColors.primary,
@@ -556,7 +560,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                     () => _statusFilter = AdminStatus.invited),
                               ),
                               _FilterChip(
-                                label: adminStatusLabel(context, AdminStatus.suspended),
+                                label: adminStatusLabel(
+                                    context, AdminStatus.suspended),
                                 isSelected:
                                     _statusFilter == AdminStatus.suspended,
                                 color: AppColors.error,
@@ -610,7 +615,8 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                   )
                 else
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(20, 4, 20, isMobile ? AppBottomNav.contentBottomPadding : 24),
+                    padding: EdgeInsets.fromLTRB(20, 4, 20,
+                        isMobile ? AppBottomNav.contentBottomPadding : 24),
                     sliver: isDesktop
                         ? SliverToBoxAdapter(
                             child: _AdminDesktopTable(
@@ -1037,7 +1043,8 @@ class _AdminDesktopTable extends StatelessWidget {
                             color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.3)),
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1410,8 +1417,7 @@ class _AdminMobileCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: admin.roleBgColor,
                   borderRadius: BorderRadius.circular(8),

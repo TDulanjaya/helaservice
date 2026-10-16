@@ -66,13 +66,15 @@ class AdminSidebar extends StatelessWidget {
         case 2:
           return false;
         case 3:
-          return !roleProvider.hasAdminPermission(AdminPermission.manageCategories);
+          return !roleProvider
+              .hasAdminPermission(AdminPermission.manageCategories);
         case 4:
           return !roleProvider.isSuperAdmin;
         case 5:
           return !roleProvider.hasAdminPermission(AdminPermission.viewFinances);
         case 6:
-          return !roleProvider.hasAdminPermission(AdminPermission.handleSupport);
+          return !roleProvider
+              .hasAdminPermission(AdminPermission.handleSupport);
         default:
           return false;
       }
@@ -128,7 +130,8 @@ class AdminSidebar extends StatelessWidget {
           ...List.generate(entries.length, (i) {
             if (i == 6 &&
                 !roleProvider.isSuperAdmin &&
-                !roleProvider.hasAdminPermission(AdminPermission.handleSupport)) {
+                !roleProvider
+                    .hasAdminPermission(AdminPermission.handleSupport)) {
               return const SizedBox.shrink();
             }
             final e = entries[i];
@@ -168,9 +171,12 @@ class AdminSidebar extends StatelessWidget {
                   Icon(e.icon,
                       size: 19,
                       color: active
-                          ? (context.isDark ? const Color(0xFFF0B44A) : AppColors.amberDark)
+                          ? (context.isDark
+                              ? const Color(0xFFF0B44A)
+                              : AppColors.amberDark)
                           : (restricted
-                              ? context.themeTextSecondary.withValues(alpha: 0.5)
+                              ? context.themeTextSecondary
+                                  .withValues(alpha: 0.5)
                               : context.themeTextSecondary)),
                   const SizedBox(width: 12),
                   Expanded(
@@ -180,7 +186,9 @@ class AdminSidebar extends StatelessWidget {
                             fontWeight:
                                 active ? FontWeight.w800 : FontWeight.w600,
                             color: active
-                                ? (context.isDark ? const Color(0xFFF0B44A) : AppColors.amberDark)
+                                ? (context.isDark
+                                    ? const Color(0xFFF0B44A)
+                                    : AppColors.amberDark)
                                 : (restricted
                                     ? context.themeTextSecondary
                                     : context.themeTextPrimary))),
@@ -190,7 +198,8 @@ class AdminSidebar extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 4),
                       child: Icon(Icons.lock_outline,
                           size: 13,
-                          color: context.themeTextSecondary.withValues(alpha: 0.6)),
+                          color: context.themeTextSecondary
+                              .withValues(alpha: 0.6)),
                     ),
                   if (i == 1)
                     StreamBuilder<int>(
@@ -270,8 +279,8 @@ class AdminSidebar extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w600)),
                     Text('v2.4',
-                        style:
-                            TextStyle(fontSize: 10, color: context.themeTextSecondary)),
+                        style: TextStyle(
+                            fontSize: 10, color: context.themeTextSecondary)),
                   ],
                 ),
               ),

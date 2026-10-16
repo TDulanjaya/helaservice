@@ -50,7 +50,8 @@ class AdminProfileScreen extends StatelessWidget {
                 ),
               );
               try {
-                await pv.Provider.of<RoleProvider>(context, listen: false).logout();
+                await pv.Provider.of<RoleProvider>(context, listen: false)
+                    .logout();
               } finally {
                 if (context.mounted) {
                   Navigator.of(context).pushNamedAndRemoveUntil(
@@ -80,7 +81,8 @@ class AdminProfileScreen extends StatelessWidget {
           children: [
             const Icon(Icons.campaign, color: AppColors.primary),
             const SizedBox(width: 8),
-            Text(context.l10n.broadcastAlert, style: const TextStyle(fontSize: 16)),
+            Text(context.l10n.broadcastAlert,
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
         content: SingleChildScrollView(
@@ -90,8 +92,8 @@ class AdminProfileScreen extends StatelessWidget {
             children: [
               Text(
                 context.l10n.broadcastAlertDesc,
-                style:
-                    TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                style: TextStyle(
+                    fontSize: 12.5, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -188,7 +190,8 @@ class AdminProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
                     child: Row(
                       children: [
-                        const Icon(Icons.security, color: AppColors.primary, size: 22),
+                        const Icon(Icons.security,
+                            color: AppColors.primary, size: 22),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -236,8 +239,8 @@ class AdminProfileScreen extends StatelessWidget {
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      context.l10n.adminSetAuditExported),
+                                  content:
+                                      Text(context.l10n.adminSetAuditExported),
                                   backgroundColor: AppColors.primary,
                                 ),
                               );
@@ -254,7 +257,9 @@ class AdminProfileScreen extends StatelessWidget {
                   Expanded(
                     child: docs.isEmpty
                         ? (snapshot.connectionState == ConnectionState.waiting
-                            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.primary))
                             : Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -273,9 +278,11 @@ class AdminProfileScreen extends StatelessWidget {
                                 ),
                               ))
                         : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             itemCount: docs.length,
-                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
                             itemBuilder: (context, i) {
                               final d = docs[i].data();
                               final title = d['title'] as String? ??
@@ -288,42 +295,57 @@ class AdminProfileScreen extends StatelessWidget {
                               final String dateStr;
                               if (ts is Timestamp) {
                                 final dt = ts.toDate();
-                                final locale = Localizations.localeOf(context).languageCode;
-                                dateStr = DateFormat('HH:mm • dd/MM/yyyy', locale).format(dt);
+                                final locale = Localizations.localeOf(context)
+                                    .languageCode;
+                                dateStr =
+                                    DateFormat('HH:mm • dd/MM/yyyy', locale)
+                                        .format(dt);
                               } else {
-                                dateStr = (d['timeAgo'] as String? ?? context.l10n.adminSetRecent);
+                                dateStr = (d['timeAgo'] as String? ??
+                                    context.l10n.adminSetRecent);
                               }
 
-                              final authorPrefix = author != null ? '${context.l10n.byTechnician(author)} • ' : '';
+                              final authorPrefix = author != null
+                                  ? '${context.l10n.byTechnician(author)} • '
+                                  : '';
 
                               return ListTile(
                                 dense: true,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 4),
                                 leading: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(Icons.history, color: AppColors.primary, size: 18),
+                                  child: const Icon(Icons.history,
+                                      color: AppColors.primary, size: 18),
                                 ),
                                 title: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
                                         title,
-                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13),
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: context.themeSurfaceContainer,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         tag,
-                                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                        style: const TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary),
                                       ),
                                     ),
                                   ],
@@ -333,12 +355,17 @@ class AdminProfileScreen extends StatelessWidget {
                                   children: [
                                     if (detail.isNotEmpty) ...[
                                       const SizedBox(height: 2),
-                                      Text(detail, style: TextStyle(fontSize: 11.5, color: context.themeTextPrimary)),
+                                      Text(detail,
+                                          style: TextStyle(
+                                              fontSize: 11.5,
+                                              color: context.themeTextPrimary)),
                                     ],
                                     const SizedBox(height: 2),
                                     Text(
                                       '$authorPrefix$dateStr',
-                                      style: TextStyle(fontSize: 10, color: context.themeTextSecondary),
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: context.themeTextSecondary),
                                     ),
                                   ],
                                 ),
@@ -367,19 +394,19 @@ class AdminProfileScreen extends StatelessWidget {
         : (adminUser?.displayName.isNotEmpty == true
             ? adminUser!.displayName
             : context.l10n.adminSetAdministratorFallback);
-    final email = user?.email.isNotEmpty == true
-        ? user!.email
-        : (adminUser?.email ?? '');
+    final email =
+        user?.email.isNotEmpty == true ? user!.email : (adminUser?.email ?? '');
 
     final roleTag = isSuperAdmin
         ? '${context.l10n.roleSuperAdminBadge} • ${context.l10n.adminSetPlatformGovernance}'
         : (adminUser != null
-            ? (adminUser.role != null ? '${adminRoleLabel(context, adminUser.role!)} • ${context.l10n.navOperations}' : 'Admin')
+            ? (adminUser.role != null
+                ? '${adminRoleLabel(context, adminUser.role!)} • ${context.l10n.navOperations}'
+                : 'Admin')
             : context.l10n.roleOpsAdminBadge);
 
-    final permissions = isSuperAdmin
-        ? AdminPermission.values
-        : (adminUser?.permissions ?? []);
+    final permissions =
+        isSuperAdmin ? AdminPermission.values : (adminUser?.permissions ?? []);
 
     final isMobile = MediaQuery.of(context).size.width < 768;
 
@@ -554,7 +581,8 @@ class AdminProfileScreen extends StatelessWidget {
                     }
                   },
                 ),
-                if (roleProvider.hasAdminPermission(AdminPermission.broadcastAlerts)) ...[
+                if (roleProvider
+                    .hasAdminPermission(AdminPermission.broadcastAlerts)) ...[
                   Divider(height: 1, color: context.themeBorder),
                   _SettingsTile(
                     icon: Icons.campaign_outlined,

@@ -21,8 +21,10 @@ class GoogleSignInButton extends StatelessWidget {
 
     // colors for light and dark modes
     final backgroundColor = isDark ? const Color(0xFF131314) : Colors.white;
-    final textColor = isDark ? const Color(0xFFE3E3E3) : const Color(0xFF1F1F1F);
-    final borderColor = isDark ? const Color(0xFF8E918F) : const Color(0xFF747775);
+    final textColor =
+        isDark ? const Color(0xFFE3E3E3) : const Color(0xFF1F1F1F);
+    final borderColor =
+        isDark ? const Color(0xFF8E918F) : const Color(0xFF747775);
 
     return OutlinedButton(
       onPressed: isLoading ? null : onPressed,
@@ -30,7 +32,8 @@ class GoogleSignInButton extends StatelessWidget {
         backgroundColor: backgroundColor,
         foregroundColor: textColor,
         disabledBackgroundColor: backgroundColor.withValues(alpha: 0.6),
-        side: BorderSide(color: borderColor.withValues(alpha: 0.35), width: 1.2),
+        side:
+            BorderSide(color: borderColor.withValues(alpha: 0.35), width: 1.2),
         minimumSize: const Size.fromHeight(52),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

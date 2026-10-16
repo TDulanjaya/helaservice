@@ -18,9 +18,8 @@ class RatingStars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = color ?? AppColors.primary;
-    final inactiveColor = context.isDark
-        ? const Color(0xFF3A4048)
-        : const Color(0xFFD4CEBF);
+    final inactiveColor =
+        context.isDark ? const Color(0xFF3A4048) : const Color(0xFFD4CEBF);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -41,4 +40,3 @@ class RatingStars extends StatelessWidget {
     );
   }
 }
-

@@ -73,4 +73,3 @@ class AppOutlineButton extends StatelessWidget {
     return expand ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
-

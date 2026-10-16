@@ -162,7 +162,8 @@ class _EditAdminPermissionsDialogState
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, size: 20, color: context.themeTextSecondary),
+                    icon: Icon(Icons.close,
+                        size: 20, color: context.themeTextSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -170,7 +171,6 @@ class _EditAdminPermissionsDialogState
               const SizedBox(height: 16),
               Divider(height: 1, color: context.themeBorder),
               const SizedBox(height: 16),
-
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
@@ -189,7 +189,8 @@ class _EditAdminPermissionsDialogState
                         children: [
                           Expanded(
                             child: _RoleCard(
-                              label: adminRoleLabel(context, AdminRole.opsAdmin),
+                              label:
+                                  adminRoleLabel(context, AdminRole.opsAdmin),
                               icon: Icons.verified_user,
                               color: AppColors.primary,
                               isSelected: _selectedRole == AdminRole.opsAdmin,
@@ -199,17 +200,19 @@ class _EditAdminPermissionsDialogState
                           const SizedBox(width: 8),
                           Expanded(
                             child: _RoleCard(
-                              label: adminRoleLabel(context, AdminRole.supportAdmin),
+                              label: adminRoleLabel(
+                                  context, AdminRole.supportAdmin),
                               icon: Icons.support_agent,
                               color: const Color(0xFF4A6572),
-                              isSelected: _selectedRole == AdminRole.supportAdmin,
-                              onTap: () => _onRoleChanged(AdminRole.supportAdmin),
+                              isSelected:
+                                  _selectedRole == AdminRole.supportAdmin,
+                              onTap: () =>
+                                  _onRoleChanged(AdminRole.supportAdmin),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
-
                       Text(
                         context.l10n.editPermAssigned,
                         style: TextStyle(
@@ -219,11 +222,11 @@ class _EditAdminPermissionsDialogState
                         ),
                       ),
                       const SizedBox(height: 8),
-
                       ...AdminPermission.values
                           .where((p) => p != AdminPermission.manageAdmins)
                           .map((permission) {
-                        final isChecked = _selectedPermissions.contains(permission);
+                        final isChecked =
+                            _selectedPermissions.contains(permission);
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 6),
@@ -276,17 +279,17 @@ class _EditAdminPermissionsDialogState
                   ),
                 ),
               ),
-
               const SizedBox(height: 18),
               Divider(height: 1, color: context.themeBorder),
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: Text(context.l10n.cancel, style: TextStyle(color: context.themeTextSecondary)),
+                    onPressed:
+                        _isLoading ? null : () => Navigator.of(context).pop(),
+                    child: Text(context.l10n.cancel,
+                        style: TextStyle(color: context.themeTextSecondary)),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton.icon(
@@ -302,7 +305,9 @@ class _EditAdminPermissionsDialogState
                           )
                         : const Icon(Icons.save, size: 18),
                     label: Text(
-                      _isLoading ? context.l10n.editPermUpdating : context.l10n.editPermSave,
+                      _isLoading
+                          ? context.l10n.editPermUpdating
+                          : context.l10n.editPermSave,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -349,7 +354,9 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : context.themeSurfaceLow,
+          color: isSelected
+              ? color.withValues(alpha: 0.12)
+              : context.themeSurfaceLow,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : context.themeBorder,

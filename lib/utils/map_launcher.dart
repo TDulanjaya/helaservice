@@ -32,12 +32,15 @@ class MapLauncher {
 
     if (Platform.isAndroid) {
       try {
-        final googleMapsIntent = Uri.parse('google.navigation:q=$latitude,$longitude&mode=d');
+        final googleMapsIntent =
+            Uri.parse('google.navigation:q=$latitude,$longitude&mode=d');
         if (await canLaunchUrl(googleMapsIntent)) {
-          return await launchUrl(googleMapsIntent, mode: LaunchMode.externalApplication);
+          return await launchUrl(googleMapsIntent,
+              mode: LaunchMode.externalApplication);
         }
 
-        final geoUri = Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude($title)');
+        final geoUri = Uri.parse(
+            'geo:$latitude,$longitude?q=$latitude,$longitude($title)');
         if (await canLaunchUrl(geoUri)) {
           return await launchUrl(geoUri, mode: LaunchMode.externalApplication);
         }
@@ -51,7 +54,8 @@ class MapLauncher {
           queryParameters: {'daddr': '$latitude,$longitude', 'q': title},
         );
         if (await canLaunchUrl(appleMapsUri)) {
-          return await launchUrl(appleMapsUri, mode: LaunchMode.externalApplication);
+          return await launchUrl(appleMapsUri,
+              mode: LaunchMode.externalApplication);
         }
       } catch (e) {
         debugPrint('[MapLauncher] Apple maps error: $e');

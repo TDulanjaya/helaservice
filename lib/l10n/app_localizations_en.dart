@@ -6405,11 +6405,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get baseLocationDesc => 'Where you normally start your workday';
 
   @override
-  String get howDoYouChargeTitle => 'How do you charge?';
+  String get howDoYouChargeTitle => 'Your usual rates';
 
   @override
   String get howDoYouChargeSubtitle =>
-      'Select at least one billing method (per hour, per day, or per job).';
+      'Customers see these on your profile. You can still choose a different price type for each job when you send a bid.';
 
   @override
   String get pricingModePerHour => 'Per hour';
@@ -6675,4 +6675,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timelineDescRescheduleDeclined => 'Reschedule declined';
+
+  @override
+  String get failedToSetRoleGeneric => 'Failed to set role. Please try again.';
+
+  @override
+  String get roleSwitchLockedProviderBlocked =>
+      'Customer mode is unavailable while your provider account is pending approval.';
+
+  @override
+  String get certUploadSectionTitle => 'Certificates and documents (optional)';
+
+  @override
+  String get certUploadSectionHint =>
+      'Add any certificates, licences or training letters. Photos or PDF.';
+
+  @override
+  String get certUploadButton => 'Upload Documents';
+
+  @override
+  String get certUploadChooseFiles => 'Choose files';
+
+  @override
+  String get certUploadMaxFilesError =>
+      'You can upload a maximum of 10 documents.';
+
+  @override
+  String certUploadFileTooLargeError(String fileName) {
+    return '$fileName exceeds the 10 MB size limit.';
+  }
+
+  @override
+  String certUploadUnsupportedTypeError(String fileName) {
+    return '$fileName is not a supported file type. Allowed: JPG, PNG, WEBP, PDF.';
+  }
+
+  @override
+  String get certUploadTitleHint => 'Document title (e.g. NVQ Level 4)';
+
+  @override
+  String get certDefaultTitle => 'Certificate';
+
+  @override
+  String get certCertifiedBadge => 'Certified';
+
+  @override
+  String get certApprovedSectionTitle => 'Trade Certifications & Licenses';
+
+  @override
+  String get certAddMore => 'Add certificates';
+
+  @override
+  String get certSaveButton => 'Save Certificates';
+
+  @override
+  String get certSubmittedSuccess => 'Certificates submitted for verification.';
+
+  @override
+  String certTradeLicensesTitle(int count) {
+    return 'Trade Certifications & Licenses ($count)';
+  }
+
+  @override
+  String certNumberTitle(int number) {
+    return 'Certificate #$number';
+  }
+
+  @override
+  String get certApproveAll => 'Approve all';
+
+  @override
+  String get certRejectReasonTitle => 'Reject Certificate';
+
+  @override
+  String get certRejectReasonPrompt =>
+      'Please enter a reason for rejecting this certificate';
+
+  @override
+  String get certRejectReasonRequired => 'Please enter a rejection reason.';
+
+  @override
+  String get certApprovedNotice => 'Certificate approved';
+
+  @override
+  String get certRejectedNotice => 'Certificate rejected';
+
+  @override
+  String get certAllApprovedNotice => 'All certificates approved';
+
+  @override
+  String get quoteRateForJobHint => 'Enter your rate for this job';
+
+  @override
+  String get quoteInspectVisitFeePrompt =>
+      'Please enter a visit fee for inspection';
+
+  @override
+  String get quoteIncludeVisitCostHint =>
+      'Include any visit cost in your price.';
+
+  @override
+  String get quoteAddTravelCost => 'Add travel cost';
 }

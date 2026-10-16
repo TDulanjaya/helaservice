@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/app_theme.dart';
@@ -80,9 +81,8 @@ class LiveTrackingScreen extends StatelessWidget {
           );
         }
         final bookings = bSnapshot.data ?? [];
-        final activeBooking = bookings
-            .where((b) => !JobStatus.isTerminal(b.status))
-            .firstOrNull;
+        final activeBooking =
+            bookings.where((b) => !JobStatus.isTerminal(b.status)).firstOrNull;
 
         if (activeBooking == null) {
           return _buildEmptyState(context);
@@ -145,6 +145,10 @@ class LiveTrackingScreen extends StatelessWidget {
                 leadingIcon: Icons.explore,
                 expand: false,
                 onPressed: () {
+                  if (kDebugMode) {
+                    debugPrint(
+                        '[navdbg] -> customer home from live_tracking_screen.dart');
+                  }
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (_) =>
@@ -162,6 +166,10 @@ class LiveTrackingScreen extends StatelessWidget {
           ? AppBottomNav(
               currentIndex: 1,
               onTap: (i) {
+                if (kDebugMode) {
+                  debugPrint(
+                      '[navdbg] -> customer home from live_tracking_screen.dart');
+                }
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (_) => HomeDiscoveryScreen(initialIndex: i),
@@ -223,8 +231,10 @@ class LiveTrackingScreen extends StatelessWidget {
                         .streamUserLocationData(tech.id),
                     builder: (context, locSnapshot) {
                       final rawLocData = locSnapshot.data;
-                      final rawLat = (rawLocData?['latitude'] as num?)?.toDouble();
-                      final rawLng = (rawLocData?['longitude'] as num?)?.toDouble();
+                      final rawLat =
+                          (rawLocData?['latitude'] as num?)?.toDouble();
+                      final rawLng =
+                          (rawLocData?['longitude'] as num?)?.toDouble();
                       final liveTechPoint = (rawLat != null && rawLng != null)
                           ? LatLng(rawLat, rawLng)
                           : null;
@@ -238,7 +248,8 @@ class LiveTrackingScreen extends StatelessWidget {
                               currentBooking?.customerLongitude != null;
 
                       final techBaseCoords = tech.serviceArea.isNotEmpty
-                          ? LocationUtils.getDistrictCoordinates(tech.serviceArea)
+                          ? LocationUtils.getDistrictCoordinates(
+                              tech.serviceArea)
                           : const (lat: 6.9271, lng: 79.8612);
                       final techBaseLatLng =
                           LatLng(techBaseCoords.lat, techBaseCoords.lng);
@@ -295,14 +306,14 @@ class LiveTrackingScreen extends StatelessWidget {
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(
-                                              Icons.location_off_rounded,
+                                          const Icon(Icons.location_off_rounded,
                                               color: AppColors.warning,
                                               size: 20),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              context.l10n.customerLocationNotAvailableTitle,
+                                              context.l10n
+                                                  .customerLocationNotAvailableTitle,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w800,
                                                 fontSize: 14,
@@ -314,7 +325,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        context.l10n.customerLocationNotAvailableDesc,
+                                        context.l10n
+                                            .customerLocationNotAvailableDesc,
                                         style: TextStyle(
                                             fontSize: 12,
                                             color: context.themeTextSecondary),
@@ -325,18 +337,20 @@ class LiveTrackingScreen extends StatelessWidget {
                                           if (tech.phone.isNotEmpty)
                                             Expanded(
                                               child: ElevatedButton.icon(
-                                                onPressed: () =>
-                                                    CallService.instance.startCall(
-                                                      context: context,
-                                                      calleePhone: tech.phone,
-                                                      calleeName: tech.name,
-                                                      bookingId: currentBooking?.id,
-                                                      calleeUid: tech.id,
-                                                      calleeRole: 'provider',
-                                                    ),
+                                                onPressed: () => CallService
+                                                    .instance
+                                                    .startCall(
+                                                  context: context,
+                                                  calleePhone: tech.phone,
+                                                  calleeName: tech.name,
+                                                  bookingId: currentBooking?.id,
+                                                  calleeUid: tech.id,
+                                                  calleeRole: 'provider',
+                                                ),
                                                 icon: const Icon(Icons.call,
                                                     size: 15),
-                                                label: Text(context.l10n.callTech),
+                                                label:
+                                                    Text(context.l10n.callTech),
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor:
                                                       AppColors.primary,
@@ -346,9 +360,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                                         BorderRadius.circular(
                                                             10),
                                                   ),
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                          vertical: 8),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 8),
                                                 ),
                                               ),
                                             ),
@@ -397,9 +410,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                 customerPoint: customerPoint,
                                 midPoint: midPoint,
                                 techName: tech.name,
-                                routePoints: hasCustomerLocation
-                                    ? route.points
-                                    : null,
+                                routePoints:
+                                    hasCustomerLocation ? route.points : null,
                                 isLive: isLive,
                                 hasCustomerLocation: hasCustomerLocation,
                                 updatedAt: updatedAt,
@@ -471,7 +483,8 @@ class LiveTrackingScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                context.l10n.etaDelayNotice(currentBooking.delayMinutes ?? 10),
+                                context.l10n.etaDelayNotice(
+                                    currentBooking.delayMinutes ?? 10),
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
@@ -479,7 +492,8 @@ class LiveTrackingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                context.l10n.artisanReportedDelay(currentBooking.delayReason ?? ''),
+                                context.l10n.artisanReportedDelay(
+                                    currentBooking.delayReason ?? ''),
                                 style: TextStyle(
                                     fontSize: 11.5,
                                     color: context.themeTextSecondary),
@@ -493,21 +507,27 @@ class LiveTrackingScreen extends StatelessWidget {
                 ],
                 if (currentBooking != null && currentBooking.id.isNotEmpty) ...[
                   StreamBuilder<String?>(
-                    stream: BookingRepository().streamBookingPin(currentBooking.id),
+                    stream:
+                        BookingRepository().streamBookingPin(currentBooking.id),
                     builder: (context, pinSnap) {
                       final pin = pinSnap.data;
-                      if (pin == null || pin.isEmpty) return const SizedBox.shrink();
+                      if (pin == null || pin.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
                       return Container(
                         margin: const EdgeInsets.only(top: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.key_rounded, color: AppColors.primary, size: 24),
+                            const Icon(Icons.key_rounded,
+                                color: AppColors.primary, size: 24),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -561,7 +581,8 @@ class LiveTrackingScreen extends StatelessWidget {
                     actorRole: 'customer',
                   ),
                 ],
-                if (currentBooking != null && currentBooking.status == JobStatus.completed) ...[
+                if (currentBooking != null &&
+                    currentBooking.status == JobStatus.completed) ...[
                   CustomerPaymentCard(booking: currentBooking),
                 ],
                 if (currentBooking != null &&
@@ -577,8 +598,8 @@ class LiveTrackingScreen extends StatelessWidget {
                       border: Border.all(color: context.themeBorder),
                     ),
                     child: ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -651,15 +672,15 @@ class LiveTrackingScreen extends StatelessWidget {
                               Row(children: [
                                 const Icon(Icons.verified,
                                     size: 12, color: AppColors.primary),
-                                 const SizedBox(width: 3),
+                                const SizedBox(width: 3),
                                 Expanded(
-                                    child: Text(
-                                      '${CategoryService.instance.nameOf(tech.category.isNotEmpty ? tech.category : tech.title, context: context)} • ${tech.jobsCount} ${context.l10n.completedJobs}',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: context.themeTextSecondary),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                  child: Text(
+                                    '${CategoryService.instance.nameOf(tech.category.isNotEmpty ? tech.category : tech.title, context: context)} • ${tech.jobsCount} ${context.l10n.completedJobs}',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.themeTextSecondary),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ]),
                               Row(children: [
@@ -670,8 +691,10 @@ class LiveTrackingScreen extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     tech.serviceArea.isNotEmpty
-                                        ? LocalizedData.getDistrict(context, tech.serviceArea)
-                                        : context.l10n.custFallbackWesternProvince,
+                                        ? LocalizedData.getDistrict(
+                                            context, tech.serviceArea)
+                                        : context
+                                            .l10n.custFallbackWesternProvince,
                                     style: TextStyle(
                                         fontSize: 11,
                                         color: context.themeTextSecondary),
@@ -703,8 +726,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                          content: Text(
-                                              context.l10n.providerPhoneNotAvailable)),
+                                          content: Text(context
+                                              .l10n.providerPhoneNotAvailable)),
                                     );
                                   }
                                 })),
@@ -728,7 +751,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                 })),
                         if (currentBooking != null &&
                             (currentBooking.status == JobStatus.pending ||
-                             currentBooking.status == JobStatus.confirmed)) ...[
+                                currentBooking.status ==
+                                    JobStatus.confirmed)) ...[
                           const SizedBox(width: 8),
                           IconSquareButton(
                             icon: Icons.calendar_month_outlined,
@@ -739,7 +763,8 @@ class LiveTrackingScreen extends StatelessWidget {
                             onTap: () => RescheduleSheet.show(
                               context: context,
                               booking: currentBooking,
-                              currentUid: FirebaseAuth.instance.currentUser?.uid ?? '',
+                              currentUid:
+                                  FirebaseAuth.instance.currentUser?.uid ?? '',
                               actorRole: 'customer',
                             ),
                           ),
@@ -774,7 +799,8 @@ class LiveTrackingScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Row(children: [
-                  if (currentBooking == null || JobStatus.canCancel(currentBooking.status)) ...[
+                  if (currentBooking == null ||
+                      JobStatus.canCancel(currentBooking.status)) ...[
                     Expanded(
                         child: AppOutlineButton(
                             label: context.l10n.cancelRequest,
@@ -788,8 +814,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20)),
                                   title: Text(context.l10n.cancelRequest,
-                                      style:
-                                          const TextStyle(fontWeight: FontWeight.w800)),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w800)),
                                   content: Text(
                                       context.l10n.cancelBookingConfirm,
                                       style: TextStyle(
@@ -826,8 +852,8 @@ class LiveTrackingScreen extends StatelessWidget {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content:
-                                          Text(context.l10n.serviceRequestCancelled)),
+                                      content: Text(context
+                                          .l10n.serviceRequestCancelled)),
                                 );
                               }
                             })),
@@ -841,28 +867,30 @@ class LiveTrackingScreen extends StatelessWidget {
                             final trackingLink =
                                 'https://helaservice.lk/track/${currentBooking?.id ?? tech.id}';
                             Clipboard.setData(ClipboardData(
-                                text:
-                                    context.l10n.custShareTrackingText(trackingLink)));
+                                text: context.l10n
+                                    .custShareTrackingText(trackingLink)));
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
-                                    context.l10n.liveTrackingCopied),
+                                content: Text(context.l10n.liveTrackingCopied),
                                 backgroundColor: AppColors.primary,
                               ),
                             );
                           })),
                 ]),
-                if (currentBooking != null && currentBooking.isEligibleForNoShow) ...[
+                if (currentBooking != null &&
+                    currentBooking.isEligibleForNoShow) ...[
                   const SizedBox(height: 10),
                   AppOutlineButton(
                     label: context.l10n.providerDidNotCome,
                     icon: Icons.person_off_outlined,
                     color: AppColors.error,
-                    onPressed: () => _promptReportNoShow(context, currentBooking),
+                    onPressed: () =>
+                        _promptReportNoShow(context, currentBooking),
                   ),
                 ],
                 const SizedBox(height: 14),
-                if (currentBooking != null && currentBooking.status == JobStatus.completed)
+                if (currentBooking != null &&
+                    currentBooking.status == JobStatus.completed)
                   PrimaryButton(
                     label: context.l10n.jobFinishedRatePay,
                     leadingIcon: Icons.check_circle,
@@ -889,6 +917,10 @@ class LiveTrackingScreen extends StatelessWidget {
               ? AppBottomNav(
                   currentIndex: 1,
                   onTap: (i) {
+                    if (kDebugMode) {
+                      debugPrint(
+                          '[navdbg] -> customer home from live_tracking_screen.dart');
+                    }
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
                         builder: (_) => HomeDiscoveryScreen(initialIndex: i),
@@ -915,7 +947,9 @@ class LiveTrackingScreen extends StatelessWidget {
   ) {
     final displayName = tech.name.isNotEmpty
         ? tech.name
-        : (booking.providerName.isNotEmpty ? booking.providerName : context.l10n.roleProvider);
+        : (booking.providerName.isNotEmpty
+            ? booking.providerName
+            : context.l10n.roleProvider);
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -936,7 +970,8 @@ class LiveTrackingScreen extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 20),
+                child: const Icon(Icons.location_on_rounded,
+                    color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -950,10 +985,13 @@ class LiveTrackingScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (booking.arrivalDistanceM != null && (booking.arrivalOutsideZone || booking.arrivalDistanceM! > 200)) ...[
+          if (booking.arrivalDistanceM != null &&
+              (booking.arrivalOutsideZone ||
+                  booking.arrivalDistanceM! > 200)) ...[
             const SizedBox(height: 6),
             Text(
-              context.l10n.providerGpsShowsAway(booking.arrivalDistanceM.toString()),
+              context.l10n
+                  .providerGpsShowsAway(booking.arrivalDistanceM.toString()),
               style: TextStyle(
                 fontSize: 11.5,
                 color: context.themeTextSecondary,
@@ -968,13 +1006,15 @@ class LiveTrackingScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.success,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     minimumSize: const Size.fromHeight(42),
                   ),
                   icon: const Icon(Icons.check_circle_outline, size: 18),
                   label: Text(
                     context.l10n.yesTheyAreHere,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   onPressed: () async {
                     try {
@@ -985,7 +1025,9 @@ class LiveTrackingScreen extends StatelessWidget {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                          SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -998,13 +1040,15 @@ class LiveTrackingScreen extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     minimumSize: const Size.fromHeight(42),
                   ),
                   icon: const Icon(Icons.cancel_outlined, size: 18),
                   label: Text(
                     context.l10n.noNotHere,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   onPressed: () async {
                     try {
@@ -1015,7 +1059,9 @@ class LiveTrackingScreen extends StatelessWidget {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                          SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -1029,7 +1075,8 @@ class LiveTrackingScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _promptReportNoShow(BuildContext context, Booking booking) async {
+  Future<void> _promptReportNoShow(
+      BuildContext context, Booking booking) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1052,7 +1099,8 @@ class LiveTrackingScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(context.l10n.providerDidNotCome),
@@ -1173,9 +1221,8 @@ class _CustomerLiveTrackingMapCardState
   void _openFullScreen() {
     final route = MaterialPageRoute<void>(
       builder: (ctx) => FullScreenMapPage(
-        initialCenter: widget.hasCustomerLocation
-            ? widget.midPoint
-            : widget.techPoint,
+        initialCenter:
+            widget.hasCustomerLocation ? widget.midPoint : widget.techPoint,
         initialZoom: 14.2,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
@@ -1261,7 +1308,8 @@ class _CustomerLiveTrackingMapCardState
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            context.l10n.locationLastUpdatedMinsAgo('$minutesOld'),
+                            context.l10n
+                                .locationLastUpdatedMinsAgo('$minutesOld'),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10.5,

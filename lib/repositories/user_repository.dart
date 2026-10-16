@@ -109,10 +109,10 @@ class UserRepository {
           final banReason = data['banReason']?.toString();
           final name = data['name']?.toString() ?? '';
           final phone = data['phone']?.toString();
-          final district = data['district']?.toString() ??
-              data['serviceArea']?.toString();
-          final serviceCategory = data['title']?.toString() ??
-              data['serviceCategory']?.toString();
+          final district =
+              data['district']?.toString() ?? data['serviceArea']?.toString();
+          final serviceCategory =
+              data['title']?.toString() ?? data['serviceCategory']?.toString();
           final lat = (data['baseLat'] as num?)?.toDouble() ??
               (data['currentLat'] as num?)?.toDouble() ??
               (data['latitude'] as num?)?.toDouble();
@@ -126,12 +126,10 @@ class UserRepository {
               role: AppRole.provider,
               isBanned: isBanned || existing.isBanned,
               banReason: banReason ?? existing.banReason,
-              displayName: existing.displayName.isNotEmpty
-                  ? existing.displayName
-                  : name,
-              phone: existing.phone?.isNotEmpty == true
-                  ? existing.phone
-                  : phone,
+              displayName:
+                  existing.displayName.isNotEmpty ? existing.displayName : name,
+              phone:
+                  existing.phone?.isNotEmpty == true ? existing.phone : phone,
               district: existing.district?.isNotEmpty == true
                   ? existing.district
                   : district,
@@ -178,13 +176,11 @@ class UserRepository {
               role: AppRole.admin,
               adminRole: adminRole,
               isBanned: isBanned || existing.isBanned,
-              displayName: existing.displayName.isNotEmpty
-                  ? existing.displayName
-                  : name,
+              displayName:
+                  existing.displayName.isNotEmpty ? existing.displayName : name,
               email: existing.email.isNotEmpty ? existing.email : email,
-              phone: existing.phone?.isNotEmpty == true
-                  ? existing.phone
-                  : phone,
+              phone:
+                  existing.phone?.isNotEmpty == true ? existing.phone : phone,
             );
           } else {
             userMap[id] = UserProfile(

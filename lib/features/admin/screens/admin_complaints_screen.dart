@@ -136,7 +136,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     : null,
               );
               await AdminLogService.instance.logAction(
-                action: isResolve ? 'complaint_resolved' : 'complaint_dismissed',
+                action:
+                    isResolve ? 'complaint_resolved' : 'complaint_dismissed',
                 targetType: 'complaint',
                 targetId: complaint.id,
                 details: notesController.text.trim().isNotEmpty
@@ -267,7 +268,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 action: 'provider_banned',
                 targetType: 'provider',
                 targetId: complaint.providerId,
-                details: 'Provider suspended from complaint ${complaint.id}. Reason: ${reasonController.text.trim()}',
+                details:
+                    'Provider suspended from complaint ${complaint.id}. Reason: ${reasonController.text.trim()}',
               );
               await _complaintRepo.updateComplaintStatus(
                 complaint.id,
@@ -278,8 +280,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(context.l10n
-                        .disputesProviderSuspendedSnack(complaint.providerName)),
+                    content: Text(context.l10n.disputesProviderSuspendedSnack(
+                        complaint.providerName)),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -311,7 +313,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.no_accounts_outlined, color: AppColors.error, size: 24),
+            const Icon(Icons.no_accounts_outlined,
+                color: AppColors.error, size: 24),
             const SizedBox(width: 8),
             Text(
               context.l10n.disputesSuspendCustomer,
@@ -329,7 +332,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.l10n.suspendCustomerConfirmPrompt(complaint.customerName),
+                context.l10n
+                    .suspendCustomerConfirmPrompt(complaint.customerName),
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.getTextSecondary(ctx),
@@ -394,7 +398,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 action: 'user_banned',
                 targetType: 'user',
                 targetId: complaint.customerId,
-                details: 'Customer suspended from complaint ${complaint.id}. Reason: ${reasonController.text.trim()}',
+                details:
+                    'Customer suspended from complaint ${complaint.id}. Reason: ${reasonController.text.trim()}',
               );
               await _complaintRepo.updateComplaintStatus(
                 complaint.id,
@@ -405,8 +410,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(context.l10n
-                        .disputesCustomerSuspendedSnack(complaint.customerName)),
+                    content: Text(context.l10n.disputesCustomerSuspendedSnack(
+                        complaint.customerName)),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -582,13 +587,17 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
         final filtered = allComplaints.where((c) {
           if (_filterStatus != 'all') {
-            if (_filterStatus == 'open' && !(c.status == 'open' || c.status == 'pending')) {
+            if (_filterStatus == 'open' &&
+                !(c.status == 'open' || c.status == 'pending')) {
               return false;
-            } else if (_filterStatus == 'in_review' && !(c.status == 'in_progress' || c.status == 'waiting_user')) {
+            } else if (_filterStatus == 'in_review' &&
+                !(c.status == 'in_progress' || c.status == 'waiting_user')) {
               return false;
-            } else if (_filterStatus == 'resolved' && !(c.status == 'resolved' || c.status == 'closed')) {
+            } else if (_filterStatus == 'resolved' &&
+                !(c.status == 'resolved' || c.status == 'closed')) {
               return false;
-            } else if (_filterStatus == 'dismissed' && c.status != 'dismissed') {
+            } else if (_filterStatus == 'dismissed' &&
+                c.status != 'dismissed') {
               return false;
             }
           }
@@ -717,13 +726,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                           _buildFilterChip('all',
                               context.l10n.disputesFilterAllCount(totalCount)),
                           const SizedBox(width: 8),
-                          _buildFilterChip(
-                              'open',
-                              'Open ()'),
+                          _buildFilterChip('open', 'Open ()'),
                           const SizedBox(width: 8),
-                          _buildFilterChip(
-                              'in_review',
-                              'In Review ()'),
+                          _buildFilterChip('in_review', 'In Review ()'),
                           const SizedBox(width: 8),
                           _buildFilterChip(
                               'resolved',
@@ -746,13 +751,17 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                           const SizedBox(width: 6),
                           _buildTypeFilterChip('complaint', 'Complaint'),
                           const SizedBox(width: 6),
-                          _buildTypeFilterChip('payment_dispute', 'Payment Dispute'),
+                          _buildTypeFilterChip(
+                              'payment_dispute', 'Payment Dispute'),
                           const SizedBox(width: 6),
-                          _buildTypeFilterChip('service_issue', 'Service Issue'),
+                          _buildTypeFilterChip(
+                              'service_issue', 'Service Issue'),
                           const SizedBox(width: 6),
-                          _buildTypeFilterChip('account_issue', 'Account Issue'),
+                          _buildTypeFilterChip(
+                              'account_issue', 'Account Issue'),
                           const SizedBox(width: 6),
-                          _buildTypeFilterChip('safety_emergency', 'Safety Issue'),
+                          _buildTypeFilterChip(
+                              'safety_emergency', 'Safety Issue'),
                           const SizedBox(width: 6),
                           _buildTypeFilterChip('feedback', 'Feedback'),
                         ],
@@ -877,9 +886,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : context.themeSurface,
+          color: isSelected ? AppColors.primary : context.themeSurface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected ? Colors.transparent : context.themeBorder,
@@ -890,9 +897,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isSelected
-                ? AppColors.ink
-                : context.themeTextPrimary,
+            color: isSelected ? AppColors.ink : context.themeTextPrimary,
           ),
         ),
       ),
@@ -1215,7 +1220,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     showDialog(
                       context: context,
                       builder: (dCtx) => Dialog(
-                        child: Image.network(complaint.photos[i], fit: BoxFit.contain),
+                        child: Image.network(complaint.photos[i],
+                            fit: BoxFit.contain),
                       ),
                     );
                   },
@@ -1238,7 +1244,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               ),
             ),
           ],
-          if (complaint.bookingId != null && complaint.bookingId!.isNotEmpty) ...[
+          if (complaint.bookingId != null &&
+              complaint.bookingId!.isNotEmpty) ...[
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () => BookingTimelineSheet.show(
@@ -1247,11 +1254,15 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 bookingTitle: complaint.effectiveSubject,
               ),
               icon: const Icon(Icons.timeline_rounded, size: 15),
-              label: Text(context.l10n.bookingTimelineWithId(complaint.bookingId!), style: const TextStyle(fontSize: 12)),
+              label: Text(
+                  context.l10n.bookingTimelineWithId(complaint.bookingId!),
+                  style: const TextStyle(fontSize: 12)),
               style: OutlinedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ],
@@ -1264,10 +1275,13 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.ink,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.forum_outlined, size: 16),
-              label: Text(context.l10n.viewTicketAndThread, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              label: Text(context.l10n.viewTicketAndThread,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 13)),
               onPressed: () => _showTicketThreadSheet(context, complaint),
             ),
           ),
@@ -1380,12 +1394,15 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                           value: 'provider',
                           child: Row(
                             children: [
-                              const Icon(Icons.block_flipped, size: 18, color: AppColors.error),
+                              const Icon(Icons.block_flipped,
+                                  size: 18, color: AppColors.error),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '${context.l10n.disputesSuspendProvider} (${complaint.providerName})',
-                                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -1396,12 +1413,15 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                           value: 'customer',
                           child: Row(
                             children: [
-                              const Icon(Icons.no_accounts_outlined, size: 18, color: AppColors.error),
+                              const Icon(Icons.no_accounts_outlined,
+                                  size: 18, color: AppColors.error),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '${context.l10n.disputesSuspendCustomer} (${complaint.customerName})',
-                                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -1419,7 +1439,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.gavel_rounded, size: 16, color: AppColors.error),
+                            Icon(Icons.gavel_rounded,
+                                size: 16, color: AppColors.error),
                             SizedBox(width: 6),
                             Text(
                               'Suspend Account',
@@ -1429,7 +1450,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                                 color: AppColors.error,
                               ),
                             ),
-                            Icon(Icons.arrow_drop_down, color: AppColors.error, size: 18),
+                            Icon(Icons.arrow_drop_down,
+                                color: AppColors.error, size: 18),
                           ],
                         ),
                       ),
@@ -1460,7 +1482,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(context.l10n.disputesCaseReopenedSnack)),
+                          content:
+                              Text(context.l10n.disputesCaseReopenedSnack)),
                     );
                   }
                 },
@@ -1487,7 +1510,8 @@ class _AdminTicketThreadSheet extends StatefulWidget {
   });
 
   @override
-  State<_AdminTicketThreadSheet> createState() => _AdminTicketThreadSheetState();
+  State<_AdminTicketThreadSheet> createState() =>
+      _AdminTicketThreadSheetState();
 }
 
 class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
@@ -1525,7 +1549,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -1551,13 +1576,16 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
       widget.onStatusChanged();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.ticketAssignedToYou), backgroundColor: AppColors.primary),
+          SnackBar(
+              content: Text(context.l10n.ticketAssignedToYou),
+              backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     }
@@ -1596,14 +1624,16 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                     children: [
                       Text(
                         c.effectiveSubject,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w800),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Type:  • Status: ',
-                        style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: context.themeTextSecondary),
                       ),
                     ],
                   ),
@@ -1615,15 +1645,21 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.ink,
                       visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text(context.l10n.ticketAssignToMe, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text(context.l10n.ticketAssignToMe,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold)),
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isAssignedToMe ? context.themeSuccessTint : context.themeSurfaceLow,
+                      color: isAssignedToMe
+                          ? context.themeSuccessTint
+                          : context.themeSurfaceLow,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -1631,7 +1667,9 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: isAssignedToMe ? AppColors.success : context.themeTextSecondary,
+                        color: isAssignedToMe
+                            ? AppColors.success
+                            : context.themeTextSecondary,
                       ),
                     ),
                   ),
@@ -1646,14 +1684,20 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                 if (c.description.isNotEmpty) ...[
                   Text(
                     c.description,
-                    style: TextStyle(fontSize: 13.5, color: context.themeTextPrimary, height: 1.4),
+                    style: TextStyle(
+                        fontSize: 13.5,
+                        color: context.themeTextPrimary,
+                        height: 1.4),
                   ),
                   const SizedBox(height: 14),
                 ],
                 if (c.photos.isNotEmpty) ...[
                   Text(
                     'Photos ()',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.themeTextSecondary),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextSecondary),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -1667,7 +1711,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                           showDialog(
                             context: context,
                             builder: (dCtx) => Dialog(
-                              child: Image.network(c.photos[i], fit: BoxFit.contain),
+                              child: Image.network(c.photos[i],
+                                  fit: BoxFit.contain),
                             ),
                           );
                         },
@@ -1695,7 +1740,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                     icon: const Icon(Icons.timeline_rounded, size: 16),
                     label: Text(context.l10n.openBookingTimeline(c.bookingId!)),
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -1706,7 +1752,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () async {
-                            await widget.complaintRepo.updateComplaintStatus(c.id, 'in_progress');
+                            await widget.complaintRepo
+                                .updateComplaintStatus(c.id, 'in_progress');
                             widget.onStatusChanged();
                           },
                           child: Text(context.l10n.markInReviewAction),
@@ -1729,7 +1776,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+                        style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.error),
                         onPressed: () {
                           Navigator.pop(context);
                           widget.onResolve(c, 'dismissed');
@@ -1742,7 +1790,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.messageHistoryTitle,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 StreamBuilder<List<SupportMessage>>(
@@ -1755,7 +1804,9 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                         child: Center(
                           child: Text(
                             context.l10n.noRepliesYet,
-                            style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary),
                           ),
                         ),
                       );
@@ -1781,31 +1832,41 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
                                       Text(
-                                        m.senderName ?? (isAdmin ? 'Admin' : m.senderRole),
+                                        m.senderName ??
+                                            (isAdmin ? 'Admin' : m.senderRole),
                                         style: TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.bold,
-                                          color: isAdmin ? AppColors.primary : context.themeTextPrimary,
+                                          color: isAdmin
+                                              ? AppColors.primary
+                                              : context.themeTextPrimary,
                                         ),
                                       ),
                                       const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: isAdmin ? AppColors.primary : context.themeBorder,
-                                          borderRadius: BorderRadius.circular(6),
+                                          color: isAdmin
+                                              ? AppColors.primary
+                                              : context.themeBorder,
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           m.senderRole.toUpperCase(),
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.bold,
-                                            color: isAdmin ? AppColors.ink : context.themeTextPrimary,
+                                            color: isAdmin
+                                                ? AppColors.ink
+                                                : context.themeTextPrimary,
                                           ),
                                         ),
                                       ),
@@ -1813,12 +1874,17 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                                   ),
                                   Text(
                                     m.formattedTime,
-                                    style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: context.themeTextSecondary),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              Text(m.body, style: TextStyle(fontSize: 13, color: context.themeTextPrimary)),
+                              Text(m.body,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: context.themeTextPrimary)),
                             ],
                           ),
                         );
@@ -1830,7 +1896,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
             ),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 12),
+            padding: EdgeInsets.fromLTRB(
+                16, 8, 16, MediaQuery.of(context).viewInsets.bottom + 12),
             decoration: BoxDecoration(
               color: context.themeSurface,
               border: Border(top: BorderSide(color: context.themeBorder)),
@@ -1844,10 +1911,12 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                     maxLines: 4,
                     decoration: InputDecoration(
                       hintText: context.l10n.replyAsSupportAdminHint,
-                      hintStyle: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+                      hintStyle: TextStyle(
+                          fontSize: 13, color: context.themeTextSecondary),
                       filled: true,
                       fillColor: context.themeSurfaceLow,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: context.themeBorder),
@@ -1864,7 +1933,8 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.send_rounded, color: AppColors.primary),
+                      : const Icon(Icons.send_rounded,
+                          color: AppColors.primary),
                 ),
               ],
             ),

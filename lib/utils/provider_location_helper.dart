@@ -26,7 +26,8 @@ class EffectiveProviderLocation {
     this.timestamp,
   });
 
-  static const none = EffectiveProviderLocation(source: ProviderLocationSource.none);
+  static const none =
+      EffectiveProviderLocation(source: ProviderLocationSource.none);
 
   bool get hasLocation => latitude != null && longitude != null;
   bool get isCurrent => source == ProviderLocationSource.current;
@@ -104,4 +105,3 @@ String? extractBaseArea({String? city, String? address}) {
   }
   return null;
 }
-

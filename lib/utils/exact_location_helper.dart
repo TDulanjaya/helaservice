@@ -3,7 +3,8 @@ import 'location_utils.dart';
 
 class ExactLocationUnavailableException implements Exception {
   final String message;
-  const ExactLocationUnavailableException([this.message = 'Exact location unavailable']);
+  const ExactLocationUnavailableException(
+      [this.message = 'Exact location unavailable']);
 
   @override
   String toString() => 'ExactLocationUnavailableException: $message';
@@ -47,9 +48,15 @@ class ExactLocationHelper {
   static LatLng? resolveTechPoint(LatLng? gpsPosition) {
     if (gpsPosition == null) return null;
     if (gpsPosition.latitude.isNaN || gpsPosition.longitude.isNaN) return null;
-    if (gpsPosition.latitude < -90.0 || gpsPosition.latitude > 90.0) return null;
-    if (gpsPosition.longitude < -180.0 || gpsPosition.longitude > 180.0) return null;
-    if (gpsPosition.latitude == 0.0 && gpsPosition.longitude == 0.0) return null;
+    if (gpsPosition.latitude < -90.0 || gpsPosition.latitude > 90.0) {
+      return null;
+    }
+    if (gpsPosition.longitude < -180.0 || gpsPosition.longitude > 180.0) {
+      return null;
+    }
+    if (gpsPosition.latitude == 0.0 && gpsPosition.longitude == 0.0) {
+      return null;
+    }
     return gpsPosition;
   }
 

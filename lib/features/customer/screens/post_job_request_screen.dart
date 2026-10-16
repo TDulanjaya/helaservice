@@ -113,7 +113,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: ctx.themeSurface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Text(
               context.l10n.largeMediaWarningTitle,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -156,7 +157,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       final allowed = await PermissionUtils.requestCameraWithRationale(context);
       if (!allowed) return;
     } else {
-      final allowed = await PermissionUtils.requestGalleryWithRationale(context);
+      final allowed =
+          await PermissionUtils.requestGalleryWithRationale(context);
       if (!allowed) return;
     }
 
@@ -172,7 +174,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         final ok = await _confirmLargeFileIfExceeds20Mb(length);
         if (ok && mounted) {
           final bytes = await picked.readAsBytes();
-          setState(() => _photos.add(PickedAttachment(file: picked, bytes: bytes)));
+          setState(
+              () => _photos.add(PickedAttachment(file: picked, bytes: bytes)));
         }
       }
     } catch (e) {
@@ -247,7 +250,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.videocam_rounded, color: AppColors.primary),
+                leading: const Icon(Icons.videocam_rounded,
+                    color: AppColors.primary),
                 title: Text(context.l10n.recordVideo),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -255,7 +259,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.video_library_rounded, color: AppColors.primary),
+                leading: const Icon(Icons.video_library_rounded,
+                    color: AppColors.primary),
                 title: Text(context.l10n.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -274,7 +279,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       final allowed = await PermissionUtils.requestCameraWithRationale(context);
       if (!allowed) return;
     } else {
-      final allowed = await PermissionUtils.requestGalleryWithRationale(context);
+      final allowed =
+          await PermissionUtils.requestGalleryWithRationale(context);
       if (!allowed) return;
     }
 
@@ -292,7 +298,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       setState(() => _processingVideo = true);
 
       try {
-        final processed = await VideoService.instance.processJobVideo(File(picked.path));
+        final processed =
+            await VideoService.instance.processJobVideo(File(picked.path));
         setState(() {
           _processedVideo = processed;
           _uploadedVideoItem = null;
@@ -317,7 +324,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       debugPrint('Error picking video: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorPickingVideo), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(context.l10n.errorPickingVideo),
+              backgroundColor: AppColors.error),
         );
       }
     }
@@ -370,7 +379,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     }
 
     final defaultCustomerRole = context.l10n.roleCustomer;
-    final timeRangeSlot = '${_fromTime.format(context)} - ${_toTime.format(context)}';
+    final timeRangeSlot =
+        '${_fromTime.format(context)} - ${_toTime.format(context)}';
 
     setState(() {
       _submitting = true;
@@ -396,10 +406,12 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
         setState(() {
           _uploadProgressFraction = 0.0;
-          _uploadProgressText = context.l10n.uploadingPhotoProgress(i + 1, _photos.length);
+          _uploadProgressText =
+              context.l10n.uploadingPhotoProgress(i + 1, _photos.length);
         });
         final rawBytes = attachment.bytes;
-        final stripped = StorageService.instance.stripExifAndCompressImage(rawBytes);
+        final stripped =
+            StorageService.instance.stripExifAndCompressImage(rawBytes);
         JobMediaUploadResult? res;
         for (int attempt = 0; attempt < 3; attempt++) {
           try {
@@ -414,7 +426,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
                     final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
                     final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-                    _uploadProgressText = context.l10n.uploadPhotoBytesProgress(i + 1, _photos.length, sentMb, totalMb);
+                    _uploadProgressText = context.l10n.uploadPhotoBytesProgress(
+                        i + 1, _photos.length, sentMb, totalMb);
                   });
                 }
               },
@@ -437,7 +450,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       JobVideoItem? videoItem;
       if (_processedVideo != null) {
-        if (_uploadedVideoItem != null && _uploadedVideoSource == _processedVideo) {
+        if (_uploadedVideoItem != null &&
+            _uploadedVideoSource == _processedVideo) {
           videoItem = _uploadedVideoItem;
         } else {
           JobMediaUploadResult? thumbRes = _uploadedVideoThumb;
@@ -446,8 +460,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               _uploadProgressFraction = 0.0;
               _uploadProgressText = context.l10n.uploadingVideoThumbnail;
             });
-            final thumbBytes = await _processedVideo!.thumbnailFile.readAsBytes();
-            final thumbStripped = StorageService.instance.stripExifAndCompressImage(thumbBytes);
+            final thumbBytes =
+                await _processedVideo!.thumbnailFile.readAsBytes();
+            final thumbStripped =
+                StorageService.instance.stripExifAndCompressImage(thumbBytes);
             for (int attempt = 0; attempt < 3; attempt++) {
               try {
                 thumbRes = await StorageService.instance.uploadJobMedia(
@@ -458,11 +474,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 _uploadedVideoThumb = thumbRes;
                 break;
               } catch (e) {
-                debugPrint('[PostJobRequest] video thumb attempt $attempt error: $e');
+                debugPrint(
+                    '[PostJobRequest] video thumb attempt $attempt error: $e');
                 if (attempt == 2) {
                   throw MediaUploadException('Video thumb upload failed: $e');
                 }
-                await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+                await Future.delayed(
+                    Duration(milliseconds: 500 * (attempt + 1)));
               }
             }
           }
@@ -471,7 +489,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             _uploadProgressFraction = 0.0;
             _uploadProgressText = context.l10n.uploadingVideoFile;
           });
-          final videoBytes = await _processedVideo!.compressedFile.readAsBytes();
+          final videoBytes =
+              await _processedVideo!.compressedFile.readAsBytes();
           JobMediaUploadResult? videoRes;
           for (int attempt = 0; attempt < 3; attempt++) {
             try {
@@ -483,17 +502,21 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 onProgress: (sent, total) {
                   if (mounted) {
                     setState(() {
-                      _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
+                      _uploadProgressFraction =
+                          total > 0 ? (sent / total) : 0.0;
                       final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
-                      final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
-                      _uploadProgressText = context.l10n.uploadVideoBytesProgress(sentMb, totalMb);
+                      final totalMb =
+                          (total / (1024 * 1024)).toStringAsFixed(1);
+                      _uploadProgressText = context.l10n
+                          .uploadVideoBytesProgress(sentMb, totalMb);
                     });
                   }
                 },
               );
               break;
             } catch (e) {
-              debugPrint('[PostJobRequest] video upload attempt $attempt error: $e');
+              debugPrint(
+                  '[PostJobRequest] video upload attempt $attempt error: $e');
               if (attempt == 2) {
                 throw MediaUploadException('Video upload failed: $e');
               }
@@ -516,8 +539,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final request = JobRequest(
         customerId: user.uid,
-        customerName:
-            user.displayName ?? user.email?.split('@').first ?? defaultCustomerRole,
+        customerName: user.displayName ??
+            user.email?.split('@').first ??
+            defaultCustomerRole,
         customerPhone: user.phoneNumber ?? '',
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -536,7 +560,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         street: _selectedLocation!.street,
         city: _selectedLocation!.city,
         directions: _selectedLocation!.directions,
-        bookingType: _scheduleMode == ScheduleHelpers.modeAsap ? 'asap' : 'scheduled',
+        bookingType:
+            _scheduleMode == ScheduleHelpers.modeAsap ? 'asap' : 'scheduled',
         scheduleMode: _scheduleMode,
         scheduledDate: schedRes.scheduledDate,
         scheduledStartAt: schedRes.scheduledStartAt,
@@ -719,9 +744,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   }
 
                   return DropdownButtonFormField<String>(
-                    initialValue: dbCategories.any((c) => c.id == _selectedCategory)
-                        ? _selectedCategory
-                        : null,
+                    initialValue:
+                        dbCategories.any((c) => c.id == _selectedCategory)
+                            ? _selectedCategory
+                            : null,
                     decoration: InputDecoration(
                       hintText: context.l10n.selectTradeCategory,
                       hintStyle: TextStyle(
@@ -964,14 +990,18 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           bottom: 6,
                           left: 6,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               '${_processedVideo!.durationSec}s',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -991,7 +1021,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                                 color: AppColors.error,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 14),
+                              child: const Icon(Icons.close,
+                                  color: Colors.white, size: 14),
                             ),
                           ),
                         ),
@@ -1058,7 +1089,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             color: AppColors.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.videocam_outlined, color: AppColors.primary, size: 20),
+                          child: const Icon(Icons.videocam_outlined,
+                              color: AppColors.primary, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1068,11 +1100,15 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             children: [
                               Text(
                                 context.l10n.addShortVideo,
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700),
                               ),
                               Text(
                                 context.l10n.addShortVideoSubtitle,
-                                style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: context.themeTextSecondary),
                               ),
                             ],
                           ),
@@ -1110,7 +1146,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                     selected: _scheduleMode == ScheduleHelpers.modeAsap,
                     onSelected: (sel) {
-                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeAsap);
+                      if (sel) {
+                        setState(
+                            () => _scheduleMode = ScheduleHelpers.modeAsap);
+                      }
                     },
                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     labelStyle: TextStyle(
@@ -1132,7 +1171,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                     selected: _scheduleMode == ScheduleHelpers.modeDateOnly,
                     onSelected: (sel) {
-                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeDateOnly);
+                      if (sel) {
+                        setState(
+                            () => _scheduleMode = ScheduleHelpers.modeDateOnly);
+                      }
                     },
                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     labelStyle: TextStyle(
@@ -1154,7 +1196,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                     selected: _scheduleMode == ScheduleHelpers.modeTimeRange,
                     onSelected: (sel) {
-                      if (sel) setState(() => _scheduleMode = ScheduleHelpers.modeTimeRange);
+                      if (sel) {
+                        setState(() =>
+                            _scheduleMode = ScheduleHelpers.modeTimeRange);
+                      }
                     },
                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     labelStyle: TextStyle(
@@ -1174,7 +1219,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   onTap: () => _pickScheduledDate(context),
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: context.themeSurfaceLow,
                       borderRadius: BorderRadius.circular(14),
@@ -1182,7 +1228,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.event_note_rounded, size: 20, color: AppColors.primary),
+                        const Icon(Icons.event_note_rounded,
+                            size: 20, color: AppColors.primary),
                         const SizedBox(width: 10),
                         Text(
                           '${_scheduledDate.year}/${_scheduledDate.month.toString().padLeft(2, '0')}/${_scheduledDate.day.toString().padLeft(2, '0')}',
@@ -1193,28 +1240,35 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           ),
                         ),
                         const Spacer(),
-                        const Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                        const Icon(Icons.arrow_drop_down,
+                            color: AppColors.primary),
                       ],
                     ),
                   ),
                 ),
-                if (ScheduleHelpers.isToday(_scheduledDate) && !ScheduleHelpers.canChooseTodayForDateOnly()) ...[
+                if (ScheduleHelpers.isToday(_scheduledDate) &&
+                    !ScheduleHelpers.canChooseTodayForDateOnly()) ...[
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                      border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 18),
+                        const Icon(Icons.warning_amber_rounded,
+                            color: AppColors.warning, size: 18),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             context.l10n.scheduleTodayPastCutoff,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.warning),
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.warning),
                           ),
                         ),
                       ],
@@ -1230,16 +1284,19 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
+                      const Icon(Icons.info_outline_rounded,
+                          size: 18, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           context.l10n.scheduleAnyTime,
-                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              fontSize: 12.5, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -1255,27 +1312,33 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         children: [
                           Text(
                             context.l10n.scheduleFrom,
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickScheduledTime(context, true),
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
                                 color: context.themeSurfaceLow,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: context.themeBorder),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _fromTime.format(context),
-                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.5),
                                   ),
-                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                  const Icon(Icons.access_time_rounded,
+                                      size: 16, color: AppColors.primary),
                                 ],
                               ),
                             ),
@@ -1290,27 +1353,33 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         children: [
                           Text(
                             context.l10n.scheduleTo,
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () => _pickScheduledTime(context, false),
                             borderRadius: BorderRadius.circular(12),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
                                 color: context.themeSurfaceLow,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: context.themeBorder),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _toTime.format(context),
-                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.5),
                                   ),
-                                  const Icon(Icons.access_time_rounded, size: 16, color: AppColors.primary),
+                                  const Icon(Icons.access_time_rounded,
+                                      size: 16, color: AppColors.primary),
                                 ],
                               ),
                             ),
@@ -1351,8 +1420,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       BoxShadow(
                         color: _selectedLocation != null
                             ? AppColors.primary.withValues(alpha: 0.08)
-                            : Colors.black.withValues(
-                                alpha: context.isDark ? 0.2 : 0.03),
+                            : Colors.black
+                                .withValues(alpha: context.isDark ? 0.2 : 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1385,7 +1454,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           children: [
                             Text(
                               _selectedLocation != null
-                                  ? (_selectedLocation!.label ?? context.l10n.selectJobLocation)
+                                  ? (_selectedLocation!.label ??
+                                      context.l10n.selectJobLocation)
                                   : context.l10n.selectJobLocation,
                               style: TextStyle(
                                 fontSize: 14,
@@ -1406,7 +1476,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                               ),
                             ),
                             if (_selectedLocation?.effectiveNote != null &&
-                                _selectedLocation!.effectiveNote!.isNotEmpty) ...[
+                                _selectedLocation!
+                                    .effectiveNote!.isNotEmpty) ...[
                               const SizedBox(height: 2),
                               Text(
                                 '${context.l10n.providerNoteLabel}: ${_selectedLocation!.effectiveNote}',
@@ -1422,7 +1493,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedLocation != null ? context.l10n.change : context.l10n.setPin,
+                        _selectedLocation != null
+                            ? context.l10n.change
+                            : context.l10n.setPin,
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
@@ -1436,10 +1509,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
 
-              if (_uploadProgressText != null || _uploadFailed || _saveFailed) ...[
+              if (_uploadProgressText != null ||
+                  _uploadFailed ||
+                  _saveFailed) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: (_uploadFailed || _saveFailed)
                         ? AppColors.error.withValues(alpha: 0.1)
@@ -1464,16 +1540,20 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             ),
                             const SizedBox(width: 12),
                           ] else if (_uploadFailed || _saveFailed) ...[
-                            const Icon(Icons.error_outline_rounded, size: 18, color: AppColors.error),
+                            const Icon(Icons.error_outline_rounded,
+                                size: 18, color: AppColors.error),
                             const SizedBox(width: 8),
                           ],
                           Expanded(
                             child: Text(
-                              _uploadProgressText ?? context.l10n.uploadFailedAttempts,
+                              _uploadProgressText ??
+                                  context.l10n.uploadFailedAttempts,
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,
-                                color: (_uploadFailed || _saveFailed) ? AppColors.error : AppColors.primary,
+                                color: (_uploadFailed || _saveFailed)
+                                    ? AppColors.error
+                                    : AppColors.primary,
                               ),
                             ),
                           ),
@@ -1486,8 +1566,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           child: LinearProgressIndicator(
                             value: _uploadProgressFraction,
                             minHeight: 6,
-                            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.15),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
                           ),
                         ),
                       ],
@@ -1500,7 +1582,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 8),
                           ),
                         ),
                       ],
@@ -1511,15 +1594,18 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               if (_selectedLocation == null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_off_rounded, color: AppColors.error, size: 18),
+                      const Icon(Icons.location_off_rounded,
+                          color: AppColors.error, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1573,8 +1659,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     );
   }
 }

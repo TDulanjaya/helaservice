@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as pv;
@@ -127,6 +128,10 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
 
     if (!mounted) return;
 
+    if (kDebugMode) {
+      debugPrint(
+          '[navdbg] -> customer home from rating_completion_screen.dart');
+    }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
       (route) => false,
@@ -176,7 +181,8 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
               const SizedBox(height: 12),
               Text(
                 context.l10n.serviceCompleted,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
@@ -184,14 +190,18 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                     ? '${widget.jobTitle} • ${widget.technician.name}'
                     : widget.technician.name,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: context.themeTextSecondary, fontSize: 13),
+                style:
+                    TextStyle(color: context.themeTextSecondary, fontSize: 13),
               ),
               if (widget.jobRequestId.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    context.l10n.jobIdNumber(widget.jobRequestId.length > 8 ? widget.jobRequestId.substring(0, 8).toUpperCase() : widget.jobRequestId.toUpperCase()),
-                    style: TextStyle(color: context.themeTextSecondary, fontSize: 11),
+                    context.l10n.jobIdNumber(widget.jobRequestId.length > 8
+                        ? widget.jobRequestId.substring(0, 8).toUpperCase()
+                        : widget.jobRequestId.toUpperCase()),
+                    style: TextStyle(
+                        color: context.themeTextSecondary, fontSize: 11),
                   ),
                 ),
             ],
@@ -211,11 +221,13 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.costBreakdown,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 14),
                       ),
                     ]),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: context.isDark
                             ? const Color(0xFF1B382B)
@@ -241,7 +253,8 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                       'LKR ${widget.totalPrice!.toStringAsFixed(0)}',
                       bold: true),
                 ] else ...[
-                  _CostRow(context.l10n.totalPaid, context.l10n.settledDirectly, bold: true),
+                  _CostRow(context.l10n.totalPaid, context.l10n.settledDirectly,
+                      bold: true),
                 ],
                 const SizedBox(height: 6),
                 Text(
@@ -276,6 +289,10 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
               label: context.l10n.done,
               trailingIcon: Icons.arrow_forward,
               onPressed: () {
+                if (kDebugMode) {
+                  debugPrint(
+                      '[navdbg] -> customer home from rating_completion_screen.dart');
+                }
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                       builder: (_) => const HomeDiscoveryScreen()),
@@ -319,7 +336,8 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
             ),
             const SizedBox(height: 20),
             Text(context.l10n.whatWentWell,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 13.5)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -330,21 +348,26 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                   label: Text(_getTagLabel(context, opt.$2)),
                   avatar: Icon(opt.$1,
                       size: 16,
-                      color:
-                          selected ? AppColors.onPrimary : context.themeTextSecondary),
+                      color: selected
+                          ? AppColors.onPrimary
+                          : context.themeTextSecondary),
                   selected: selected,
                   onSelected: (v) => setState(
                       () => v ? _tags.add(opt.$2) : _tags.remove(opt.$2)),
                   selectedColor: AppColors.primary,
                   labelStyle: TextStyle(
-                      color: selected ? AppColors.onPrimary : context.themeTextPrimary,
+                      color: selected
+                          ? AppColors.onPrimary
+                          : context.themeTextPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600),
                   backgroundColor: context.themeSurfaceContainer,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                       side: BorderSide(
-                          color: selected ? AppColors.primary : context.themeBorder)),
+                          color: selected
+                              ? AppColors.primary
+                              : context.themeBorder)),
                 );
               }).toList(),
             ),
@@ -360,11 +383,13 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                 fillColor: context.themeSurface,
                 border: OutlineInputBorder(
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                  borderSide:
+                      BorderSide(color: context.themeBorder, width: 1.5),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                  borderSide:
+                      BorderSide(color: context.themeBorder, width: 1.5),
                 ),
                 focusedBorder: const OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -374,10 +399,12 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
             ),
             const SizedBox(height: 18),
             Row(children: [
-              const Icon(Icons.volunteer_activism, color: AppColors.secondaryContainer),
+              const Icon(Icons.volunteer_activism,
+                  color: AppColors.secondaryContainer),
               const SizedBox(width: 6),
               Text(context.l10n.tipProvider,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)),
             ]),
             const SizedBox(height: 8),
             Row(
@@ -403,7 +430,8 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: _isSaving ? context.l10n.savingProgress : context.l10n.done,
+              label:
+                  _isSaving ? context.l10n.savingProgress : context.l10n.done,
               trailingIcon: Icons.arrow_forward,
               onPressed: _isSaving ? null : _submitReview,
             ),
@@ -416,7 +444,8 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                   context: context,
                   backgroundColor: context.themeSurface,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24)),
                   ),
                   builder: (ctx) => SafeArea(
                     child: Padding(
@@ -438,12 +467,15 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                           const SizedBox(height: 16),
                           Text(
                             context.l10n.orderPaymentSupport,
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             context.l10n.orderSupportDesc,
-                            style: TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
+                            style: TextStyle(
+                                fontSize: 12.5,
+                                color: context.themeTextSecondary),
                           ),
                           const SizedBox(height: 16),
                           ListTile(
@@ -453,11 +485,15 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                             ),
                             leading: const CircleAvatar(
                               backgroundColor: AppColors.primary,
-                              child: Icon(Icons.call, color: AppColors.onPrimary, size: 18),
+                              child: Icon(Icons.call,
+                                  color: AppColors.onPrimary, size: 18),
                             ),
                             title: Text(context.l10n.callSupportHotline,
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-                            subtitle: Text(context.l10n.tollFreeCare, style: const TextStyle(fontSize: 11)),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13.5)),
+                            subtitle: Text(context.l10n.tollFreeCare,
+                                style: const TextStyle(fontSize: 11)),
                             onTap: () {
                               Navigator.pop(ctx);
                               MapLauncher.openPhoneCall('1340');
@@ -495,8 +531,9 @@ class _CostRow extends StatelessWidget {
         Expanded(
           child: Text(label,
               style: style.copyWith(
-                  color:
-                      bold ? context.themeTextPrimary : context.themeTextSecondary)),
+                  color: bold
+                      ? context.themeTextPrimary
+                      : context.themeTextSecondary)),
         ),
         const SizedBox(width: 8),
         Text(value, style: style),
@@ -538,12 +575,14 @@ class _TipChip extends StatelessWidget {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: selected ? AppColors.primary : context.themeTextPrimary)),
+                    color: selected
+                        ? AppColors.primary
+                        : context.themeTextPrimary)),
             Text(sub,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 10, color: context.themeTextSecondary)),
+                style:
+                    TextStyle(fontSize: 10, color: context.themeTextSecondary)),
           ]),
         ),
       ),

@@ -8,7 +8,6 @@ enum IconSquareButtonStyle {
   ink, // dark card background
 }
 
-
 class IconSquareButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -61,7 +60,8 @@ class IconSquareButton extends StatelessWidget {
       case IconSquareButtonStyle.soft:
         bg = color ?? context.themeSoft;
         fg = iconColor ?? context.themeInk;
-        borderSide = BorderSide(color: context.themeBorder.withValues(alpha: 0.5), width: 1.0);
+        borderSide = BorderSide(
+            color: context.themeBorder.withValues(alpha: 0.5), width: 1.0);
         break;
       case IconSquareButtonStyle.amber:
         bg = color ?? AppColors.primary;
@@ -80,7 +80,9 @@ class IconSquareButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(radius),
-        border: borderSide != BorderSide.none ? Border.fromBorderSide(borderSide) : null,
+        border: borderSide != BorderSide.none
+            ? Border.fromBorderSide(borderSide)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,

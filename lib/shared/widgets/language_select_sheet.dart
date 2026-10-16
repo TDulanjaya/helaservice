@@ -5,7 +5,6 @@ import '../../state/role_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
 
-
 class LanguageSelectSheet extends StatelessWidget {
   const LanguageSelectSheet({super.key});
 
@@ -95,9 +94,8 @@ class LanguageSelectSheet extends StatelessWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? context.themeAmberTint
-                      : context.themeSoft,
+                  color:
+                      isSelected ? context.themeAmberTint : context.themeSoft,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected ? AppColors.primary : context.themeBorder,
@@ -122,9 +120,8 @@ class LanguageSelectSheet extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 13,
-                        color: isSelected
-                            ? AppColors.primary
-                            : context.themeInk,
+                        color:
+                            isSelected ? AppColors.primary : context.themeInk,
                       ),
                     ),
                   ),
@@ -193,4 +190,3 @@ class LanguageSelectSheet extends StatelessWidget {
     );
   }
 }
-

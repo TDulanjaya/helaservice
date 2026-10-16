@@ -33,4 +33,3 @@ class PhotoPlaceholder extends StatelessWidget {
     );
   }
 }
-

@@ -106,7 +106,8 @@ class _CategoryDistrictManagementScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${context.l10n.categoryTitle} (${context.l10n.english})',
+                  Text(
+                      '${context.l10n.categoryTitle} (${context.l10n.english})',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -290,8 +291,11 @@ class _CategoryDistrictManagementScreenState
                     'ta': titleTaController.text.trim(),
                 };
 
-                final sortOrder = int.tryParse(sortOrderController.text.trim()) ?? 10;
-                final slugId = titleEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
+                final sortOrder =
+                    int.tryParse(sortOrderController.text.trim()) ?? 10;
+                final slugId = titleEn
+                    .toLowerCase()
+                    .replaceAll(RegExp(r'[^a-z0-9_]'), '_');
 
                 final cat = CategoryRow(
                   id: slugId,
@@ -309,7 +313,8 @@ class _CategoryDistrictManagementScreenState
                   iconKey: selectedIconKey,
                 );
 
-                final createdDetails = context.l10n.categoryCreatedWithSortOrder(titleEn, sortOrder);
+                final createdDetails = context.l10n
+                    .categoryCreatedWithSortOrder(titleEn, sortOrder);
                 try {
                   await CategoryRepository().addCategory(cat);
                   await AdminLogService.instance.logAction(
@@ -338,7 +343,8 @@ class _CategoryDistrictManagementScreenState
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        content:
+                            Text(e.toString().replaceAll('Exception: ', '')),
                         backgroundColor: AppColors.error,
                       ),
                     );
@@ -361,10 +367,12 @@ class _CategoryDistrictManagementScreenState
   }
 
   void _openEditCategoryDialog(BuildContext context, CategoryRow c) {
-    final titleEnController = TextEditingController(text: c.names?['en'] ?? c.name);
+    final titleEnController =
+        TextEditingController(text: c.names?['en'] ?? c.name);
     final titleSiController = TextEditingController(text: c.names?['si'] ?? '');
     final titleTaController = TextEditingController(text: c.names?['ta'] ?? '');
-    final sortOrderController = TextEditingController(text: c.sortOrder.toString());
+    final sortOrderController =
+        TextEditingController(text: c.sortOrder.toString());
     final descriptionController = TextEditingController(text: c.description);
     bool isLive = c.isLive;
     String selectedIconKey = c.iconKey.isNotEmpty ? c.iconKey : 'handyman';
@@ -426,7 +434,8 @@ class _CategoryDistrictManagementScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${context.l10n.categoryTitle} (${context.l10n.english})',
+                  Text(
+                      '${context.l10n.categoryTitle} (${context.l10n.english})',
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -504,7 +513,8 @@ class _CategoryDistrictManagementScreenState
                                 fillColor: context.themeSurfaceLow,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.themeBorder),
+                                  borderSide:
+                                      BorderSide(color: context.themeBorder),
                                 ),
                               ),
                             ),
@@ -522,7 +532,8 @@ class _CategoryDistrictManagementScreenState
                                   color: context.themeTextPrimary)),
                           Switch(
                             value: isLive,
-                            onChanged: (val) => setDialogState(() => isLive = val),
+                            onChanged: (val) =>
+                                setDialogState(() => isLive = val),
                             activeTrackColor: AppColors.primary,
                           ),
                         ],
@@ -625,7 +636,9 @@ class _CategoryDistrictManagementScreenState
                     'ta': titleTaController.text.trim(),
                 };
 
-                final sortOrder = int.tryParse(sortOrderController.text.trim()) ?? c.sortOrder;
+                final sortOrder =
+                    int.tryParse(sortOrderController.text.trim()) ??
+                        c.sortOrder;
 
                 final updatedCat = c.copyWith(
                   name: titleEn,
@@ -638,7 +651,8 @@ class _CategoryDistrictManagementScreenState
                   iconKey: selectedIconKey,
                 );
 
-                final updatedDetails = context.l10n.categoryUpdatedWithSortOrder(titleEn, sortOrder, isLive);
+                final updatedDetails = context.l10n
+                    .categoryUpdatedWithSortOrder(titleEn, sortOrder, isLive);
                 try {
                   await CategoryRepository().updateCategory(updatedCat);
                   await AdminLogService.instance.logAction(
@@ -651,7 +665,8 @@ class _CategoryDistrictManagementScreenState
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(context.l10n.categoryUpdatedSuccess(c.name)),
+                        content:
+                            Text(context.l10n.categoryUpdatedSuccess(c.name)),
                         backgroundColor: AppColors.primary,
                       ),
                     );
@@ -660,7 +675,8 @@ class _CategoryDistrictManagementScreenState
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        content:
+                            Text(e.toString().replaceAll('Exception: ', '')),
                         backgroundColor: AppColors.error,
                       ),
                     );
@@ -819,7 +835,8 @@ class _CategoryDistrictManagementScreenState
                         color: context.themeAmberTint,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: context.themeAmberText.withValues(alpha: 0.3)),
+                            color:
+                                context.themeAmberText.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -951,397 +968,424 @@ class _CategoryDistrictManagementScreenState
                     stream: CategoryRepository().streamCategoryRows(),
                     builder: (context, snapshot) {
                       final categories = snapshot.data ?? [];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              context.l10n.publishedTradeCategories,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: context.themeTextPrimary,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              context.l10n.categoriesCount('${categories.length}'),
-                              style: const TextStyle(
-                                fontSize: 11.5,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      if (categories.isEmpty &&
-                          snapshot.connectionState == ConnectionState.waiting)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                                color: AppColors.primary),
-                          ),
-                        )
-                      else if (categories.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: context.themeSurfaceLow,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: context.themeBorder),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                          Row(
                             children: [
+                              Expanded(
+                                child: Text(
+                                  context.l10n.publishedTradeCategories,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: context.themeTextPrimary,
+                                  ),
+                                ),
+                              ),
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color:
                                       AppColors.primary.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(Icons.category_outlined,
-                                    size: 32, color: AppColors.primary),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                context.l10n.noCategoriesInDb,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: context.themeTextPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                context.l10n.cdmNoCategoriesDesc,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: context.themeTextSecondary),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: () =>
-                                    _openAddCategoryDialog(context),
-                                icon: const Icon(Icons.add, size: 16),
-                                label: Text(context.l10n.addFirstCategory,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                child: Text(
+                                  context.l10n
+                                      .categoriesCount('${categories.length}'),
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        )
-                      else if (isMobile)
-                        Column(
-                          children: categories.map((c) {
-                            final matchingTechs = technicians.where((t) {
-                              return t.category == c.id ||
-                                  t.category.toLowerCase() == c.id.toLowerCase() ||
-                                  t.category == c.name;
-                            }).toList();
-                            final registeredCount = matchingTechs.length;
-                            final onlineCount =
-                                matchingTechs.where((t) => t.online).length;
-                            return _MobileCategoryCard(
-                              c: c,
-                              registeredCount: registeredCount,
-                              onlineCount: onlineCount,
-                              onEdit: () => _openEditCategoryDialog(context, c),
-                              onToggleStatus: () async {
-                                await CategoryRepository()
-                                    .toggleCategoryStatus(c.id, c.status);
-                              },
-                              onDelete: () =>
-                                  _confirmDeleteCategory(context, c),
-                            );
-                          }).toList(),
-                        )
-                      else
-                        Column(
-                          children: categories.map((c) {
-                            final isActive = c.isLive;
-                            final matchingTechs = technicians.where((t) {
-                              return t.category == c.id ||
-                                  t.category.toLowerCase() == c.id.toLowerCase() ||
-                                  t.category == c.name;
-                            }).toList();
-                            final registeredCount = matchingTechs.length;
-                            final onlineCount =
-                                matchingTechs.where((t) => t.online).length;
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(14),
+                          const SizedBox(height: 14),
+                          if (categories.isEmpty &&
+                              snapshot.connectionState ==
+                                  ConnectionState.waiting)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.primary),
+                              ),
+                            )
+                          else if (categories.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
                                 color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                                 border: Border.all(color: context.themeBorder),
                               ),
-                              child: Row(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Container(
-                                    width: 44,
-                                    height: 44,
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: AppColors.primary
                                           .withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(10),
+                                      shape: BoxShape.circle,
                                     ),
-                                    child: Icon(c.icon,
-                                        color: AppColors.primary, size: 24),
+                                    child: const Icon(Icons.category_outlined,
+                                        size: 32, color: AppColors.primary),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    flex: 4,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          c.name,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
-                                            color: context.themeTextPrimary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          c.description,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            color: context.themeTextSecondary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          context.l10n.registeredOnlineCount(
-                                            '$registeredCount',
-                                            '$onlineCount',
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: 10.5,
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    context.l10n.noCategoriesInDb,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: context.themeTextPrimary,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: context.themeSurface,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: context.themeBorder),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    context.l10n.cdmNoCategoriesDesc,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: context.themeTextSecondary),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _openAddCategoryDialog(context),
+                                    icon: const Icon(Icons.add, size: 16),
+                                    label: Text(context.l10n.addFirstCategory,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else if (isMobile)
+                            Column(
+                              children: categories.map((c) {
+                                final matchingTechs = technicians.where((t) {
+                                  return t.category == c.id ||
+                                      t.category.toLowerCase() ==
+                                          c.id.toLowerCase() ||
+                                      t.category == c.name;
+                                }).toList();
+                                final registeredCount = matchingTechs.length;
+                                final onlineCount =
+                                    matchingTechs.where((t) => t.online).length;
+                                return _MobileCategoryCard(
+                                  c: c,
+                                  registeredCount: registeredCount,
+                                  onlineCount: onlineCount,
+                                  onEdit: () =>
+                                      _openEditCategoryDialog(context, c),
+                                  onToggleStatus: () async {
+                                    await CategoryRepository()
+                                        .toggleCategoryStatus(c.id, c.status);
+                                  },
+                                  onDelete: () =>
+                                      _confirmDeleteCategory(context, c),
+                                );
+                              }).toList(),
+                            )
+                          else
+                            Column(
+                              children: categories.map((c) {
+                                final isActive = c.isLive;
+                                final matchingTechs = technicians.where((t) {
+                                  return t.category == c.id ||
+                                      t.category.toLowerCase() ==
+                                          c.id.toLowerCase() ||
+                                      t.category == c.name;
+                                }).toList();
+                                final registeredCount = matchingTechs.length;
+                                final onlineCount =
+                                    matchingTechs.where((t) => t.online).length;
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: context.themeSurfaceLow,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border:
+                                        Border.all(color: context.themeBorder),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(c.icon,
+                                            color: AppColors.primary, size: 24),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.gavel_rounded,
-                                              size: 14,
-                                              color: AppColors.primary),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        flex: 4,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              c.name,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 14,
+                                                color: context.themeTextPrimary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              c.description,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                color:
+                                                    context.themeTextSecondary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              context.l10n
+                                                  .registeredOnlineCount(
+                                                '$registeredCount',
+                                                '$onlineCount',
+                                              ),
+                                              style: const TextStyle(
+                                                fontSize: 10.5,
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: context.themeSurface,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: context.themeBorder),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.gavel_rounded,
+                                                  size: 14,
+                                                  color: AppColors.primary),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      context.l10n
+                                                          .cdmDynamicQuotes,
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        fontSize: 11,
+                                                        color: context
+                                                            .themeTextPrimary,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      context.l10n
+                                                          .cdmArtisansBidPerJob,
+                                                      style: TextStyle(
+                                                        fontSize: 9.5,
+                                                        color: context
+                                                            .themeTextSecondary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.08),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.public,
+                                                size: 12,
+                                                color: AppColors.primary),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              context.l10n.islandWideBadge,
+                                              style: const TextStyle(
+                                                fontSize: 10.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      InkWell(
+                                        onTap: () async {
+                                          await CategoryRepository()
+                                              .toggleCategoryStatus(
+                                                  c.id, c.status);
+                                        },
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: (isActive
+                                                    ? AppColors.primary
+                                                    : AppColors.error)
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                isActive
+                                                    ? Icons.check_circle
+                                                    : Icons
+                                                        .pause_circle_outline,
+                                                size: 13,
+                                                color: isActive
+                                                    ? AppColors.primary
+                                                    : AppColors.error,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                LocalizedData.getStatus(
+                                                    context, c.status),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isActive
+                                                      ? AppColors.primary
+                                                      : AppColors.error,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      PopupMenuButton<String>(
+                                        icon: Icon(Icons.more_vert,
+                                            size: 18,
+                                            color: context.themeTextSecondary),
+                                        onSelected: (val) {
+                                          if (val == 'edit') {
+                                            _openEditCategoryDialog(context, c);
+                                          } else if (val == 'toggle') {
+                                            CategoryRepository()
+                                                .toggleCategoryStatus(
+                                                    c.id, c.status);
+                                          } else if (val == 'delete') {
+                                            _confirmDeleteCategory(context, c);
+                                          }
+                                        },
+                                        itemBuilder: (ctx) => [
+                                          PopupMenuItem(
+                                            value: 'edit',
+                                            child: Row(
                                               children: [
-                                                Text(
-                                                  context.l10n.cdmDynamicQuotes,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 11,
-                                                    color: context
-                                                        .themeTextPrimary,
-                                                  ),
+                                                const Icon(Icons.edit_outlined,
+                                                    size: 16),
+                                                const SizedBox(width: 8),
+                                                Text(context.l10n.editCategory),
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'toggle',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  isActive
+                                                      ? Icons.pause_outlined
+                                                      : Icons
+                                                          .play_arrow_outlined,
+                                                  size: 16,
+                                                  color:
+                                                      context.themeTextPrimary,
                                                 ),
+                                                const SizedBox(width: 8),
+                                                Text(isActive
+                                                    ? context
+                                                        .l10n.cdmPauseCategory
+                                                    : context.l10n
+                                                        .cdmActivateCategory),
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'delete',
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.delete_outline,
+                                                    size: 16,
+                                                    color: AppColors.error),
+                                                const SizedBox(width: 8),
                                                 Text(
-                                                  context.l10n.cdmArtisansBidPerJob,
-                                                  style: TextStyle(
-                                                    fontSize: 9.5,
-                                                    color: context
-                                                        .themeTextSecondary,
-                                                  ),
-                                                ),
+                                                    context.l10n.deleteCategory,
+                                                    style: const TextStyle(
+                                                        color:
+                                                            AppColors.error)),
                                               ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.public,
-                                            size: 12, color: AppColors.primary),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          context.l10n.islandWideBadge,
-                                          style: const TextStyle(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  InkWell(
-                                    onTap: () async {
-                                      await CategoryRepository()
-                                          .toggleCategoryStatus(c.id, c.status);
-                                    },
-                                    borderRadius: BorderRadius.circular(999),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: (isActive
-                                                ? AppColors.primary
-                                                : AppColors.error)
-                                            .withValues(alpha: 0.12),
-                                        borderRadius:
-                                            BorderRadius.circular(999),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isActive
-                                                ? Icons.check_circle
-                                                : Icons.pause_circle_outline,
-                                            size: 13,
-                                            color: isActive
-                                                ? AppColors.primary
-                                                : AppColors.error,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            LocalizedData.getStatus(context, c.status),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                              color: isActive
-                                                  ? AppColors.primary
-                                                  : AppColors.error,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  PopupMenuButton<String>(
-                                    icon: Icon(Icons.more_vert,
-                                        size: 18,
-                                        color: context.themeTextSecondary),
-                                    onSelected: (val) {
-                                      if (val == 'edit') {
-                                        _openEditCategoryDialog(context, c);
-                                      } else if (val == 'toggle') {
-                                        CategoryRepository()
-                                            .toggleCategoryStatus(
-                                                c.id, c.status);
-                                      } else if (val == 'delete') {
-                                        _confirmDeleteCategory(context, c);
-                                      }
-                                    },
-                                    itemBuilder: (ctx) => [
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.edit_outlined,
-                                                size: 16),
-                                            const SizedBox(width: 8),
-                                            Text(context.l10n.editCategory),
-                                          ],
-                                        ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'toggle',
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              isActive
-                                                  ? Icons.pause_outlined
-                                                  : Icons.play_arrow_outlined,
-                                              size: 16,
-                                              color: context.themeTextPrimary,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(isActive
-                                                ? context.l10n.cdmPauseCategory
-                                                : context.l10n.cdmActivateCategory),
-                                          ],
-                                        ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.delete_outline,
-                                                size: 16,
-                                                color: AppColors.error),
-                                            const SizedBox(width: 8),
-                                            Text(context.l10n.deleteCategory,
-                                                style: const TextStyle(
-                                                    color: AppColors.error)),
-                                          ],
-                                        ),
-                                      ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                    ],
+                                );
+                              }).toList(),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
-        ),
+              ),
+            ),
           if (_selectedTab == 1) _buildArtisanFleetView(context, isMobile),
         ],
       ),
@@ -1465,8 +1509,10 @@ class _CategoryDistrictManagementScreenState
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildArtisanFilterChip('all',
-                        context.l10n.cdmFilterAllCount('${technicians.length}')),
+                    _buildArtisanFilterChip(
+                        'all',
+                        context.l10n
+                            .cdmFilterAllCount('${technicians.length}')),
                     const SizedBox(width: 8),
                     _buildArtisanFilterChip(
                         'active',
@@ -1628,7 +1674,9 @@ class _CategoryDistrictManagementScreenState
                           decoration: BoxDecoration(
                             color: (isBanned
                                     ? AppColors.error
-                                    : (t.online ? Colors.teal : AppColors.outline))
+                                    : (t.online
+                                        ? Colors.teal
+                                        : AppColors.outline))
                                 .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
@@ -1651,7 +1699,9 @@ class _CategoryDistrictManagementScreenState
                               fontWeight: FontWeight.bold,
                               color: isBanned
                                   ? AppColors.error
-                                  : (t.online ? Colors.teal : AppColors.outline),
+                                  : (t.online
+                                      ? Colors.teal
+                                      : AppColors.outline),
                             ),
                           ),
                         ),
@@ -1870,7 +1920,8 @@ class _CategoryDistrictManagementScreenState
             children: [
               Text(
                 context.l10n.cdmSuspendConfirmBody,
-                style: TextStyle(fontSize: 13, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 13, color: context.themeTextSecondary),
               ),
               const SizedBox(height: 12),
               Text(
@@ -2465,9 +2516,7 @@ class _MiniCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected
-                ? context.themeAmberTint
-                : context.themeSurface,
+            color: isSelected ? context.themeAmberTint : context.themeSurface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? AppColors.primary : context.themeBorder,
@@ -2598,7 +2647,8 @@ class _CatalogMetricsBar extends StatelessWidget {
                 label: context.l10n.activeArtisanFleetTitle,
                 sub: technicians.isEmpty
                     ? context.l10n.noActiveArtisansFleet
-                    : context.l10n.vettedTechniciansAvailable('${technicians.length}'),
+                    : context.l10n
+                        .vettedTechniciansAvailable('${technicians.length}'),
                 isSelected: selectedTab == 1,
                 onTap: () => onTabSelected(1),
               ),

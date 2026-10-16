@@ -66,4 +66,3 @@ String jobPostErrorMessage(BuildContext context, Object error) {
 
   return l10n.jobPostErrorGeneral;
 }
-

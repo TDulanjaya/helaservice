@@ -41,8 +41,7 @@ class ReviewService {
     });
 
     if (bookingId.isNotEmpty) {
-      final bookingRef =
-          _db.collection(FirestorePaths.bookings).doc(bookingId);
+      final bookingRef = _db.collection(FirestorePaths.bookings).doc(bookingId);
       batch.update(bookingRef, {
         'rating': rating.clamp(1, 5),
         'reviewedAt': FieldValue.serverTimestamp(),
@@ -68,14 +67,16 @@ class ReviewService {
       final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
       final uri = Uri.parse('$baseUrl/review-submitted');
 
-      await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'bookingId': bookingId}),
-      ).timeout(const Duration(seconds: 10));
+      await http
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'bookingId': bookingId}),
+          )
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('review submitted notify error $e');
     }
@@ -89,7 +90,7 @@ class ReviewService {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+        .map(
+            (snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
   }
 }

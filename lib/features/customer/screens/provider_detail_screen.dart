@@ -53,7 +53,8 @@ class ProviderDetailScreen extends StatelessWidget {
         actions: [
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert_rounded, color: context.themeInk),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) {
               if (value == 'report') {
                 BlockReportHelper.showReportSheet(
@@ -77,7 +78,8 @@ class ProviderDetailScreen extends StatelessWidget {
                 value: 'report',
                 child: Row(
                   children: [
-                    const Icon(Icons.flag_outlined, size: 18, color: AppColors.error),
+                    const Icon(Icons.flag_outlined,
+                        size: 18, color: AppColors.error),
                     const SizedBox(width: 10),
                     Text(ctx.l10n.reportProvider),
                   ],
@@ -87,7 +89,8 @@ class ProviderDetailScreen extends StatelessWidget {
                 value: 'block',
                 child: Row(
                   children: [
-                    const Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+                    const Icon(Icons.block_rounded,
+                        size: 18, color: AppColors.error),
                     const SizedBox(width: 10),
                     Text(ctx.l10n.blockUserAction),
                   ],
@@ -145,16 +148,19 @@ class ProviderDetailScreen extends StatelessWidget {
                 if (!technician.isApproved) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                      border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                        const Icon(Icons.info_outline,
+                            size: 16, color: AppColors.warning),
                         const SizedBox(width: 8),
                         Text(
                           context.l10n.pendingAdminApprovalUnavailable,
@@ -177,6 +183,12 @@ class ProviderDetailScreen extends StatelessWidget {
                         StatusPill(
                           type: StatusPillType.online,
                           label: context.l10n.verifiedArtisan,
+                          showDot: true,
+                        ),
+                      if (technician.hasApprovedCertificates)
+                        StatusPill(
+                          type: StatusPillType.online,
+                          label: context.l10n.certCertifiedBadge,
                           showDot: true,
                         ),
                       StatusPill(
@@ -209,7 +221,8 @@ class ProviderDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.secondaryContainer.withValues(alpha: 0.15),
+                          color: AppColors.secondaryContainer
+                              .withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.star_rounded,
@@ -220,13 +233,14 @@ class ProviderDetailScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (technician.isNewProvider || technician.rating == null) ...[
+                            if (technician.isNewProvider ||
+                                technician.rating == null) ...[
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.15),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -302,7 +316,8 @@ class ProviderDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              LocalizedData.getDistrict(context, technician.serviceArea),
+                              LocalizedData.getDistrict(
+                                  context, technician.serviceArea),
                               style: const TextStyle(
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w800,
@@ -377,7 +392,8 @@ class ProviderDetailScreen extends StatelessWidget {
                         onPressed: () async {
                           String phone = technician.phone.trim();
                           if (phone.isEmpty) {
-                            final t = await TechnicianRepository().getById(technician.id);
+                            final t = await TechnicianRepository()
+                                .getById(technician.id);
                             phone = t?.phone.trim() ?? '';
                           }
                           if (phone.isNotEmpty && context.mounted) {
@@ -393,7 +409,9 @@ class ProviderDetailScreen extends StatelessWidget {
                           } else {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.l10n.providerPhoneNotAvailable)),
+                                SnackBar(
+                                    content: Text(context
+                                        .l10n.providerPhoneNotAvailable)),
                               );
                             }
                           }
@@ -423,7 +441,8 @@ class ProviderDetailScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 16),
                         label: Text(context.l10n.chat),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -456,7 +475,8 @@ class ProviderDetailScreen extends StatelessWidget {
                   children: [
                     if (technician.serviceArea.trim().isNotEmpty)
                       PillBadge(
-                        label: '${context.l10n.district}: ${LocalizedData.getDistrict(context, technician.serviceArea)}',
+                        label:
+                            '${context.l10n.district}: ${LocalizedData.getDistrict(context, technician.serviceArea)}',
                         icon: Icons.location_on,
                       ),
                     if (technician.languages.trim().isNotEmpty)
@@ -538,40 +558,98 @@ class ProviderDetailScreen extends StatelessWidget {
                 final modes = technician.resolvedPricingModes;
                 final rows = <Widget>[];
 
-                if (modes.contains(ProviderPricingHelper.modeHour) && technician.hourlyRateLkr > 0) {
-                  rows.add(_buildRateRow(context.l10n.hourlyRate, 'LKR ${technician.hourlyRateLkr} / hr'));
+                if (modes.contains(ProviderPricingHelper.modeHour) &&
+                    technician.hourlyRateLkr > 0) {
+                  rows.add(_buildRateRow(context.l10n.hourlyRate,
+                      'LKR ${technician.hourlyRateLkr} / hr'));
                 }
                 if (modes.contains(ProviderPricingHelper.modeDay) &&
                     technician.dailyRateLkr != null &&
                     technician.dailyRateLkr! > 0) {
-                  rows.add(_buildRateRow(context.l10n.dailyRate, 'LKR ${technician.dailyRateLkr} / day'));
+                  rows.add(_buildRateRow(context.l10n.dailyRate,
+                      'LKR ${technician.dailyRateLkr} / day'));
                 }
                 if (modes.contains(ProviderPricingHelper.modeJob)) {
-                  rows.add(_buildRateRow(context.l10n.pricingModePricePerJob, context.l10n.quoteEachJob));
+                  rows.add(_buildRateRow(context.l10n.pricingModePricePerJob,
+                      context.l10n.quoteEachJob));
                 }
                 if (modes.contains(ProviderPricingHelper.modeVisit)) {
-                  rows.add(_buildRateRow(context.l10n.standardVisitFee, 'LKR ${technician.effectiveVisitFeeLkr}'));
+                  rows.add(_buildRateRow(context.l10n.standardVisitFee,
+                      'LKR ${technician.effectiveVisitFeeLkr}'));
                 }
                 if (modes.contains(ProviderPricingHelper.modeTravel)) {
-                  if (technician.perKmRateLkr != null && technician.perKmRateLkr! > 0) {
-                    rows.add(_buildRateRow(context.l10n.travelRate, 'LKR ${technician.perKmRateLkr} / km'));
+                  if (technician.perKmRateLkr != null &&
+                      technician.perKmRateLkr! > 0) {
+                    rows.add(_buildRateRow(context.l10n.travelRate,
+                        'LKR ${technician.perKmRateLkr} / km'));
                   }
                 } else {
-                  rows.add(_buildRateRow(context.l10n.travelTitle, context.l10n.travelIncluded));
+                  rows.add(_buildRateRow(
+                      context.l10n.travelTitle, context.l10n.travelIncluded));
                 }
-                if (technician.emergencyAvailable && technician.emergencyRateLkr > 0) {
-                  rows.add(_buildRateRow(context.l10n.emergencyCalloutRate, 'LKR ${technician.emergencyRateLkr}'));
+                if (technician.emergencyAvailable &&
+                    technician.emergencyRateLkr > 0) {
+                  rows.add(_buildRateRow(context.l10n.emergencyCalloutRate,
+                      'LKR ${technician.emergencyRateLkr}'));
                 }
 
                 final childrenWithDividers = <Widget>[];
                 for (var i = 0; i < rows.length; i++) {
-                  if (i > 0) childrenWithDividers.add(const Divider(height: 16));
+                  if (i > 0) {
+                    childrenWithDividers.add(const Divider(height: 16));
+                  }
                   childrenWithDividers.add(rows[i]);
                 }
                 return Column(children: childrenWithDividers);
               },
             ),
           ),
+          if (technician.hasApprovedCertificates &&
+              technician.certificateTitles.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _SectionCard(
+              title: context.l10n.certApprovedSectionTitle,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: technician.certificateTitles.map((title) {
+                  final displayTitle = title.trim().isNotEmpty
+                      ? title.trim()
+                      : context.l10n.certDefaultTitle;
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 15,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          displayTitle,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
           StreamBuilder<List<PortfolioItem>>(
             stream: PortfolioRepository()
                 .streamPortfolio(technician.id, approvedOnly: true),
@@ -907,7 +985,8 @@ class ProviderDetailScreen extends StatelessWidget {
             border: Border(top: BorderSide(color: context.themeBorder)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.05),
+                color:
+                    Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -923,7 +1002,8 @@ class ProviderDetailScreen extends StatelessWidget {
                 onTap: () async {
                   String phone = technician.phone.trim();
                   if (phone.isEmpty) {
-                    final t = await TechnicianRepository().getById(technician.id);
+                    final t =
+                        await TechnicianRepository().getById(technician.id);
                     phone = t?.phone.trim() ?? '';
                   }
                   if (phone.isNotEmpty && context.mounted) {
@@ -939,7 +1019,9 @@ class ProviderDetailScreen extends StatelessWidget {
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.l10n.providerPhoneNotAvailable)),
+                        SnackBar(
+                            content:
+                                Text(context.l10n.providerPhoneNotAvailable)),
                       );
                     }
                   }
@@ -972,7 +1054,9 @@ class ProviderDetailScreen extends StatelessWidget {
                     label: !technician.isApproved
                         ? context.l10n.providerVerificationPending
                         : context.l10n.requestService,
-                    trailingIcon: technician.isApproved ? Icons.arrow_forward_rounded : null,
+                    trailingIcon: technician.isApproved
+                        ? Icons.arrow_forward_rounded
+                        : null,
                     onPressed: !technician.isApproved
                         ? null
                         : () async {
@@ -1011,7 +1095,9 @@ class ProviderDetailScreen extends StatelessWidget {
                               status: 'confirmed',
                               time: '',
                               relativeTime: '',
-                              title: technician.category.isNotEmpty ? technician.category : technician.title,
+                              title: technician.category.isNotEmpty
+                                  ? technician.category
+                                  : technician.title,
                               estRate: 'LKR ${technician.effectiveVisitFeeLkr}',
                               customerName: custName,
                               customerInitials: initials,
@@ -1024,8 +1110,10 @@ class ProviderDetailScreen extends StatelessWidget {
                               priceStatus: 'awaiting_confirmation',
                               visitFeeLkr: technician.effectiveVisitFeeLkr,
                               travelCostLkr: 0,
-                              estimatedTotalLkr: technician.effectiveVisitFeeLkr,
-                              agreedPrice: technician.effectiveVisitFeeLkr.toDouble(),
+                              estimatedTotalLkr:
+                                  technician.effectiveVisitFeeLkr,
+                              agreedPrice:
+                                  technician.effectiveVisitFeeLkr.toDouble(),
                             );
 
                             try {
@@ -1066,11 +1154,14 @@ class ProviderDetailScreen extends StatelessWidget {
                               );
                             } catch (e) {
                               if (context.mounted) {
-                                final message = e.toString().contains('LOCATION_REQUIRED')
-                                    ? context.l10n.locationRequiredToBook
-                                    : (e.toString().contains('PROVIDER_CATEGORY_MISSING')
-                                        ? context.l10n.errorProviderCategoryMissing
-                                        : e.toString());
+                                final message =
+                                    e.toString().contains('LOCATION_REQUIRED')
+                                        ? context.l10n.locationRequiredToBook
+                                        : (e.toString().contains(
+                                                'PROVIDER_CATEGORY_MISSING')
+                                            ? context.l10n
+                                                .errorProviderCategoryMissing
+                                            : e.toString());
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(message),
@@ -1080,22 +1171,27 @@ class ProviderDetailScreen extends StatelessWidget {
                               }
                             }
                           },
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildRateRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-        Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.primary)),
+        Text(label,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(value,
+            style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary)),
       ],
     );
   }
@@ -1127,4 +1223,3 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-

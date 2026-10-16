@@ -40,7 +40,8 @@ class EmergencyDispatchScreen extends StatefulWidget {
   });
 
   @override
-  State<EmergencyDispatchScreen> createState() => _EmergencyDispatchScreenState();
+  State<EmergencyDispatchScreen> createState() =>
+      _EmergencyDispatchScreenState();
 }
 
 class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
@@ -107,7 +108,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     final now = DateTime.now();
     final elapsed = now.difference(_lastNetworkRequestTime);
     if (elapsed.inMilliseconds < 1000) {
-      await Future.delayed(Duration(milliseconds: 1000 - elapsed.inMilliseconds));
+      await Future.delayed(
+          Duration(milliseconds: 1000 - elapsed.inMilliseconds));
     }
     _lastNetworkRequestTime = DateTime.now();
   }
@@ -120,15 +122,17 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       final url = Uri.parse(
         'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$lat&lon=$lon',
       );
-      final response = await http.get(
-        url,
-        headers: kIsWeb
-            ? const <String, String>{}
-            : const <String, String>{
-                'User-Agent': 'HelaService-App/1.0',
-                'Referer': 'https://helaservice.vercel.app',
-              },
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(
+            url,
+            headers: kIsWeb
+                ? const <String, String>{}
+                : const <String, String>{
+                    'User-Agent': 'HelaService-App/1.0',
+                    'Referer': 'https://helaservice.vercel.app',
+                  },
+          )
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
@@ -141,8 +145,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
 
         if (addr != null) {
           road = (addr['road'] ?? addr['street'] ?? '') as String;
-          area = (addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '') as String;
-          city = (addr['city'] ?? addr['town'] ?? addr['municipality'] ?? addr['county'] ?? '') as String;
+          area = (addr['suburb'] ??
+              addr['neighbourhood'] ??
+              addr['village'] ??
+              '') as String;
+          city = (addr['city'] ??
+              addr['town'] ??
+              addr['municipality'] ??
+              addr['county'] ??
+              '') as String;
         }
 
         final parts = [road, area, city].where((s) => s.isNotEmpty).toList();
@@ -178,7 +189,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       }
 
       if (!mounted) return;
-      final granted = await PermissionUtils.requestLocationWithRationale(context);
+      final granted =
+          await PermissionUtils.requestLocationWithRationale(context);
       if (!granted) {
         final postPerm = await Geolocator.checkPermission();
         if (mounted) {
@@ -248,20 +260,23 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       final url = Uri.parse(
         'https://nominatim.openstreetmap.org/search?format=jsonv2&q=${Uri.encodeComponent(q)}&countrycodes=lk&limit=5',
       );
-      final response = await http.get(
-        url,
-        headers: kIsWeb
-            ? const <String, String>{}
-            : const <String, String>{
-                'User-Agent': 'HelaService-App/1.0',
-                'Referer': 'https://helaservice.vercel.app',
-              },
-      ).timeout(const Duration(seconds: 6));
+      final response = await http
+          .get(
+            url,
+            headers: kIsWeb
+                ? const <String, String>{}
+                : const <String, String>{
+                    'User-Agent': 'HelaService-App/1.0',
+                    'Referer': 'https://helaservice.vercel.app',
+                  },
+          )
+          .timeout(const Duration(seconds: 6));
 
       if (response.statusCode == 200 && mounted) {
         final list = (json.decode(response.body) as List<dynamic>?) ?? [];
         setState(() {
-          _searchResults = list.map((item) => item as Map<String, dynamic>).toList();
+          _searchResults =
+              list.map((item) => item as Map<String, dynamic>).toList();
         });
       }
     } catch (_) {
@@ -383,7 +398,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: ctx.themeSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -526,11 +542,13 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                     onPressed: _isCreatingBooking
                         ? null
                         : () async {
-                            final currentAddress = addressController.text.trim();
+                            final currentAddress =
+                                addressController.text.trim();
                             if (currentAddress.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(context.l10n.pleaseEnterServiceLocation),
+                                  content: Text(
+                                      context.l10n.pleaseEnterServiceLocation),
                                 ),
                               );
                               return;
@@ -538,7 +556,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             if (_userLat == null || _userLng == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(context.l10n.locationRequiredToBook),
+                                  content:
+                                      Text(context.l10n.locationRequiredToBook),
                                   backgroundColor: AppColors.error,
                                 ),
                               );
@@ -782,7 +801,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
             if (_userLat != null && _userLng != null) ...[
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: context.themeSurface,
                   borderRadius: BorderRadius.circular(12),
@@ -790,7 +810,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on_rounded, size: 16, color: AppColors.primary),
+                    const Icon(Icons.location_on_rounded,
+                        size: 16, color: AppColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -799,7 +820,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             : '${_userLat!.toStringAsFixed(4)}, ${_userLng!.toStringAsFixed(4)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ),
                     InkWell(
@@ -821,11 +843,13 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                         }
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.edit_location_alt_outlined, size: 14, color: AppColors.primary),
+                            const Icon(Icons.edit_location_alt_outlined,
+                                size: 14, color: AppColors.primary),
                             const SizedBox(width: 4),
                             Text(
                               context.l10n.searchOnMap,
@@ -886,25 +910,30 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             runSpacing: 8,
                             children: [
                               OutlinedButton.icon(
-                                onPressed: _isGpsLoading ? null : _resolveUserLocation,
+                                onPressed:
+                                    _isGpsLoading ? null : _resolveUserLocation,
                                 icon: _isGpsLoading
                                     ? const SizedBox(
                                         width: 14,
                                         height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       )
-                                    : const Icon(Icons.refresh_rounded, size: 16),
+                                    : const Icon(Icons.refresh_rounded,
+                                        size: 16),
                                 label: Text(context.l10n.tryGpsAgain),
                                 style: OutlinedButton.styleFrom(
                                   visualDensity: VisualDensity.compact,
                                   foregroundColor: AppColors.error,
-                                  side: const BorderSide(color: AppColors.error),
+                                  side:
+                                      const BorderSide(color: AppColors.error),
                                 ),
                               ),
                               if (_permissionPermanentlyDenied)
                                 OutlinedButton.icon(
                                   onPressed: () => Geolocator.openAppSettings(),
-                                  icon: const Icon(Icons.settings_outlined, size: 16),
+                                  icon: const Icon(Icons.settings_outlined,
+                                      size: 16),
                                   label: Text(context.l10n.openSettings),
                                   style: OutlinedButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
@@ -912,7 +941,9 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                 ),
                               OutlinedButton.icon(
                                 onPressed: () async {
-                                  final picked = await JobLocationPicker.pickLocation(context);
+                                  final picked =
+                                      await JobLocationPicker.pickLocation(
+                                          context);
                                   if (picked != null) {
                                     setState(() {
                                       _userLat = picked.latitude;
@@ -944,7 +975,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                           setState(() => _searchResults = []);
                           return;
                         }
-                        _searchDebounce = Timer(const Duration(milliseconds: 1000), () {
+                        _searchDebounce =
+                            Timer(const Duration(milliseconds: 1000), () {
                           _searchMap(q);
                         });
                       },
@@ -957,12 +989,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                 child: SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
                               )
                             : IconButton(
-                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                                onPressed: () => _searchMap(_searchController.text),
+                                icon: const Icon(Icons.arrow_forward_rounded,
+                                    size: 18),
+                                onPressed: () =>
+                                    _searchMap(_searchController.text),
                               ),
                         filled: true,
                         fillColor: context.themeSurfaceLow,
@@ -992,7 +1027,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             final name = item['display_name']?.toString() ?? '';
                             return ListTile(
                               dense: true,
-                              leading: const Icon(Icons.place_outlined, size: 18),
+                              leading:
+                                  const Icon(Icons.place_outlined, size: 18),
                               title: Text(
                                 name,
                                 maxLines: 2,
@@ -1032,16 +1068,20 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: addresses.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 8),
                                   itemBuilder: (context, index) {
                                     final item = addresses[index];
-                                    final isHome = item.label.toLowerCase() == 'home';
-                                    final isWork = item.label.toLowerCase() == 'work';
+                                    final isHome =
+                                        item.label.toLowerCase() == 'home';
+                                    final isWork =
+                                        item.label.toLowerCase() == 'work';
                                     final itemDisplayLabel = isHome
                                         ? context.l10n.addressLabelHome
                                         : (isWork
                                             ? context.l10n.addressLabelWork
-                                            : (item.label.toLowerCase() == 'other'
+                                            : (item.label.toLowerCase() ==
+                                                    'other'
                                                 ? context.l10n.addressLabelOther
                                                 : item.label));
 
@@ -1054,12 +1094,16 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                             horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: context.themeSurface,
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: context.themeBorder),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color: context.themeBorder),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Row(
                                               children: [
@@ -1068,7 +1112,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                                       ? Icons.home_rounded
                                                       : (isWork
                                                           ? Icons.work_rounded
-                                                          : Icons.place_rounded),
+                                                          : Icons
+                                                              .place_rounded),
                                                   size: 13,
                                                   color: AppColors.primary,
                                                 ),
@@ -1089,7 +1134,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 fontSize: 10.5,
-                                                color: context.themeTextSecondary,
+                                                color:
+                                                    context.themeTextSecondary,
                                               ),
                                             ),
                                           ],
@@ -1141,9 +1187,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                       ),
                       ...categories.map((cat) {
                         final catName = cat.name;
-                        final isSelected =
-                            _selectedCategory.toLowerCase() ==
-                                catName.toLowerCase();
+                        final isSelected = _selectedCategory.toLowerCase() ==
+                            catName.toLowerCase();
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
@@ -1160,7 +1205,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                               fontSize: 12,
                             ),
                             onSelected: (_) => setState(
-                              () => _selectedCategory = isSelected ? '' : catName,
+                              () =>
+                                  _selectedCategory = isSelected ? '' : catName,
                             ),
                           ),
                         );
@@ -1224,7 +1270,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: context.themeBorder.withValues(alpha: 0.3),
+                                color:
+                                    context.themeBorder.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -1264,7 +1311,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                     itemBuilder: (context, idx) {
                       final tech = filtered[idx];
                       final distKm = _getDistanceKm(tech);
-                      final etaMins = distKm != null ? _calculateEtaMinutes(distKm) : null;
+                      final etaMins =
+                          distKm != null ? _calculateEtaMinutes(distKm) : null;
                       final rateLkr = tech.emergencyRateLkr;
 
                       return Container(
@@ -1335,9 +1383,11 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                       const SizedBox(height: 6),
                                       Row(
                                         children: [
-                                          if (tech.isNewProvider || tech.rating == null) ...[
+                                          if (tech.isNewProvider ||
+                                              tech.rating == null) ...[
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 6,
                                                 vertical: 2,
                                               ),
@@ -1374,7 +1424,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                           if (distKm != null) ...[
                                             const SizedBox(width: 10),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 6,
                                                 vertical: 2,
                                               ),
@@ -1387,10 +1438,12 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                               child: Text(
                                                 tech.effectiveLocation.isCurrent
                                                     ? context.l10n.awayNow(
-                                                        distKm.toStringAsFixed(1),
+                                                        distKm
+                                                            .toStringAsFixed(1),
                                                       )
                                                     : context.l10n.basedAway(
-                                                        distKm.toStringAsFixed(1),
+                                                        distKm
+                                                            .toStringAsFixed(1),
                                                       ),
                                                 style: const TextStyle(
                                                   fontSize: 10.5,
@@ -1429,7 +1482,9 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,
-                                        color: rateLkr > 0 ? AppColors.error : context.themeMuted,
+                                        color: rateLkr > 0
+                                            ? AppColors.error
+                                            : context.themeMuted,
                                       ),
                                     ),
                                   ],
@@ -1447,7 +1502,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            context.l10n.emergencyEtaApprox(etaMins),
+                                            context.l10n
+                                                .emergencyEtaApprox(etaMins),
                                             style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w700,
@@ -1466,7 +1522,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                               child: ElevatedButton.icon(
                                 onPressed: _isCreatingBooking
                                     ? null
-                                    : () => _confirmEmergencyCallout(context, tech),
+                                    : () =>
+                                        _confirmEmergencyCallout(context, tech),
                                 icon: const Icon(Icons.bolt_rounded, size: 18),
                                 label: Text(
                                   context.l10n.requestEmergencyCallout,

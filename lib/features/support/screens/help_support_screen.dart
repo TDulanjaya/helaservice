@@ -100,22 +100,26 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         ChoiceChip(
                           label: Text(context.l10n.typeHelp),
                           selected: selectedType == 'help',
-                          onSelected: (s) => setSheetState(() => selectedType = 'help'),
+                          onSelected: (s) =>
+                              setSheetState(() => selectedType = 'help'),
                         ),
                         ChoiceChip(
                           label: Text(context.l10n.typeAccount),
                           selected: selectedType == 'account',
-                          onSelected: (s) => setSheetState(() => selectedType = 'account'),
+                          onSelected: (s) =>
+                              setSheetState(() => selectedType = 'account'),
                         ),
                         ChoiceChip(
                           label: Text(context.l10n.typeAppProblem),
                           selected: selectedType == 'app_problem',
-                          onSelected: (s) => setSheetState(() => selectedType = 'app_problem'),
+                          onSelected: (s) =>
+                              setSheetState(() => selectedType = 'app_problem'),
                         ),
                         ChoiceChip(
                           label: Text(context.l10n.typeFeedback),
                           selected: selectedType == 'feedback',
-                          onSelected: (s) => setSheetState(() => selectedType = 'feedback'),
+                          onSelected: (s) =>
+                              setSheetState(() => selectedType = 'feedback'),
                         ),
                       ],
                     ),
@@ -161,14 +165,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 top: 2,
                                 right: 2,
                                 child: GestureDetector(
-                                  onTap: () => setSheetState(() => selectedPhotos.removeAt(i)),
+                                  onTap: () => setSheetState(
+                                      () => selectedPhotos.removeAt(i)),
                                   child: Container(
                                     decoration: const BoxDecoration(
                                       color: Colors.black54,
                                       shape: BoxShape.circle,
                                     ),
                                     padding: const EdgeInsets.all(2),
-                                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                    child: const Icon(Icons.close,
+                                        size: 14, color: Colors.white),
                                   ),
                                 ),
                               ),
@@ -181,10 +187,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     if (selectedPhotos.length < 3)
                       OutlinedButton.icon(
                         onPressed: () async {
-                          final img = await _picker.pickImage(source: ImageSource.gallery);
+                          final img = await _picker.pickImage(
+                              source: ImageSource.gallery);
                           if (img != null) {
                             final bytes = await img.readAsBytes();
-                            setSheetState(() => selectedPhotos.add(PickedAttachment(file: img, bytes: bytes)));
+                            setSheetState(() => selectedPhotos.add(
+                                PickedAttachment(file: img, bytes: bytes)));
                           }
                         },
                         icon: const Icon(Icons.add_a_photo_outlined, size: 18),
@@ -206,17 +214,30 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 final desc = descriptionController.text.trim();
                                 if (subj.isEmpty || desc.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(context.l10n.pleaseFillRequiredFields)),
+                                    SnackBar(
+                                        content: Text(context
+                                            .l10n.pleaseFillRequiredFields)),
                                   );
                                   return;
                                 }
 
-                                final roleProvider = Provider.of<RoleProvider>(context, listen: false);
-                                final profile = roleProvider.currentUser ?? AuthService().currentUser;
-                                final String reporterRole = (profile?.role == AppRole.provider) ? 'provider' : 'customer';
-                                final String reporterName = (profile?.displayName.trim().isNotEmpty == true)
+                                final roleProvider = Provider.of<RoleProvider>(
+                                    context,
+                                    listen: false);
+                                final profile = roleProvider.currentUser ??
+                                    AuthService().currentUser;
+                                final String reporterRole =
+                                    (profile?.role == AppRole.provider)
+                                        ? 'provider'
+                                        : 'customer';
+                                final String reporterName = (profile
+                                            ?.displayName
+                                            .trim()
+                                            .isNotEmpty ==
+                                        true)
                                     ? profile!.displayName.trim()
-                                    : ((user.displayName != null && user.displayName!.trim().isNotEmpty)
+                                    : ((user.displayName != null &&
+                                            user.displayName!.trim().isNotEmpty)
                                         ? user.displayName!.trim()
                                         : (user.email ?? ''));
 
@@ -225,19 +246,22 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 final storageService = StorageService();
                                 try {
                                   for (final p in selectedPhotos) {
-                                    final uploadedUrl = await storageService.uploadPickedAttachment(
+                                    final uploadedUrl = await storageService
+                                        .uploadPickedAttachment(
                                       p,
                                       purpose: 'job_photo',
                                     );
                                     photoUrls.add(uploadedUrl);
                                   }
                                 } catch (e) {
-                                  debugPrint('[HelpSupportScreen] Photo upload failed: $e');
+                                  debugPrint(
+                                      '[HelpSupportScreen] Photo upload failed: $e');
                                   if (context.mounted) {
                                     setSheetState(() => isSubmitting = false);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(context.l10n.ticketPhotoUploadFailed),
+                                        content: Text(context
+                                            .l10n.ticketPhotoUploadFailed),
                                         backgroundColor: AppColors.error,
                                       ),
                                     );
@@ -265,18 +289,21 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                     Navigator.pop(bCtx);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(context.l10n.ticketCreatedSuccess),
+                                        content: Text(
+                                            context.l10n.ticketCreatedSuccess),
                                         backgroundColor: AppColors.primary,
                                       ),
                                     );
                                   }
                                 } catch (e) {
-                                  debugPrint('[HelpSupportScreen] Failed to submit ticket: $e');
+                                  debugPrint(
+                                      '[HelpSupportScreen] Failed to submit ticket: $e');
                                   if (context.mounted) {
                                     setSheetState(() => isSubmitting = false);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(ticketErrorMessage(context, e)),
+                                        content: Text(
+                                            ticketErrorMessage(context, e)),
                                         backgroundColor: AppColors.error,
                                       ),
                                     );
@@ -287,7 +314,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
                               )
                             : Text(context.l10n.ticketSend),
                       ),
@@ -384,7 +412,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 28),
+                    child: const Icon(Icons.support_agent_rounded,
+                        color: Colors.white, size: 28),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -463,7 +492,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 24),
@@ -496,7 +526,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     ),
                     child: Column(
                       children: [
-                        Icon(Icons.inbox_outlined, size: 40, color: context.themeTextSecondary),
+                        Icon(Icons.inbox_outlined,
+                            size: 40, color: context.themeTextSecondary),
                         const SizedBox(height: 8),
                         Text(
                           context.l10n.noTicketsYet,
@@ -529,7 +560,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SupportTicketDetailScreen(ticketId: ticket.id),
+                              builder: (_) => SupportTicketDetailScreen(
+                                  ticketId: ticket.id),
                             ),
                           );
                         },
@@ -538,13 +570,15 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             Expanded(
                               child: Text(
                                 ticket.effectiveSubject,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: statusColor.withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(6),

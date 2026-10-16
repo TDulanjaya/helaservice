@@ -13,7 +13,6 @@ import '../widgets/icon_square_button.dart';
 import '../widgets/app_card.dart';
 import '../../utils/l10n_extension.dart';
 
-
 class ConversationsInboxScreen extends StatefulWidget {
   const ConversationsInboxScreen({super.key});
 
@@ -120,11 +119,13 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                       const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                    borderSide:
+                        BorderSide(color: context.themeBorder, width: 1.5),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: context.themeBorder, width: 1.5),
+                    borderSide:
+                        BorderSide(color: context.themeBorder, width: 1.5),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -148,7 +149,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.lock_outline, size: 48, color: onSurfaceVar),
+                            Icon(Icons.lock_outline,
+                                size: 48, color: onSurfaceVar),
                             const SizedBox(height: 16),
                             Text(
                               context.l10n.signInToViewMessages,
@@ -165,9 +167,11 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                   : StreamBuilder<List<ChatRoomSummary>>(
                       stream: roleProvider.isAuthorizedAdmin
                           ? ChatService.instance.streamAllChatRooms()
-                          : ChatService.instance.streamUserChatRooms(effectiveUid),
+                          : ChatService.instance
+                              .streamUserChatRooms(effectiveUid),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
@@ -192,8 +196,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                           final otherName =
                               r.getOtherPartyName(effectiveUid).toLowerCase();
                           final lastMsg = r.lastMessage.toLowerCase();
-                          final role =
-                              (r.getOtherPartyRole(effectiveUid) ?? '').toLowerCase();
+                          final role = (r.getOtherPartyRole(effectiveUid) ?? '')
+                              .toLowerCase();
                           return otherName.contains(_searchQuery) ||
                               lastMsg.contains(_searchQuery) ||
                               role.contains(_searchQuery);
@@ -234,7 +238,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                   Text(
                                     _searchQuery.isEmpty
                                         ? context.l10n.conversationsEmptyDesc
-                                        : context.l10n.trySearchingAnotherKeyword,
+                                        : context
+                                            .l10n.trySearchingAnotherKeyword,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 13.5,
@@ -265,7 +270,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                               ),
                               itemBuilder: (context, index) {
                                 final room = filtered[index];
-                                final otherPartyId = room.getOtherPartyId(effectiveUid);
+                                final otherPartyId =
+                                    room.getOtherPartyId(effectiveUid);
                                 final otherPartyName =
                                     room.getOtherPartyName(effectiveUid);
                                 final otherPartyRole =
@@ -273,11 +279,16 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                 final otherPartyPhone =
                                     room.getOtherPartyPhone(effectiveUid);
                                 final lastMessage = room.lastMessage.trim();
-                                final unreadCount = room.getUnreadCount(effectiveUid);
+                                final unreadCount =
+                                    room.getUnreadCount(effectiveUid);
                                 final hasUnread = unreadCount > 0;
                                 final isJustNow = room.lastMessageAt != null &&
-                                    DateTime.now().difference(room.lastMessageAt!).inMinutes < 1;
-                                final timeAgo = _formatTimeAgo(context, room.lastMessageAt);
+                                    DateTime.now()
+                                            .difference(room.lastMessageAt!)
+                                            .inMinutes <
+                                        1;
+                                final timeAgo =
+                                    _formatTimeAgo(context, room.lastMessageAt);
 
                                 return InkWell(
                                   onTap: () {
@@ -299,7 +310,8 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                       vertical: 10,
                                     ),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         UserAvatar(
                                           uid: otherPartyId,
@@ -335,14 +347,20 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                                       timeAgo,
                                                       style: TextStyle(
                                                         fontSize: 12,
-                                                        fontWeight: (isJustNow || hasUnread)
-                                                            ? FontWeight.w700
-                                                            : FontWeight.w500,
+                                                        fontWeight:
+                                                            (isJustNow ||
+                                                                    hasUnread)
+                                                                ? FontWeight
+                                                                    .w700
+                                                                : FontWeight
+                                                                    .w500,
                                                         color: hasUnread
                                                             ? AppColors.primary
                                                             : (isJustNow
-                                                                ? context.themeAmberText
-                                                                : context.themeMuted),
+                                                                ? context
+                                                                    .themeAmberText
+                                                                : context
+                                                                    .themeMuted),
                                                       ),
                                                     ),
                                                   ],
@@ -351,23 +369,32 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                               const SizedBox(height: 3),
                                               Row(
                                                 children: [
-                                                  if (lastMessage == 'photo' || lastMessage == 'Photo') ...[
+                                                  if (lastMessage == 'photo' ||
+                                                      lastMessage ==
+                                                          'Photo') ...[
                                                     Icon(
-                                                      Icons.photo_camera_rounded,
+                                                      Icons
+                                                          .photo_camera_rounded,
                                                       size: 14,
                                                       color: hasUnread
                                                           ? context.themeInk
-                                                          : context.themeTextSecondary,
+                                                          : context
+                                                              .themeTextSecondary,
                                                     ),
                                                     const SizedBox(width: 4),
                                                   ],
                                                   Expanded(
                                                     child: Text(
                                                       lastMessage.isNotEmpty
-                                                          ? ((lastMessage == 'photo' || lastMessage == 'Photo')
-                                                              ? context.l10n.chatPhotoMessage
+                                                          ? ((lastMessage ==
+                                                                      'photo' ||
+                                                                  lastMessage ==
+                                                                      'Photo')
+                                                              ? context.l10n
+                                                                  .chatPhotoMessage
                                                               : lastMessage)
-                                                          : context.l10n.tapToStartConversation,
+                                                          : context.l10n
+                                                              .tapToStartConversation,
                                                       style: TextStyle(
                                                         fontSize: 13,
                                                         fontWeight: hasUnread
@@ -376,33 +403,45 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                                         color: hasUnread
                                                             ? context.themeInk
                                                             : (lastMessage.isNotEmpty
-                                                                ? context.themeTextSecondary
-                                                                : context.themeMuted),
-                                                        fontStyle: lastMessage.isEmpty
+                                                                ? context
+                                                                    .themeTextSecondary
+                                                                : context
+                                                                    .themeMuted),
+                                                        fontStyle: lastMessage
+                                                                .isEmpty
                                                             ? FontStyle.italic
                                                             : FontStyle.normal,
                                                       ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                   if (hasUnread) ...[
                                                     const SizedBox(width: 8),
                                                     Container(
-                                                      padding: const EdgeInsets.symmetric(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
                                                         horizontal: 7,
                                                         vertical: 2,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color: AppColors.primary,
-                                                        borderRadius: BorderRadius.circular(10),
+                                                        color:
+                                                            AppColors.primary,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
                                                       ),
                                                       child: Text(
-                                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                                        unreadCount > 99
+                                                            ? '99+'
+                                                            : unreadCount
+                                                                .toString(),
                                                         style: const TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 11,
-                                                          fontWeight: FontWeight.bold,
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                         ),
                                                       ),
                                                     ),
@@ -413,11 +452,14 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                           ),
                                         ),
                                         if (otherPartyPhone != null &&
-                                            otherPartyPhone.trim().isNotEmpty) ...[
+                                            otherPartyPhone
+                                                .trim()
+                                                .isNotEmpty) ...[
                                           const SizedBox(width: 10),
                                           IconSquareButton.small(
                                             icon: Icons.phone_outlined,
-                                            tooltip: '${context.l10n.call} $otherPartyName',
+                                            tooltip:
+                                                '${context.l10n.call} $otherPartyName',
                                             onTap: () {
                                               MapLauncher.openPhoneCall(
                                                   otherPartyPhone);
@@ -429,7 +471,6 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                                   ),
                                 );
                               },
-
                             ),
                           ),
                         );
@@ -552,5 +593,3 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
     );
   }
 }
-
-

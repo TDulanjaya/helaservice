@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -131,10 +132,12 @@ class CustomerProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showEditAddressDialog(BuildContext context, String uid, SavedAddress addr) {
+  void _showEditAddressDialog(
+      BuildContext context, String uid, SavedAddress addr) {
     final labelController = TextEditingController(text: addr.label);
     final addressController = TextEditingController(text: addr.address);
-    final landmarkController = TextEditingController(text: addr.effectiveNote ?? '');
+    final landmarkController =
+        TextEditingController(text: addr.effectiveNote ?? '');
 
     showDialog(
       context: context,
@@ -210,14 +213,16 @@ class CustomerProfileScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteAddress(BuildContext context, String uid, SavedAddress addr) {
+  void _confirmDeleteAddress(
+      BuildContext context, String uid, SavedAddress addr) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(context.l10n.deleteSavedAddress),
-        content: Text('${context.l10n.confirmDeleteSavedAddress} ("${addr.label}")'),
+        content:
+            Text('${context.l10n.confirmDeleteSavedAddress} ("${addr.label}")'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -318,7 +323,8 @@ class CustomerProfileScreen extends StatelessWidget {
                 ),
               );
               try {
-                await pv.Provider.of<RoleProvider>(context, listen: false).deleteAccount();
+                await pv.Provider.of<RoleProvider>(context, listen: false)
+                    .deleteAccount();
               } finally {
                 if (context.mounted) {
                   Navigator.of(context).pushNamedAndRemoveUntil(
@@ -409,8 +415,8 @@ class CustomerProfileScreen extends StatelessWidget {
                   ],
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
@@ -473,7 +479,9 @@ class CustomerProfileScreen extends StatelessWidget {
                           size: 18, color: context.themeTextSecondary),
                       const SizedBox(width: 10),
                       Text(
-                        phone.isNotEmpty ? '+94 $phone' : context.l10n.phoneNotSet,
+                        phone.isNotEmpty
+                            ? '+94 $phone'
+                            : context.l10n.phoneNotSet,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13.5,
@@ -544,8 +552,8 @@ class CustomerProfileScreen extends StatelessWidget {
                     )
                   else
                     StreamBuilder<List<SavedAddress>>(
-                      stream: SavedAddressRepository()
-                          .streamSavedAddresses(uid),
+                      stream:
+                          SavedAddressRepository().streamSavedAddresses(uid),
                       builder: (context, snapshot) {
                         final addresses = snapshot.data ?? [];
                         if (addresses.isEmpty) {
@@ -643,8 +651,8 @@ class CustomerProfileScreen extends StatelessWidget {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.edit_outlined,
-                                      size: 16),
+                                  icon:
+                                      const Icon(Icons.edit_outlined, size: 16),
                                   tooltip: context.l10n.edit,
                                   onPressed: () => _showEditAddressDialog(
                                       context, uid, item),
@@ -653,8 +661,8 @@ class CustomerProfileScreen extends StatelessWidget {
                                   icon: const Icon(Icons.delete_outline,
                                       size: 16, color: AppColors.error),
                                   tooltip: context.l10n.delete,
-                                  onPressed: () => _confirmDeleteAddress(
-                                      context, uid, item),
+                                  onPressed: () =>
+                                      _confirmDeleteAddress(context, uid, item),
                                 ),
                               ],
                             );
@@ -851,10 +859,15 @@ class CustomerProfileScreen extends StatelessWidget {
                 ),
               ),
 
-            // provider application status badge for applicants
-            if (roleProvider.isRegisteredProvider && !roleProvider.isApprovedProvider)
+            // provider application status badge
+            if (roleProvider.isRegisteredProvider &&
+                !roleProvider.isApprovedProvider)
               AppCard(
                 onTap: () {
+                  if (kDebugMode) {
+                    debugPrint(
+                        '[navdbg] -> pending from customer_profile_screen.dart');
+                  }
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const ProviderPendingScreen(
@@ -1014,18 +1027,22 @@ class CustomerProfileScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 0),
+                  onPressed: () =>
+                      LegalContentSheet.show(context, initialTabIndex: 0),
                   child: Text(
                     context.l10n.privacyPolicy,
-                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                    style: TextStyle(
+                        fontSize: 12, color: context.themeTextSecondary),
                   ),
                 ),
                 Text('•', style: TextStyle(color: context.themeBorder)),
                 TextButton(
-                  onPressed: () => LegalContentSheet.show(context, initialTabIndex: 1),
+                  onPressed: () =>
+                      LegalContentSheet.show(context, initialTabIndex: 1),
                   child: Text(
                     context.l10n.termsOfService,
-                    style: TextStyle(fontSize: 12, color: context.themeTextSecondary),
+                    style: TextStyle(
+                        fontSize: 12, color: context.themeTextSecondary),
                   ),
                 ),
               ],

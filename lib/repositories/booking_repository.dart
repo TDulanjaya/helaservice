@@ -88,7 +88,8 @@ class BookingRepository {
   }
 
   Future<String> createBooking(Booking booking) async {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? booking.customerId;
+    final currentUid =
+        FirebaseAuth.instance.currentUser?.uid ?? booking.customerId;
     final pin = (100000 + Random().nextInt(900000)).toString();
 
     final batch = FirebaseFirestore.instance.batch();
@@ -121,10 +122,12 @@ class BookingRepository {
         if (booking.quoteId == null) {
           if (booking.type == 'urgent') {
             resolvedVisitFee = (data['emergencyRateLkr'] as num?)?.toInt() ??
-                (data['baseRateLkr'] as num?)?.toInt() ?? 0;
+                (data['baseRateLkr'] as num?)?.toInt() ??
+                0;
           } else {
             resolvedVisitFee = (data['visitFeeLkr'] as num?)?.toInt() ??
-                (data['baseRateLkr'] as num?)?.toInt() ?? 0;
+                (data['baseRateLkr'] as num?)?.toInt() ??
+                0;
           }
         }
       }
@@ -137,16 +140,21 @@ class BookingRepository {
     String? linkedJobRequestId = booking.jobRequestId;
 
     if (linkedJobRequestId == null || linkedJobRequestId.isEmpty) {
-      if (booking.customerLatitude == null || booking.customerLongitude == null) {
+      if (booking.customerLatitude == null ||
+          booking.customerLongitude == null) {
         throw Exception('LOCATION_REQUIRED');
       }
 
       // create linked job request for direct booking
-      final jobReqRef = FirebaseFirestore.instance.collection(FirestorePaths.jobRequests).doc();
+      final jobReqRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc();
       linkedJobRequestId = jobReqRef.id;
 
-      final roundedLat = double.parse(booking.customerLatitude!.toStringAsFixed(2));
-      final roundedLng = double.parse(booking.customerLongitude!.toStringAsFixed(2));
+      final roundedLat =
+          double.parse(booking.customerLatitude!.toStringAsFixed(2));
+      final roundedLng =
+          double.parse(booking.customerLongitude!.toStringAsFixed(2));
 
       batch.set(jobReqRef, {
         'customerId': currentUid,
@@ -373,7 +381,8 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'arrival_claimed',
       title: 'Arrival Claimed',
-      description: 'Provider claimed arrival ($distanceM m away${outsideZone ? ', outside zone' : ''})',
+      description:
+          'Provider claimed arrival ($distanceM m away${outsideZone ? ', outside zone' : ''})',
       actorUid: uid,
       actorRole: 'provider',
     );
@@ -553,7 +562,6 @@ class BookingRepository {
     );
   }
 
-
   // provider completes job with pin
   Future<PinVerificationResult> verifyAndCompleteJob({
     required String bookingId,
@@ -618,9 +626,10 @@ class BookingRepository {
               0.0;
           updateData['finalAmount'] = visitFee;
         } else {
-          final approvedTotal = (bookingMap['approvedTotalLkr'] as num?)?.toDouble() ??
-              (bookingMap['agreedPrice'] as num?)?.toDouble() ??
-              0.0;
+          final approvedTotal =
+              (bookingMap['approvedTotalLkr'] as num?)?.toDouble() ??
+                  (bookingMap['agreedPrice'] as num?)?.toDouble() ??
+                  0.0;
           updateData['finalAmount'] = approvedTotal;
         }
       } else {
@@ -647,8 +656,10 @@ class BookingRepository {
       }
 
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      final action = completionType == 'visit_only' ? 'completed_visit_only' : 'completed';
-      final title = completionType == 'visit_only' ? 'Visit Completed' : 'Job Completed';
+      final action =
+          completionType == 'visit_only' ? 'completed_visit_only' : 'completed';
+      final title =
+          completionType == 'visit_only' ? 'Visit Completed' : 'Job Completed';
       final description = completionType == 'visit_only'
           ? (finalAmount != null
               ? 'Visit fee collected: LKR ${finalAmount.toStringAsFixed(0)}'
@@ -729,12 +740,14 @@ class BookingRepository {
   }
 
   // customer disputes payment
-  Future<void> disputePayment(String bookingId, {required String reason}) async {
+  Future<void> disputePayment(String bookingId,
+      {required String reason}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final bookingDoc = await _col.doc(bookingId).get();
     final bookingData = bookingDoc.data();
     final providerId = (bookingData?['providerId'] as String?) ?? '';
-    final complaintRef = FirebaseFirestore.instance.collection(FirestorePaths.complaints).doc();
+    final complaintRef =
+        FirebaseFirestore.instance.collection(FirestorePaths.complaints).doc();
 
     final batch = FirebaseFirestore.instance.batch();
     batch.update(_col.doc(bookingId), {
@@ -775,7 +788,8 @@ class BookingRepository {
       'lastMessageAt': FieldValue.serverTimestamp(),
     };
     if (kDebugMode) {
-      debugPrint('[BookingRepository] disputePayment keys: ${complaintData.keys.toList()}');
+      debugPrint(
+          '[BookingRepository] disputePayment keys: ${complaintData.keys.toList()}');
     }
     batch.set(complaintRef, complaintData);
     await batch.commit();
@@ -802,7 +816,8 @@ class BookingRepository {
     final currentStatus = doc.data()?['status'] as String? ?? JobStatus.pending;
 
     if (!JobStatus.canCancel(currentStatus)) {
-      throw Exception('Cannot cancel booking in progress. Please contact support.');
+      throw Exception(
+          'Cannot cancel booking in progress. Please contact support.');
     }
 
     final batch = FirebaseFirestore.instance.batch();
@@ -895,34 +910,50 @@ class BookingRepository {
 
   Stream<List<Booking>> streamAllBookings({int limit = 100}) {
     return _col.limit(limit).snapshots().map((snap) {
-      final items = snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
-      items.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
-      return items;
-    });
-  }
-
-  Stream<List<Booking>> streamBookingsForProvider(String providerId, {int limit = 50}) {
-    return _col.where('providerId', isEqualTo: providerId).limit(limit).snapshots().map((snap) {
-      final items = snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
+      final items =
+          snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
       items.sort((a, b) =>
           (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return items;
     });
   }
 
-  Stream<List<Booking>> streamProviderBookings(String providerId, {int limit = 50}) =>
+  Stream<List<Booking>> streamBookingsForProvider(String providerId,
+      {int limit = 50}) {
+    return _col
+        .where('providerId', isEqualTo: providerId)
+        .limit(limit)
+        .snapshots()
+        .map((snap) {
+      final items =
+          snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
+      items.sort((a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      return items;
+    });
+  }
+
+  Stream<List<Booking>> streamProviderBookings(String providerId,
+          {int limit = 50}) =>
       streamBookingsForProvider(providerId, limit: limit);
 
-  Stream<List<Booking>> streamBookingsForCustomer(String customerId, {int limit = 50}) {
-    return _col.where('customerId', isEqualTo: customerId).limit(limit).snapshots().map((snap) {
-      final items = snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
+  Stream<List<Booking>> streamBookingsForCustomer(String customerId,
+      {int limit = 50}) {
+    return _col
+        .where('customerId', isEqualTo: customerId)
+        .limit(limit)
+        .snapshots()
+        .map((snap) {
+      final items =
+          snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
       items.sort((a, b) =>
           (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
       return items;
     });
   }
 
-  Stream<List<Booking>> streamCustomerBookings(String customerId, {int limit = 50}) =>
+  Stream<List<Booking>> streamCustomerBookings(String customerId,
+          {int limit = 50}) =>
       streamBookingsForCustomer(customerId, limit: limit);
 
   Stream<Booking?> streamBooking(String bookingId) {
@@ -940,7 +971,8 @@ class BookingRepository {
     return Booking.fromMap(doc.id, doc.data()!);
   }
 
-  Future<void> reportDelay(String bookingId, {required String reason, required int delayMinutes}) async {
+  Future<void> reportDelay(String bookingId,
+      {required String reason, required int delayMinutes}) async {
     if (bookingId.isEmpty) return;
     await _col.doc(bookingId).update({
       'delayReason': reason,
@@ -979,7 +1011,8 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'reschedule_requested',
       title: 'Reschedule Requested',
-      description: '$actorRole requested reschedule to ${proposedDate.year}/${proposedDate.month}/${proposedDate.day} $proposedSlot. Reason: $reason',
+      description:
+          '$actorRole requested reschedule to ${proposedDate.year}/${proposedDate.month}/${proposedDate.day} $proposedSlot. Reason: $reason',
       actorUid: requestedBy,
       actorRole: actorRole,
       metadata: {
@@ -1029,7 +1062,8 @@ class BookingRepository {
       updates['scheduledStartAt'] = Timestamp.fromDate(
         computeScheduledStartAt(proposedDate, proposedSlot),
       );
-      updates['time'] = '${proposedDate.year}/${proposedDate.month}/${proposedDate.day} $proposedSlot';
+      updates['time'] =
+          '${proposedDate.year}/${proposedDate.month}/${proposedDate.day} $proposedSlot';
     }
     if (proposedSlot.isNotEmpty) {
       updates['scheduledSlot'] = proposedSlot;
@@ -1085,7 +1119,8 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'reschedule_declined',
       title: 'Reschedule Declined',
-      description: '$actorRole declined the proposed reschedule${declineReason != null ? ': $declineReason' : ''}',
+      description:
+          '$actorRole declined the proposed reschedule${declineReason != null ? ': $declineReason' : ''}',
       actorUid: declinedBy,
       actorRole: actorRole,
     );
@@ -1151,7 +1186,8 @@ class BookingRepository {
   }
 
   // stream single booking by id
-  Stream<Booking?> streamBookingById(String bookingId) => streamBooking(bookingId);
+  Stream<Booking?> streamBookingById(String bookingId) =>
+      streamBooking(bookingId);
 
   // confirm same price
   Future<void> confirmPriceSame(String bookingId, double agreedPrice) async {
@@ -1169,7 +1205,8 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'price_kept',
       title: 'Price Kept',
-      description: 'Provider confirmed initial quoted price of LKR ${agreedPrice.round()}',
+      description:
+          'Provider confirmed initial quoted price of LKR ${agreedPrice.round()}',
       actorUid: uid,
       actorRole: 'provider',
     );
@@ -1192,7 +1229,8 @@ class BookingRepository {
       if (data['quoteType'] == 'firm') {
         throw Exception('Cannot propose new price on a firm quote.');
       }
-      final count = (data['proposalCount'] as num?)?.toInt() ?? currentProposalCount;
+      final count =
+          (data['proposalCount'] as num?)?.toInt() ?? currentProposalCount;
       if (count >= 3) {
         throw Exception('Maximum 3 proposals reached.');
       }
@@ -1213,7 +1251,8 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'price_proposed',
       title: 'Price Revised',
-      description: 'Provider proposed updated price of LKR ${proposedPrice['totalLkr']}',
+      description:
+          'Provider proposed updated price of LKR ${proposedPrice['totalLkr']}',
       actorUid: uid,
       actorRole: 'provider',
       metadata: proposedPrice,
@@ -1289,7 +1328,8 @@ class BookingRepository {
       throw Exception('Extra amount must be between LKR 1 and 1,000,000.');
     }
     if (description.isEmpty || description.length > 300) {
-      throw Exception('Extra description must be between 1 and 300 characters.');
+      throw Exception(
+          'Extra description must be between 1 and 300 characters.');
     }
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final extraRef = _col.doc(bookingId).collection('extras').doc();
@@ -1386,16 +1426,12 @@ class BookingRepository {
   // stream extras
   Stream<List<BookingExtra>> streamExtras(String bookingId) {
     if (bookingId.isEmpty) return Stream.value([]);
-    return _col
-        .doc(bookingId)
-        .collection('extras')
-        .snapshots()
-        .map((snap) {
-          final list = snap.docs.map((d) => BookingExtra.fromMap(d.id, d.data())).toList();
-          list.sort((a, b) => (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
-          return list;
-        });
+    return _col.doc(bookingId).collection('extras').snapshots().map((snap) {
+      final list =
+          snap.docs.map((d) => BookingExtra.fromMap(d.id, d.data())).toList();
+      list.sort((a, b) =>
+          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
+      return list;
+    });
   }
 }
-
-

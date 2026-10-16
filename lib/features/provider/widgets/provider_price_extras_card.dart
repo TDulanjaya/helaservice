@@ -51,12 +51,14 @@ class ProviderPriceExtrasCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.hourglass_top_rounded, color: AppColors.warning, size: 20),
+            const Icon(Icons.hourglass_top_rounded,
+                color: AppColors.warning, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 '${context.l10n.priceRevisionProposed} (LKR $total). ${context.l10n.awaitingCustomerApproval}.',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                    fontSize: 12.5, fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -75,12 +77,16 @@ class ProviderPriceExtrasCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
+            const Icon(Icons.check_circle_outline,
+                color: AppColors.success, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 '${context.l10n.revisedAgreedPrice}: LKR $total (${context.l10n.arrivalConfirmed})',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.success),
+                style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.success),
               ),
             ),
           ],
@@ -102,12 +108,15 @@ class ProviderPriceExtrasCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.cancel_outlined, color: AppColors.error, size: 20),
+                const Icon(Icons.cancel_outlined,
+                    color: AppColors.error, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.l10n.customerDidNotAgreeVisitOnly(visitDue.toString()),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    context.l10n
+                        .customerDidNotAgreeVisitOnly(visitDue.toString()),
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -126,12 +135,14 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                 icon: const Icon(Icons.pin_outlined, size: 16),
                 label: Text(
                   context.l10n.completionTypeVisitOnly,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -156,12 +167,15 @@ class ProviderPriceExtrasCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.price_check_rounded, color: AppColors.primary, size: 20),
+              const Icon(Icons.price_check_rounded,
+                  color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  context.l10n.priceMatchesQuoteAmount(b.agreedPrice?.toStringAsFixed(0) ?? '0'),
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  context.l10n.priceMatchesQuoteAmount(
+                      b.agreedPrice?.toStringAsFixed(0) ?? '0'),
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -189,17 +203,22 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       debugPrint('confirmPriceSame error: $e');
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                          SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error),
                         );
                       }
                     }
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                  child: Text(context.l10n.priceMatchesQuote, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  child: Text(context.l10n.priceMatchesQuote,
+                      style: const TextStyle(
+                          fontSize: 11.5, fontWeight: FontWeight.w700)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -209,10 +228,13 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                  child: Text(context.l10n.proposeNewPrice, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  child: Text(context.l10n.proposeNewPrice,
+                      style: const TextStyle(
+                          fontSize: 11.5, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -223,7 +245,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
   }
 
   void _openProposePriceDialog(BuildContext context, Booking b) {
-    final rateCtrl = TextEditingController(text: '${b.agreedPrice?.round() ?? 2500}');
+    final rateCtrl =
+        TextEditingController(text: '${b.agreedPrice?.round() ?? 2500}');
     final qtyCtrl = TextEditingController(text: '1.0');
     final descCtrl = TextEditingController();
     String unit = 'fixed';
@@ -238,8 +261,11 @@ class ProviderPriceExtrasCard extends StatelessWidget {
 
           return AlertDialog(
             backgroundColor: ctx.themeSurface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(context.l10n.proposeRevisedPrice, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(context.l10n.proposeRevisedPrice,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -251,12 +277,19 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       labelText: context.l10n.billingUnit,
                       filled: true,
                       fillColor: ctx.themeSurfaceLow,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'fixed', child: Text(context.l10n.billingUnitFixed)),
-                      DropdownMenuItem(value: 'hour', child: Text(context.l10n.billingUnitHour)),
-                      DropdownMenuItem(value: 'day', child: Text(context.l10n.billingUnitDay)),
+                      DropdownMenuItem(
+                          value: 'fixed',
+                          child: Text(context.l10n.billingUnitFixed)),
+                      DropdownMenuItem(
+                          value: 'hour',
+                          child: Text(context.l10n.billingUnitHour)),
+                      DropdownMenuItem(
+                          value: 'day',
+                          child: Text(context.l10n.billingUnitDay)),
                     ],
                     onChanged: (val) {
                       if (val != null) setDialogState(() => unit = val);
@@ -272,19 +305,23 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       prefixText: 'LKR ',
                       filled: true,
                       fillColor: ctx.themeSurfaceLow,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: qtyCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setDialogState(() {}),
                     decoration: InputDecoration(
-                      labelText: '${context.l10n.quantityLabel} ${context.l10n.quantityRangeMinMax('0.5', '60')}',
+                      labelText:
+                          '${context.l10n.quantityLabel} ${context.l10n.quantityRangeMinMax('0.5', '60')}',
                       filled: true,
                       fillColor: ctx.themeSurfaceLow,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -296,7 +333,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       hintText: context.l10n.priceChangeReasonHint,
                       filled: true,
                       fillColor: ctx.themeSurfaceLow,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -309,8 +347,14 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${context.l10n.totalRevisedPrice}:', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                        Text('LKR $total', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.primary)),
+                        Text('${context.l10n.totalRevisedPrice}:',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13)),
+                        Text('LKR $total',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                                color: AppColors.primary)),
                       ],
                     ),
                   ),
@@ -318,19 +362,24 @@ class ProviderPriceExtrasCard extends StatelessWidget {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.cancel)),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(context.l10n.cancel)),
               ElevatedButton(
                 onPressed: () async {
                   final desc = descCtrl.text.trim();
                   if (desc.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.l10n.priceRevisionReasonRequired)),
+                      SnackBar(
+                          content:
+                              Text(context.l10n.priceRevisionReasonRequired)),
                     );
                     return;
                   }
                   if (rate < 1 || qty < 0.5 || qty > 60) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.l10n.checkRateAndQuantity)),
+                      SnackBar(
+                          content: Text(context.l10n.checkRateAndQuantity)),
                     );
                     return;
                   }
@@ -358,12 +407,16 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                     debugPrint('proposeNewPrice error: $e');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
                       );
                     }
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white),
                 child: Text(context.l10n.submitProposal),
               ),
             ],
@@ -387,10 +440,13 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _openProposeExtraDialog(context, b),
                     icon: const Icon(Icons.add_circle_outline, size: 16),
-                    label: Text(context.l10n.addExtraWorkItem, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.addExtraWorkItem,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
@@ -401,7 +457,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
               const SizedBox(height: 8),
               ...extras.map((ex) => Container(
                     margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: context.themeSurfaceLow,
                       borderRadius: BorderRadius.circular(10),
@@ -414,13 +471,20 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(ex.description, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                              Text('LKR ${ex.amountLkr}', style: TextStyle(fontSize: 11, color: context.themeTextSecondary)),
+                              Text(ex.description,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              Text('LKR ${ex.amountLkr}',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.themeTextSecondary)),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: ex.status == 'approved'
                                 ? AppColors.success.withValues(alpha: 0.12)
@@ -465,7 +529,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.addExtraWorkItem, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        title: Text(context.l10n.addExtraWorkItem,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,7 +543,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                 hintText: context.l10n.extraDescriptionHint,
                 filled: true,
                 fillColor: ctx.themeSurfaceLow,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 10),
@@ -490,13 +556,16 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                 prefixText: 'LKR ',
                 filled: true,
                 fillColor: ctx.themeSurfaceLow,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(context.l10n.cancel)),
           ElevatedButton(
             onPressed: () async {
               final desc = descCtrl.text.trim();
@@ -533,12 +602,16 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                 debugPrint('proposeExtra error: $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.l10n.somethingWentWrong), backgroundColor: AppColors.error),
+                    SnackBar(
+                        content: Text(context.l10n.somethingWentWrong),
+                        backgroundColor: AppColors.error),
                   );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white),
             child: Text(context.l10n.proposeExtra),
           ),
         ],
@@ -578,7 +651,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
               const SizedBox(height: 14),
               Text(
                 context.l10n.pinCode,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -635,7 +709,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                         isSubmitting = true;
                         errorMessage = null;
                       });
-                      final result = await BookingRepository().verifyAndCompleteJob(
+                      final result =
+                          await BookingRepository().verifyAndCompleteJob(
                         bookingId: b.id,
                         enteredPin: pin,
                         jobRequestId: b.jobRequestId,
@@ -647,7 +722,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(context.l10n.jobCompletedSuccessfully),
+                              content:
+                                  Text(context.l10n.jobCompletedSuccessfully),
                               backgroundColor: AppColors.success,
                             ),
                           );
@@ -655,7 +731,8 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       } else {
                         setDialogState(() {
                           isSubmitting = false;
-                          errorMessage = result.errorMessage ?? context.l10n.somethingWentWrong;
+                          errorMessage = result.errorMessage ??
+                              context.l10n.somethingWentWrong;
                         });
                       }
                     },

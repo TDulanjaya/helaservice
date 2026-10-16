@@ -176,9 +176,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         final bookings = snapshot.data ?? [];
-        final activeBookings = bookings
-            .where((b) => !JobStatus.isTerminal(b.status))
-            .toList();
+        final activeBookings =
+            bookings.where((b) => !JobStatus.isTerminal(b.status)).toList();
 
         if (activeBookings.isEmpty) {
           return Center(
@@ -431,25 +430,31 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  await BookingRepository().resetPinAttempts(b.id);
+                                  await BookingRepository()
+                                      .resetPinAttempts(b.id);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(context.l10n.pinAttemptsResetZero),
+                                        content: Text(
+                                            context.l10n.pinAttemptsResetZero),
                                         backgroundColor: AppColors.success,
                                       ),
                                     );
                                   }
                                 },
-                                icon: const Icon(Icons.refresh_rounded, size: 16),
+                                icon:
+                                    const Icon(Icons.refresh_rounded, size: 16),
                                 label: Text(
                                   context.l10n.resetPinAttempts,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.error,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -588,7 +593,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   ),
                 ),
               ),
-              if (b.status == JobStatus.pending || b.status == JobStatus.confirmed) ...[
+              if (b.status == JobStatus.pending ||
+                  b.status == JobStatus.confirmed) ...[
                 const SizedBox(width: 8),
                 IconSquareButton(
                   icon: Icons.calendar_month_outlined,
@@ -640,12 +646,14 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 minimumSize: const Size.fromHeight(38),
               ),
               label: Text(
                 context.l10n.providerDidNotCome,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 12.5),
               ),
               icon: const Icon(Icons.person_off_outlined, size: 16),
               onPressed: () => _promptReportNoShow(context, b),
@@ -680,23 +688,28 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   color: AppColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 18),
+                child: const Icon(Icons.location_on_rounded,
+                    color: AppColors.primary, size: 18),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   context.l10n.providerSaysArrived(displayName),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 13),
                 ),
               ),
             ],
           ),
           if (booking.arrivalDistanceM != null &&
-              (booking.arrivalOutsideZone || booking.arrivalDistanceM! > 200)) ...[
+              (booking.arrivalOutsideZone ||
+                  booking.arrivalDistanceM! > 200)) ...[
             const SizedBox(height: 6),
             Text(
-              context.l10n.providerGpsShowsAway(booking.arrivalDistanceM.toString()),
-              style: TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
+              context.l10n
+                  .providerGpsShowsAway(booking.arrivalDistanceM.toString()),
+              style:
+                  TextStyle(fontSize: 11.5, color: context.themeTextSecondary),
             ),
           ],
           const SizedBox(height: 12),
@@ -707,13 +720,15 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.success,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     minimumSize: const Size.fromHeight(38),
                   ),
                   icon: const Icon(Icons.check_circle_outline, size: 16),
                   label: Text(
                     context.l10n.yesTheyAreHere,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 12.5),
                   ),
                   onPressed: () async {
                     try {
@@ -724,7 +739,9 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                          SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -737,13 +754,15 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     minimumSize: const Size.fromHeight(38),
                   ),
                   icon: const Icon(Icons.cancel_outlined, size: 16),
                   label: Text(
                     context.l10n.noNotHere,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 12.5),
                   ),
                   onPressed: () async {
                     try {
@@ -754,7 +773,9 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                          SnackBar(
+                              content: Text(e.toString()),
+                              backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -768,7 +789,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
     );
   }
 
-  Future<void> _promptReportNoShow(BuildContext context, Booking booking) async {
+  Future<void> _promptReportNoShow(
+      BuildContext context, Booking booking) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -791,7 +813,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(context.l10n.providerDidNotCome),
@@ -979,9 +1002,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         final bookings = snapshot.data ?? [];
-        final historyBookings = bookings
-            .where((b) => JobStatus.isTerminal(b.status))
-            .toList();
+        final historyBookings =
+            bookings.where((b) => JobStatus.isTerminal(b.status)).toList();
 
         if (historyBookings.isEmpty) {
           return Center(
@@ -1005,7 +1027,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   const SizedBox(height: 16),
                   Text(
                     context.l10n.noServiceHistoryYet,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -1187,7 +1210,9 @@ class _HistoryBookingCard extends StatelessWidget {
                 Text(
                   booking.relativeTime.isNotEmpty
                       ? booking.relativeTime
-                      : (booking.time.isNotEmpty ? booking.time : context.l10n.pastService),
+                      : (booking.time.isNotEmpty
+                          ? booking.time
+                          : context.l10n.pastService),
                   style: TextStyle(
                     fontSize: 11.5,
                     color: context.themeTextSecondary,
@@ -1321,7 +1346,9 @@ class _JobHistoryDetailModal extends StatelessWidget {
                       label: context.l10n.serviceDate,
                       value: booking.relativeTime.isNotEmpty
                           ? booking.relativeTime
-                          : (booking.time.isNotEmpty ? booking.time : context.l10n.statusCompleted),
+                          : (booking.time.isNotEmpty
+                              ? booking.time
+                              : context.l10n.statusCompleted),
                     ),
                     const Divider(height: 16),
                     _buildDetailRow(
@@ -1364,7 +1391,8 @@ class _JobHistoryDetailModal extends StatelessWidget {
                 label: Text(context.l10n.viewTimeline),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -1376,15 +1404,18 @@ class _JobHistoryDetailModal extends StatelessWidget {
                   otherPartyRole: 'provider',
                   otherPartyName: booking.providerName,
                 ),
-                icon: const Icon(Icons.flag_outlined, size: 16, color: AppColors.error),
+                icon: const Icon(Icons.flag_outlined,
+                    size: 16, color: AppColors.error),
                 label: Text(
                   context.l10n.reportProblemTitle,
                   style: const TextStyle(color: AppColors.error),
                 ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
-                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side:
+                      BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               if (isCompleted) ...[
@@ -1414,7 +1445,8 @@ class _JobHistoryDetailModal extends StatelessWidget {
                   ),
                 ),
               ],
-              if (booking.jobRequestId != null && booking.jobRequestId!.isNotEmpty)
+              if (booking.jobRequestId != null &&
+                  booking.jobRequestId!.isNotEmpty)
                 FutureBuilder<JobRequest?>(
                   future: JobRequestRepository().getById(booking.jobRequestId!),
                   builder: (ctx, snap) {
@@ -1436,7 +1468,8 @@ class _JobHistoryDetailModal extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 context.l10n.providerDetailsTitle,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 10),
               AppCard(
@@ -1515,7 +1548,8 @@ class _JobHistoryDetailModal extends StatelessWidget {
                 if (booking.rating != null && booking.rating! > 0) ...[
                   Text(
                     context.l10n.yourRatingReview,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   AppCard(
@@ -1545,7 +1579,7 @@ class _JobHistoryDetailModal extends StatelessWidget {
                     onPressed: () async {
                       Navigator.pop(context);
                       final tech = await TechnicianRepository()
-                              .getById(booking.providerId);
+                          .getById(booking.providerId);
                       if (tech == null) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -1637,8 +1671,6 @@ class _CustomerJobRequestCard extends StatelessWidget {
     return LocalizedData.getStatus(context, status);
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(request.status);
@@ -1659,7 +1691,8 @@ class _CustomerJobRequestCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (request.isExpired ? AppColors.error : statusColor).withValues(alpha: 0.12),
+                      color: (request.isExpired ? AppColors.error : statusColor)
+                          .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Row(
@@ -1669,17 +1702,23 @@ class _CustomerJobRequestCard extends StatelessWidget {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: request.isExpired ? AppColors.error : statusColor,
+                            color: request.isExpired
+                                ? AppColors.error
+                                : statusColor,
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          request.isExpired ? context.l10n.expiredPill : _getStatusLabel(context, request.status),
+                          request.isExpired
+                              ? context.l10n.expiredPill
+                              : _getStatusLabel(context, request.status),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: request.isExpired ? AppColors.error : statusColor,
+                            color: request.isExpired
+                                ? AppColors.error
+                                : statusColor,
                           ),
                         ),
                       ],
@@ -1688,7 +1727,8 @@ class _CustomerJobRequestCard extends StatelessWidget {
                   if (request.bookingType == 'scheduled') ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
@@ -1696,10 +1736,12 @@ class _CustomerJobRequestCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_month_outlined, size: 12, color: AppColors.primary),
+                          const Icon(Icons.calendar_month_outlined,
+                              size: 12, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
-                            request.scheduledSlot ?? context.l10n.statusScheduled,
+                            request.scheduledSlot ??
+                                context.l10n.statusScheduled,
                             style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
@@ -1713,14 +1755,14 @@ class _CustomerJobRequestCard extends StatelessWidget {
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: context.themeSurfaceLow,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  CategoryService.instance.nameOf(request.category, context: context),
+                  CategoryService.instance
+                      .nameOf(request.category, context: context),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1887,8 +1929,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(context.l10n.repostJob,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Text(context.l10n.repostJobConfirm,
@@ -1940,8 +1981,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(context.l10n.deleteJob,
             style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Text(context.l10n.deleteJobConfirm,

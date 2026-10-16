@@ -37,7 +37,9 @@ class OtpService {
     }
     return _instance;
   }
-  OtpService._internal() : _client = null, _auth = null;
+  OtpService._internal()
+      : _client = null,
+        _auth = null;
   OtpService._withClient(http.Client? client, FirebaseAuth? auth)
       : _client = client,
         _auth = auth;
@@ -154,7 +156,8 @@ class OtpService {
             response.statusCode == 500) {
           throw Exception('Service temporarily unavailable. Please try again.');
         }
-        throw Exception(errorMsg.isNotEmpty ? errorMsg : 'Authentication failed.');
+        throw Exception(
+            errorMsg.isNotEmpty ? errorMsg : 'Authentication failed.');
       }
 
       throw Exception(
@@ -288,7 +291,8 @@ class OtpService {
             return const OtpVerificationResult(
               isValid: false,
               errorCode: 'SERVICE_UNAVAILABLE',
-              errorMessage: 'Service temporarily unavailable. Please try again.',
+              errorMessage:
+                  'Service temporarily unavailable. Please try again.',
             );
         }
       }

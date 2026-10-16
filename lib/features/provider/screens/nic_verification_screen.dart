@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:provider/provider.dart' as pv;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
@@ -17,7 +19,10 @@ import '../../../utils/permission_utils.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../utils/nic_validator.dart';
+import '../../../utils/provider_routing_helper.dart';
 import '../../customer/screens/home_discovery_screen.dart';
+import '../../provider/screens/provider_dashboard_screen.dart';
+import '../../provider/screens/provider_pending_screen.dart';
 
 // compress identity photo
 Uint8List _compressNicImage(Uint8List rawBytes) {
@@ -30,9 +35,11 @@ Uint8List _compressNicImage(Uint8List rawBytes) {
   img.Image working = image;
   if (working.width > 1600 || working.height > 1600) {
     if (working.width > working.height) {
-      working = img.copyResize(working, width: 1600, interpolation: img.Interpolation.linear);
+      working = img.copyResize(working,
+          width: 1600, interpolation: img.Interpolation.linear);
     } else {
-      working = img.copyResize(working, height: 1600, interpolation: img.Interpolation.linear);
+      working = img.copyResize(working,
+          height: 1600, interpolation: img.Interpolation.linear);
     }
   }
 
@@ -41,7 +48,8 @@ Uint8List _compressNicImage(Uint8List rawBytes) {
 
   Uint8List? result;
   for (final quality in qualitySteps) {
-    final encoded = Uint8List.fromList(img.encodeJpg(working, quality: quality));
+    final encoded =
+        Uint8List.fromList(img.encodeJpg(working, quality: quality));
     if (encoded.lengthInBytes <= targetMaxBytes) {
       result = encoded;
       break;
@@ -53,7 +61,8 @@ Uint8List _compressNicImage(Uint8List rawBytes) {
     if (fallback.lengthInBytes <= targetMaxBytes) {
       result = fallback;
     } else {
-      throw Exception('NIC image is too large even after compression. Please retake the photo.');
+      throw Exception(
+          'NIC image is too large even after compression. Please retake the photo.');
     }
   }
 
@@ -87,6 +96,91 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
   void initState() {
     super.initState();
     _checkExistingStatus();
+    _restoreUploadedKeys().then((_) => _recoverLostPhoto());
+  }
+
+  static const String _pendingSlotKey = 'nic_pending_photo_slot';
+
+  String? get _uploadsPrefKey {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return uid == null ? null : 'nic_uploaded_keys_$uid';
+  }
+
+  // show uploaded photos
+  Future<void> _restoreUploadedKeys() async {
+    final prefKey = _uploadsPrefKey;
+    if (prefKey == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(prefKey);
+      if (raw == null || !mounted) return;
+      final saved = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      setState(() {
+        _frontKey ??= saved['front'] as String?;
+        _backKey ??= saved['back'] as String?;
+        _selfieKey ??= saved['selfie'] as String?;
+        _front = _frontKey != null;
+        _back = _backKey != null;
+        _selfie = _selfieKey != null;
+      });
+    } catch (e) {
+      debugPrint('[NicVerificationScreen] restore keys failed: $e');
+    }
+  }
+
+  Future<void> _saveUploadedKeys() async {
+    final prefKey = _uploadsPrefKey;
+    if (prefKey == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          prefKey,
+          jsonEncode({
+            if (_frontKey != null) 'front': _frontKey,
+            if (_backKey != null) 'back': _backKey,
+            if (_selfieKey != null) 'selfie': _selfieKey,
+          }));
+    } catch (_) {}
+  }
+
+  Future<void> _clearUploadedKeys() async {
+    final prefKey = _uploadsPrefKey;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefKey != null) await prefs.remove(prefKey);
+      await prefs.remove(_pendingSlotKey);
+    } catch (_) {}
+  }
+
+  Future<void> _setPendingSlot(String? docType) async {
+    if (kIsWeb) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (docType == null) {
+        await prefs.remove(_pendingSlotKey);
+      } else {
+        await prefs.setString(_pendingSlotKey, docType);
+      }
+    } catch (_) {}
+  }
+
+  // upload recovered photo
+  Future<void> _recoverLostPhoto() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final slot = prefs.getString(_pendingSlotKey);
+      final lost = await ImagePicker().retrieveLostData();
+      await prefs.remove(_pendingSlotKey);
+      if (lost.isEmpty || slot == null || !mounted) return;
+      final files = lost.files;
+      final file = lost.file ??
+          ((files != null && files.isNotEmpty) ? files.first : null);
+      if (file == null) return;
+      await _handleUpload(slot, recovered: file);
+    } catch (e) {
+      debugPrint('[NicVerificationScreen] recover photo failed: $e');
+    }
   }
 
   Future<void> _checkExistingStatus() async {
@@ -107,16 +201,19 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     } catch (_) {}
   }
 
-
-  Future<void> _handleUpload(String docType) async {
-    final allowed = await PermissionUtils.requestCameraWithRationale(
-      context,
-      title: docType == 'selfie' ? context.l10n.takeProfilePhoto : context.l10n.nationalIdVerification,
-      description: docType == 'selfie'
-          ? context.l10n.uploadClearFacePhoto
-          : context.l10n.permissionCameraDesc,
-    );
-    if (!allowed) return;
+  Future<void> _handleUpload(String docType, {XFile? recovered}) async {
+    if (recovered == null) {
+      final allowed = await PermissionUtils.requestCameraWithRationale(
+        context,
+        title: docType == 'selfie'
+            ? context.l10n.takeProfilePhoto
+            : context.l10n.nationalIdVerification,
+        description: docType == 'selfie'
+            ? context.l10n.uploadClearFacePhoto
+            : context.l10n.permissionCameraDesc,
+      );
+      if (!allowed) return;
+    }
 
     setState(() {
       if (docType == 'front') _isUploadingFront = true;
@@ -126,14 +223,17 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
 
     try {
       final picker = ImagePicker();
-      final XFile? photo = await picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 85,
-        preferredCameraDevice:
-            docType == 'selfie' ? CameraDevice.front : CameraDevice.rear,
-      );
+      if (recovered == null) await _setPendingSlot(docType);
+      final XFile? photo = recovered ??
+          await picker.pickImage(
+            source: ImageSource.camera,
+            maxWidth: 1600,
+            maxHeight: 1600,
+            imageQuality: 85,
+            preferredCameraDevice:
+                docType == 'selfie' ? CameraDevice.front : CameraDevice.rear,
+          );
+      if (recovered == null) await _setPendingSlot(null);
 
       if (photo == null) {
         setState(() {
@@ -175,6 +275,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
             _selfieKey = key;
           }
         });
+        await _saveUploadedKeys();
       }
     } catch (e) {
       debugPrint('[NicVerificationScreen] Upload failed for $docType: $e');
@@ -223,9 +324,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         'trade': profile?.serviceCategory?.isNotEmpty == true
             ? profile!.serviceCategory!
             : '',
-        'location': profile?.district?.isNotEmpty == true
-            ? profile!.district!
-            : '',
+        'location':
+            profile?.district?.isNotEmpty == true ? profile!.district! : '',
         'nicNumber': cleanNic,
         if (cleanNic.isNotEmpty) 'nic': cleanNic,
         'phone': profile?.phone?.isNotEmpty == true
@@ -262,8 +362,9 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // request server-side nic hash (failure must not block submit)
+      // request server nic hash
       await AuthService().requestNicHash();
+      await _clearUploadedKeys();
 
       if (mounted) {
         setState(() {
@@ -286,70 +387,116 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     }
   }
 
+  // pick screen by role and approval
+  void _navigateBackOrDashboard() {
+    final nav = Navigator.of(context);
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final user = roleProvider.currentUser;
+    final isApproved =
+        roleProvider.isApprovedProvider || (user?.isVerified ?? false);
+
+    if (user != null && isLockedNewProvider(user, isApproved)) {
+      if (kDebugMode) {
+        debugPrint('[navdbg] -> pending from nic_verification_screen.dart');
+      }
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) =>
+              const ProviderPendingScreen(isExistingCustomer: false),
+        ),
+        (route) => false,
+      );
+      return;
+    }
+
+    if (isApproved) {
+      if (kDebugMode) {
+        debugPrint('[navdbg] -> dashboard from nic_verification_screen.dart');
+      }
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const ProviderDashboardScreen()),
+        (route) => false,
+      );
+      return;
+    }
+
+    // return to customer home
+    if (kDebugMode) {
+      debugPrint('[navdbg] -> customer home from nic_verification_screen.dart');
+    }
+    nav.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.l10n.nationalIdVerification,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: context.themeInk,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _navigateBackOrDashboard();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            context.l10n.nationalIdVerification,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: context.themeInk,
+            ),
           ),
-        ),
-        leading: Center(
-          child: IconSquareButton.small(
-            icon: Icons.chevron_left_rounded,
-            onTap: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-                (route) => false,
-              );
-            },
+          leading: Center(
+            child: IconSquareButton.small(
+              icon: Icons.chevron_left_rounded,
+              onTap: _navigateBackOrDashboard,
+            ),
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: context.themeAmberTint,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  context.l10n.step2Of3,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: context.themeAmberTint,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    context.l10n.step2Of3,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+        body: _isSubmitted ? _buildSubmittedView() : _buildFormView(),
+        bottomNavigationBar: widget.showBottomNav
+            ? AppBottomNav(
+                currentIndex: 2,
+                items: [
+                  NavItem(Icons.radar, context.l10n.navJobs),
+                  NavItem(Icons.payments, context.l10n.navEarnings),
+                  NavItem(Icons.verified_user, context.l10n.navVerification),
+                  NavItem(Icons.manage_accounts, context.l10n.navProfile),
+                ],
+              )
+            : null,
       ),
-      body: _isSubmitted ? _buildSubmittedView() : _buildFormView(),
-      bottomNavigationBar: widget.showBottomNav
-          ? AppBottomNav(
-              currentIndex: 2,
-              items: [
-                NavItem(Icons.radar, context.l10n.navJobs),
-                NavItem(Icons.payments, context.l10n.navEarnings),
-                NavItem(Icons.verified_user, context.l10n.navVerification),
-                NavItem(Icons.manage_accounts, context.l10n.navProfile),
-              ],
-            )
-          : null,
     );
   }
 
   Widget _buildSubmittedView() {
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
+      padding: EdgeInsets.fromLTRB(24, 24, 24,
+          widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -384,7 +531,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               const SizedBox(height: 16),
               Text(
                 context.l10n.verificationUnderReview,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Container(
@@ -416,11 +564,7 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
               PrimaryButton(
                 label: context.l10n.returnToDashboard,
                 trailingIcon: Icons.arrow_forward,
-                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                      builder: (_) => const HomeDiscoveryScreen()),
-                  (route) => false,
-                ),
+                onPressed: _navigateBackOrDashboard,
               ),
             ],
           ),
@@ -431,7 +575,8 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
 
   Widget _buildFormView() {
     return ListView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
+      padding: EdgeInsets.fromLTRB(16, 16, 16,
+          widget.showBottomNav ? AppBottomNav.contentBottomPadding : 24),
       children: [
         Text(
           context.l10n.nationalIdVerification,
@@ -502,11 +647,13 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_rounded, size: 13, color: AppColors.primary),
+              const Icon(Icons.lock_rounded,
+                  size: 13, color: AppColors.primary),
               const SizedBox(width: 6),
               Text(
                 context.l10n.endToEndEncryptedVault,
-                style: TextStyle(fontSize: 11, color: context.themeTextSecondary),
+                style:
+                    TextStyle(fontSize: 11, color: context.themeTextSecondary),
               ),
             ],
           ),
@@ -515,7 +662,6 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
     );
   }
 }
-
 
 class _UploadStep extends StatelessWidget {
   final int index;
@@ -587,7 +733,8 @@ class _UploadStep extends StatelessWidget {
                 )
               else if (uploaded)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(999),
@@ -595,7 +742,8 @@ class _UploadStep extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_rounded, size: 12, color: AppColors.primary),
+                      const Icon(Icons.check_rounded,
+                          size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
                       Text(
                         context.l10n.attachedStatus,
@@ -610,7 +758,8 @@ class _UploadStep extends StatelessWidget {
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
@@ -639,7 +788,9 @@ class _UploadStep extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               decoration: BoxDecoration(
                 color: uploaded
-                    ? (context.isDark ? const Color(0xFF14241B) : const Color(0xFFE8F5E9))
+                    ? (context.isDark
+                        ? const Color(0xFF14241B)
+                        : const Color(0xFFE8F5E9))
                     : context.themeSurfaceLow,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(

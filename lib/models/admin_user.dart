@@ -166,7 +166,8 @@ class AdminUser {
 
   bool get canManageAdmins => hasPermission(AdminPermission.manageAdmins);
   bool get canVerifyNic => hasPermission(AdminPermission.verifyNic);
-  bool get canManageCategories => hasPermission(AdminPermission.manageCategories);
+  bool get canManageCategories =>
+      hasPermission(AdminPermission.manageCategories);
   bool get canBroadcastAlerts => hasPermission(AdminPermission.broadcastAlerts);
   bool get canViewFinances => hasPermission(AdminPermission.viewFinances);
   bool get canManageUsers => hasPermission(AdminPermission.manageUsers);
@@ -175,7 +176,9 @@ class AdminUser {
   String get initials {
     final parts = displayName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts[0].isEmpty) return 'AD';
-    if (parts.length == 1) return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    if (parts.length == 1) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
@@ -243,8 +246,11 @@ class AdminUser {
       'status': status.key,
       'permissions': permissions.map((p) => p.key).toList(),
       if (invitedBy != null) 'invitedBy': invitedBy,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
-      if (lastActiveAt != null) 'lastActiveAt': Timestamp.fromDate(lastActiveAt!),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
+      if (lastActiveAt != null)
+        'lastActiveAt': Timestamp.fromDate(lastActiveAt!),
     };
   }
 

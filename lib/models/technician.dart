@@ -76,6 +76,8 @@ class Technician {
   final String serviceArea;
   final String phone;
   final String certification;
+  final bool hasApprovedCertificates;
+  final List<String> certificateTitles;
   final List<RecentWork> recentWork;
   final List<Review> reviews;
   final bool isBanned;
@@ -116,10 +118,12 @@ class Technician {
         modes: resolvedPricingModes,
         visitFeeLkr: visitFeeLkr,
         baseRateLkr: baseRateLkr,
-      ) ?? 0;
+      ) ??
+      0;
 
   // active location based on online state
-  EffectiveProviderLocation get effectiveLocation => getEffectiveProviderLocation(this);
+  EffectiveProviderLocation get effectiveLocation =>
+      getEffectiveProviderLocation(this);
 
   const Technician({
     required this.id,
@@ -158,6 +162,8 @@ class Technician {
     required this.serviceArea,
     this.phone = '',
     required this.certification,
+    this.hasApprovedCertificates = false,
+    this.certificateTitles = const [],
     required this.recentWork,
     required this.reviews,
     this.isBanned = false,
@@ -353,8 +359,10 @@ class Technician {
     try {
       final startParts = todaySchedule.start.split(':').map(int.parse).toList();
       final endParts = todaySchedule.end.split(':').map(int.parse).toList();
-      final startMins = startParts[0] * 60 + (startParts.length > 1 ? startParts[1] : 0);
-      final endMins = endParts[0] * 60 + (endParts.length > 1 ? endParts[1] : 0);
+      final startMins =
+          startParts[0] * 60 + (startParts.length > 1 ? startParts[1] : 0);
+      final endMins =
+          endParts[0] * 60 + (endParts.length > 1 ? endParts[1] : 0);
       final currentMins = now.hour * 60 + now.minute;
       return currentMins >= startMins && currentMins <= endMins;
     } catch (_) {
@@ -385,8 +393,10 @@ class Technician {
       if (hourlyRateLkr > 0) 'hourlyRateLkr': hourlyRateLkr,
       'emergencyRateLkr': emergencyRateLkr,
       if (pricingModes != null) 'pricingModes': pricingModes,
-      if (dailyRateLkr != null && dailyRateLkr! > 0) 'dailyRateLkr': dailyRateLkr,
-      if (perKmRateLkr != null && perKmRateLkr! > 0) 'perKmRateLkr': perKmRateLkr,
+      if (dailyRateLkr != null && dailyRateLkr! > 0)
+        'dailyRateLkr': dailyRateLkr,
+      if (perKmRateLkr != null && perKmRateLkr! > 0)
+        'perKmRateLkr': perKmRateLkr,
       if (visitFeeLkr != null && visitFeeLkr! > 0) 'visitFeeLkr': visitFeeLkr,
       // round to 2 decimals for privacy
       if (effectiveBaseLat != null)
@@ -394,11 +404,10 @@ class Technician {
       if (effectiveBaseLng != null)
         'baseLng': roundToTwoDecimals(effectiveBaseLng),
       if (baseAddress != null) 'baseAddress': baseAddress,
-      if (baseArea != null && baseArea!.trim().isNotEmpty) 'baseArea': baseArea!.trim(),
-      if (currentLat != null)
-        'currentLat': roundToTwoDecimals(currentLat!),
-      if (currentLng != null)
-        'currentLng': roundToTwoDecimals(currentLng!),
+      if (baseArea != null && baseArea!.trim().isNotEmpty)
+        'baseArea': baseArea!.trim(),
+      if (currentLat != null) 'currentLat': roundToTwoDecimals(currentLat!),
+      if (currentLng != null) 'currentLng': roundToTwoDecimals(currentLng!),
       if (currentLocationAt != null)
         'currentLocationAt': Timestamp.fromDate(currentLocationAt!),
       if (effectiveBaseLat != null)
@@ -410,6 +419,8 @@ class Technician {
       'serviceArea': serviceArea,
       'phone': phone,
       'certification': certification,
+      'hasApprovedCertificates': hasApprovedCertificates,
+      if (certificateTitles.isNotEmpty) 'certificateTitles': certificateTitles,
       'isBanned': isBanned,
       if (banReason != null) 'banReason': banReason,
       'isVerified': isVerified,
@@ -468,9 +479,8 @@ class Technician {
       dailyRateLkr: (map['dailyRateLkr'] as num?)?.toInt(),
       perKmRateLkr: (map['perKmRateLkr'] as num?)?.toInt(),
       visitFeeLkr: (map['visitFeeLkr'] as num?)?.toInt(),
-      pricingModes: (map['pricingModes'] as List?)
-          ?.map((e) => e.toString())
-          .toList(),
+      pricingModes:
+          (map['pricingModes'] as List?)?.map((e) => e.toString()).toList(),
       latitude: parsedBaseLat,
       longitude: parsedBaseLng,
       baseLat: parsedBaseLat,
@@ -485,6 +495,11 @@ class Technician {
       serviceArea: map['serviceArea'] ?? '',
       phone: map['phone'] ?? '',
       certification: map['certification'] ?? '',
+      hasApprovedCertificates: map['hasApprovedCertificates'] == true,
+      certificateTitles: (map['certificateTitles'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       isBanned: (map['isBanned'] == true) || (map['banned'] == true),
       banReason: map['banReason'] as String?,
       isVerified: map['isVerified'] == true,

@@ -281,7 +281,7 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (_) => setDialogState(() {}),
                     decoration: InputDecoration(
-                      labelText: '${context.l10n.quantityLabel} (0.5 to 60)',
+                      labelText: '${context.l10n.quantityLabel} ${context.l10n.quantityRangeMinMax('0.5', '60')}',
                       filled: true,
                       fillColor: ctx.themeSurfaceLow,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

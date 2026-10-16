@@ -250,10 +250,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         });
       }
     } catch (e) {
+      debugPrint('[CompleteProfileScreen] Failed to pick photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToPickPhoto}: $e'),
+            content: Text(context.l10n.failedToPickPhoto),
             backgroundColor: AppColors.error,
           ),
         );
@@ -300,10 +301,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         });
       }
     } catch (e) {
+      debugPrint('[CompleteProfileScreen] Failed to pick NIC image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToPickPhoto}: $e'),
+            content: Text(context.l10n.failedToPickPhoto),
             backgroundColor: AppColors.error,
           ),
         );

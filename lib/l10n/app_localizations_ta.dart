@@ -1434,7 +1434,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get agreeProviderTerms =>
-      'வழங்குநர் விதிமுறைகள், தள கமிஷன் விகிதங்கள் மற்றும் அடையாள அட்டை சரிபார்ப்பு செயல்முறையை ஏற்கிறேன்';
+      'வழங்குநர் விதிமுறைகள் மற்றும் NIC சரிபார்ப்பு செயல்முறையை ஏற்கிறேன்';
 
   @override
   String get createAccountVerifyNic =>
@@ -2478,7 +2478,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get nicUnderReviewDesc =>
-      'உங்கள் தேசிய அடையாள அட்டை (NIC) ஆவணங்கள் மற்றும் சுயபடம் ஆகியவை எங்கள் பாதுகாப்பான பெட்டகத்தில் சேமிக்கப்பட்டுள்ளன. எங்கள் நிர்வாக குழு உங்கள் தகவல்களை சரிபார்த்து வருகிறது.';
+      'உங்கள் NIC புகைப்படங்கள் மற்றும் செல்ஃபி பாதுகாப்பாக சேமிக்கப்பட்டுள்ளன. எங்கள் குழு உங்கள் விவரங்களை சரிபார்த்து வருகிறது.';
 
   @override
   String get returnToDashboard => 'முகப்பு பலகைக்கு திரும்புக';
@@ -2961,7 +2961,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get permVerifyNicDesc =>
-      'ஸ்மார்ட் NIC, காவல்துறை அறிக்கைகளை மதிப்பாய்வு செய்து கைவினைஞர் பதிவுகளை அங்கீகரிக்க/நிராகரிக்க.';
+      'NIC ஆவணங்களை மதிப்பாய்வு செய்து சேவை வழங்குநர் பதிவுகளை அங்கீகரிக்க அல்லது நிராகரிக்க.';
 
   @override
   String get permManageCategoriesDesc =>
@@ -4349,7 +4349,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get providerDetailsTitle => 'சேவை வழங்குநர் விவரங்கள்';
 
   @override
-  String get decline => 'நිරாகரி';
+  String get decline => 'நிராகரி';
 
   @override
   String didYouPayAmount(String amount, String name) {
@@ -5516,7 +5516,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get hintEmail => 'மின்னஞ்சல் முகவரி';
 
   @override
-  String get hintPhone => 'கைபேසි எண்';
+  String get hintPhone => 'கைபேசி எண்';
 
   @override
   String get hintCategorySearch => 'எ.கா. மின் வேலை, குழாய் வேலை';
@@ -5685,7 +5685,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get verificationMatch => 'பொருந்துகிறது';
 
   @override
-  String get verificationValid => 'செல்லුපடியாகும்';
+  String get verificationValid => 'செல்லுபடியாகும்';
 
   @override
   String get profileTrustPhotoRationale =>
@@ -6707,4 +6707,130 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get heroCommunityRated => 'சமூகத்தால் மதிப்பிடப்பட்ட வல்லுநர்கள்';
+
+  @override
+  String get supportTicketCloseConfirm =>
+      'இந்த கோரிக்கையை மூட நிச்சயமாக விரும்புகிறீர்களா?';
+
+  @override
+  String get ticketClosedMessage => 'கோரிக்கை மூடப்பட்டது.';
+
+  @override
+  String get ticketNotFound => 'கோரிக்கை கிடைக்கவில்லை';
+
+  @override
+  String bookingTimelineWithId(String id) {
+    return 'முன்பதிவு காலவரிசை ($id)';
+  }
+
+  @override
+  String get viewTicketAndThread => 'கோரிக்கை மற்றும் உரையாடலைக் காண்க';
+
+  @override
+  String get refreshImages => 'படங்களை புதுப்பிக்கவும்';
+
+  @override
+  String quantityRangeMinMax(String min, String max) {
+    return '($min முதல் $max வரை)';
+  }
+
+  @override
+  String get timelineDescCreated =>
+      'வாடிக்கையாளர் முன்பதிவு கோரிக்கையை உருவாக்கினார்';
+
+  @override
+  String get timelineDescAccepted => 'சேவை வழங்குநர் முன்பதிவை ஏற்றுக்கொண்டார்';
+
+  @override
+  String get timelineDescDeclined => 'சேவை வழங்குநர் முன்பதிவை நிராகரித்தார்';
+
+  @override
+  String get timelineDescCancelled => 'முன்பதிவு ரத்து செய்யப்பட்டது';
+
+  @override
+  String get timelineDescEnRoute =>
+      'சேவை வழங்குநர் அந்த இடத்திற்கு பயணத்தைத் தொடங்கினார்';
+
+  @override
+  String get timelineDescArrived =>
+      'சேவை வழங்குநர் இடத்திற்கு வந்து சேர்ந்தார்';
+
+  @override
+  String get timelineDescArrivalClaimed => 'சேவை வழங்குநர் வருகையைக் கோரினார்';
+
+  @override
+  String get timelineDescArrivalConfirmed =>
+      'வாடிக்கையாளர் சேவை வழங்குநரின் வருகையை உறுதிப்படுத்தினார்';
+
+  @override
+  String get timelineDescArrivalDenied =>
+      'சேவை வழங்குநர் வரவில்லை என்று வாடிக்கையாளர் தெரிவித்தார்';
+
+  @override
+  String get timelineDescArrivalAutoStarted =>
+      'சரிபார்க்கப்பட்ட GPS உடன் வாடிக்கையாளர் காலாவதியான பிறகு தொடங்கியது';
+
+  @override
+  String get timelineDescCompleted => 'பணி நிறைவடைந்தது';
+
+  @override
+  String get timelineDescCompletedVisitOnly =>
+      'ஆய்வு/வருகைக் கட்டணத்துடன் மட்டும் நிறைவடைந்தது';
+
+  @override
+  String get timelineDescPaymentConfirmed =>
+      'வாடிக்கையாளர் கட்டணத்தை உறுதிப்படுத்தினார்';
+
+  @override
+  String get timelineDescPaymentDisputed => 'கட்டண சர்ச்சை தெரிவிக்கப்பட்டது';
+
+  @override
+  String get timelineDescPriceProposed =>
+      'சேவை வழங்குநர் திருத்தப்பட்ட விலையை முன்மொழிந்தார்';
+
+  @override
+  String get timelineDescPriceApproved =>
+      'வாடிக்கையாளர் திருத்தப்பட்ட விலையை ஏற்றுக்கொண்டார்';
+
+  @override
+  String get timelineDescPriceRejected =>
+      'வாடிக்கையாளர் திருத்தப்பட்ட விலையை நிராகரித்தார்';
+
+  @override
+  String get timelineDescPriceKept =>
+      'சேவை வழங்குநர் ஆரம்ப மேற்கோள் விலையை உறுதிப்படுத்தினார்';
+
+  @override
+  String get timelineDescExtraRequested =>
+      'சேவை வழங்குநர் கூடுதல் பணிக்கான ஒப்புதலைக் கோரினார்';
+
+  @override
+  String get timelineDescExtraApproved =>
+      'வாடிக்கையாளர் கூடுதல் பணியை ஏற்றுக்கொண்டார்';
+
+  @override
+  String get timelineDescExtraRejected =>
+      'வாடிக்கையாளர் கூடுதல் பணியை நிராகரித்தார்';
+
+  @override
+  String get timelineDescNoShowReported =>
+      'சேவை வழங்குநர் வரவில்லை என்று வாடிக்கையாளர் தெரிவித்தார்';
+
+  @override
+  String get timelineDescBeforePhotoAdded =>
+      'சேவை வழங்குநர் ஆரம்ப ஆய்வுப் புகைப்படத்தைப் பதிவேற்றினார்';
+
+  @override
+  String get timelineDescAfterPhotoAdded =>
+      'சேவை வழங்குநர் நிறைவடைந்த பணிப் புகைப்படத்தைப் பதிவேற்றினார்';
+
+  @override
+  String get timelineDescRescheduleRequested => 'மறுஅட்டவணை கோரப்பட்டது';
+
+  @override
+  String get timelineDescRescheduleAccepted =>
+      'மறுஅட்டவணை ஏற்றுக்கொள்ளப்பட்டது';
+
+  @override
+  String get timelineDescRescheduleDeclined => 'மறுஅட்டவணை நிராகரிக்கப்பட்டது';
 }

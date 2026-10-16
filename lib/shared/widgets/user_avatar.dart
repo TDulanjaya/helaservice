@@ -190,10 +190,11 @@ class _UserAvatarState extends State<UserAvatar> {
         );
       }
     } catch (e) {
+      debugPrint('[UserAvatar] Failed to remove photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToRemovePhoto}: $e'),
+            content: Text(context.l10n.failedToRemovePhoto),
             backgroundColor: AppColors.error,
           ),
         );

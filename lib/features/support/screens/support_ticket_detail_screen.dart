@@ -133,7 +133,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.ticketCloseConfirm),
-        content: const Text('Are you sure you want to close this ticket?'),
+        content: Text(context.l10n.supportTicketCloseConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -152,7 +152,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
       await _complaintRepo.closeTicket(widget.ticketId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ticket closed.')),
+          SnackBar(content: Text(context.l10n.ticketClosedMessage)),
         );
       }
     }
@@ -179,7 +179,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           return Scaffold(
             backgroundColor: context.themeSurface,
             appBar: AppBar(backgroundColor: context.themeSurface),
-            body: const Center(child: Text('Ticket not found')),
+            body: Center(child: Text(context.l10n.ticketNotFound)),
           );
         }
 

@@ -112,10 +112,11 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
         );
       }
     } catch (e) {
+      debugPrint('[JobPhotosSheet] Failed to upload image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToUploadImage}: $e'),
+            content: Text(context.l10n.failedToUploadImage),
             backgroundColor: AppColors.error,
           ),
         );

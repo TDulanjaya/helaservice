@@ -1247,7 +1247,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 bookingTitle: complaint.effectiveSubject,
               ),
               icon: const Icon(Icons.timeline_rounded, size: 15),
-              label: Text('Booking Timeline (${complaint.bookingId!})', style: const TextStyle(fontSize: 12)),
+              label: Text(context.l10n.bookingTimelineWithId(complaint.bookingId!), style: const TextStyle(fontSize: 12)),
               style: OutlinedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1267,7 +1267,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.forum_outlined, size: 16),
-              label: const Text('View Ticket & Thread', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              label: Text(context.l10n.viewTicketAndThread, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
               onPressed: () => _showTicketThreadSheet(context, complaint),
             ),
           ),
@@ -1617,7 +1617,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                       visualDensity: VisualDensity.compact,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('Assign to me', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text(context.l10n.ticketAssignToMe, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   )
                 else
                   Container(

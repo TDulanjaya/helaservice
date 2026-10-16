@@ -5,27 +5,27 @@ const { verifyFirebaseToken } = require('./_auth');
 const templates = {
   booking_created: {
     en: { title: 'New Booking Request', body: 'A customer sent you a new service booking request.' },
-    si: { title: 'නව සේවා ඉල්ලීමක්', body: 'පාරිභෝගිකයෙකු ඔබට නව සේවා වෙන්කිරීමක් යොමු කර ඇත.' },
+    si: { title: 'නව සේවා ඉල්ලීමක්', body: 'පාරිභෝගිකයෙකු ඔබට නව වෙන්කිරීමක් එවා ඇත.' },
     ta: { title: 'புதிய முன்பதிவு கோரிக்கை', body: 'ஒரு வாடிக்கையாளர் புதிய சேவை முன்பதிவு கோரிக்கையை அனுப்பியுள்ளார்.' },
   },
   booking_confirmed: {
     en: { title: 'Booking Confirmed', body: 'Your service provider confirmed the appointment.' },
-    si: { title: 'සේවාව තහවුරු විය', body: 'ඔබගේ සේවා ශිල්පියා සේවා ඇණවුම තහවුරු කර ඇත.' },
+    si: { title: 'වෙන්කිරීම තහවුරුයි', body: 'ඔබගේ සේවා සපයන්නා වෙන්කිරීම තහවුරු කළා.' },
     ta: { title: 'முன்பதிவு உறுதிப்படுத்தப்பட்டது', body: 'உங்கள் சேவை வழங்குநர் முன்பதிவை உறுதிப்படுத்தினார்.' },
   },
   booking_declined: {
     en: { title: 'Booking Declined', body: 'The provider is unavailable for this booking.' },
-    si: { title: 'ඉල්ලීම ප්‍රතික්ෂේප විය', body: 'ශිල්පියා මෙම අවස්ථාවේ ලබාගත නොහැක.' },
+    si: { title: 'ඉල්ලීම ප්‍රතික්ෂේප විය', body: 'සේවා සපයන්නාට මෙම වෙලාවට පැමිණිය නොහැක.' },
     ta: { title: 'முன்பதிவு நிராகரிக்கப்பட்டது', body: 'வழங்குநர் தற்போது கிடைக்கவில்லை.' },
   },
   booking_en_route: {
     en: { title: 'Technician En Route', body: 'Your service provider is travelling to your location.' },
-    si: { title: 'සේවා ශිල්පියා පැමිණෙමින් සිටී', body: 'ඔබගේ සේවා ශිල්පියා ඔබගේ ස්ථානයට පැමිණෙමින් සිටී.' },
+    si: { title: 'සේවා සපයන්නා එමින් සිටී', body: 'ඔබගේ සේවා සපයන්නා ඔබගේ ස්ථානයට එමින් සිටී.' },
     ta: { title: 'தொழில்நுட்ப வல்லுநர் வழியில் உள்ளார்', body: 'உங்கள் சேவை வழங்குநர் உங்கள் இருப்பிடத்திற்கு வழியில் உள்ளார்.' },
   },
   booking_completed: {
     en: { title: 'Job Completed', body: 'Service has been marked completed. Please rate the provider.' },
-    si: { title: 'සේවාව නිම කරන ලදී', body: 'සේවාව සාර්ථකව අවසන් විය. කරුණාකර ශිල්පියාව අගයන්න.' },
+    si: { title: 'වැඩය අවසන්', body: 'වැඩය අවසන් කළා. සේවා සපයන්නා අගයන්න.' },
     ta: { title: 'பணி முடிந்தது', body: 'சேவை முடிந்தது. வழங்குநரை மதிப்பிடவும்.' },
   },
   booking_cancelled: {
@@ -35,7 +35,7 @@ const templates = {
   },
   payment_recorded: {
     en: { title: 'Payment Recorded', body: 'Provider recorded payment. Please confirm in app.' },
-    si: { title: 'ගෙවීම සටහන් විය', body: 'ගෙවීම් මුදල සටහන් කර ඇත. කරුණාකර තහවුරු කරන්න.' },
+    si: { title: 'ගෙවීම සටහන් විය', body: 'සේවා සපයන්නා ගෙවීම සටහන් කළා. යෙදුමේ තහවුරු කරන්න.' },
     ta: { title: 'கட்டணம் பதிவு செய்யப்பட்டது', body: 'கட்டணம் பதிவு செய்யப்பட்டது. உறுதிப்படுத்தவும்.' },
   },
   payment_confirmed: {
@@ -45,7 +45,7 @@ const templates = {
   },
   payment_disputed: {
     en: { title: 'Payment Disputed', body: 'Customer disputed the payment amount.' },
-    si: { title: 'ගෙවීම පිළිබඳ ගැටළුවක්', body: 'පාරිභෝගිකයා ගෙවීම් මුදල පිළිබඳ ගැටළුවක් යොමු කළේය.' },
+    si: { title: 'ගෙවීම පිළිබඳ ගැටළුවක්', body: 'පාරිභෝගිකයා ගෙවීමේ මුදල ගැන ගැටලුවක් කීවා.' },
     ta: { title: 'கட்டணம் சர்ச்சை', body: 'வாடிக்கையாளர் கட்டணத் தொகையை மறுத்துள்ளார்.' },
   },
   reschedule_requested: {
@@ -65,12 +65,12 @@ const templates = {
   },
   quote_received: {
     en: { title: 'New Quote Received', body: 'A technician submitted a quote for your request.' },
-    si: { title: 'නව මිල ගණන් ලැබුණි', body: 'කාර්මික ශිල්පියෙකු ඔබේ රැකියාව සඳහා මිලක් ඉදිරිපත් කර ඇත.' },
+    si: { title: 'නව මිල ගණන් ලැබුණි', body: 'සේවා සපයන්නෙකු ඔබේ වැඩයට මිලක් එවා ඇත.' },
     ta: { title: 'புதிய விலைப்புள்ளி பெறப்பட்டது', body: 'தொழில்நுட்ப வல்லுநர் ஒரு விலைப்புள்ளியை சமர்ப்பித்துள்ளார்.' },
   },
   quote_accepted: {
     en: { title: 'Quote Accepted', body: 'The customer accepted your quote. Please proceed.' },
-    si: { title: 'මිල ගණන් පිළිගැනිණි', body: 'පාරිභෝගිකයා ඔබේ මිල පිළිගෙන ඇත. කරුණාකර ඉදිරියට යන්න.' },
+    si: { title: 'මිල පිළිගත්තා', body: 'පාරිභෝගිකයා ඔබේ මිල පිළිගත්තා.' },
     ta: { title: 'விலைப்புள்ளி ஏற்றுக்கொள்ளப்பட்டது', body: 'வாடிக்கையாளர் உங்கள் விலைப்புள்ளியை ஏற்றுக்கொண்டார்.' },
   },
   chat_message: {
@@ -80,7 +80,7 @@ const templates = {
   },
   price_proposed: {
     en: { title: 'Price Proposal', body: 'The technician sent a price confirmation for the job.' },
-    si: { title: 'මිල යෝජනාවක්', body: 'කාර්මික ශිල්පියා කාර්යය සඳහා මිල තහවුරු කිරීමක් එවා ඇත.' },
+    si: { title: 'මිල යෝජනාවක්', body: 'සේවා සපයන්නා වැඩයේ අවසන් මිල එවා ඇත.' },
     ta: { title: 'விலை முன்மொழிவு', body: 'தொழில்நுட்ப வல்லுநர் பணிக்கான விலை உறுதிப்படுத்தலை அனுப்பியுள்ளார்.' },
   },
   price_responded: {
@@ -90,17 +90,17 @@ const templates = {
   },
   extra_requested: {
     en: { title: 'Extra Work Requested', body: 'The technician requested approval for extra work.' },
-    si: { title: 'අමතර වැඩ ඉල්ලීමක්', body: 'කාර්මික ශිල්පියා අමතර කාර්යයක් සඳහා අනුමැතිය ඉල්ලා ඇත.' },
+    si: { title: 'අමතර වැඩ ඉල්ලීමක්', body: 'සේවා සපයන්නා අමතර වැඩකට අනුමැතිය ඉල්ලා ඇත.' },
     ta: { title: 'கூடுதல் பணி கோரப்பட்டது', body: 'தொழில்நுட்ப வல்லுநர் கூடுதல் பணிக்கு ஒப்புதல் கோரியுள்ளார்.' },
   },
   extra_responded: {
     en: { title: 'Extra Work Response', body: 'The customer responded to the extra work request.' },
-    si: { title: 'අමතර වැඩ ප්‍රතිචාරය', body: 'පාරිභෝගිකයා අමතර කාර්යයේ ඉල්ලීමට ප්‍රතිචාර දැක්වීය.' },
+    si: { title: 'අමතර වැඩ ප්‍රතිචාරය', body: 'පාරිභෝගිකයා අමතර වැඩ ඉල්ලීමට පිළිතුරු දුන්නා.' },
     ta: { title: 'கூடுதல் பணி பதில்', body: 'வாடிக்கையாளர் கூடுதல் பணி கோரிக்கைக்கு பதிலளித்துள்ளார்.' },
   },
   arrival_claimed: {
     en: { title: 'Provider Arrived', body: 'Technician is at your location. Please confirm their arrival.' },
-    si: { title: 'සේවා ශිල්පියා පැමිණ ඇත', body: 'සේවා ශිල්පියා ඔබගේ ස්ථානයට පැමිණ ඇත. කරුණාකර තහවුරු කරන්න.' },
+    si: { title: 'සේවා සපයන්නා පැමිණියා', body: 'සේවා සපයන්නා ඔබගේ ස්ථානයට පැමිණියා. තහවුරු කරන්න.' },
     ta: { title: 'தொழில்நுட்ப வல்லுநர் வந்துவிட்டார்', body: 'தொழில்நுட்ப வல்லுநர் உங்கள் இடத்தில் உள்ளார். வருகையை உறுதிப்படுத்தவும்.' },
   },
   arrival_confirmed: {
@@ -110,12 +110,12 @@ const templates = {
   },
   arrival_denied: {
     en: { title: 'Arrival Denied', body: 'Customer stated you have not arrived yet. Please call them.' },
-    si: { title: 'පැමිණීම ප්‍රතික්ෂේප විය', body: 'ඔබ තවමත් පැමිණ නැති බව පාරිභෝගිකයා ප්‍රකාශ කර ඇත. කරුණාකර ඔවුන් අමතන්න.' },
+    si: { title: 'පැමිණීම ප්‍රතික්ෂේප විය', body: 'ඔබ තවම පැමිණ නැති බව පාරිභෝගිකයා කීවා. ඔවුන් අමතන්න.' },
     ta: { title: 'வருகை மறுக்கப்பட்டது', body: 'நீங்கள் இன்னும் வரவில்லை என்று வாடிக்கையாளர் தெரிவித்துள்ளார்.' },
   },
   arrival_auto_started: {
     en: { title: 'Job Started', body: 'Job started automatically after arrival GPS verification.' },
-    si: { title: 'වැඩ ආරම්භ විය', body: 'GPS තහවුරු කිරීමෙන් පසු කාර්යය ස්වයංක්‍රීයව ආරම්භ විය.' },
+    si: { title: 'වැඩ ආරම්භ විය', body: 'GPS තහවුරු වූ පසු වැඩය ස්වයංක්රීයව ආරම්භ විය.' },
     ta: { title: 'பணி தொடங்கியது', body: 'GPS சரிபார்ப்பிற்குப் பிறகு பணி தானாகவே தொடங்கியது.' },
   },
   no_show_reported: {
@@ -125,7 +125,7 @@ const templates = {
   },
   support_ticket_created: {
     en: { title: 'New Support Ticket', body: 'A customer or provider submitted a support request.' },
-    si: { title: 'නව සහාය ඉල්ලීමක්', body: 'පාරිභෝගිකයෙකු හෝ ශිල්පියෙකු සහාය ඉල්ලීමක් යොමු කර ඇත.' },
+    si: { title: 'නව සහාය ඉල්ලීමක්', body: 'පාරිභෝගිකයෙකු හෝ සේවා සපයන්නෙකු සහාය ඉල්ලීමක් එවා ඇත.' },
     ta: { title: 'புதிய ஆதரவு கோரிக்கை', body: 'ஒரு புதிய ஆதரவு கோரிக்கை சமர்ப்பிக்கப்பட்டுள்ளது.' },
   },
   support_admin_reply: {

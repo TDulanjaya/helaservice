@@ -206,6 +206,67 @@ class BookingTimelineSheet extends StatelessWidget {
     }
   }
 
+  String _descriptionForAction(BuildContext context, String action, String fallbackDescription) {
+    switch (action) {
+      case 'created':
+        return context.l10n.timelineDescCreated;
+      case 'accepted':
+        return context.l10n.timelineDescAccepted;
+      case 'declined':
+        return context.l10n.timelineDescDeclined;
+      case 'cancelled':
+        return context.l10n.timelineDescCancelled;
+      case 'en_route':
+        return context.l10n.timelineDescEnRoute;
+      case 'arrived':
+        return context.l10n.timelineDescArrived;
+      case 'arrival_claimed':
+        return context.l10n.timelineDescArrivalClaimed;
+      case 'arrival_confirmed':
+        return context.l10n.timelineDescArrivalConfirmed;
+      case 'arrival_denied':
+        return context.l10n.timelineDescArrivalDenied;
+      case 'arrival_auto_started':
+        return context.l10n.timelineDescArrivalAutoStarted;
+      case 'completed':
+        return context.l10n.timelineDescCompleted;
+      case 'completed_visit_only':
+        return context.l10n.timelineDescCompletedVisitOnly;
+      case 'payment_confirmed':
+        return context.l10n.timelineDescPaymentConfirmed;
+      case 'payment_disputed':
+        return context.l10n.timelineDescPaymentDisputed;
+      case 'price_proposed':
+        return context.l10n.timelineDescPriceProposed;
+      case 'price_approved':
+        return context.l10n.timelineDescPriceApproved;
+      case 'price_rejected':
+        return context.l10n.timelineDescPriceRejected;
+      case 'price_kept':
+        return context.l10n.timelineDescPriceKept;
+      case 'extra_requested':
+        return context.l10n.timelineDescExtraRequested;
+      case 'extra_approved':
+        return context.l10n.timelineDescExtraApproved;
+      case 'extra_rejected':
+        return context.l10n.timelineDescExtraRejected;
+      case 'no_show_reported':
+        return context.l10n.timelineDescNoShowReported;
+      case 'before_photo_added':
+        return context.l10n.timelineDescBeforePhotoAdded;
+      case 'after_photo_added':
+        return context.l10n.timelineDescAfterPhotoAdded;
+      case 'reschedule_requested':
+        return context.l10n.timelineDescRescheduleRequested;
+      case 'reschedule_accepted':
+        return context.l10n.timelineDescRescheduleAccepted;
+      case 'reschedule_declined':
+        return context.l10n.timelineDescRescheduleDeclined;
+      default:
+        return fallbackDescription;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -362,7 +423,7 @@ class BookingTimelineSheet extends StatelessWidget {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              event.description,
+                                              _descriptionForAction(context, event.action, event.description),
                                               style: TextStyle(
                                                 fontSize: 12.5,
                                                 color: context.themeTextSecondary,

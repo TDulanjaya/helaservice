@@ -1148,10 +1148,11 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
           );
         }
       } catch (e) {
+        debugPrint('[CustomerBookingsView] Error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                content: Text(context.l10n.somethingWentWrong),
                 backgroundColor: AppColors.error),
           );
         }
@@ -1922,10 +1923,11 @@ class _CustomerJobRequestCard extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('[CustomerBookingsView] Error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                content: Text(context.l10n.somethingWentWrong),
                 backgroundColor: AppColors.error),
           );
         }
@@ -1974,10 +1976,11 @@ class _CustomerJobRequestCard extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('[CustomerBookingsView] Error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('${context.l10n.somethingWentWrong}: $e'),
+                content: Text(context.l10n.somethingWentWrong),
                 backgroundColor: AppColors.error),
           );
         }

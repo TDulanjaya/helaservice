@@ -176,10 +176,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         }
       }
     } catch (e) {
+      debugPrint('[PostJobRequest] Failed to pick image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToPickImage}: $e'),
+            content: Text(context.l10n.failedToPickImage),
             backgroundColor: AppColors.error,
           ),
         );

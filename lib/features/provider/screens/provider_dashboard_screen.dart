@@ -1966,9 +1966,10 @@ class _QuoteHistoryTile extends StatelessWidget {
           );
         }
       } catch (e) {
+        debugPrint('[ProviderDashboardScreen] Error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${context.l10n.somethingWentWrong}: $e')),
+            SnackBar(content: Text(context.l10n.somethingWentWrong)),
           );
         }
       }

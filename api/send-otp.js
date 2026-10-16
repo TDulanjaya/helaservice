@@ -52,7 +52,7 @@ function getEmailTemplates({ otp, purpose, language }) {
     // signup mode
     if (isSi) {
       subject = `ඔබගේ HelaService තහවුරු කිරීමේ කේතය: ${otp}`;
-      title = 'ඔබගේ විද්‍යුත් තැපෑල තහවුරු කරන්න';
+      title = 'ඔබගේ ඊමේල් තහවුරු කරන්න';
       purposeDescription = 'නව HelaService ගිණුම සක්‍රිය කිරීම සඳහා මෙම කේතය භාවිතා කරන්න.';
       subtitle = 'මෙම කේතය <strong>විනාඩි 10ක්</strong> සඳහා වලංගු වේ.';
       securityNote = 'මෙම කේතය කිසිවෙකු සමඟ බෙදා නොගන්න. HelaService කාර්ය මණ්ඩලය කිසි විටෙකත් ඔබෙන් මෙම කේතය ඉල්ලන්නේ නැත.';

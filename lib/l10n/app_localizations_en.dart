@@ -1401,7 +1401,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agreeProviderTerms =>
-      'I agree to the Provider Terms, platform commission rates, and NIC verification process';
+      'I agree to the Provider Terms and the NIC verification process';
 
   @override
   String get createAccountVerifyNic => 'Create Account & Verify NIC';
@@ -2419,7 +2419,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nicUnderReviewDesc =>
-      'Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.';
+      'Your NIC photos and selfie are stored securely. Our team is checking your details.';
 
   @override
   String get returnToDashboard => 'Return to Dashboard';
@@ -2897,7 +2897,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permVerifyNicDesc =>
-      'Review smart NICs, police reports, and approve/reject artisan registrations.';
+      'Review NIC documents and approve or reject provider registrations.';
 
   @override
   String get permManageCategoriesDesc =>
@@ -6561,4 +6561,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heroCommunityRated => 'Community rated professionals';
+
+  @override
+  String get supportTicketCloseConfirm =>
+      'Are you sure you want to close this ticket?';
+
+  @override
+  String get ticketClosedMessage => 'Ticket closed.';
+
+  @override
+  String get ticketNotFound => 'Ticket not found';
+
+  @override
+  String bookingTimelineWithId(String id) {
+    return 'Booking Timeline ($id)';
+  }
+
+  @override
+  String get viewTicketAndThread => 'View Ticket & Thread';
+
+  @override
+  String get refreshImages => 'Refresh Images';
+
+  @override
+  String quantityRangeMinMax(String min, String max) {
+    return '($min to $max)';
+  }
+
+  @override
+  String get timelineDescCreated => 'Customer created booking request';
+
+  @override
+  String get timelineDescAccepted => 'Provider accepted the booking';
+
+  @override
+  String get timelineDescDeclined => 'Provider declined the booking';
+
+  @override
+  String get timelineDescCancelled => 'Booking was cancelled';
+
+  @override
+  String get timelineDescEnRoute => 'Provider started journey to location';
+
+  @override
+  String get timelineDescArrived => 'Provider arrived at location';
+
+  @override
+  String get timelineDescArrivalClaimed => 'Provider claimed arrival';
+
+  @override
+  String get timelineDescArrivalConfirmed =>
+      'Customer confirmed provider arrival';
+
+  @override
+  String get timelineDescArrivalDenied =>
+      'Customer reported provider has not arrived';
+
+  @override
+  String get timelineDescArrivalAutoStarted =>
+      'Started after customer timeout with verified GPS';
+
+  @override
+  String get timelineDescCompleted => 'Job completed';
+
+  @override
+  String get timelineDescCompletedVisitOnly =>
+      'Completed with inspection/visit fee only';
+
+  @override
+  String get timelineDescPaymentConfirmed => 'Customer confirmed payment';
+
+  @override
+  String get timelineDescPaymentDisputed => 'Payment disputed';
+
+  @override
+  String get timelineDescPriceProposed => 'Provider proposed revised price';
+
+  @override
+  String get timelineDescPriceApproved => 'Customer approved revised price';
+
+  @override
+  String get timelineDescPriceRejected => 'Customer rejected revised price';
+
+  @override
+  String get timelineDescPriceKept => 'Provider confirmed initial quoted price';
+
+  @override
+  String get timelineDescExtraRequested =>
+      'Provider requested approval for extra work';
+
+  @override
+  String get timelineDescExtraApproved => 'Customer approved extra work';
+
+  @override
+  String get timelineDescExtraRejected => 'Customer rejected extra work';
+
+  @override
+  String get timelineDescNoShowReported => 'Customer reported provider no-show';
+
+  @override
+  String get timelineDescBeforePhotoAdded =>
+      'Provider uploaded initial inspection photo';
+
+  @override
+  String get timelineDescAfterPhotoAdded =>
+      'Provider uploaded completed work photo';
+
+  @override
+  String get timelineDescRescheduleRequested => 'Reschedule requested';
+
+  @override
+  String get timelineDescRescheduleAccepted => 'Reschedule accepted';
+
+  @override
+  String get timelineDescRescheduleDeclined => 'Reschedule declined';
 }

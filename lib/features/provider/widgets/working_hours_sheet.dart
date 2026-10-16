@@ -151,11 +151,12 @@ class _WorkingHoursSheetState extends State<WorkingHoursSheet> {
         );
       }
     } catch (e) {
+      debugPrint('[WorkingHoursSheet] Failed to save schedule: $e');
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.failedToSaveSchedule}: $e'),
+            content: Text(context.l10n.failedToSaveSchedule),
             backgroundColor: AppColors.error,
           ),
         );

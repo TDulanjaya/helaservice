@@ -442,7 +442,7 @@
   "homeAddressLabel": "Home address",
   "becomeProvider": "Become a Service Provider",
   "providerRegisterSubtitle": "Earn island-wide by taking verified jobs near you across Sri Lanka",
-  "agreeProviderTerms": "I agree to the Provider Terms, platform commission rates, and NIC verification process",
+  "agreeProviderTerms": "I agree to the Provider Terms and the NIC verification process",
   "createAccountVerifyNic": "Create Account & Verify NIC",
   "selectDelayReason": "Select a reason to adjust the customer ETA by +10 mins:",
   "heavyTraffic": "Heavy Traffic",
@@ -1017,7 +1017,7 @@
   "navJobs": "Jobs",
   "verificationUnderReview": "Verification Under Review",
   "statusPendingReviewCaps": "STATUS: PENDING REVIEW",
-  "nicUnderReviewDesc": "Your National ID (NIC) documents and biometric selfie have been securely stored in our encrypted credential vault. Our admin verification desk is validating your record with e-DLS & Sri Lanka Police databases.",
+  "nicUnderReviewDesc": "Your NIC photos and selfie are stored securely. Our team is checking your details.",
   "returnToDashboard": "Return to Dashboard",
   "verifyIdentitySubtitle": "Verify your identity to start receiving jobs island-wide across Sri Lanka.",
   "nicFrontSide": "NIC Front Side",
@@ -1357,7 +1357,7 @@
   "permBroadcastAlertsLabel": "Island-wide Emergency Alerts",
   "permViewFinancesLabel": "Service & Financial Logs",
   "permManageAdminsDesc": "Invite, configure, demote, and deactivate administrators.",
-  "permVerifyNicDesc": "Review smart NICs, police reports, and approve/reject artisan registrations.",
+  "permVerifyNicDesc": "Review NIC documents and approve or reject provider registrations.",
   "permManageCategoriesDesc": "Configure trade categories and provincial hub thresholds.",
   "permBroadcastAlertsDesc": "Send push alerts and critical warnings to active island artisans.",
   "permViewFinancesDesc": "Inspect service metrics, provider earnings, and completed job records.",
@@ -3226,5 +3226,56 @@
   "heroTransparentQuotes": "Transparent Local Quotes",
   "heroDirectQuoteRequests": "Direct quote requests in minutes",
   "heroPrivateSecureChat": "Private, secure chat",
-  "heroCommunityRated": "Community rated professionals"
+  "heroCommunityRated": "Community rated professionals",
+  "supportTicketCloseConfirm": "Are you sure you want to close this ticket?",
+  "ticketClosedMessage": "Ticket closed.",
+  "ticketNotFound": "Ticket not found",
+  "bookingTimelineWithId": "Booking Timeline ({id})",
+  "@bookingTimelineWithId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "viewTicketAndThread": "View Ticket & Thread",
+  "refreshImages": "Refresh Images",
+  "quantityRangeMinMax": "({min} to {max})",
+  "@quantityRangeMinMax": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineDescCreated": "Customer created booking request",
+  "timelineDescAccepted": "Provider accepted the booking",
+  "timelineDescDeclined": "Provider declined the booking",
+  "timelineDescCancelled": "Booking was cancelled",
+  "timelineDescEnRoute": "Provider started journey to location",
+  "timelineDescArrived": "Provider arrived at location",
+  "timelineDescArrivalClaimed": "Provider claimed arrival",
+  "timelineDescArrivalConfirmed": "Customer confirmed provider arrival",
+  "timelineDescArrivalDenied": "Customer reported provider has not arrived",
+  "timelineDescArrivalAutoStarted": "Started after customer timeout with verified GPS",
+  "timelineDescCompleted": "Job completed",
+  "timelineDescCompletedVisitOnly": "Completed with inspection/visit fee only",
+  "timelineDescPaymentConfirmed": "Customer confirmed payment",
+  "timelineDescPaymentDisputed": "Payment disputed",
+  "timelineDescPriceProposed": "Provider proposed revised price",
+  "timelineDescPriceApproved": "Customer approved revised price",
+  "timelineDescPriceRejected": "Customer rejected revised price",
+  "timelineDescPriceKept": "Provider confirmed initial quoted price",
+  "timelineDescExtraRequested": "Provider requested approval for extra work",
+  "timelineDescExtraApproved": "Customer approved extra work",
+  "timelineDescExtraRejected": "Customer rejected extra work",
+  "timelineDescNoShowReported": "Customer reported provider no-show",
+  "timelineDescBeforePhotoAdded": "Provider uploaded initial inspection photo",
+  "timelineDescAfterPhotoAdded": "Provider uploaded completed work photo",
+  "timelineDescRescheduleRequested": "Reschedule requested",
+  "timelineDescRescheduleAccepted": "Reschedule accepted",
+  "timelineDescRescheduleDeclined": "Reschedule declined"
 }

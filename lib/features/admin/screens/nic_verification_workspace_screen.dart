@@ -1638,7 +1638,7 @@ class _NicVerificationWorkspaceScreenState
             TextButton.icon(
               onPressed: () => setState(() => _refreshCounter++),
               icon: const Icon(Icons.refresh, size: 14),
-              label: const Text('Refresh Images', style: TextStyle(fontSize: 11)),
+              label: Text(context.l10n.refreshImages, style: const TextStyle(fontSize: 11)),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 minimumSize: const Size(0, 28),

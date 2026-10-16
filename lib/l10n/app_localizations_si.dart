@@ -9,7 +9,7 @@ class AppLocalizationsSi extends AppLocalizations {
   AppLocalizationsSi([String locale = 'si']) : super(locale);
 
   @override
-  String get appTitle => 'හෙළසර්විස්';
+  String get appTitle => 'HelaService';
 
   @override
   String get tagline => 'ශ්‍රී ලංකාවේ විශ්වාසනීය නිවාස හා හදිසි සේවා සපයන්නන්';
@@ -54,7 +54,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get roleCustomer => 'පාරිභෝගිකයා';
 
   @override
-  String get roleProvider => 'කාර්මික ශිල්පියා';
+  String get roleProvider => 'සේවා සපයන්නා';
 
   @override
   String get roleAdmin => 'මෙහෙයුම් පරිපාලක';
@@ -66,7 +66,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get navHome => 'මුල් පිටුව';
 
   @override
-  String get navExplore => 'ගවේෂණය';
+  String get navExplore => 'සොයන්න';
 
   @override
   String get navBookings => 'වෙන්කිරීම්';
@@ -102,16 +102,16 @@ class AppLocalizationsSi extends AppLocalizations {
   String get navLiveMap => 'සජීවී සිතියම';
 
   @override
-  String get navVerifications => 'සත්‍යාපනයන්';
+  String get navVerifications => 'තහවුරු කිරීම්';
 
   @override
-  String get navVerification => 'සත්‍යාපනය';
+  String get navVerification => 'තහවුරු කිරීම';
 
   @override
   String get navOverview => 'දළ විශ්ලේෂණය';
 
   @override
-  String get navVerify => 'සත්‍යාපනය';
+  String get navVerify => 'තහවුරු කරන්න';
 
   @override
   String get navCoverage => 'ආවරණ ප්‍රදේශ';
@@ -123,7 +123,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get navSettings => 'සැකසුම්';
 
   @override
-  String get loginTitle => 'හෙළසර්විස් වෙත සාදරයෙන් පිළිගනිමු';
+  String get loginTitle => 'HelaService වෙත සාදරයෙන් පිළිගනිමු';
 
   @override
   String get loginSubtitle =>
@@ -149,7 +149,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get createAccountSubtitle =>
-      'හෙළසර්විස් සමඟ ආරම්භ කිරීමට ලියාපදිංචි වන්න.';
+      'HelaService භාවිත කිරීමට ලියාපදිංචි වන්න.';
 
   @override
   String get continueText => 'ඉදිරියට යන්න';
@@ -161,14 +161,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get logIn => 'ඇතුල් වන්න';
 
   @override
-  String get newToHelaService => 'හෙළසර්විස් වෙත නවකයෙක්ද?';
+  String get newToHelaService => 'HelaService වෙත අලුත්ද?';
 
   @override
   String get resetPassword => 'මුරපදය නැවත සකසන්න';
 
   @override
   String get resetPasswordDesc =>
-      'ඔබගේ ගිණුමේ විද්‍යුත් තැපෑල ඇතුළත් කරන්න, අපි මුරපදය නැවත සැකසීමේ සබැඳියක් ඔබගේ ලිපිනයට එවන්නෙමු.';
+      'ඔබගේ ගිණුමේ ඊමේල් ලිපිනය ඇතුළත් කරන්න. මුරපදය අලුත් කිරීමේ සබැඳියක් අපි එවන්නෙමු.';
 
   @override
   String get sendResetLink => 'නැවත සැකසීමේ සබැඳිය එවන්න';
@@ -216,7 +216,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get splashNoConnection =>
-      'ඔබගේ ගිණුම පූරණය කළ නොහැකි විය. අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+      'ගිණුම පෙන්වීමට නොහැකි විය. අන්තර්ජාලය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
 
   @override
   String get exploreAsGuest => 'ලියාපදිංචි නොවී සේවාවන් බලන්න';
@@ -225,7 +225,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get orContinueWith => 'නැතහොත්';
 
   @override
-  String get orSignUpWithEmail => 'විද්‍යුත් තැපෑලෙන් ලියාපදිංචි වන්න';
+  String get orSignUpWithEmail => 'නැතහොත් ඊමේල් මගින් ලියාපදිංචි වන්න';
 
   @override
   String get smsNotice =>
@@ -242,8 +242,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get selectAccountType => 'ගිණුම් වර්ගය තෝරන්න';
 
   @override
-  String get customerRoleDesc =>
-      'සේවාවන් ලබාගැනීමට සහ දේශීය කාර්මිකයන් කුලියට ගැනීමට';
+  String get customerRoleDesc => 'වැඩ පළ කර ළඟ සිටින සේවා සපයන්නන් ලබාගන්න';
 
   @override
   String get providerRoleDesc =>
@@ -274,7 +273,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get primaryCategory => 'ප්‍රධාන සේවා කාණ්ඩය';
 
   @override
-  String get nicNumber => 'ජාතික හැඳුනුම්පත් (NIC) අංකය';
+  String get nicNumber => 'ජාතික හැඳුනුම්පත් අංකය (NIC)';
 
   @override
   String get nicFront => 'හැඳුනුම්පතේ ඉදිරිපස ඡායාරූපය';
@@ -283,7 +282,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get nicBack => 'හැඳුනුම්පතේ පසුපස ඡායාරූපය';
 
   @override
-  String get detectGps => 'වත්මන් GPS ස්ථානය හඳුනාගන්න';
+  String get detectGps => 'GPS මගින් ස්ථානය සොයන්න';
 
   @override
   String get refreshGps => 'GPS ස්ථානය යාවත්කාලීන කරන්න';
@@ -292,25 +291,24 @@ class AppLocalizationsSi extends AppLocalizations {
   String get gpsDetected => 'GPS ස්ථානය හඳුනාගන්නා ලදී';
 
   @override
-  String get gpsHint =>
-      'ශ්‍රී ලංකාව පුරා ළඟම සිටින ශිල්පියා සම්බන්ධ කිරීමට යොදා ගැනේ';
+  String get gpsHint => 'ඔබට ළඟම සිටින සේවා සපයන්නා සොයාගැනීමට භාවිත වේ';
 
   @override
   String get agreeTerms =>
-      'මම හෙළසර්විස් නියමයන් සහ රහස්‍යතා ප්‍රතිපත්තියට එකඟ වෙමි';
+      'HelaService නියමයන් සහ රහස්‍යතා ප්‍රතිපත්තියට මම එකඟ වෙමි';
 
   @override
   String get completeRegistration => 'ලියාපදිංචිය අවසන් කර ඉදිරියට යන්න';
 
   @override
-  String get accountVerified => 'ගිණුම සත්‍යාපනය කර ඇත';
+  String get accountVerified => 'ගිණුම තහවුරු කර ඇත';
 
   @override
   String get postJobTitle => 'වැඩ ඉල්ලීමක් පළ කරන්න';
 
   @override
   String get postJobSubtitle =>
-      'ශ්‍රී ලංකාව පුරා ඔබේ ප්‍රදේශයේ සිටින සත්‍යාපිත ශිල්පීන් සමඟ සම්බන්ධ වන්න';
+      'ඔබ අසල සිටින තහවුරු කළ සේවා සපයන්නන් සමඟ සම්බන්ධ වන්න';
 
   @override
   String get postJobGetQuotes => 'වැඩය පළ කර මිල ගණන් ලබාගන්න';
@@ -335,8 +333,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get jobDescription => 'විස්තරය';
 
   @override
-  String get jobDescriptionHint =>
-      'ගැටලුව හෝ සිදු කළ යුතු කාර්යය පිළිබඳ විස්තර ඇතුළත් කරන්න...';
+  String get jobDescriptionHint => 'ගැටලුව හෝ කළ යුතු වැඩය විස්තර කරන්න...';
 
   @override
   String get budget => 'ඇස්තමේන්තුගත අයවැය (රු.)';
@@ -351,7 +348,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get photosOfIssue => 'ගැටලුවේ ඡායාරූප';
 
   @override
-  String get jobPhotos => 'සේවා ඡායාරූප (Proof of Work)';
+  String get jobPhotos => 'වැඩයේ ඡායාරූප';
 
   @override
   String get add => 'එක් කරන්න';
@@ -372,13 +369,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get yourExactLocation => 'ඔබේ නිශ්චිත ස්ථානය';
 
   @override
-  String get gpsCoordinatesLocked => 'GPS ඛණ්ඩාංක තහවුරු විය';
+  String get gpsCoordinatesLocked => 'GPS ස්ථානය තහවුරුයි';
 
   @override
   String get detectingLocation => 'ඔබේ නිශ්චිත ස්ථානය හඳුනාගනිමින් පවතී...';
 
   @override
-  String get tapToDetectGps => 'ඔබේ නිශ්චිත GPS ස්ථානය ලබාගැනීමට ස්පර්ශ කරන්න';
+  String get tapToDetectGps => 'ඔබේ GPS ස්ථානය ලබාගැනීමට ඔබන්න';
 
   @override
   String get streetAddressOptional => 'වීදි ලිපිනය හෝ සලකුණ (විකල්ප)';
@@ -391,7 +388,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get quotesAlert =>
-      'ඔබගේ ප්‍රදේශයේ සත්‍යාපිත ශිල්පීන්ගෙන් මිල ගණන් ළඟදීම ලැබෙනු ඇත.';
+      'ළඟ සිටින තහවුරු කළ සේවා සපයන්නන්ගෙන් ඉක්මනින් මිල ගණන් ලැබේවි.';
 
   @override
   String get enterJobTitleError => 'කරුණාකර වැඩ මාතෘකාවක් ඇතුළත් කරන්න';
@@ -403,17 +400,17 @@ class AppLocalizationsSi extends AppLocalizations {
   String get selectCategoryError => 'කරුණාකර සේවා කාණ්ඩයක් තෝරන්න';
 
   @override
-  String get quotesTitle => 'ශිල්පීන්ගේ මිල ගණන්';
+  String get quotesTitle => 'ලැබුණු මිල ගණන්';
 
   @override
   String get quotesReceived => 'මිල ගණන් ලැබුණි';
 
   @override
   String get noQuotes =>
-      'තවමත් මිල ගණන් ලැබී නොමැත. ඔබේ ප්‍රදේශයේ ශිල්පීන් ඉල්ලීම සමාලෝචනය කරමින් සිටී.';
+      'තවම මිල ගණන් ලැබී නැත. ඔබේ ප්‍රදේශයේ සේවා සපයන්නන් ඉල්ලීම බලමින් සිටී.';
 
   @override
-  String get waitingForQuotes => 'මිල ගණන් අපේක්ෂාවෙන්';
+  String get waitingForQuotes => 'මිල ගණන් එනතුරු';
 
   @override
   String get waitingForQuotesDesc =>
@@ -456,14 +453,14 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඔබේ ක්‍රමවේදය, අමතර කොටස් හෝ වගකීම් සහතිකය පැහැදිලි කරන්න...';
 
   @override
-  String get submitQuote => 'පාරිභෝගිකයාට මිල ගණන් ඉදිරිපත් කරන්න';
+  String get submitQuote => 'පාරිභෝගිකයාට මිල යවන්න';
 
   @override
-  String get submitPriceQuote => 'ඔබේ මිල ගණන් ඉදිරිපත් කරන්න';
+  String get submitPriceQuote => 'ඔබේ මිල යවන්න';
 
   @override
   String get submitPriceQuoteSub =>
-      'වැඩ විස්තර සමාලෝචනය කර පාරිභෝගිකයාට ඔබේ මිල ගණන් යවන්න.';
+      'වැඩ විස්තර බලා පාරිභෝගිකයාට ඔබේ මිල යවන්න.';
 
   @override
   String get customerPhotos => 'පාරිභෝගිකයාගේ ඡායාරූප';
@@ -481,7 +478,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get sendPriceQuote => 'මිල ගණන් යවන්න';
 
   @override
-  String get quoteSubmittedSuccess => 'මිල ගණන් සාර්ථකව ඉදිරිපත් කරන ලදී!';
+  String get quoteSubmittedSuccess => 'මිල යැව්වා!';
 
   @override
   String get acceptQuote => 'මිල ගණන් පිළිගන්න';
@@ -500,7 +497,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get findCertifiedArtisans =>
-      'අදම ඔබට උදව් කිරීමට සූදානම් සහතිකලත් දේශීය ශිල්පීන් සොයාගන්න.';
+      'අදම උදව් කිරීමට සූදානම් තහවුරු කළ සේවා සපයන්නන් සොයාගන්න.';
 
   @override
   String get searchHint => 'නල කාර්මිකයන්, විදුලි කාර්මිකයන් සොයන්න...';
@@ -526,7 +523,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get noCategoriesAvailable => 'ලබාගත හැකි කාණ්ඩ නොමැත';
 
   @override
-  String get artisansOnDuty => 'ක්‍රියාකාරී ශිල්පීන්';
+  String get artisansOnDuty => 'දැන් සිටින සේවා සපයන්නන්';
 
   @override
   String get activeNearby => 'අවට ක්‍රියාකාරී';
@@ -538,14 +535,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get avgArrivalTime => 'සාමාන්‍ය පැමිණීමේ කාලය: විනාඩි 14 (කොළඹ 03)';
 
   @override
-  String get topRatedTechnicians => 'ඉහළම ඇගයීම් ලත් කාර්මිකයන්';
+  String get topRatedTechnicians => 'ඉහළම ඇගයීම් ලත් සේවා සපයන්නන්';
 
   @override
   String get verifiedChecksRatings =>
       'සත්‍යාපිත පසුබිම් පරීක්ෂණ සහ දිවයින පුරා ඇගයීම්';
 
   @override
-  String get noTechniciansYet => 'තවමත් කාර්මික ශිල්පීන් ලියාපදිංචි වී නොමැත';
+  String get noTechniciansYet => 'තවම සේවා සපයන්නන් ලියාපදිංචි වී නැත';
 
   @override
   String get emergencyHelpTitle => 'හදිසි සේවාවක් අවශ්‍යද?';
@@ -564,7 +561,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get viewAllServices => 'සියලුම සේවාවන් බලන්න';
 
   @override
-  String get nearbyArtisans => 'ළඟම සිටින සත්‍යාපිත ශිල්පීන්';
+  String get nearbyArtisans => 'ළඟ සිටින තහවුරු කළ සේවා සපයන්නන්';
 
   @override
   String get filterAll => 'සියල්ල';
@@ -615,7 +612,7 @@ class AppLocalizationsSi extends AppLocalizations {
       '• ද්‍රව්‍ය සහ අමතර කොටස් සඳහා වෙළඳසැල් රිසිට්පත් සමඟ වෙන වෙනම අය කෙරේ.';
 
   @override
-  String get aboutTechnician => 'කාර්මික ශිල්පියා පිළිබඳව';
+  String get aboutTechnician => 'සේවා සපයන්නා ගැන';
 
   @override
   String get recentWorkCompleted => 'මෑතකදී නිමකළ වැඩ';
@@ -643,7 +640,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඔබ සේවාවක් ඉල්ලූ පසු, සජීවී GPS ලුහුබැඳීම මෙහි දිස්වනු ඇත.';
 
   @override
-  String get techOnTheWay => 'කාර්මික ශිල්පියා එමින් සිටී • සජීවී GPS';
+  String get techOnTheWay => 'සේවා සපයන්නා එමින් සිටී • සජීවී GPS';
 
   @override
   String get estimatedArrival => 'පැමිණීමට ඇස්තමේන්තුගත කාලය';
@@ -701,7 +698,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get whatWentWell => 'විශේෂයෙන් හොඳින් සිදු වූයේ කුමක්ද?';
 
   @override
-  String get leaveReviewOptional => 'සවිස්තරාත්මක සමාලෝචනයක් ලියන්න (විකල්ප)';
+  String get leaveReviewOptional => 'සමාලෝචනයක් ලියන්න (අවශ්‍ය නම්)';
 
   @override
   String get tipProvider => 'සේවා සපයන්නාට අමතර මුදලක් — 100% ක්ම සපයන්නාට';
@@ -731,7 +728,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get verifiedArtisan => 'NIC සත්‍යාපිතයි';
 
   @override
-  String get activeFleet => 'ක්‍රියාකාරී ශිල්පීන්';
+  String get activeFleet => 'සක්‍රිය සේවා සපයන්නන්';
 
   @override
   String get availableNow => 'දැනට සේවාව ලබාගත හැක';
@@ -771,10 +768,10 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get browseArtisansExplore =>
-      'ගවේෂණය පිටුවෙන් සහතිකලත් ශිල්පීන් සොයාගන්න.';
+      '\"සොයන්න\" පිටුවෙන් තහවුරු කළ සේවා සපයන්නන් බලන්න.';
 
   @override
-  String get bookTechnician => 'ශිල්පියෙකු වෙන්කරන්න';
+  String get bookTechnician => 'සේවා සපයන්නෙකු වෙන්කරන්න';
 
   @override
   String get callArtisan => 'අමතන්න';
@@ -799,19 +796,19 @@ class AppLocalizationsSi extends AppLocalizations {
   String get submitRating => 'ඇගයීම ඉදිරිපත් කර අවසන් කරන්න';
 
   @override
-  String get providerDashboardTitle => 'ශිල්පී මෙහෙයුම් කේන්ද්‍රය';
+  String get providerDashboardTitle => 'සේවා සපයන්නා පුවරුව';
 
   @override
-  String get statusOnline => 'Online (ඉල්ලීම් ලබාගත හැක)';
+  String get statusOnline => 'Online (වැඩ ලැබේ)';
 
   @override
-  String get statusOffline => 'Offline (නැවතී ඇත)';
+  String get statusOffline => 'Offline (නවතා ඇත)';
 
   @override
-  String get youAreOnline => 'ඔබ ONLINE වී ඇත';
+  String get youAreOnline => 'ඔබ දැන් Online';
 
   @override
-  String get youAreOffline => 'ඔබ OFFLINE වී ඇත';
+  String get youAreOffline => 'ඔබ දැන් Offline';
 
   @override
   String get activeDispatchSub =>
@@ -847,7 +844,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get noLeadsAvailable =>
-      'මේ මොහොතේ ඔබේ ප්‍රදේශයේ නව වැඩ නොමැත. දැනුම්දීම් ලබාගැනීමට Online තත්ත්වයේ සිටින්න.';
+      'දැනට ඔබේ ප්‍රදේශයේ නව වැඩ නැත. දැනුම්දීම් ලැබීමට Online ලෙස සිටින්න.';
 
   @override
   String get noQuotesYet => 'තවමත් මිල ගණන් ඉදිරිපත් කර නැත';
@@ -860,7 +857,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get acceptedCaps => 'පිළිගත්';
 
   @override
-  String get pendingResponseCaps => 'ප්‍රතිචාර අපේක්ෂාවෙන්';
+  String get pendingResponseCaps => 'පිළිතුර බලාපොරොත්තුවෙන්';
 
   @override
   String get declinedCaps => 'ප්‍රතික්ෂේපිත';
@@ -878,8 +875,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get logout => 'ගිණුමෙන් ඉවත් වන්න';
 
   @override
-  String get logoutConfirm =>
-      'ඔබට හෙළසර්විස් වෙතින් ඉවත් වීමට අවශ්‍ය බව සහතිකද?';
+  String get logoutConfirm => 'HelaService වෙතින් ඉවත් වීමට අවශ්‍යද?';
 
   @override
   String get editProfile => 'පැතිකඩ සංස්කරණය';
@@ -904,7 +900,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get profilePhotoRequiredHint =>
-      'ඔබේ කාර්මික පැතිකඩ සඳහා පැහැදිලි මුහුණේ ඡායාරූපයක් එක් කරන්න.';
+      'ඔබේ පැතිකඩ සඳහා පැහැදිලි මුහුණේ ඡායාරූපයක් එක් කරන්න.';
 
   @override
   String get profilePhotoRequiredError =>
@@ -963,8 +959,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get logoutModalTitle => 'ඉවත් වන්න';
 
   @override
-  String get logoutModalConfirm =>
-      'ඔබට හෙළසර්විස් වෙතින් ඉවත් වීමට අවශ්‍ය බව සහතිකද?';
+  String get logoutModalConfirm => 'HelaService වෙතින් ඉවත් වීමට අවශ්‍යද?';
 
   @override
   String get profileDetails => 'පැතිකඩ විස්තර';
@@ -1044,7 +1039,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get verifiedArtisanNetworkSriLanka =>
-      'තහවුරු කළ කාර්මික ජාලය — ශ්‍රී ලංකාව';
+      'තහවුරු කළ සේවා සපයන්නන් — ශ්‍රී ලංකාව';
 
   @override
   String get fastTrackVerificationChecklist => 'ක්ෂණික තහවුරු කිරීමේ ලැයිස්තුව';
@@ -1082,13 +1077,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get quotesCount => 'මිල ගණන්';
 
   @override
-  String get adminDashboardTitle => 'හෙළසර්විස් මෙහෙයුම් පාලක පැනලය';
+  String get adminDashboardTitle => 'HelaService පරිපාලක පුවරුව';
 
   @override
   String get platformOverview => 'වේදිකා දළ විශ්ලේෂණය';
 
   @override
-  String get activeTechnicians => 'ක්‍රියාකාරී කාර්මිකයන්';
+  String get activeTechnicians => 'සක්‍රිය සේවා සපයන්නන්';
 
   @override
   String get pendingVerifications => 'තහවුරු කිරීමට ඇති ගිණුම්';
@@ -1103,7 +1098,8 @@ class AppLocalizationsSi extends AppLocalizations {
   String get systemHealth => 'පද්ධති තත්ත්වය: යහපත්';
 
   @override
-  String get pendingTechnicianApprovals => 'අනුමැතිය අපේක්ෂිත කාර්මිකයන්';
+  String get pendingTechnicianApprovals =>
+      'අනුමැතිය බලාපොරොත්තුවෙන් සිටින සේවා සපයන්නන්';
 
   @override
   String get disputeResolutionCenter => 'ගැටළු නිරාකරණ මධ්‍යස්ථානය';
@@ -1173,7 +1169,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get onTimeArrival => 'වේලාවට පැමිණීම';
 
   @override
-  String get artisanProfile => 'ශිල්පී පැතිකඩ';
+  String get artisanProfile => 'සේවා සපයන්නාගේ පැතිකඩ';
 
   @override
   String get jobsDone => 'කළ සේවා';
@@ -1197,7 +1193,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get baseLocation => 'වැඩපොළ / මූලික GPS ස්ථානය';
 
   @override
-  String get noGpsSet => 'නිශ්චිත GPS ඛණ්ඩාංක සකසා නැත';
+  String get noGpsSet => 'නිශ්චිත GPS ස්ථානය සකසා නැත';
 
   @override
   String get distanceCalcHint => 'පාරිභෝගික වැඩ සඳහා තත්‍ය කාලීන දුර ගණනය කෙරේ';
@@ -1222,27 +1218,27 @@ class AppLocalizationsSi extends AppLocalizations {
   String get themeMode => 'පෙනුම සහ තේමාව';
 
   @override
-  String get currentTheme => 'වත්මන්';
+  String get currentTheme => 'දැනට';
 
   @override
   String get appLanguage => 'යෙදුම් භාෂාව / App Language / மொழி';
 
   @override
-  String get currentLanguage => 'වත්මන්';
+  String get currentLanguage => 'දැනට';
 
   @override
   String get switchToCustomer => 'පාරිභෝගික ප්‍රකාරයට මාරු වන්න';
 
   @override
   String get switchToCustomerDesc =>
-      'ඔබගේ නිවස හෝ කාර්යාලය සඳහා ශිල්පීන් වෙන්කරගන්න';
+      'ඔබේ නිවසට හෝ කාර්යාලයට සේවා සපයන්නන් වෙන්කරගන්න';
 
   @override
   String get broadcastAlert => 'හදිසි නිවේදන යැවීම';
 
   @override
   String get broadcastAlertDesc =>
-      'ශ්‍රී ලංකාව පුරා දැනට අන්තර්ජාලයේ සිටින සියලුම සත්‍යාපිත ශිල්පීන්ට දැනුම්දීමක් යවන්න.';
+      'දැන් Online සිටින සියලුම තහවුරු කළ සේවා සපයන්නන්ට හදිසි දැනුම්දීමක් යවන්න.';
 
   @override
   String get sendBroadcast => 'නිවේදනය යවන්න';
@@ -1273,11 +1269,11 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get emergencyBroadcastDesc =>
-      'දිස්ත්‍රික්ක පුරා සිටින සක්‍රිය ශිල්පීන්ට අනතුරු ඇඟවීම් යවන්න';
+      'දිස්ත්‍රික්ක පුරා සක්‍රිය සේවා සපයන්නන්ට දැනුම්දීම් යවන්න';
 
   @override
   String get switchOperationalViewDesc =>
-      'පාරිභෝගික හෝ කාර්මික ගමන් මග පරීක්ෂා කරන්න';
+      'පාරිභෝගික හෝ සේවා සපයන්නා දර්ශනය පරීක්ෂා කරන්න';
 
   @override
   String get jobLedger => 'වැඩ ලංසු සහ ලුහුබැඳීමේ ලෙජරය';
@@ -1308,7 +1304,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get filterCancelled => 'අවලංගුයි';
 
   @override
-  String get wonBy => 'දිනාගත් ශිල්පියා';
+  String get wonBy => 'තෝරාගත් සේවා සපයන්නා';
 
   @override
   String get customerLabel => 'පාරිභෝගිකයා';
@@ -1333,13 +1329,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get customerSatisfaction => 'පාරිභෝගික තෘප්තිය';
 
   @override
-  String get manualReview => 'අතින් සමාලෝචනය';
+  String get manualReview => 'අතින් පරීක්ෂාව';
 
   @override
   String get cloudStoragePath => 'Cloud ගබඩා මාර්ගය';
 
   @override
-  String get manualNicReview => 'අතින් හැඳුනුම්පත් සමාලෝචනය';
+  String get manualNicReview => 'හැඳුනුම්පත අතින් පරීක්ෂාව';
 
   @override
   String get ocrAuditConcordant => 'OCR විගණනය — ක්ෂේත්‍ර 4ම නිවැරදියි';
@@ -1378,14 +1374,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get emailAddressLabel => 'විද්‍යුත් තැපැල් ලිපිනය';
 
   @override
-  String get accountEmailLabel => 'ගිණුමේ විද්‍යුත් තැපෑල';
+  String get accountEmailLabel => 'ගිණුමේ ඊමේල්';
 
   @override
   String get atLeast6Chars => 'අවම වශයෙන් අක්ෂර 6ක්';
 
   @override
-  String get customerPhoneLabel =>
-      'සම්බන්ධතා දුරකථන අංකය (ශිල්පී පිටත්කිරීම සඳහා)';
+  String get customerPhoneLabel => 'දුරකථන අංකය (සේවා සපයන්නාට ඔබව ඇමතීමට)';
 
   @override
   String get providerPhoneLabel =>
@@ -1403,10 +1398,10 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get agreeProviderTerms =>
-      'මම සේවා සපයන්නන්ගේ කොන්දේසි, වේදිකා කොමිස් ගාස්තු සහ NIC සත්‍යාපන ක්‍රියාවලියට එකඟ වෙමි';
+      'සේවා සපයන්නන්ගේ කොන්දේසි සහ NIC තහවුරු කිරීමට මම එකඟ වෙමි';
 
   @override
-  String get createAccountVerifyNic => 'ගිණුම සාදා හැඳුනුම්පත සත්‍යාපනය කරන්න';
+  String get createAccountVerifyNic => 'ගිණුම සාදා NIC තහවුරු කරන්න';
 
   @override
   String get selectDelayReason =>
@@ -1463,7 +1458,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get reportTrafficDelay => 'රථවාහන / ප්‍රමාදය වාර්තා කරන්න';
 
   @override
-  String get gpsActiveDevice => 'GPS සක්‍රියයි (තත්‍ය කාලීන උපාංග පිහිටීම)';
+  String get gpsActiveDevice => 'GPS සක්‍රියයි (ඔබේ දුරකථනයේ සජීවී ස්ථානය)';
 
   @override
   String get gpsActivePrecision => 'GPS සක්‍රියයි (ඉහළ නිරවද්‍යතාව)';
@@ -1536,10 +1531,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get roleAdminSubtitle => 'පද්ධති පසුබිම් මෙහෙයුම් මෙවලම්';
 
   @override
-  String get nicVerificationDeskTitle => 'කාර්මික අනන්‍යතා සත්‍යාපන අංශය';
+  String get nicVerificationDeskTitle =>
+      'සේවා සපයන්නන්ගේ හැඳුනුම්පත් තහවුරු කිරීම';
 
   @override
-  String get statPendingReview => 'සමාලෝචනය අපේක්ෂිත';
+  String get statPendingReview => 'පරීක්ෂාවට ඇති';
 
   @override
   String get statApproved => 'අනුමතයි';
@@ -1551,16 +1547,16 @@ class AppLocalizationsSi extends AppLocalizations {
   String get statFlaggedRejected => 'සලකුණු කළ / ප්‍රතික්ෂේපිත';
 
   @override
-  String get verificationQueueClear => 'සත්‍යාපන පෝලිම හිස්ව පවතී';
+  String get verificationQueueClear => 'තහවුරු කිරීමට ඉල්ලීම් නැත';
 
   @override
-  String get incomingVerificationStream => 'ලැබෙන සත්‍යාපන ලැයිස්තුව';
+  String get incomingVerificationStream => 'ලැබුණු තහවුරු කිරීමේ ඉල්ලීම්';
 
   @override
-  String get selectArtisanAudit => 'ලේඛන පරීක්ෂා කිරීමට ශිල්පියෙකු තෝරන්න';
+  String get selectArtisanAudit => 'ලේඛන පරීක්ෂා කිරීමට සේවා සපයන්නෙකු තෝරන්න';
 
   @override
-  String get reviewRequired => 'සමාලෝචනය අවශ්‍යයි';
+  String get reviewRequired => 'පරීක්ෂා කිරීම අවශ්‍යයි';
 
   @override
   String get activeAndVerified => 'සක්‍රිය සහ සත්‍යාපිත';
@@ -1569,13 +1565,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get rejectedStatus => 'ප්‍රතික්ෂේපිත';
 
   @override
-  String get pendingVerificationStatus => 'සත්‍යාපනය වෙමින් පවතී';
+  String get pendingVerificationStatus => 'තහවුරු කිරීම බලාපොරොත්තුවෙන්';
 
   @override
-  String get approveAndActivateArtisan => 'අනුමත කර ශිල්පියා සක්‍රිය කරන්න';
+  String get approveAndActivateArtisan => 'අනුමත කර සක්‍රිය කරන්න';
 
   @override
-  String get artisanActivated => 'ශිල්පියා සක්‍රිය කරන ලදී';
+  String get artisanActivated => 'සේවා සපයන්නා සක්‍රිය කළා';
 
   @override
   String get rejectAction => 'ප්‍රතික්ෂේප කරන්න';
@@ -1623,7 +1619,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get navAdminsAndTeam => 'පරිපාලකයින් සහ කණ්ඩායම';
 
   @override
-  String get navArtisans => 'ශිල්පීන්';
+  String get navArtisans => 'සේවා සපයන්නන්';
 
   @override
   String get navCustomers => 'පාරිභෝගිකයින්';
@@ -1659,7 +1655,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get islandOperationsTitle => 'දිවයින මෙහෙයුම්';
 
   @override
-  String get activeProvidersTitle => 'ක්‍රියාකාරී ශිල්පීන්';
+  String get activeProvidersTitle => 'සක්‍රිය සේවා සපයන්නන්';
 
   @override
   String get liveBadge => '+2 සජීවීව';
@@ -1685,7 +1681,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String verificationDossiersLogged(String count) {
-    return 'සත්‍යාපන ලේඛන $countක් සටහන්ව ඇත';
+    return 'තහවුරු කිරීමේ ගොනු $countක්';
   }
 
   @override
@@ -1702,7 +1698,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'දිස්ත්‍රික් ධාරිතාව — තත්කාලීන පැටවීම';
 
   @override
-  String get noActiveArtisansFleet => 'බලඇණියේ ක්‍රියාකාරී ශිල්පීන් නැත';
+  String get noActiveArtisansFleet => 'සක්‍රිය සේවා සපයන්නන් නැත';
 
   @override
   String tradeAndZone(String trade, String zone) {
@@ -1722,7 +1718,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String dispatchedArtisanToJob(String artisan, String job) {
-    return '$artisan ශිල්පියා $job වෙත පිටත් කරන ලදී';
+    return '$artisan $job වැඩයට යැව්වා';
   }
 
   @override
@@ -1751,16 +1747,16 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get activeArtisanFleetTitle => 'ක්‍රියාකාරී ශිල්පී බලඇණිය';
+  String get activeArtisanFleetTitle => 'සක්‍රිය සේවා සපයන්නන්';
 
   @override
   String artisansCount(String count) {
-    return 'ශිල්පීන් $countක්';
+    return 'සේවා සපයන්නන් $countක්';
   }
 
   @override
   String vettedTechniciansAvailable(String count) {
-    return 'පරීක්ෂා කළ ශිල්පීන් $countක් සිටී';
+    return 'පරීක්ෂා කළ සේවා සපයන්නන් $countක් සිටී';
   }
 
   @override
@@ -1778,7 +1774,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get statusPaused => 'තාවකාලිකව නැවතුණි';
 
   @override
-  String get dynamicBiddingBadge => 'ගතික ලංසු තැබීම';
+  String get dynamicBiddingBadge => 'මිල ගණන් ලැබේ';
 
   @override
   String get islandWideBadge => 'දිවයින පුරා';
@@ -1812,7 +1808,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get deleteCategoryConfirm => 'ඔබට මෙම කාණ්ඩය මැකීමට අවශ්‍ය බව සහතිකද?';
 
   @override
-  String get suspendArtisan => 'ශිල්පියාගේ ගිණුම අත්හිටුවන්න';
+  String get suspendArtisan => 'ගිණුම අත්හිටුවන්න';
 
   @override
   String get readOnlyOpsGovernance =>
@@ -1855,8 +1851,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get awaitingFirstSignIn => 'පළමු ඇතුළුවීම අපේක්ෂාවෙන්';
 
   @override
-  String get searchAdminPlaceholder =>
-      'පරිපාලක නම හෝ විද්‍යුත් තැපෑල අනුව සොයන්න...';
+  String get searchAdminPlaceholder => 'පරිපාලක නම හෝ ඊමේල් අනුව සොයන්න...';
 
   @override
   String get roleFilterLabel => 'භූමිකාව:';
@@ -1897,8 +1892,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get searchTechniciansNicJobs =>
-      'කාර්මික ශිල්පීන්, හැඳුනුම්පත්, වැඩ සොයන්න...';
+  String get searchTechniciansNicJobs => 'සේවා සපයන්නන්, NIC, වැඩ සොයන්න...';
 
   @override
   String get islandNetworkStatus =>
@@ -1914,14 +1908,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get disputeComplaintCenter => 'ආරවුල් සහ පැමිණිලි මධ්‍යස්ථානය';
 
   @override
-  String get reviewUserReports =>
-      'පරිශීලක වාර්තා සමාලෝචනය, ගැටළු විගණනය සහ පාලනය ක්‍රියාත්මක කරන්න';
+  String get reviewUserReports => 'පැමිණිලි සහ ගැටලු පරීක්ෂා කර පියවර ගන්න';
 
   @override
   String get totalReports => 'මුළු වාර්තා';
 
   @override
-  String get pendingAction => 'ක්‍රියාමාර්ග ගැනීමට ඇති';
+  String get pendingAction => 'කළ යුතු දේ';
 
   @override
   String get resolvedCases => 'විසඳූ ගැටළු';
@@ -1956,7 +1949,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String passwordResetSent(String email) {
-    return 'මුරපදය යළි පිහිටුවීමේ සබැඳිය $email වෙත යවන ලදී. කරුණාකර ඔබගේ විද්‍යුත් තැපෑල පරීක්ෂා කරන්න.';
+    return 'මුරපදය අලුත් කිරීමේ සබැඳිය $email වෙත යැව්වා. ඔබගේ ඊමේල් පරීක්ෂා කරන්න.';
   }
 
   @override
@@ -1973,10 +1966,10 @@ class AppLocalizationsSi extends AppLocalizations {
   String get searchChatsPlaceholder => 'නම හෝ පණිවිඩය අනුව සොයන්න...';
 
   @override
-  String get signInToViewMessages => 'ඔබගේ පණිවිඩ බැලීමට කරුණාකර පුරනය වන්න';
+  String get signInToViewMessages => 'පණිවිඩ බැලීමට ලොග් වන්න';
 
   @override
-  String get failedToLoadConversations => 'සංවාද පූරණය කිරීමට නොහැකි විය';
+  String get failedToLoadConversations => 'සංවාද පෙන්වීමට නොහැකි විය';
 
   @override
   String get noMatchingConversations => 'ගැලපෙන සංවාද කිසිවක් හමු නොවීය';
@@ -1993,7 +1986,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'වෙනත් නමක් හෝ වචනයක් යොදා සොයා බලන්න.';
 
   @override
-  String get tapToStartConversation => 'සංවාදය ආරම්භ කිරීමට ස්පර්ශ කරන්න';
+  String get tapToStartConversation => 'චැට් කිරීමට ඔබන්න';
 
   @override
   String get unauthorizedAdminAccess => 'අනවසරයි: පරිපාලක ප්‍රවේශය අවශ්‍ය වේ.';
@@ -2061,14 +2054,13 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get postJobBannerDesc =>
-      'ඔබේ වැඩය තත්පර 60කින් පළ කර අසල සිටින සත්‍යාපිත කාර්මිකයන්ගෙන් ක්ෂණික මිල ගණන් ලබා ගන්න.';
+      'තත්පර 60කින් වැඩය පළ කර ළඟ සිටින තහවුරු කළ සේවා සපයන්නන්ගෙන් මිල ගණන් ලබාගන්න.';
 
   @override
   String get postJobAndGetQuotes => 'වැඩය පළ කර මිල ගණන් ලබා ගන්න';
 
   @override
-  String get noArtisansMatchFilters =>
-      'ඔබගේ පෙරහන් වලට ගැලපෙන කාර්මිකයන් හමු නොවීය';
+  String get noArtisansMatchFilters => 'ඔබේ පෙරහන්වලට ගැළපෙන සේවා සපයන්නන් නැත';
 
   @override
   String get tryClearingSearchOrFilters =>
@@ -2078,14 +2070,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get resetAllFilters => 'සියලු පෙරහන් නැවත සකසන්න';
 
   @override
-  String get filterArtisans => 'කාර්මිකයන් පෙරහන් කරන්න';
+  String get filterArtisans => 'සේවා සපයන්නන් පෙරන්න';
 
   @override
   String get onlineReadyToBid => 'සක්‍රීයයි සහ ලංසු තැබීමට සූදානම්';
 
   @override
   String get onlineReadyToBidSub =>
-      'ක්ෂණික වෙන්කරවා ගැනීම සඳහා සූදානම් ක්‍රියාකාරී කාර්මිකයන් පෙන්වන්න';
+      'දැන් වෙන්කළ හැකි සේවා සපයන්නන් පමණක් පෙන්වන්න';
 
   @override
   String get emergencyDispatch => 'හදිසි සේවා';
@@ -2100,7 +2092,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get applyFilters => 'පෙරහන් යොදන්න';
 
   @override
-  String get topArtisans => 'ප්‍රමුඛ කාර්මිකයන්';
+  String get topArtisans => 'ප්‍රමුඛ සේවා සපයන්නන්';
 
   @override
   String get friend => 'මිතුරා';
@@ -2124,7 +2116,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get couldNotConnectChat => 'චැට් වෙත සම්බන්ධ විය නොහැකි විය';
 
   @override
-  String get couldNotLoadChat => 'චැට් පූරණය කළ නොහැකි විය';
+  String get couldNotLoadChat => 'චැට් එක පෙන්වීමට නොහැකි විය';
 
   @override
   String get sendMsgToStartChat => 'සංවාදය ආරම්භ කිරීමට පණිවිඩයක් එවන්න';
@@ -2134,7 +2126,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String bookingConfirmedChatStarted(String providerName) {
-    return 'ඔබගේ සේවා වෙන්කිරීම තහවුරුයි. වේලාව සහ ස්ථානය සම්බන්ධීකරණයට $providerName සමඟ සෘජු සංවාදයක් අරඹන ලදී.';
+    return 'ඔබගේ වෙන්කිරීම තහවුරුයි. වේලාව සහ ස්ථානය කතා කරගැනීමට $providerName සමඟ චැට් එකක් ආරම්භ කළා.';
   }
 
   @override
@@ -2153,7 +2145,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String artisanReportedDelay(String reason) {
-    return 'කාර්මිකයා දැක්වූ හේතුව: $reason';
+    return 'සේවා සපයන්නා කී හේතුව: $reason';
   }
 
   @override
@@ -2180,7 +2172,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get enableLocationServices =>
-      'කරුණාකර ඔබගේ උපාංගයේ ස්ථාන සේවා සක්‍රීය කරන්න';
+      'ඔබගේ දුරකථනයේ ස්ථාන සේවා (Location) සක්‍රිය කරන්න';
 
   @override
   String get locationPermissionDenied => 'ස්ථාන අවසරය ප්‍රතික්ෂේප විය';
@@ -2196,13 +2188,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get failedToSubmitRequest => 'ඉල්ලීම ඉදිරිපත් කිරීම අසාර්ථක විය';
 
   @override
-  String get reportProvider => 'සේවා සපයන්නා ගැන පැමිණිලි කරන්න';
+  String get reportProvider => 'සේවා සපයන්නා වාර්තා කරන්න';
 
   @override
   String get experience => 'පළපුරුද්ද';
 
   @override
-  String get noCustomerReviews => 'තවමත් පාරිභෝගික සමාලෝචන නොමැත';
+  String get noCustomerReviews => 'තවම පාරිභෝගික සමාලෝචන නැත';
 
   @override
   String get complaintUnprofessionalConduct => 'වෘත්තීය නොවන හැසිරීම';
@@ -2245,15 +2237,13 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඉදිරිපත් කිරීමට පෙර කරුණාකර ගැටලුව විස්තර කරන්න.';
 
   @override
-  String get signInToSubmitComplaint =>
-      'පැමිණිල්ලක් ඉදිරිපත් කිරීමට කරුණාකර පුරනය වන්න.';
+  String get signInToSubmitComplaint => 'පැමිණිල්ලක් කිරීමට ලොග් වන්න.';
 
   @override
-  String get complaintSubmittedSuccess =>
-      'සමාලෝචනය සඳහා පැමිණිල්ල පරිපාලක සහාය වෙත යොමු කරන ලදී.';
+  String get complaintSubmittedSuccess => 'පැමිණිල්ල සහාය කණ්ඩායමට යැව්වා.';
 
   @override
-  String get submitOfficialReport => 'නිල වාර්තාව ඉදිරිපත් කරන්න';
+  String get submitOfficialReport => 'පැමිණිල්ල යවන්න';
 
   @override
   String jobIdNumber(String id) {
@@ -2273,7 +2263,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get serviceDiagnostic => 'සේවා පරීක්ෂාව';
 
   @override
-  String get technician => 'කාර්මික ශිල්පියා';
+  String get technician => 'සේවා සපයන්නා';
 
   @override
   String get today => 'අද';
@@ -2290,7 +2280,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get homeServiceGpsLocation => 'නිවසේ / සේවා GPS ස්ථානය';
 
   @override
-  String get tapToAutoDetectGps => 'වත්මන් GPS ඛණ්ඩාංක ලබාගැනීමට ස්පර්ශ කරන්න';
+  String get tapToAutoDetectGps => 'GPS මගින් ස්ථානය ලබාගැනීමට ඔබන්න';
 
   @override
   String gpsLocationUpdated(String lat, String lng) {
@@ -2303,7 +2293,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String currentMode(String mode) {
-    return 'වත්මන්: $mode (වෙනස් කිරීමට ස්පර්ශ කරන්න)';
+    return 'දැනට: $mode (වෙනස් කිරීමට ඔබන්න)';
   }
 
   @override
@@ -2342,7 +2332,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get acceptJob => 'වැඩය භාර ගන්න';
 
   @override
-  String get passToNextArtisan => 'ඊළඟ කාර්මිකයාට මාරු කරන්න';
+  String get passToNextArtisan => 'ඊළඟ සේවා සපයන්නාට යවන්න';
 
   @override
   String get pullOverSafelyWarning => 'භාර ගැනීමට පෙර ආරක්ෂිතව නවතින්න.';
@@ -2351,7 +2341,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get serviceRequest => 'සේවා ඉල්ලීම';
 
   @override
-  String get clientAddress => 'සේවාදායකයාගේ ලිපිනය';
+  String get clientAddress => 'පාරිභෝගිකයාගේ ලිපිනය';
 
   @override
   String durationMins(int minutes) {
@@ -2408,7 +2398,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String failedToSubmitVerification(String error) {
-    return 'සත්‍යාපනය ඉදිරිපත් කිරීමට නොහැකි විය: $error';
+    return 'තහවුරු කිරීමට යැවීමට නොහැකි විය: $error';
   }
 
   @override
@@ -2418,14 +2408,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get navJobs => 'වැඩ';
 
   @override
-  String get verificationUnderReview => 'සත්‍යාපනය සමාලෝචනය වෙමින් පවතී';
+  String get verificationUnderReview => 'ඔබගේ ඉල්ලීම පරීක්ෂා කරමින් පවතී';
 
   @override
-  String get statusPendingReviewCaps => 'තත්ත්වය: සමාලෝචනය වෙමින් පවතී';
+  String get statusPendingReviewCaps => 'තත්ත්වය: පරීක්ෂා කරමින්';
 
   @override
   String get nicUnderReviewDesc =>
-      'ඔබගේ ජාතික හැඳුනුම්පත් (NIC) ලේඛන සහ සෙල්ෆි ඡායාරූපය අපගේ සංකේතනය කළ ගබඩාවේ සුරක්ෂිතව තැන්පත් කර ඇත. පරිපාලන සත්‍යාපන අංශය විසින් ඔබගේ තොරතුරු තහවුරු කරමින් පවතී.';
+      'ඔබගේ හැඳුනුම්පත් ඡායාරූප සහ සෙල්ෆිය ආරක්ෂිතව ගබඩා කර ඇත. අපගේ කණ්ඩායම ඔබගේ තොරතුරු පරීක්ෂා කරමින් සිටී.';
 
   @override
   String get returnToDashboard => 'පුවරුවට ආපසු යන්න';
@@ -2453,7 +2443,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get nicBackSideDesc =>
-      'ඔබගේ ලිපිනය සහ තීරු කේතය (barcode) පැහැදිලිව පෙනෙන පිටුපස ඡායාරූපයක්.';
+      'ලිපිනය සහ barcode පැහැදිලිව පෙනෙන පිටුපස ඡායාරූපය.';
 
   @override
   String get captureOrUploadBack => 'පිටුපස ඡායාරූපය ලබා ගන්න හෝ එක් කරන්න';
@@ -2479,7 +2469,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'අව් කණ්ණාඩි, තොප්පි හෝ මුහුණු ආවරණ පළඳින්න එපා. ඔබගේ නම හෝ ඡායාරූපය ආවරණය නොකරන්න.';
 
   @override
-  String get fastTurnaroundTitle => 'ක්ෂණික සත්‍යාපනය:';
+  String get fastTurnaroundTitle => 'ඉක්මන් පරීක්ෂාව:';
 
   @override
   String get fastTurnaroundBody =>
@@ -2500,7 +2490,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'ස්වභාවික දිවා ආලෝකයේ ගත් ඡායාරූප පළමු වරම අනුමත වේ.';
 
   @override
-  String get submitForVerification => 'සත්‍යාපනය සඳහා ඉදිරිපත් කරන්න';
+  String get submitForVerification => 'තහවුරු කිරීමට යවන්න';
 
   @override
   String get attachedStatus => 'එක් කරන ලදී';
@@ -2509,8 +2499,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get requiredStatus => 'අවශ්‍යයි';
 
   @override
-  String get photoAttachedTapReplace =>
-      'ඡායාරූපය එක් කර ඇත · මාරු කිරීමට ස්පර්ශ කරන්න';
+  String get photoAttachedTapReplace => 'ඡායාරූපය එක් කළා · මාරු කිරීමට ඔබන්න';
 
   @override
   String get newLabel => 'නව';
@@ -2560,48 +2549,46 @@ class AppLocalizationsSi extends AppLocalizations {
   String get minsUnit => 'මිනි';
 
   @override
-  String get certifiedArtisan => 'සහතිකලත් ශිල්පී';
+  String get certifiedArtisan => 'තහවුරු කළ සේවා සපයන්නා';
 
   @override
   String get addAdminGrantOnePermission =>
-      'කරුණාකර මෙම ඇඩ්මින්ට අවම වශයෙන් එක් අවසරයක් හෝ ලබා දෙන්න.';
+      'මෙම පරිපාලකට අවම වශයෙන් එක් අවසරයක් දෙන්න.';
 
   @override
   String addAdminFailed(String error) {
-    return 'ඇඩ්මින් එකතු කිරීමට නොහැකි විය: $error';
+    return 'පරිපාලකයා එක් කිරීමට නොහැකි විය: $error';
   }
 
   @override
-  String get addAdminAccountCreated => 'ඇඩ්මින් ගිණුම සෑදුවා';
+  String get addAdminAccountCreated => 'පරිපාලක ගිණුම සෑදුවා';
 
   @override
   String addAdminSuccessBody(String role) {
-    return 'පරිශීලකයාට $role වරප්‍රසාද සාර්ථකව ලබා දී ඇත. ඊළඟ වතාවේ ඔවුන් මෙම ඊමේල් එකෙන් ලොග් වූ විට, ඇඩ්මින් කොන්සෝලයට පිවිසිය හැක.';
+    return 'මෙම පරිශීලකයාට $role අවසර ලබා දුන්නා. මෙම ඊමේල් එකෙන් ඊළඟ වතාවේ ලොග් වූ විට පරිපාලක පුවරුව භාවිත කළ හැක.';
   }
 
   @override
-  String get addAdminTitle => 'පද්ධති ඇඩ්මින් කෙනෙක් එකතු කරන්න';
+  String get addAdminTitle => 'පරිපාලකයෙකු එක් කරන්න';
 
   @override
   String get addAdminSubtitle =>
       'භූමිකාව සහ අවසර ලබා දෙන්න; ආරාධනා ලින්ක් සෑදෙනු ඇත';
 
   @override
-  String get addAdminEnterFullName =>
-      'කරුණාකර ඇඩ්මින්ගේ සම්පූර්ණ නම ඇතුළත් කරන්න';
+  String get addAdminEnterFullName => 'පරිපාලකගේ සම්පූර්ණ නම ඇතුළත් කරන්න';
 
   @override
-  String get addAdminWorkEmail => 'නිල රැකියා ඊමේල්';
+  String get addAdminWorkEmail => 'නිල ඊමේල්';
 
   @override
-  String get addAdminEnterWorkEmail =>
-      'කරුණාකර වලංගු රැකියා ඊමේල් එකක් ඇතුළත් කරන්න';
+  String get addAdminEnterWorkEmail => 'වලංගු නිල ඊමේල් එකක් ඇතුළත් කරන්න';
 
   @override
   String get addAdminMobileOptional => 'ජංගම දුරකථනය (අත්‍යවශ්‍ය නැත)';
 
   @override
-  String get addAdminTier => 'ඇඩ්මින් මට්ටම';
+  String get addAdminTier => 'පරිපාලක මට්ටම';
 
   @override
   String get addAdminOperationalPermissions => 'මෙහෙයුම් අවසර';
@@ -2610,7 +2597,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get addAdminAdding => 'එකතු කරමින්...';
 
   @override
-  String get addAdminGrantRole => 'ඇඩ්මින් භූමිකාව දෙන්න';
+  String get addAdminGrantRole => 'පරිපාලක අවසර දෙන්න';
 
   @override
   String get editPermSelectOne => 'කරුණාකර අවම වශයෙන් එක් අවසරයක් හෝ තෝරන්න.';
@@ -2626,7 +2613,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get editPermChangeTier => 'ඇඩ්මින් මට්ටම වෙනස් කරන්න';
+  String get editPermChangeTier => 'පරිපාලක මට්ටම වෙනස් කරන්න';
 
   @override
   String get editPermAssigned => 'ලබා දී ඇති මෙහෙයුම් අවසර';
@@ -2638,8 +2625,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get editPermSave => 'අවසර සුරකින්න';
 
   @override
-  String get sidebarOnlySuperAdmins =>
-      'ඇඩ්මින් කළමනාකරණයට පිවිසිය හැක්කේ Super Admin අයට පමණි.';
+  String get sidebarOnlySuperAdmins => 'පරිපාලක කළමනාකරණය Super Admin හට පමණි.';
 
   @override
   String get sidebarNoPermission => 'මෙම කොටසට පිවිසීමට ඔබට අවසර නැත.';
@@ -2654,11 +2640,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get topBarSupportMessages => 'සහාය සහ මැදිහත්වීම් පණිවිඩ';
 
   @override
-  String get topBarAdministrator => 'ඇඩ්මින්';
+  String get topBarAdministrator => 'පරිපාලක';
 
   @override
   String get cdmPublishedCategoriesInfo =>
-      'ප්‍රකාශිත කාණ්ඩ දිවයින පුරා ලබා ගත හැක. මිල ගණන් ගතිකයි — ළඟපාත තහවුරු කළ කාර්මිකයන් දුර සහ වැඩයේ විස්තර අනුව තමන්ගේ මිල ගණන් ඉදිරිපත් කරයි.';
+      'ප්‍රකාශිත කාණ්ඩ දිවයින පුරා ලබාගත හැක. මිල ස්ථාවර නැත — ළඟ සිටින තහවුරු කළ සේවා සපයන්නන් දුර සහ වැඩය අනුව මිල ගණන් එවයි.';
 
   @override
   String get cdmCategoryTitleHint => 'උදා: සූර්ය PV නඩත්තුව';
@@ -2689,22 +2675,21 @@ class AppLocalizationsSi extends AppLocalizations {
   String get cdmDelete => 'මකන්න';
 
   @override
-  String get cdmReadOnlyModeOpsGovernance => 'කියවීමට පමණි (Ops පාලනය)';
+  String get cdmReadOnlyModeOpsGovernance => 'කියවීමට පමණි';
 
   @override
   String get cdmFleetSubtitle =>
-      'තහවුරු කළ කාර්මිකයන් පරීක්ෂා කරන්න, ප්‍රවේශය පාලනය කරන්න, සහ අත්හිටුවීම් ක්‍රියාත්මක කරන්න';
+      'තහවුරු කළ සේවා සපයන්නන් පරීක්ෂා කරන්න, ප්‍රවේශය පාලනය කරන්න, අත්හිටුවන්න';
 
   @override
   String get cdmNoCategoriesDesc =>
-      'පාරිභෝගිකයන්ට කාර්මිකයන් සොයා වෙන්කරවා ගැනීමට හැකි වන ලෙස ඔබේ සේවා කාණ්ඩ එකතු කර Firebase වෙත ප්‍රකාශයට පත් කරන්න.';
+      'පාරිභෝගිකයන්ට සේවා සපයන්නන් සොයා වෙන්කර ගැනීමට, ඔබේ සේවා කාණ්ඩ එකතු කර ප්‍රකාශ කරන්න.';
 
   @override
   String get cdmDynamicQuotes => 'ගතික මිල ගණන්';
 
   @override
-  String get cdmArtisansBidPerJob =>
-      'එක් එක් වැඩයට කාර්මිකයන් මිල ඉදිරිපත් කරයි';
+  String get cdmArtisansBidPerJob => 'සේවා සපයන්නන් එක් එක් වැඩයට මිල එවයි';
 
   @override
   String get cdmPauseCategory => 'කාණ්ඩය නවත්වන්න';
@@ -2733,10 +2718,10 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get cdmNoArtisansMatchSearch => 'සෙවුමට ගැළපෙන කාර්මිකයන් නැත';
+  String get cdmNoArtisansMatchSearch => 'සෙවුමට ගැළපෙන සේවා සපයන්නන් නැත';
 
   @override
-  String get cdmNoArtisansInFilter => 'මෙම පෙරහනේ ලියාපදිංචි කාර්මිකයන් නැත';
+  String get cdmNoArtisansInFilter => 'මෙම පෙරහනේ සේවා සපයන්නන් නැත';
 
   @override
   String get cdmBadgeSuspended => 'අත්හිටුවා ඇත';
@@ -2770,7 +2755,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get cdmRestoreUnban => 'යළි සක්‍රිය කරන්න / තහනම ඉවත් කරන්න';
 
   @override
-  String get cdmDeleteArtisanPermanently => 'කාර්මිකයා ස්ථිරවම මකන්න';
+  String get cdmDeleteArtisanPermanently => 'සේවා සපයන්නා ස්ථිරවම මකන්න';
 
   @override
   String cdmSuspendName(String name) {
@@ -2779,7 +2764,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get cdmSuspendConfirmBody =>
-      'මෙම කාර්මිකයා අත්හිටුවීමට ඔබට විශ්වාසද? ඔවුන් ඕෆ්ලයින් ලෙස අගුළු දමා, පාරිභෝගික සෙවුම්වලින් සඟවා, මිල ගණන් ඉදිරිපත් කිරීම වළක්වනු ඇත.';
+      'මෙම සේවා සපයන්නා අත්හිටුවන්නද? ඔවුන් Offline කර, සෙවුම්වලින් සඟවා, මිල ගණන් එවීම නවත්වනු ඇත.';
 
   @override
   String get cdmReasonForSuspension => 'අත්හිටුවීමට හේතුව:';
@@ -2799,7 +2784,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get cdmRestoreConfirmBody =>
-      'මෙම කාර්මිකයාගේ පැතිකඩ යළි සක්‍රිය කරන්නද? ඔවුන්ට නැවත ඔන්ලයින් වී පාරිභෝගික සේවා ඉල්ලීම් භාර ගැනීමට හැකි වේ.';
+      'මෙම සේවා සපයන්නාගේ පැතිකඩ නැවත සක්‍රිය කරන්නද? ඔවුන්ට නැවත Online වී වැඩ භාරගත හැක.';
 
   @override
   String cdmArtisanRestored(String name) {
@@ -2810,11 +2795,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get cdmRestoreAccess => 'ප්‍රවේශය යළි ලබා දෙන්න';
 
   @override
-  String get cdmDeleteArtisan => 'කාර්මිකයා මකන්න';
+  String get cdmDeleteArtisan => 'සේවා සපයන්නා මකන්න';
 
   @override
   String cdmDeleteArtisanConfirm(String name) {
-    return '\"$name\" කාර්මික දත්ත ගබඩාවෙන් ස්ථිරවම මකා දැමීමට ඔබට විශ්වාසද? මෙය ආපසු හැරවිය නොහැක.';
+    return '\"$name\" ස්ථිරවම මකන්නද? මෙය ආපසු හැරවිය නොහැක.';
   }
 
   @override
@@ -2877,7 +2862,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get adminRoleDescOps =>
-      'මෙහෙයුම් යැවීම්, ශිල්පී සත්‍යාපන, ප්‍රවර්ග සහ දිස්ත්‍රික් මධ්‍යස්ථාන කළමනාකරණය.';
+      'වැඩ යැවීම, සේවා සපයන්නන් තහවුරු කිරීම, කාණ්ඩ සහ දිස්ත්‍රික්ක කළමනාකරණය.';
 
   @override
   String get adminRoleDescSupport =>
@@ -2887,7 +2872,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get permManageAdminsLabel => 'පරිපාලක කණ්ඩායම් පාලනය';
 
   @override
-  String get permVerifyNicLabel => 'ශිල්පී NIC සහ KYC සත්‍යාපනය';
+  String get permVerifyNicLabel => 'සේවා සපයන්නන්ගේ NIC තහවුරු කිරීම';
 
   @override
   String get permManageCategoriesLabel => 'ප්‍රවර්ග සහ දිස්ත්‍රික් මධ්‍යස්ථාන';
@@ -2904,7 +2889,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permVerifyNicDesc =>
-      'ස්මාර්ට් NIC, පොලිස් වාර්තා සමාලෝචනය කර ශිල්පී ලියාපදිංචි කිරීම් අනුමත/ප්‍රතික්ෂේප කිරීම.';
+      'NIC ලේඛන පරීක්ෂා කර සේවා සපයන්නන්ගේ ලියාපදිංචිය අනුමත හෝ ප්‍රතික්ෂේප කිරීම.';
 
   @override
   String get permManageCategoriesDesc =>
@@ -2912,7 +2897,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permBroadcastAlertsDesc =>
-      'සක්‍රිය ශිල්පීන්ට දැනුම්දීම් සහ හදිසි අනතුරු ඇඟවීම් යැවීම.';
+      'සක්‍රිය සේවා සපයන්නන්ට දැනුම්දීම් සහ හදිසි පණිවිඩ යැවීම.';
 
   @override
   String get permViewFinancesDesc =>
@@ -2925,7 +2910,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get adminStatusSuspended => 'අත්හිටුවා ඇත';
 
   @override
-  String get custArtisanLabel => 'කාර්මිකයා';
+  String get custArtisanLabel => 'සේවා සපයන්නා';
 
   @override
   String get custDefaultSystemLanguage => 'පද්ධතියේ පෙරනිමි භාෂාව';
@@ -2951,7 +2936,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String custShareTrackingText(String link) {
-    return 'මගේ HelaService කාර්මිකයා සජීවීව මෙතැනින් බලන්න: $link';
+    return 'මගේ HelaService සේවා සපයන්නා එන හැටි මෙතැනින් බලන්න: $link';
   }
 
   @override
@@ -2971,7 +2956,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get custServiceProviderLabel => 'සේවා සපයන්නා';
 
   @override
-  String get liveMapColArtisan => 'කාර්මිකයා';
+  String get liveMapColArtisan => 'සේවා සපයන්නා';
 
   @override
   String get liveMapColAssignedZone => 'පවරා ඇති කලාපය';
@@ -3107,7 +3092,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String disputesErrorLoading(String error) {
-    return 'පැමිණිලි පූරණය කිරීමේ දෝෂයක්: $error';
+    return 'පැමිණිලි පෙන්වීමට නොහැකි විය: $error';
   }
 
   @override
@@ -3200,7 +3185,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'සම්පීඩනය කළ පසුත් NIC රූපය විශාල වැඩියි. කරුණාකර නැවත ඡායාරූපය ගන්න.';
 
   @override
-  String get provUserNotAuthenticated => 'පරිශීලකයා සත්‍යාපනය කර නැත';
+  String get provUserNotAuthenticated => 'කරුණාකර නැවත ලොග් වන්න';
 
   @override
   String get provNotLoggedIn => 'ලොග් වී නැත';
@@ -3255,18 +3240,18 @@ class AppLocalizationsSi extends AppLocalizations {
       'ජාල සම්බන්ධතා ගැටලුවක්. කරුණාකර ඔබේ අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.';
 
   @override
-  String get authErrSignInCancelled => 'පරිශීලකයා පුරනය වීම අවලංගු කළා.';
+  String get authErrSignInCancelled => 'ලොග් වීම අවලංගු කළා.';
 
   @override
-  String get authErrUserDataUnavailable => 'Firebase පරිශීලක දත්ත ලබාගත නොහැක.';
+  String get authErrUserDataUnavailable =>
+      'ගිණුමේ තොරතුරු ලබාගත නොහැක. නැවත උත්සාහ කරන්න.';
 
   @override
-  String get authErrAlreadyAdmin =>
-      'මෙම පරිශීලකයා දැනටමත් පරිපාලකයෙකු ලෙස ලියාපදිංචි වී ඇත.';
+  String get authErrAlreadyAdmin => 'මෙම පුද්ගලයා දැනටමත් පරිපාලකයෙකි.';
 
   @override
   String authErrAuthenticationFailed(String email) {
-    return '$email සඳහා සත්‍යාපනය අසාර්ථක විය';
+    return '$email සමඟ ලොග් වීමට නොහැකි විය';
   }
 
   @override
@@ -3276,7 +3261,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String authErrNoRegisteredUser(String email) {
-    return '\"$email\" ඊමේල් එකෙන් ලියාපදිංචි පරිශීලකයෙක් නැත. පරිපාලකයෙකු ලෙස උසස් කිරීමට පෙර එම පුද්ගලයා යෙදුමේ ගිණුමක් ලියාපදිංචි කළ යුතුය.';
+    return '\"$email\" ඊමේල් එකෙන් ගිණුමක් නැත. පරිපාලකයෙකු කිරීමට පෙර ඔවුන් යෙදුමේ ගිණුමක් සෑදිය යුතුය.';
   }
 
   @override
@@ -3286,17 +3271,17 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String nicDeskErrorApproving(String error) {
-    return 'සත්‍යාපනය අනුමත කිරීමේ දෝෂයක්: $error';
+    return 'අනුමත කිරීමේදී දෝෂයක්: $error';
   }
 
   @override
   String nicDeskVerificationRejected(String name) {
-    return '$name ගේ සත්‍යාපනය ප්‍රතික්ෂේප කළා.';
+    return '$name ගේ ඉල්ලීම ප්‍රතික්ෂේප කළා.';
   }
 
   @override
   String nicDeskErrorRejecting(String error) {
-    return 'සත්‍යාපනය ප්‍රතික්ෂේප කිරීමේ දෝෂයක්: $error';
+    return 'ප්‍රතික්ෂේප කිරීමේදී දෝෂයක්: $error';
   }
 
   @override
@@ -3347,7 +3332,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get nicDeskReadOnlyMode =>
-      'කියවීමට පමණයි: ශිල්පීන්ගේ තොරතුරු අනුමත හෝ ප්‍රතික්ෂේප කිරීමට NIC සත්‍යාපන අවසරය අවශ්‍යයි.';
+      'කියවීමට පමණි: අනුමත හෝ ප්‍රතික්ෂේප කිරීමට NIC තහවුරු කිරීමේ අවසරය අවශ්‍යයි.';
 
   @override
   String get nicDeskNoId => 'ID නැත';
@@ -3482,11 +3467,11 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String verifyEmailSubtitle(String email) {
-    return 'අපි $email වෙත ඉලක්කම් 6ක සත්‍යාපන කේතයක් යැව්වා';
+    return 'අපි $email වෙත ඉලක්කම් 6ක කේතයක් යැව්වා';
   }
 
   @override
-  String get enterVerificationCode => 'සත්‍යාපන කේතය ඇතුළත් කරන්න';
+  String get enterVerificationCode => 'කේතය ඇතුළත් කරන්න';
 
   @override
   String get resendCode => 'කේතය නැවත යවන්න';
@@ -3500,33 +3485,31 @@ class AppLocalizationsSi extends AppLocalizations {
   String get verifyAndContinue => 'තහවුරු කර ඉදිරියට යන්න';
 
   @override
-  String get codeExpired =>
-      'සත්‍යාපන කේතයේ කාලය ඉකුත් වී ඇත. කරුණාකර අලුත් කේතයක් ඉල්ලන්න.';
+  String get codeExpired => 'කේතයේ කාලය ඉකුත් වී ඇත. අලුත් කේතයක් ඉල්ලන්න.';
 
   @override
-  String get codeIncorrect =>
-      'සත්‍යාපන කේතය වැරදියි. කරුණාකර පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+  String get codeIncorrect => 'කේතය වැරදියි. පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
 
   @override
   String get emailVerifiedSuccess => 'ඊමේල් ලිපිනය සාර්ථකව තහවුරු විය!';
 
   @override
-  String get myJobPosts => 'මගේ රැකියා ඉල්ලීම්';
+  String get myJobPosts => 'මගේ වැඩ ඉල්ලීම්';
 
   @override
   String yourPostedJobs(int count) {
-    return 'ඔබ පළ කළ රැකියා ($count)';
+    return 'ඔබ පළ කළ වැඩ ($count)';
   }
 
   @override
-  String get postNewJob => 'නව රැකියාවක් පළ කරන්න';
+  String get postNewJob => 'නව වැඩයක් පළ කරන්න';
 
   @override
-  String get noJobPostsYet => 'තවම රැකියා ඉල්ලීම් පළ කර නැත';
+  String get noJobPostsYet => 'තවම වැඩ ඉල්ලීම් නැත';
 
   @override
   String get noJobPostsDesc =>
-      'ඔබේ ප්‍රදේශයේ සත්‍යාපිත කාර්මික ශිල්පීන්ගෙන් මිල කැඳවීම් සහ යෝජනා ලබා ගැනීමට සේවා ඉල්ලීමක් පළ කරන්න.';
+      'ඔබේ ප්‍රදේශයේ තහවුරු කළ සේවා සපයන්නන්ගෙන් මිල ගණන් ලබාගැනීමට වැඩ ඉල්ලීමක් පළ කරන්න.';
 
   @override
   String reviewQuotesCount(int count) {
@@ -3541,15 +3524,15 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionLocationDesc =>
-      'ඔබ අසල සිටින සත්‍යාපිත ශිල්පීන් හා සම්බන්ධ කිරීමට සහ නිවැරදි ප්‍රවාහන ගාස්තු ගණනය කිරීමට HelaService ඔබගේ ස්ථානය භාවිත කරයි.';
+      'ළඟ සිටින තහවුරු කළ සේවා සපයන්නන් සොයාගැනීමට සහ නිවැරදි ගමන් ගාස්තු ගණනය කිරීමට HelaService ඔබගේ ස්ථානය භාවිත කරයි.';
 
   @override
   String get permissionLocationBullet1 =>
-      'ඔබගේ ස්ථානයට ආසන්නවම සිටින කාර්මික ශිල්පීන් සොයා ගන්න.';
+      'ඔබට ළඟම සිටින සේවා සපයන්නන් සොයාගන්න.';
 
   @override
   String get permissionLocationBullet2 =>
-      'ඔබේ දොරකඩටම ශිල්පියා පැමිණෙන ආකාරය සජීවීව නිරීක්ෂණය කරන්න.';
+      'සේවා සපයන්නා ඔබේ දොරකඩට එන හැටි සජීවීව බලන්න.';
 
   @override
   String get permissionLocationBullet3 =>
@@ -3566,7 +3549,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionCameraDesc =>
-      'සත්‍යාපිත ශිල්පීන්ගෙන් නිවැරදි මිල කැඳවීම් ලබා ගැනීමට ගැටලුවේ ඡායාරූප ගන්න.';
+      'තහවුරු කළ සේවා සපයන්නන්ගෙන් නිවැරදි මිල ගණන් ලබාගැනීමට ගැටලුවේ ඡායාරූප ගන්න.';
 
   @override
   String get permissionCameraBullet1 =>
@@ -3574,11 +3557,11 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionCameraBullet2 =>
-      'මිල නියම කිරීමට පෙර අලුත්වැඩියාව පරීක්ෂා කිරීමට ශිල්පීන්ට උදවු වන්න.';
+      'මිල කීමට පෙර ගැටලුව බැලීමට සේවා සපයන්නන්ට උදව් වේ.';
 
   @override
   String get permissionCameraBullet3 =>
-      'ඔබගේ රැකියා ඉතිහාසය සඳහා සුරක්ෂිතව ගබඩා කෙරේ.';
+      'ඔබේ වැඩ ඉතිහාසය සඳහා ආරක්ෂිතව ගබඩා කෙරේ.';
 
   @override
   String get permissionOpenCamera => 'කැමරාව විවෘත කරන්න';
@@ -3588,7 +3571,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionGalleryDesc =>
-      'ඔබගේ සුදුසුකම් හෝ රැකියා විස්තර තහවුරු කිරීමට පවතින ඡායාරූප හෝ සහතික එක් කරන්න.';
+      'ඔබේ තොරතුරු හෝ වැඩයේ විස්තර තහවුරු කිරීමට ඡායාරූප හෝ සහතික එක් කරන්න.';
 
   @override
   String get permissionGalleryBullet1 =>
@@ -3596,7 +3579,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionGalleryBullet2 =>
-      'ගිණුම සත්‍යාපනය සහ නිවැරදි රැකියා ඇස්තමේන්තුව සඳහා භාවිත වේ.';
+      'ගිණුම තහවුරු කිරීමට සහ නිවැරදි මිල ගණනකට භාවිත වේ.';
 
   @override
   String get permissionGalleryBullet3 =>
@@ -3613,11 +3596,10 @@ class AppLocalizationsSi extends AppLocalizations {
   String get permissionLocationNeeded => 'ස්ථාන අවසරය අවශ්‍යයි';
 
   @override
-  String get navUserManagement => 'පරිශීලක සහ තහනම් කළමනාකරණය';
+  String get navUserManagement => 'පරිශීලකයින් සහ තහනම්';
 
   @override
-  String get searchUsersHint =>
-      'නම, විද්‍යුත් තැපෑල, දුරකථන හෝ ජා.හැ. අංකයෙන් සොයන්න...';
+  String get searchUsersHint => 'නම, ඊමේල්, දුරකථන හෝ NIC අංකයෙන් සොයන්න...';
 
   @override
   String get filterByRole => 'භූමිකාව';
@@ -3648,7 +3630,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get confirmUnbanDesc =>
-      'මෙම ගිණුමේ අත්හිටුවීම ඉවත් කිරීමට ඔබට විශ්වාසද? පරිශීලකයාට වහාම නැවත ප්‍රවේශය ලැබෙනු ඇත.';
+      'මෙම ගිණුමේ අත්හිටුවීම ඉවත් කරන්නද? ඔවුන්ට වහාම නැවත ලොග් විය හැක.';
 
   @override
   String get userSuspendedSnack => 'ගිණුම සාර්ථකව අත්හිටුවන ලදී.';
@@ -3663,7 +3645,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get activeCustomers => 'සක්‍රිය පාරිභෝගිකයින්';
 
   @override
-  String get activeProviders => 'සක්‍රිය සේවාදායකයින්';
+  String get activeProviders => 'සක්‍රිය සේවා සපයන්නන්';
 
   @override
   String get suspendedAccounts => 'අත්හිටුවූ ගිණුම්';
@@ -3692,7 +3674,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get suspendUserConfirmDesc =>
-      'මෙම ගිණුම අත්හිටුවීමට ඔබට විශ්වාසද? පරිශීලකයා වහාම පද්ධතියෙන් ඉවත් කර නැවත ඇතුළුවීම අවහිර කරනු ඇත.';
+      'මෙම ගිණුම අත්හිටුවන්නද? ඔවුන් වහාම ලොග් අවුට් වී නැවත ලොග් වීම අවහිර වේ.';
 
   @override
   String get pleaseEnterSuspensionReason =>
@@ -3723,7 +3705,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get zoomOut => 'කුඩා කරන්න';
 
   @override
-  String get recenterMap => 'සිතියම නැවත කේන්ද්‍රගත කරන්න';
+  String get recenterMap => 'සිතියම මැදට ගන්න';
 
   @override
   String get superAdminCannotBeSuspended =>
@@ -3757,15 +3739,15 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionNotificationDesc =>
-      'කාර්මික ශිල්පීන් ඔබේ රැකියා පිළිගන්නා විට, මිල ගණන් එවන විට හෝ ඔබ වෙත පැමිණෙන විට තථ්‍ය කාලීන දැනුම්දීම් ලබා ගන්න.';
+      'සේවා සපයන්නන් ඔබේ වැඩය භාරගන්නා විට, මිල ගණන් එවන විට හෝ ඔබ වෙත පැමිණෙන විට වහාම දැනුම්දීම් ලබාගන්න.';
 
   @override
   String get permissionNotificationBullet1 =>
-      'සේවා ශිල්පියෙකු ඔබේ රැකියාව පිළිගන්නා විට හෝ මිලක් ඉදිරිපත් කරන විට ක්ෂණික දැනුම්දීම්.';
+      'සේවා සපයන්නෙකු ඔබේ වැඩය භාරගත් විට හෝ මිලක් එවූ විට වහාම දැනුම්දීමක්.';
 
   @override
   String get permissionNotificationBullet2 =>
-      'ඔබගේ සේවා ශිල්පියා ඔබ වෙත එමින් සිටින විට සජීවී ලුහුබැඳීමේ තොරතුරු.';
+      'සේවා සපයන්නා ඔබ වෙත එන විට සජීවී තොරතුරු.';
 
   @override
   String get permissionNotificationBullet3 =>
@@ -3782,7 +3764,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permissionNotificationPermanentlyDisabled =>
-      'උපාංග සැකසීම් තුළ දැනුම්දීම් අක්‍රිය කර ඇත. රැකියා දැනුම්දීම් ලබා ගැනීමට කරුණාකර ඒවා සක්‍රිය කරන්න.';
+      'දුරකථනයේ සැකසුම්වල දැනුම්දීම් අක්‍රිය කර ඇත. වැඩ දැනුම්දීම් ලැබීමට ඒවා සක්‍රිය කරන්න.';
 
   @override
   String get noMatchesFound => 'ගැළපීම් කිසිවක් හමු නොවීය';
@@ -3795,23 +3777,22 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get proApprovalRequiredDesc =>
-      'ඔබගේ සේවා සැපයුම්කරු ගිණුම පරිපාලක සත්‍යාපනය අපේක්ෂාවෙන් පවතී. ආරක්ෂාව සහ විශ්වාසනීයත්වය තහවුරු කිරීමට, අනුමත වූ පසු රැකියා ඇඟවීම් සහ මිල ගණන් ඉදිරිපත් කිරීමේ අවස්ථාව විවෘත වේ.';
+      'ඔබගේ සේවා සපයන්නා ගිණුම පරිපාලක අනුමැතිය බලාපොරොත්තුවෙන් පවතී. අනුමත වූ පසු වැඩ දැනුම්දීම් සහ මිල ගණන් එවීම විවෘත වේ.';
 
   @override
-  String get proVerificationStatus => 'සත්‍යාපන තත්ත්වය';
+  String get proVerificationStatus => 'තහවුරු කිරීමේ තත්ත්වය';
 
   @override
-  String get proStatusPendingReview => 'පරිපාලක සමාලෝචනය යටතේ පවතී';
+  String get proStatusPendingReview => 'පරිපාලකයින් පරීක්ෂා කරමින්';
 
   @override
-  String get proStatusActionRequired =>
-      'ක්‍රියාමාර්ගයක් අවශ්‍යයි: සත්‍යාපනය ඉදිරිපත් කරන්න';
+  String get proStatusActionRequired => 'අවශ්‍යයි: තහවුරු කිරීමට ලේඛන යවන්න';
 
   @override
-  String get proStatusRejected => 'සත්‍යාපනය ප්‍රතික්ෂේප විය';
+  String get proStatusRejected => 'තහවුරු කිරීම ප්‍රතික්ෂේප විය';
 
   @override
-  String get proSubmitNicAction => 'ජාතික හැඳුනුම්පත් සත්‍යාපනය සම්පූර්ණ කරන්න';
+  String get proSubmitNicAction => 'NIC තහවුරු කිරීම සම්පූර්ණ කරන්න';
 
   @override
   String get proRefreshStatus => 'තත්ත්වය යාවත්කාලීන කරන්න';
@@ -3820,11 +3801,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get proCheckingStatus => 'තත්ත්වය පරීක්ෂා කරමින්...';
 
   @override
-  String get proApprovalGrantedTitle => 'ප්‍රවේශය ලබා දෙන ලදී!';
+  String get proApprovalGrantedTitle => 'ගිණුම අනුමතයි!';
 
   @override
   String get proApprovalGrantedDesc =>
-      'සුභ පැතුම්! ඔබගේ ගිණුම පරිපාලක විසින් සාර්ථකව අනුමත කරන ලදී. ඔබට දැන් රැකියා ලබා ගැනීමට, මිල ගණන් ඉදිරිපත් කිරීමට සහ සේවාවන් හැසිරවීමට පූර්ණ ප්‍රවේශය ඇත.';
+      'සුභ පැතුම්! ඔබගේ ගිණුම අනුමත කළා. දැන් ඔබට වැඩ භාරගැනීමට, මිල ගණන් එවීමට සහ ඔබේ සේවා කළමනාකරණයට හැක.';
 
   @override
   String get proGetStarted => 'පුවරුවට පිවිසෙන්න';
@@ -3846,7 +3827,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get reportIssueDesc =>
-      'මෙම සංවාදය හෝ පරිශීලකයා පිළිබඳව නිල පැමිණිල්ලක් ඉදිරිපත් කරන්න. පරිපාලන කණ්ඩායම මෙය සමාලෝචනය කර සුදුසු පියවර ගනු ඇත.';
+      'මෙම සංවාදය හෝ පුද්ගලයා ගැන පැමිණිල්ලක් කරන්න. අපගේ කණ්ඩායම එය පරීක්ෂා කර පියවර ගනු ඇත.';
 
   @override
   String get reportReasonPrompt => 'හේතුවක් තෝරන්න';
@@ -3888,7 +3869,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get cancelReasonCustomerRequest => 'පාරිභෝගිකයාගේ ඉල්ලීම පරිදි';
 
   @override
-  String get cancelReasonProviderUnavailable => 'සේවා ශිල්පියා ලබා ගත නොහැක';
+  String get cancelReasonProviderUnavailable => 'සේවා සපයන්නාට පැමිණිය නොහැක';
 
   @override
   String get cancelReasonScheduleConflict => 'වේලාවන් ගැටලු සහගත වීම';
@@ -3906,34 +3887,34 @@ class AppLocalizationsSi extends AppLocalizations {
   String get bookingCancelledSuccess => 'වෙන්කිරීම සාර්ථකව අවලංගු කරන ලදී';
 
   @override
-  String get repostJob => 'නැවත රැකියාව පළ කරන්න';
+  String get repostJob => 'වැඩය නැවත පළ කරන්න';
 
   @override
   String get repostJobConfirm =>
-      'ඔබට මෙම රැකියාව නැවත පළ කිරීමට අවශ්‍යද? ආසන්නයේ සිටින සේවා ශිල්පීන්ට නව මිල ගණන් ඉදිරිපත් කිරීමට මෙය නැවත විවෘත වේ.';
+      'මෙම වැඩය නැවත පළ කරන්නද? ළඟ සිටින සේවා සපයන්නන්ට නැවත මිල ගණන් එවිය හැක.';
 
   @override
-  String get repostJobSuccess => 'රැකියාව සාර්ථකව නැවත පළ කරන ලදී!';
+  String get repostJobSuccess => 'වැඩය නැවත පළ කළා!';
 
   @override
-  String get deleteJob => 'රැකියාව මකා දමන්න';
+  String get deleteJob => 'වැඩය මකන්න';
 
   @override
   String get deleteJobConfirm =>
-      'මෙම රැකියා ඉල්ලීම ස්ථිරවම මකා දැමීමට ඔබට අවශ්‍යද? මෙය නැවත ප්‍රතිවර්තනය කළ නොහැක.';
+      'මෙම වැඩ ඉල්ලීම ස්ථිරවම මකන්නද? මෙය ආපසු හැරවිය නොහැක.';
 
   @override
-  String get deleteJobSuccess => 'රැකියා ඉල්ලීම මකා දමන ලදී';
+  String get deleteJobSuccess => 'වැඩ ඉල්ලීම මකා දැමුවා';
 
   @override
-  String get chatWithProvider => 'සේවා ශිල්පියා සමග කතාබස් කරන්න';
+  String get chatWithProvider => 'සේවා සපයන්නා සමඟ චැට් කරන්න';
 
   @override
   String get otpCheckSpamHintTitle => 'ඊමේල් පණිවිඩය ලැබුණේ නැද්ද?';
 
   @override
   String get otpCheckSpamHintDesc =>
-      'කරුණාකර ඔබගේ Spam හෝ Junk ෆෝල්ඩරය පරීක්ෂා කරන්න. සමහර අවස්ථාවල සත්‍යාපන කේතය එහි ගොස් තිබිය හැක.';
+      'ඔබගේ Spam හෝ Junk ෆෝල්ඩරය පරීක්ෂා කරන්න. සමහර විට කේතය එහි වැටී තිබිය හැක.';
 
   @override
   String get loggingOut => 'පිටවෙමින් පවතී...';
@@ -4008,18 +3989,17 @@ class AppLocalizationsSi extends AppLocalizations {
       'පරිපාලක පෙරදසුන් මාදිලිය · සේවා සපයන්නාගේ අතුරුමුහුණත නරඹමින්';
 
   @override
-  String get resubmitVerification => 'නැවත සත්‍යාපනය ඉදිරිපත් කරන්න';
+  String get resubmitVerification => 'නැවත තහවුරු කිරීමට යවන්න';
 
   @override
-  String get verificationNotApprovedTitle => 'සත්‍යාපනය අනුමත නොවීය';
+  String get verificationNotApprovedTitle => 'තහවුරු කිරීම අනුමත නොවීය';
 
   @override
   String get verificationNotApprovedBody =>
-      'ඔබගේ සත්‍යාපනය පරිපාලනය විසින් අනුමත නොකරන ලදී. කරුණාකර ඔබගේ ලේඛන පරීක්ෂා කර නැවත ඉදිරිපත් කරන්න.';
+      'ඔබගේ ඉල්ලීම අනුමත කළේ නැත. ලේඛන පරීක්ෂා කර නැවත යවන්න.';
 
   @override
-  String get proVerificationPendingReview =>
-      'සත්‍යාපනය ඉදිරිපත් කර ඇත · සමාලෝචනය වෙමින්';
+  String get proVerificationPendingReview => 'යැව්වා · පරීක්ෂා කරමින්';
 
   @override
   String get chooseRoleTitle => 'ඔබට HelaService භාවිතා කිරීමට අවශ්‍ය කෙසේද?';
@@ -4032,7 +4012,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get roleCustomerDesc =>
-      'ශ්‍රී ලංකාවේ ඕනෑම තැනක සිට විශ්වාසදායී කාර්මික ශිල්පීන් සොයාගන්න හෝ හදිසි සේවා ලබාගන්න.';
+      'ශ්‍රී ලංකාවේ ඕනෑම තැනක විශ්වාසදායී සේවා සපයන්නන් සොයාගන්න, වැඩ පළ කරන්න, හෝ හදිසි උදව් ලබාගන්න.';
 
   @override
   String get roleCustomerBadge => 'පාරිභෝගික';
@@ -4063,13 +4043,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get roleProviderPerk2 => 'සෘජු අවස්ථා';
 
   @override
-  String get roleProviderPerk3 => 'ආරක්ෂිත සත්‍යාපනය';
+  String get roleProviderPerk3 => 'ආරක්ෂිත තහවුරු කිරීම';
 
   @override
   String get selectServiceLocation => 'සේවා ස්ථානය තෝරන්න';
 
   @override
-  String get useCurrentGpsLocation => 'වත්මන් GPS ස්ථානය භාවිතා කරන්න';
+  String get useCurrentGpsLocation => 'GPS ස්ථානය භාවිත කරන්න';
 
   @override
   String get savedAddresses => 'සුරකින ලද ලිපිනයන්';
@@ -4203,7 +4183,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get rateServiceProvider => 'සේවා සපයන්නා ශ්‍රේණිගත කරන්න';
 
   @override
-  String get jobCompletedSuccessfully => 'කාර්යය සාර්ථකව අවසන් කරන ලදී!';
+  String get jobCompletedSuccessfully => 'වැඩය සාර්ථකව අවසන්!';
 
   @override
   String get verifyAndFinish => 'තහවුරු කර අවසන් කරන්න';
@@ -4215,8 +4195,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get directServiceBooking => 'සෘජු සේවා වෙන්කිරීම';
 
   @override
-  String get signInCancelledByUser =>
-      'පිවිසීම පරිශීලකයා විසින් අවලංගු කරන ලදී.';
+  String get signInCancelledByUser => 'ලොග් වීම අවලංගු කළා.';
 
   @override
   String couldNotDetectLocation(String error) {
@@ -4497,7 +4476,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get workingHoursTitle => 'සේවා කාලසටහන සහ වේලාවන්';
 
   @override
-  String get serviceRadiusTitle => 'සේවා ආවරණ දුර (Radius)';
+  String get serviceRadiusTitle => 'සේවා දුර සීමාව';
 
   @override
   String get serviceRadiusSubtitle => 'සේවා සඳහා ගමන් කරන උපරිම දුර';
@@ -4559,8 +4538,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get rescheduleRequestedNotice =>
-      'නැවත වේලාවක් වෙන්කිරීමේ යෝජනාව පිළිතුරක් අපේක්ෂාවෙන්';
+  String get rescheduleRequestedNotice => 'නව වේලාවට පිළිතුර බලාපොරොත්තුවෙන්';
 
   @override
   String get saveChanges => 'වෙනස්කම් සුරකින්න';
@@ -4605,7 +4583,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get portfolioItemDesc => 'විස්තරය';
 
   @override
-  String get portfolioItemDescHint => 'කළ කාර්යය පිළිබඳ කෙටි විස්තරයක්';
+  String get portfolioItemDescHint => 'කළ වැඩය ගැන කෙටි විස්තරයක්';
 
   @override
   String get uploadPhoto => 'ඡායාරූපයක් එක්කරන්න';
@@ -4632,11 +4610,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get newProviderBadge => 'නවක';
 
   @override
-  String get blockUserTitle => 'පරිශීලකයා අවහිර කරන්න';
+  String get blockUserTitle => 'අවහිර කරන්න';
 
   @override
   String get blockUserConfirm =>
-      'ඔබට මෙම පරිශීලකයා අවහිර කිරීමට අවශ්‍ය බව විශ්වාසද? ඔවුන්ට ඔබට පණිවිඩ හෝ ඉල්ලීම් එවිය නොහැක.';
+      'මෙම පුද්ගලයා අවහිර කරන්නද? ඔවුන්ට ඔබට පණිවිඩ හෝ ඉල්ලීම් එවිය නොහැක.';
 
   @override
   String get blockUserAction => 'අවහිර කරන්න';
@@ -4645,7 +4623,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get unblockUserAction => 'අවහිරය ඉවත් කරන්න';
 
   @override
-  String get userBlockedSuccess => 'පරිශීලකයා සාර්ථකව අවහිර කරන ලදී';
+  String get userBlockedSuccess => 'අවහිර කළා';
 
   @override
   String get userUnblockedSuccess => 'අවහිරය ඉවත් කරන ලදී';
@@ -4678,11 +4656,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get reportDetailsHint => 'සිදුවූ දේ පිළිබඳ විස්තරයක් මෙහි ලියන්න...';
 
   @override
-  String get reportAlsoBlock => 'මෙම පරිශීලකයා අවහිර කිරීමද සිදුකරන්න';
+  String get reportAlsoBlock => 'මෙම පුද්ගලයාද අවහිර කරන්න';
 
   @override
   String get reportSubmittedSuccess =>
-      'පැමිණිල්ල යොමු විය. අපගේ සහායක කණ්ඩායම මෙය ඉක්මනින් සමාලෝචනය කරනු ඇත.';
+      'පැමිණිල්ල යැව්වා. අපගේ සහාය කණ්ඩායම ඉක්මනින් බලනු ඇත.';
 
   @override
   String get offlineBannerText =>
@@ -4692,7 +4670,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get retryAction => 'නැවත උත්සාහ කරන්න';
 
   @override
-  String get forceUpdateTitle => 'යෙදුම යාවත්කාලීන කිරීම අවශ්‍යයි';
+  String get forceUpdateTitle => 'යෙදුම යාවත්කාලීන කරන්න';
 
   @override
   String get forceUpdateMessage =>
@@ -4706,22 +4684,22 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get emergencyDispatchSubtitle =>
-      'කිලෝමීටර් 15ක් ඇතුළත සිටින ශිල්පීන් දැන්ම සොයාගන්න';
+      'කි.මී. 15ක් ඇතුළත සිටින තහවුරු කළ සේවා සපයන්නන් දැන්ම සොයාගන්න';
 
   @override
   String get scanningNearbyProviders =>
-      'අසල සිටින හදිසි සේවා ශිල්පීන් සොයමින් පවතී...';
+      'ළඟ සිටින හදිසි සේවා සපයන්නන් සොයමින්...';
 
   @override
   String get dispatchTimerLabel => 'කඩිනම් සෙවුම් කාලය';
 
   @override
   String get noEmergencyProvidersFound =>
-      'මේ මොහොතේ කිලෝමීටර් 15ක් ඇතුළත හදිසි ශිල්පීන් නොමැත';
+      'දැනට කි.මී. 15ක් ඇතුළත හදිසි සේවා සපයන්නන් නැත';
 
   @override
   String get noEmergencyProvidersDesc =>
-      'වෙනත් සේවා කාණ්ඩයක් තෝරා ගැනීමට හෝ හදිසි රැකියා ඉල්ලීමක් පළ කිරීමට උත්සාහ කරන්න.';
+      'වෙනත් සේවා කාණ්ඩයක් තෝරන්න, නැතහොත් හදිසි වැඩ ඉල්ලීමක් පළ කරන්න.';
 
   @override
   String get emergencyCalloutRate => 'හදිසි ඇමතුම් ගාස්තුව';
@@ -4774,7 +4752,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get urgentHelpBannerDesc =>
-      'ජල කාන්දුවීම්, විදුලි බිඳවැටීම් සඳහා කි.මී. 15ක් ඇතුළත කඩිනම් ශිල්පී සේවාව.';
+      'ජල කාන්දු, විදුලිය නැතිවීම, අගුළු ගැටලු සඳහා කි.මී. 15ක් ඇතුළත ඉක්මන් සේවා.';
 
   @override
   String get urgentHelpBannerAction => 'හදිසි සහන ලබාගන්න';
@@ -4811,7 +4789,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get visitOnlyCompletedNote =>
-      'මෙම වෙන්කිරීම පරීක්ෂාව / පැමිණීම සඳහා පමණක් සම්පූර්ණ කරන ලදී. සමාලෝචන අක්‍රීය කර ඇත.';
+      'මෙම වෙන්කිරීම පරීක්ෂා කිරීමට පැමිණීම පමණක් ලෙස අවසන් කළා. සමාලෝචන ලිවිය නොහැක.';
 
   @override
   String get completionTypeNormal => 'සාමාන්‍ය වැඩ සම්පූර්ණ කිරීම';
@@ -4892,7 +4870,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get billingUnit => 'අයකිරීම් ඒකකය';
 
   @override
-  String get billingUnitFixed => 'ස්ථාවර රැකියාව';
+  String get billingUnitFixed => 'වැඩයකට';
 
   @override
   String get billingUnitHour => 'පැයකට';
@@ -4916,7 +4894,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get totalRevisedPrice => 'මුළු සංශෝධිත මිල';
 
   @override
-  String get submitProposal => 'යෝජනාව ඉදිරිපත් කරන්න';
+  String get submitProposal => 'යෝජනාව යවන්න';
 
   @override
   String get addExtraWorkItem => 'අමතර වැඩ / අයිතමයක් එක් කරන්න';
@@ -5019,7 +4997,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get validVisitFeePrompt =>
-      'කරුණාකර වලංගු පැමිණීමේ ගාස්තුවක් ඇතුළත් කරන්න (LKR 1 - 20,000)';
+      'වලංගු පැමිණීමේ ගාස්තුවක් ඇතුළත් කරන්න (LKR 1 - 20,000)';
 
   @override
   String get validUnitRatePrompt =>
@@ -5068,7 +5046,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get quoteOutdatedDeclined =>
-      'මෙම මිල ගණන් යල් පැන ගිය එකකි, කරුණාකර අලුත් එකක් එවන ලෙස සේවාදායකයාගෙන් ඉල්ලන්න';
+      'මෙම මිල ගණන පරණයි. අලුත් එකක් එවන්න කියා සේවා සපයන්නාගෙන් ඉල්ලන්න';
 
   @override
   String youAreMetersAway(String distance) {
@@ -5076,14 +5054,14 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get imHereGpsWrong => 'මම ස්ථානයට පැමිණියෙමි (GPS දෝෂ සහිතයි)';
+  String get imHereGpsWrong => 'මම ආවා, නමුත් GPS වැරදියි';
 
   @override
   String get slideToClaimArrival => 'පැමිණීම තහවුරු කිරීමට ස්ලයිඩ් කරන්න';
 
   @override
   String get waitingCustomerConfirmation =>
-      'පැමිණීම වාර්තා කෙරිණි. පාරිභෝගිකයාගේ තහවුරු කිරීම අපේක්ෂාවෙන්...';
+      'පැමිණි බව දැන්වූවා. පාරිභෝගිකයා තහවුරු කරන තෙක් රැඳී සිටින්න...';
 
   @override
   String get arrivalDeniedProviderNotice =>
@@ -5101,7 +5079,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'විනාඩි 10 ක් ගතවී ඇතත් පාරිභෝගිකයා ප්‍රතිචාර දක්වා නැත.';
 
   @override
-  String get startJobVerifiedGps => 'කාර්යය ආරම්භ කරන්න (GPS තහවුරු කර ඇත)';
+  String get startJobVerifiedGps => 'වැඩය ආරම්භ කරන්න (GPS තහවුරුයි)';
 
   @override
   String get callCustomerToConfirm =>
@@ -5124,14 +5102,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get noNotHere => 'නැත, තවම පැමිණ නැත';
 
   @override
-  String get providerDidNotCome => 'සේවා ශිල්පියා පැමිණියේ නැත';
+  String get providerDidNotCome => 'සේවා සපයන්නා ආවේ නැත';
 
   @override
   String get confirmNoShowTitle => 'නොපැමිණීම වාර්තා කරන්නද?';
 
   @override
   String get confirmNoShowMessage =>
-      'සේවා ශිල්පියා නොපැමිණි බැවින් මෙම වෙන්කිරීම අවලංගු කෙරේ.';
+      'සේවා සපයන්නා නොපැමිණි නිසා මෙම වෙන්කිරීම අවලංගු කෙරේ.';
 
   @override
   String get locationRequiredToBook =>
@@ -5147,7 +5125,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get arrivalDeniedFlag => 'පාරිභෝගිකයා පැමිණීම ප්‍රතික්ෂේප කළේය';
 
   @override
-  String get noShowFlag => 'සේවා ශිල්පියා නොපැමිණියේය';
+  String get noShowFlag => 'සේවා සපයන්නා නොපැමිණියේය';
 
   @override
   String gpsOutsideZoneAlert(String distance) {
@@ -5163,7 +5141,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get completeJobEnterPin =>
-      'කාර්යය සම්පූර්ණ කරන්න (පාරිභෝගික PIN ඇතුළත් කරන්න)';
+      'වැඩය අවසන් කරන්න (පාරිභෝගිකයාගේ PIN ඇතුළත් කරන්න)';
 
   @override
   String get noShowReportedSuccess =>
@@ -5203,18 +5181,18 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get customerLocationNotAvailableDesc =>
-      'මෙම කාර්යය සඳහා නිශ්චිත GPS ඛණ්ඩාංක සපයා නොමැත. පැමිණීම සම්බන්ධීකරණය කිරීමට පහතින් පාරිභෝගිකයා අමතන්න.';
+      'මෙම වැඩයට නිශ්චිත ස්ථානය ලබා දී නැත. පැමිණීමට පෙර පාරිභෝගිකයා අමතන්න.';
 
   @override
   String get locationRequiredTitle => 'ස්ථානය අවශ්‍යයි';
 
   @override
   String get jobNoLocationRepost =>
-      'මෙම කාර්යය සඳහා ස්ථානයක් සකසා නැත. කරුණාකර ස්ථානය සකසා නැවත පළ කරන්න.';
+      'මෙම වැඩයට ස්ථානයක් නැත. ස්ථානය සකසා නැවත පළ කරන්න.';
 
   @override
   String quoteAcceptedChatMessage(String providerName, String price) {
-    return 'හෙලෝ $providerName, මම ඔබේ මිල ගණන් පිළිගත්තා (රු. $price). අපි කාර්යයේ විස්තර සම්බන්ධීකරණය කරමු!';
+    return 'හෙලෝ $providerName, මම ඔබේ මිල ගණන පිළිගත්තා (රු. $price). වැඩයේ විස්තර කතා කරමු!';
   }
 
   @override
@@ -5247,7 +5225,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get becomeProviderSubtitle =>
-      'ඔබගේ වෘත්තීය කුසලතා පිරිනමන්න, රැකියා ලබාගෙන වැඩිපුර උපයන්න';
+      'ඔබේ හැකියාවෙන් වැඩ ලබාගෙන වැඩිපුර උපයන්න';
 
   @override
   String get switchToProvider => 'සේවා සපයන්නාගේ ප්‍රකාරයට මාරු වන්න';
@@ -5290,7 +5268,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get inspectionQuoteNotice =>
-      'පරීක්ෂණ මිල ගණන් වලට පැමිණීමේ ගාස්තුව සහ ගමන් වියදම් ඇතුළත් වේ. මුළු කාර්යයේ මිල පැමිණි පසු තීරණය කරනු ලැබේ.';
+      'මෙම මිලට පැමිණීමේ ගාස්තුව සහ ගමන් ගාස්තුව ඇතුළත්. වැඩයේ මුළු මිල පැමිණි පසු එකඟ වේ.';
 
   @override
   String get materialsEstimateOptional => 'ද්‍රව්‍ය ඇස්තමේන්තුව (විකල්ප)';
@@ -5349,7 +5327,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get unableToLoadPhoto => 'ඡායාරූපය පූරණය කළ නොහැක';
+  String get unableToLoadPhoto => 'ඡායාරූපය පෙන්වීමට නොහැක';
 
   @override
   String get newTimeLabel => 'නව වේලාව:';
@@ -5368,7 +5346,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'සම්පූර්ණ කරන ලද සහ පසුගිය වෙන්කිරීම් මෙහි පෙන්වනු ඇත.';
 
   @override
-  String get yourRatingReview => 'ඔබගේ ශ්‍රේණිගත කිරීම සහ සමාලෝචනය';
+  String get yourRatingReview => 'ඔබේ ඇගයීම සහ සමාලෝචනය';
 
   @override
   String get signInToViewBookings =>
@@ -5465,7 +5443,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get nicUnderReviewMessage =>
-      'ඔබගේ සත්‍යාපන ඉල්ලීම HelaService පරිපාලනය විසින් සමාලෝචනය කරමින් පවතී.';
+      'ඔබගේ ඉල්ලීම HelaService කණ්ඩායම පරීක්ෂා කරමින් සිටී.';
 
   @override
   String amountLkrLabel(Object amount) {
@@ -5483,7 +5461,8 @@ class AppLocalizationsSi extends AppLocalizations {
       'පැමිණීමේ / පරීක්ෂණ ගාස්තුව පමණක් අය කරන්න. සම්පූර්ණ සේවාවකින් තොරව සේවාව නිම වේ.';
 
   @override
-  String get providerVerificationPending => 'සේවා සපයන්නා සත්‍යාපනය අපේක්ෂිතයි';
+  String get providerVerificationPending =>
+      'සේවා සපයන්නා තහවුරු කිරීම බලාපොරොත්තුවෙන්';
 
   @override
   String sendQuoteLkr(Object amount) {
@@ -5734,7 +5713,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get privacyDataCollectionPoints =>
-      '• පැතිකඩ නම, දුරකථන අංකය සහ ගිණුම් විස්තර\n• කාර්ය විස්තර, ලිපින සහ සේවා ස්ථාන\n• සත්‍යාපන ලේඛන (ජාතික හැඳුනුම්පත, ව්‍යාපාර බලපත්‍ර)\n• වේදිකාව හරහා පණිවිඩ සහ සන්නිවේදන';
+      '• පැතිකඩ නම, දුරකථන අංකය සහ ගිණුම් විස්තර\n• වැඩ විස්තර, ලිපින සහ සේවා ස්ථාන\n• තහවුරු කිරීමේ ලේඛන (ජාතික හැඳුනුම්පත, ව්‍යාපාර බලපත්‍ර)\n• වේදිකාව හරහා පණිවිඩ සහ සන්නිවේදන';
 
   @override
   String get timelineBookingCreated => 'සේවාව නිර්මාණය කරන ලදී';
@@ -5798,7 +5777,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get tapToPickLocationDesc =>
-      'GPS, සිතියම හෝ සුරකින ලද ලිපින මඟින් තෝරාගැනීමට ස්පර්ශ කරන්න';
+      'GPS, සිතියම හෝ සුරකින ලද ලිපිනයකින් තෝරාගැනීමට ඔබන්න';
 
   @override
   String get setPin => 'ස්ථානය සලකුණු කරන්න';
@@ -5867,14 +5846,14 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get permManageUsersDesc =>
-      'පාරිභෝගිකයින් සහ ශිල්පීන් අත්හිටුවීම හෝ නැවත සක්‍රිය කිරීම.';
+      'පාරිභෝගිකයින් සහ සේවා සපයන්නන් අත්හිටුවීම හෝ නැවත සක්‍රිය කිරීම.';
 
   @override
   String get permHandleSupportLabel => 'සහාය සහ පැමිණිලි';
 
   @override
   String get permHandleSupportDesc =>
-      'පාරිභෝගික සහ ශිල්පී සහාය ඉල්ලීම් සමාලෝචනය කර පිළිතුරු දීම.';
+      'පාරිභෝගික සහ සේවා සපයන්නන්ගේ සහාය ඉල්ලීම්වලට පිළිතුරු දීම.';
 
   @override
   String get noPermissionForAction => 'මෙය සිදු කිරීමට ඔබට අවසර නොමැත.';
@@ -5962,13 +5941,13 @@ class AppLocalizationsSi extends AppLocalizations {
   String get supportPhone => 'සහාය දුරකථන අංකය';
 
   @override
-  String get supportEmail => 'සහාය විද්‍යුත් තැපෑල';
+  String get supportEmail => 'සහාය ඊමේල්';
 
   @override
   String get callSupport => 'සහාය අමතන්න';
 
   @override
-  String get emailSupport => 'විද්‍යුත් තැපෑල යොමු කරන්න';
+  String get emailSupport => 'ඊමේල් කරන්න';
 
   @override
   String get noTicketsYet => 'තවමත් සහාය ඉල්ලීම් නොමැත';
@@ -6025,7 +6004,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඉල්ලීම පළ කිරීමට පෙර කරුණාකර සිතියමෙන් සේවා ස්ථානය තෝරන්න.';
 
   @override
-  String get scheduleModeAsap => 'හැකි ඉක්මනින් (ASAP)';
+  String get scheduleModeAsap => 'හැකි ඉක්මනින්';
 
   @override
   String get scheduleModeDateOnly => 'දිනය පමණක් තෝරන්න';
@@ -6067,7 +6046,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get admin2faSubtitle =>
-      'ඔබගේ පරිපාලක විද්‍යුත් තැපෑලට එවන ලද ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.';
+      'ඔබගේ පරිපාලක ඊමේල් එකට ආ ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.';
 
   @override
   String get useDifferentAccount => 'වෙනත් ගිණුමක් භාවිතා කරන්න';
@@ -6165,11 +6144,11 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get jobPostPermissionDenied =>
-      'ඔබගේ කාර්යය පළ කිරීමට නොහැකි විය. කරුණාකර නැවත ලොග් වී උත්සාහ කරන්න.';
+      'වැඩය පළ කිරීමට නොහැකි විය. නැවත ලොග් වී උත්සාහ කරන්න.';
 
   @override
   String get jobPostErrorGeneral =>
-      'ඔබගේ කාර්යය පළ කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+      'වැඩය පළ කිරීමට නොහැකි විය. නැවත උත්සාහ කරන්න.';
 
   @override
   String get emergencyRateUnavailable =>
@@ -6180,8 +6159,7 @@ class AppLocalizationsSi extends AppLocalizations {
       'මේ මොහොතේ ඔබේ හැඳුනුම්පත උඩුගත කිරීමට නොහැකි විය. කරුණාකර පසුව නැවත උත්සාහ කරන්න.';
 
   @override
-  String get emailOtpRequiredError =>
-      'කරුණාකර පළමුව ඔබේ විද්‍යුත් තැපෑල තහවුරු කරන්න.';
+  String get emailOtpRequiredError => 'පළමුව ඔබේ ඊමේල් තහවුරු කරන්න.';
 
   @override
   String get profileCompletionError =>
@@ -6192,18 +6170,18 @@ class AppLocalizationsSi extends AppLocalizations {
       'වලංගු නොවන හැඳුනුම්පත් අංකයකි. ඉලක්කම් 9ක් සමග V/X හෝ ඉලක්කම් 12ක් ඇතුළත් කරන්න.';
 
   @override
-  String get providerPendingTitle => 'අයදුම්පත සමාලෝචනය වෙමින් පවතී';
+  String get providerPendingTitle => 'අයදුම්පත පරීක්ෂා කරමින්';
 
   @override
   String get providerPendingSubtitle =>
-      'අපි ඔබගේ ලියාපදිංචිය සහ හැඳුනුම්පත් ලේඛන සමාලෝචනය කරමින් සිටිමු. අනුමත වූ පසු ඔබට දැනුම් දෙනු ලැබේ.';
+      'ඔබගේ ලියාපදිංචිය සහ හැඳුනුම්පත් ලේඛන අපි පරීක්ෂා කරමින් සිටිමු. අනුමත වූ විට ඔබට දැනුම් දෙන්නෙමු.';
 
   @override
   String get providerRejectedTitle => 'අයදුම්පත සඳහා අවධානය අවශ්‍යයි';
 
   @override
   String get providerRejectedSubtitle =>
-      'ඔබගේ අයදුම්පත අනුමත නොවීය. කරුණාකර පහත හේතුව පරීක්ෂා කර යාවත්කාලීන තොරතුරු ඉදිරිපත් කරන්න.';
+      'ඔබගේ අයදුම්පත අනුමත නොවීය. පහත හේතුව බලා නිවැරදි තොරතුරු යවන්න.';
 
   @override
   String get rejectionReasonLabel => 'හේතුව';
@@ -6221,11 +6199,11 @@ class AppLocalizationsSi extends AppLocalizations {
   String get applicantNameLabel => 'අයදුම්කරුගේ නම';
 
   @override
-  String get fixAndResubmit => 'නිවැරදි කර නැවත ඉදිරිපත් කරන්න';
+  String get fixAndResubmit => 'නිවැරදි කර නැවත යවන්න';
 
   @override
   String get providerPendingCustomerToast =>
-      'ඔබගේ සැපයුම්කරු අයදුම්පත සමාලෝචනය වෙමින් පවතී. මේ අතර ඔබට පාරිභෝගික විශේෂාංග භාවිතා කළ හැක.';
+      'ඔබගේ සේවා සපයන්නා ඉල්ලීම පරීක්ෂා කරමින් පවතී. ඒ අතරතුර පාරිභෝගික කොටස භාවිත කළ හැක.';
 
   @override
   String get providerApprovedCelebration =>
@@ -6235,7 +6213,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get providerApplicationStatusBadge => 'සේවා අයදුම්පත';
 
   @override
-  String get providerApplicationUnderReview => 'සමාලෝචනය වෙමින්';
+  String get providerApplicationUnderReview => 'පරීක්ෂා කරමින්';
 
   @override
   String get providerApplicationActionNeeded => 'අවධානය අවශ්‍යයි';
@@ -6245,7 +6223,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get providerResubmitSubtitle =>
-      'ඔබගේ අයදුම්පත සඳහා වඩාත් පැහැදිලි ලේඛනයක් අවශ්‍ය වේ. කරුණාකර පහත හේතුව පරීක්ෂා කර නැවත ඉදිරිපත් කරන්න.';
+      'ඔබගේ අයදුම්පතට වඩා පැහැදිලි ලේඛනයක් හෝ ඡායාරූපයක් අවශ්‍යයි. පහත සටහන බලා නැවත යවන්න.';
 
   @override
   String get autoChecksTitle => 'ස්වයංක්‍රීය ආරක්ෂණ සහ වලංගුතා පරීක්ෂාවන්';
@@ -6334,7 +6312,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get optionalReviewerNote => 'අමතර උපදෙස් (විකල්ප, උපරිම අකුරු 300)';
 
   @override
-  String get filterPending => 'සමාලෝචනයේ';
+  String get filterPending => 'බලාපොරොත්තුවෙන්';
 
   @override
   String get filterResubmitted => 'නැවත ඉදිරිපත් කළ';
@@ -6381,23 +6359,22 @@ class AppLocalizationsSi extends AppLocalizations {
   String get recentPlaces => 'මෑත ස්ථාන';
 
   @override
-  String get useMyCurrentLocation => 'මගේ වත්මන් ස්ථානය භාවිත කරන්න';
+  String get useMyCurrentLocation => 'මම දැන් ඉන්න ස්ථානය භාවිත කරන්න';
 
   @override
-  String get showingJobsNearYouNow => 'දැන් ඔබ අසල ඇති රැකියා පෙන්වයි';
+  String get showingJobsNearYouNow => 'දැන් ඔබ අසල ඇති වැඩ';
 
   @override
   String showingJobsNearBase(String area) {
-    return 'ඔබගේ මූලික ස්ථානය අසල රැකියා පෙන්වයි ($area)';
+    return 'ඔබේ මූලික ස්ථානය අසල වැඩ ($area)';
   }
 
   @override
-  String get showingJobsNearBaseNoArea =>
-      'ඔබගේ මූලික ස්ථානය අසල රැකියා පෙන්වයි';
+  String get showingJobsNearBaseNoArea => 'ඔබේ මූලික ස්ථානය අසල වැඩ';
 
   @override
   String get setBaseLocationPrompt =>
-      'ආසන්න රැකියා බැලීමට ඔබගේ මූලික ස්ථානය සකසන්න';
+      'ළඟ ඇති වැඩ බැලීමට ඔබේ මූලික ස්ථානය සකසන්න';
 
   @override
   String get setBaseLocationBtn => 'මූලික ස්ථානය සකසන්න';
@@ -6431,7 +6408,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get howDoYouChargeSubtitle =>
-      'අවම වශයෙන් එක් අය කිරීමේ ක්‍රමයක් තෝරන්න (පැයකට, දිනකට හෝ කාර්යයකට).';
+      'අවම වශයෙන් එකක් තෝරන්න (පැයකට, දිනකට හෝ වැඩයකට).';
 
   @override
   String get pricingModePerHour => 'පැයකට';
@@ -6440,8 +6417,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get pricingModePerDay => 'දිනකට';
 
   @override
-  String get pricingModePricePerJob =>
-      'කාර්යයකට මිල (සෑම කාර්යයකටම මිලක් නියම කරන්න)';
+  String get pricingModePricePerJob => 'වැඩයකට මිල (එක් එක් වැඩයට මිල කියන්න)';
 
   @override
   String get pricingModeVisitFee => 'පැමිණීමේ / පරීක්ෂණ ගාස්තුව';
@@ -6451,20 +6427,20 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get atLeastOneBasePricingModeRequired =>
-      'පැයකට, දිනකට, හෝ කාර්යයකට මිල යන ක්‍රම වලින් අවම වශයෙන් එකක් තෝරන්න.';
+      'පැයකට, දිනකට හෝ වැඩයකට මිල — අවම වශයෙන් එකක් තෝරන්න.';
 
   @override
   String get travelIncluded => 'ගමන් ගාස්තු ඇතුළත් කර ඇත';
 
   @override
-  String get quoteEachJob => 'කාර්යය අනුව මිල නියම කෙරේ';
+  String get quoteEachJob => 'වැඩය අනුව මිල';
 
   @override
   String get travelTitle => 'ගමන්';
 
   @override
   String get couldNotLoadExactLocationRetry =>
-      'නියමිත රැකියා ස්ථානය ලබා ගැනීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+      'වැඩයේ නිශ්චිත ස්ථානය ලබාගත නොහැකි විය. නැවත උත්සාහ කරන්න.';
 
   @override
   String get gettingYourLocation => 'ඔබගේ ස්ථානය ලබා ගනිමින්...';
@@ -6517,7 +6493,7 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get markInReviewAction => 'සමාලෝචනය වෙමින් ලෙස සලකුණු කරන්න';
+  String get markInReviewAction => 'පරීක්ෂාවට ගන්න';
 
   @override
   String get resolveAction => 'විසඳන්න';
@@ -6558,19 +6534,17 @@ class AppLocalizationsSi extends AppLocalizations {
   }
 
   @override
-  String get notificationIdentityApprovedTitle =>
-      'හැඳුනුම්පත් සත්‍යාපනය අනුමතයි';
+  String get notificationIdentityApprovedTitle => 'හැඳුනුම්පත තහවුරුයි';
 
   @override
   String get notificationIdentityApprovedBody =>
-      'ඔබගේ අනන්‍යතා සත්‍යාපනය අනුමත කරන ලදී. ඔබගේ පැතිකඩ දැන් සක්‍රීයයි.';
+      'ඔබගේ හැඳුනුම්පත තහවුරු කළා. ඔබගේ පැතිකඩ දැන් සක්‍රියයි.';
 
   @override
-  String get heroVerifiedArtisans => 'සත්‍යාපිත සේවා ශිල්පීන්';
+  String get heroVerifiedArtisans => 'තහවුරු කළ සේවා සපයන්නන්';
 
   @override
-  String get heroLiveTracking =>
-      'ඔබගේ සේවාදායකයා එන විට සජීවීව නිරීක්ෂණය කරන්න';
+  String get heroLiveTracking => 'සේවා සපයන්නා එන විට සජීවීව බලන්න';
 
   @override
   String get heroTransparentQuotes => 'විනිවිදභාවයෙන් යුත් දේශීය මිල ගණන්';
@@ -6584,4 +6558,125 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get heroCommunityRated => 'ප්‍රජාව විසින් ශ්‍රේණිගත කළ වෘත්තිකයන්';
+
+  @override
+  String get supportTicketCloseConfirm => 'මෙම ඉල්ලීම වසන්නද?';
+
+  @override
+  String get ticketClosedMessage => 'ඉල්ලීම වසා දැමුවා.';
+
+  @override
+  String get ticketNotFound => 'ඉල්ලීම හමු නොවීය';
+
+  @override
+  String bookingTimelineWithId(String id) {
+    return 'වෙන්කිරීමේ ඉතිහාසය ($id)';
+  }
+
+  @override
+  String get viewTicketAndThread => 'ඉල්ලීම සහ පණිවිඩ බලන්න';
+
+  @override
+  String get refreshImages => 'ඡායාරූප නැවත ලබාගන්න';
+
+  @override
+  String quantityRangeMinMax(String min, String max) {
+    return '($min - $max)';
+  }
+
+  @override
+  String get timelineDescCreated => 'පාරිභෝගිකයා වෙන්කිරීමේ ඉල්ලීමක් යොමු කළා';
+
+  @override
+  String get timelineDescAccepted => 'සේවා සපයන්නා වෙන්කිරීම පිළිගත්තා';
+
+  @override
+  String get timelineDescDeclined => 'සේවා සපයන්නා වෙන්කිරීම ප්‍රතික්ෂේප කළා';
+
+  @override
+  String get timelineDescCancelled => 'වෙන්කිරීම අවලංගු කළා';
+
+  @override
+  String get timelineDescEnRoute =>
+      'සේවා සපයන්නා ස්ථානයට පැමිණීමට ගමන ආරම්භ කළා';
+
+  @override
+  String get timelineDescArrived => 'සේවා සපයන්නා ස්ථානයට පැමිණියා';
+
+  @override
+  String get timelineDescArrivalClaimed =>
+      'සේවා සපයන්නා තමන් පැමිණි බව සටහන් කළා';
+
+  @override
+  String get timelineDescArrivalConfirmed =>
+      'පාරිභෝගිකයා සේවා සපයන්නාගේ පැමිණීම තහවුරු කළා';
+
+  @override
+  String get timelineDescArrivalDenied =>
+      'සේවා සපයන්නා පැමිණ නැති බව පාරිභෝගිකයා වාර්තා කළා';
+
+  @override
+  String get timelineDescArrivalAutoStarted =>
+      'GPS තහවුරු කිරීමෙන් පසු ස්වයංක්‍රීයව ආරම්භ විය';
+
+  @override
+  String get timelineDescCompleted => 'වැඩය අවසන් කළා';
+
+  @override
+  String get timelineDescCompletedVisitOnly =>
+      'පරීක්ෂණ/පැමිණීමේ ගාස්තුව පමණක් අය කර අවසන් කළා';
+
+  @override
+  String get timelineDescPaymentConfirmed => 'පාරිභෝගිකයා ගෙවීම තහවුරු කළා';
+
+  @override
+  String get timelineDescPaymentDisputed => 'ගෙවීම පිළිබඳ ගැටලුවක් වාර්තා කළා';
+
+  @override
+  String get timelineDescPriceProposed =>
+      'සේවා සපයන්නා සංශෝධිත මිලක් යෝජනා කළා';
+
+  @override
+  String get timelineDescPriceApproved => 'පාරිභෝගිකයා සංශෝධිත මිල අනුමත කළා';
+
+  @override
+  String get timelineDescPriceRejected =>
+      'පාරිභෝගිකයා සංශෝධිත මිල ප්‍රතික්ෂේප කළා';
+
+  @override
+  String get timelineDescPriceKept => 'සේවා සපයන්නා මුල් මිලම ස්ථිර කළා';
+
+  @override
+  String get timelineDescExtraRequested =>
+      'සේවා සපයන්නා අමතර වැඩ සඳහා අනුමැතිය ඉල්ලා සිටියා';
+
+  @override
+  String get timelineDescExtraApproved => 'පාරිභෝගිකයා අමතර වැඩ අනුමත කළා';
+
+  @override
+  String get timelineDescExtraRejected =>
+      'පාරිභෝගිකයා අමතර වැඩ ප්‍රතික්ෂේප කළා';
+
+  @override
+  String get timelineDescNoShowReported =>
+      'සේවා සපයන්නා නොපැමිණි බව පාරිභෝගිකයා වාර්තා කළා';
+
+  @override
+  String get timelineDescBeforePhotoAdded =>
+      'සේවා සපයන්නා වැඩයට පෙර ඡායාරූපයක් එක් කළා';
+
+  @override
+  String get timelineDescAfterPhotoAdded =>
+      'සේවා සපයන්නා වැඩය අවසන් වූ පසු ඡායාරූපයක් එක් කළා';
+
+  @override
+  String get timelineDescRescheduleRequested =>
+      'වෙලාව වෙනස් කිරීමට ඉල්ලා සිටියා';
+
+  @override
+  String get timelineDescRescheduleAccepted => 'වෙලාව වෙනස් කිරීම පිළිගත්තා';
+
+  @override
+  String get timelineDescRescheduleDeclined =>
+      'වෙලාව වෙනස් කිරීම ප්‍රතික්ෂේප කළා';
 }

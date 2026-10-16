@@ -113,11 +113,12 @@ class _RescheduleSheetState extends State<RescheduleSheet> {
         );
       }
     } catch (e) {
+      debugPrint('[RescheduleSheet] Error: $e');
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${context.l10n.somethingWentWrong}: $e'),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );

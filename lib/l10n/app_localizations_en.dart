@@ -3891,7 +3891,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelReasonPriceDispute => 'Price or rate disagreement';
 
   @override
-  String get cancelReasonOther => 'Other reason';
+  String get cancelReasonOther => 'Other';
 
   @override
   String get confirmCancellation => 'Confirm Cancellation';
@@ -6882,4 +6882,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String ratePerKm(String amount) {
     return 'LKR $amount/km';
   }
+
+  @override
+  String get whenDoYouNeedThis => 'When do you need this?';
+
+  @override
+  String get scheduleModeToday => 'Today';
+
+  @override
+  String get scheduleModeSpecificDay => 'On a specific day';
+
+  @override
+  String get scheduleModeFlexible => 'Flexible';
+
+  @override
+  String get urgentHelpHint => 'Emergency? Use Urgent help.';
+
+  @override
+  String get todayDisabledPast20 => 'After 20:00, please pick a specific day.';
+
+  @override
+  String get slotAnytimeLabel => 'Anytime (08:00 - 20:00)';
+
+  @override
+  String get slotMorningShort => 'Morning';
+
+  @override
+  String get slotAfternoonShort => 'Afternoon';
+
+  @override
+  String get slotEveningShort => 'Evening';
+
+  @override
+  String get slotAnytimeShort => 'Anytime';
+
+  @override
+  String get slotExactTime => 'Exact time';
+
+  @override
+  String get flexibleWithin3Days => 'Within 3 days';
+
+  @override
+  String get flexibleWithinWeek => 'Within a week';
+
+  @override
+  String get flexibleWithin2Weeks => 'Within 2 weeks';
+
+  @override
+  String get slotPassed => 'Passed';
+
+  @override
+  String get cancelJobTitle => 'Cancel Job Request';
+
+  @override
+  String get cancelJobConfirmPrompt =>
+      'Are you sure you want to cancel this job?';
+
+  @override
+  String get cancelReasonFoundSomeone => 'Found someone else';
+
+  @override
+  String get cancelReasonNoLongerNeeded => 'No longer needed';
+
+  @override
+  String get cancelReasonTooExpensive => 'Too expensive';
+
+  @override
+  String get withdrawBid => 'Withdraw bid';
+
+  @override
+  String get withdrawBidConfirmPrompt =>
+      'Are you sure you want to withdraw your bid?';
+
+  @override
+  String get bidWithdrawnSuccess => 'Bid withdrawn';
+
+  @override
+  String get quoteNoLongerAvailable => 'This quote is no longer available.';
+
+  @override
+  String get providerWithdrewQuoteNotice => 'A provider withdrew their quote';
+
+  @override
+  String get clashWarningBidding => 'You already have a job at this time.';
+
+  @override
+  String clashWarningPostWin(int count) {
+    return 'You have $count other bids at this time. Withdraw them?';
+  }
+
+  @override
+  String get reviewBidsButton => 'Review Bids';
+
+  @override
+  String coverageWarningCount(int count) {
+    return '$count providers serve this area';
+  }
+
+  @override
+  String get coverageWarningZero =>
+      'No providers in this category cover this area yet. You can still post.';
+
+  @override
+  String get myBidsActiveTab => 'Active';
+
+  @override
+  String get myBidsPastTab => 'Past';
+
+  @override
+  String get bidStatusPending => 'Pending';
+
+  @override
+  String get bidStatusAccepted => 'Accepted';
+
+  @override
+  String get bidStatusNotSelected => 'Not Selected';
+
+  @override
+  String get bidStatusWithdrawn => 'Withdrawn';
+
+  @override
+  String get bidStatusJobClosed => 'Job no longer available';
+
+  @override
+  String get whenCanYouCome => 'When can you come?';
+
+  @override
+  String get selectDayInsideWindow =>
+      'Select a day within the customer\'s window';
 }

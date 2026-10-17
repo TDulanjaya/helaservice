@@ -189,6 +189,10 @@ class _NotificationCard extends StatelessWidget {
       case 'quote_received':
       case 'quote_accepted':
         return Icons.local_offer_outlined;
+      case 'quote_not_selected':
+        return Icons.money_off_rounded;
+      case 'job_closed':
+        return Icons.cancel_outlined;
       case 'provider_en_route':
         return Icons.directions_car_outlined;
       case 'provider_arrived':
@@ -210,6 +214,10 @@ class _NotificationCard extends StatelessWidget {
       case 'job_completed':
       case 'payment_recorded':
         return const Color(0xFF22C55E);
+      case 'quote_not_selected':
+        return const Color(0xFF94A3B8);
+      case 'job_closed':
+        return AppColors.error;
       case 'provider_en_route':
       case 'provider_arrived':
         return AppColors.primary;

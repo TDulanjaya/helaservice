@@ -7039,7 +7039,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelReasonOther.
   ///
   /// In en, this message translates to:
-  /// **'Other reason'**
+  /// **'Other'**
   String get cancelReasonOther;
 
   /// No description provided for @confirmCancellation.
@@ -12437,6 +12437,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LKR {amount}/km'**
   String ratePerKm(String amount);
+
+  /// No description provided for @whenDoYouNeedThis.
+  ///
+  /// In en, this message translates to:
+  /// **'When do you need this?'**
+  String get whenDoYouNeedThis;
+
+  /// No description provided for @scheduleModeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get scheduleModeToday;
+
+  /// No description provided for @scheduleModeSpecificDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On a specific day'**
+  String get scheduleModeSpecificDay;
+
+  /// No description provided for @scheduleModeFlexible.
+  ///
+  /// In en, this message translates to:
+  /// **'Flexible'**
+  String get scheduleModeFlexible;
+
+  /// No description provided for @urgentHelpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency? Use Urgent help.'**
+  String get urgentHelpHint;
+
+  /// No description provided for @todayDisabledPast20.
+  ///
+  /// In en, this message translates to:
+  /// **'After 20:00, please pick a specific day.'**
+  String get todayDisabledPast20;
+
+  /// No description provided for @slotAnytimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Anytime (08:00 - 20:00)'**
+  String get slotAnytimeLabel;
+
+  /// No description provided for @slotMorningShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get slotMorningShort;
+
+  /// No description provided for @slotAfternoonShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon'**
+  String get slotAfternoonShort;
+
+  /// No description provided for @slotEveningShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get slotEveningShort;
+
+  /// No description provided for @slotAnytimeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Anytime'**
+  String get slotAnytimeShort;
+
+  /// No description provided for @slotExactTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact time'**
+  String get slotExactTime;
+
+  /// No description provided for @flexibleWithin3Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Within 3 days'**
+  String get flexibleWithin3Days;
+
+  /// No description provided for @flexibleWithinWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Within a week'**
+  String get flexibleWithinWeek;
+
+  /// No description provided for @flexibleWithin2Weeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Within 2 weeks'**
+  String get flexibleWithin2Weeks;
+
+  /// No description provided for @slotPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed'**
+  String get slotPassed;
+
+  /// No description provided for @cancelJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Job Request'**
+  String get cancelJobTitle;
+
+  /// No description provided for @cancelJobConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this job?'**
+  String get cancelJobConfirmPrompt;
+
+  /// No description provided for @cancelReasonFoundSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Found someone else'**
+  String get cancelReasonFoundSomeone;
+
+  /// No description provided for @cancelReasonNoLongerNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer needed'**
+  String get cancelReasonNoLongerNeeded;
+
+  /// No description provided for @cancelReasonTooExpensive.
+  ///
+  /// In en, this message translates to:
+  /// **'Too expensive'**
+  String get cancelReasonTooExpensive;
+
+  /// No description provided for @withdrawBid.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw bid'**
+  String get withdrawBid;
+
+  /// No description provided for @withdrawBidConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to withdraw your bid?'**
+  String get withdrawBidConfirmPrompt;
+
+  /// No description provided for @bidWithdrawnSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Bid withdrawn'**
+  String get bidWithdrawnSuccess;
+
+  /// No description provided for @quoteNoLongerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote is no longer available.'**
+  String get quoteNoLongerAvailable;
+
+  /// No description provided for @providerWithdrewQuoteNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'A provider withdrew their quote'**
+  String get providerWithdrewQuoteNotice;
+
+  /// No description provided for @clashWarningBidding.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a job at this time.'**
+  String get clashWarningBidding;
+
+  /// No description provided for @clashWarningPostWin.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} other bids at this time. Withdraw them?'**
+  String clashWarningPostWin(int count);
+
+  /// No description provided for @reviewBidsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Bids'**
+  String get reviewBidsButton;
+
+  /// No description provided for @coverageWarningCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} providers serve this area'**
+  String coverageWarningCount(int count);
+
+  /// No description provided for @coverageWarningZero.
+  ///
+  /// In en, this message translates to:
+  /// **'No providers in this category cover this area yet. You can still post.'**
+  String get coverageWarningZero;
+
+  /// No description provided for @myBidsActiveTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get myBidsActiveTab;
+
+  /// No description provided for @myBidsPastTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get myBidsPastTab;
+
+  /// No description provided for @bidStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bidStatusPending;
+
+  /// No description provided for @bidStatusAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get bidStatusAccepted;
+
+  /// No description provided for @bidStatusNotSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Selected'**
+  String get bidStatusNotSelected;
+
+  /// No description provided for @bidStatusWithdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn'**
+  String get bidStatusWithdrawn;
+
+  /// No description provided for @bidStatusJobClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Job no longer available'**
+  String get bidStatusJobClosed;
+
+  /// No description provided for @whenCanYouCome.
+  ///
+  /// In en, this message translates to:
+  /// **'When can you come?'**
+  String get whenCanYouCome;
+
+  /// No description provided for @selectDayInsideWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day within the customer\'s window'**
+  String get selectDayInsideWindow;
 }
 
 class _AppLocalizationsDelegate

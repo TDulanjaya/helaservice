@@ -161,9 +161,14 @@ service cloud.firestore {
         'requestId', 'providerId', 'createdBy', 'providerName', 'providerTrade',
         'providerLocation', 'etaMinutes', 'notes', 'status', 'createdAt', 'updatedAt',
         'quoteType', 'priceUnit', 'unitRateLkr', 'quantity', 'materialsEstimateLkr',
-        'visitFeeLkr', 'travelKm', 'travelRateLkr', 'travelCostLkr', 'quotedPrice'
+        'visitFeeLkr', 'travelKm', 'travelRateLkr', 'travelCostLkr', 'quotedPrice',
+        'proposedStartAt', 'proposedEndAt', 'proposedSlot', 'withdrawnAt'
       ]) &&
       !data.keys().hasAny(['providerRating', 'providerReviewCount', 'providerNicVerified', 'providerPhone', 'providerLatitude', 'providerLongitude']) &&
+      (!('proposedStartAt' in data) || data.proposedStartAt == null || data.proposedStartAt is timestamp) &&
+      (!('proposedEndAt' in data) || data.proposedEndAt == null || data.proposedEndAt is timestamp) &&
+      (!('proposedSlot' in data) || data.proposedSlot == null || (data.proposedSlot is string && data.proposedSlot.size() <= 20)) &&
+      (!('withdrawnAt' in data) || data.withdrawnAt == null || data.withdrawnAt is timestamp) &&
       (
         (!('quoteType' in data) && data.quotedPrice is int && data.quotedPrice > 0) ||
         (
@@ -247,36 +252,51 @@ service cloud.firestore {
       );
     }
 
-    function validBookingScheduleFromQuote(b, jobDoc) {
+    function validBookingScheduleFromQuote(b, jobDoc, q) {
       return b.get('scheduleMode', null) == jobDoc.get('scheduleMode', null) &&
-        b.get('scheduledDate', null) == jobDoc.get('scheduledDate', null) &&
-        b.get('scheduledStartAt', null) == jobDoc.get('scheduledStartAt', null) &&
-        b.get('scheduledEndAt', null) == jobDoc.get('scheduledEndAt', null) &&
         (
-          'scheduledEndAt' in b
-            ? (b.scheduledEndAt is timestamp && b.scheduledEndAt > request.time)
-            : validScheduledStartAt(b)
+          jobDoc.get('scheduleMode', '') == 'flexible'
+            ? (
+                b.get('scheduledDate', null) is timestamp &&
+                b.get('scheduledStartAt', null) is timestamp &&
+                b.get('scheduledStartAt', null) == q.get('proposedStartAt', null) &&
+                b.get('scheduledEndAt', null) == q.get('proposedEndAt', null) &&
+                b.get('scheduledSlot', null) == q.get('proposedSlot', null) &&
+                b.scheduledStartAt >= request.time - duration.value(15, 'm')
+              )
+            : (
+                b.get('scheduledDate', null) == jobDoc.get('scheduledDate', null) &&
+                b.get('scheduledStartAt', null) == jobDoc.get('scheduledStartAt', null) &&
+                b.get('scheduledEndAt', null) == jobDoc.get('scheduledEndAt', null) &&
+                (
+                  'scheduledEndAt' in b
+                    ? (b.scheduledEndAt is timestamp && b.scheduledEndAt > request.time)
+                    : validScheduledStartAt(b)
+                )
+              )
         );
     }
 
     function validSchedule(data) {
-      return (!('scheduleMode' in data) || data.scheduleMode in ['asap', 'date_only', 'time_range']) &&
+      return (!('scheduleMode' in data) || data.scheduleMode in ['asap', 'date_only', 'time_range', 'today', 'date', 'flexible']) &&
+        (!('expiresAt' in data) || data.expiresAt is timestamp) &&
+        (!('flexibleWindowDays' in data) || data.flexibleWindowDays in [3, 7, 14]) &&
+        (!('scheduledSlot' in data) || data.scheduledSlot in ['anytime', 'morning', 'afternoon', 'evening', 'exact']) &&
         (
-          data.get('scheduleMode', '') == 'asap'
-            ? (!('scheduledDate' in data) && !('scheduledStartAt' in data) && !('scheduledEndAt' in data))
+          data.get('scheduleMode', '') in ['asap', 'flexible']
+            ? true
             : (
-                data.get('scheduleMode', '') in ['date_only', 'time_range']
+                data.get('scheduleMode', '') in ['date_only', 'time_range', 'today', 'date']
                   ? (
-                      data.scheduledStartAt is timestamp &&
-                      data.scheduledEndAt is timestamp &&
-                      data.scheduledEndAt >= data.scheduledStartAt + duration.value(1, 'h') &&
-                      data.scheduledEndAt <= data.scheduledStartAt + duration.value(12, 'h') &&
-                      data.scheduledStartAt >= request.time - duration.value(15, 'm') &&
-                      data.scheduledStartAt <= request.time + duration.value(60, 'd') &&
-                      (!('scheduledDate' in data) || (
-                        data.scheduledDate is timestamp &&
-                        data.scheduledStartAt >= data.scheduledDate &&
-                        data.scheduledEndAt <= data.scheduledDate + duration.value(1, 'd')
+                      (!('scheduledDate' in data) || data.scheduledDate is timestamp) &&
+                      (!('scheduledStartAt' in data) || (
+                        data.scheduledStartAt is timestamp &&
+                        data.scheduledStartAt >= request.time - duration.value(15, 'm') &&
+                        data.scheduledStartAt <= request.time + duration.value(60, 'd')
+                      )) &&
+                      (!('scheduledEndAt' in data) || (
+                        data.scheduledEndAt is timestamp &&
+                        data.scheduledEndAt >= data.get('scheduledStartAt', request.time)
                       ))
                     )
                   : validScheduledStartAt(data)
@@ -580,7 +600,11 @@ service cloud.firestore {
 
       // quotes subcollection
       match /quotes/{quoteId} {
-        allow read: if isAuthenticated();
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          resource.data.providerId == request.auth.uid ||
+          get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid
+        );
         allow create: if isUserActive() &&
           !isPendingProvider() &&
           quoteId == request.auth.uid &&
@@ -598,7 +622,12 @@ service cloud.firestore {
           (
             get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'customerRespondedAt']) &&
-            request.resource.data.status in ['accepted', 'declined']
+            request.resource.data.status in ['accepted', 'declined', 'not_selected']
+          ) ||
+          (
+            resource.data.providerId == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'withdrawnAt']) &&
+            request.resource.data.status == 'withdrawn'
           ) ||
           (
             resource.data.providerId == request.auth.uid &&
@@ -612,6 +641,11 @@ service cloud.firestore {
           resource.data.status == 'pending'
         );
       }
+    }
+
+    // allow providers to read their quotes across all jobs
+    match /{path=**}/quotes/{quoteId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.providerId == request.auth.uid);
     }
 
     // bookings collection
@@ -651,7 +685,8 @@ service cloud.firestore {
             ) &&
             validBookingScheduleFromQuote(
               request.resource.data,
-              get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data
+              get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)).data,
+              get(/databases/$(database)/documents/jobRequests/$(request.resource.data.jobRequestId)/quotes/$(request.resource.data.quoteId)).data
             )
           )
         ) &&

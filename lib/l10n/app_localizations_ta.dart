@@ -3965,7 +3965,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get cancelReasonPriceDispute => 'விலை அல்லது கட்டண கருத்து வேறுபாடு';
 
   @override
-  String get cancelReasonOther => 'வேறு காரணம்';
+  String get cancelReasonOther => 'மற்றவை';
 
   @override
   String get confirmCancellation => 'ரத்து செய்வதை உறுதிப்படுத்து';
@@ -7049,4 +7049,135 @@ class AppLocalizationsTa extends AppLocalizations {
   String ratePerKm(String amount) {
     return 'LKR $amount/கி.மீ.';
   }
+
+  @override
+  String get whenDoYouNeedThis => 'இது உங்களுக்கு எப்போது தேவை?';
+
+  @override
+  String get scheduleModeToday => 'இன்று';
+
+  @override
+  String get scheduleModeSpecificDay => 'ஒரு குறிப்பிட்ட நாளில்';
+
+  @override
+  String get scheduleModeFlexible => 'நெகிழ்வானது';
+
+  @override
+  String get urgentHelpHint => 'அவசரமா? அவசர உதவியைப் பயன்படுத்தவும்.';
+
+  @override
+  String get todayDisabledPast20 =>
+      'இரவு 8:00 மணிக்கு பிறகு, ஒரு குறிப்பிட்ட தேதியைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get slotAnytimeLabel => 'எந்த நேரமும் (08:00 - 20:00)';
+
+  @override
+  String get slotMorningShort => 'காலை';
+
+  @override
+  String get slotAfternoonShort => 'மதியம்';
+
+  @override
+  String get slotEveningShort => 'மாலை';
+
+  @override
+  String get slotAnytimeShort => 'எந்த நேரமும்';
+
+  @override
+  String get slotExactTime => 'சரியான நேரம்';
+
+  @override
+  String get flexibleWithin3Days => '3 நாட்களுக்குள்';
+
+  @override
+  String get flexibleWithinWeek => 'ஒரு வாரத்திற்குள்';
+
+  @override
+  String get flexibleWithin2Weeks => '2 வாரங்களுக்குள்';
+
+  @override
+  String get slotPassed => 'நேரம் முடிந்தது';
+
+  @override
+  String get cancelJobTitle => 'வேலை கோரிக்கையை ரத்துசெய்';
+
+  @override
+  String get cancelJobConfirmPrompt =>
+      'இந்த வேலையை ரத்துசெய்ய விரும்புகிறீர்களா?';
+
+  @override
+  String get cancelReasonFoundSomeone => 'வேறு ஒருவரை கண்டுபிடித்தேன்';
+
+  @override
+  String get cancelReasonNoLongerNeeded => 'இனி தேவையில்லை';
+
+  @override
+  String get cancelReasonTooExpensive => 'அதிக விலை';
+
+  @override
+  String get withdrawBid => 'மதிப்பீட்டைத் திரும்பப் பெறவும்';
+
+  @override
+  String get withdrawBidConfirmPrompt =>
+      'உங்கள் மதிப்பீட்டை திரும்பப் பெற விரும்புகிறீர்களா?';
+
+  @override
+  String get bidWithdrawnSuccess => 'மதிப்பீடு திரும்பப் பெறப்பட்டது';
+
+  @override
+  String get quoteNoLongerAvailable => 'இந்த மதிப்பீடு இனி கிடைக்காது.';
+
+  @override
+  String get providerWithdrewQuoteNotice =>
+      'ஒரு வழங்குநர் தனது மதிப்பீட்டைத் திரும்பப் பெற்றார்';
+
+  @override
+  String get clashWarningBidding =>
+      'இந்த நேரத்தில் உங்களுக்கு ஏற்கனவே ஒரு வேலை உள்ளது.';
+
+  @override
+  String clashWarningPostWin(int count) {
+    return 'இந்த நேரத்தில் உங்களுக்கு மேலும் $count மதிப்பீடுகள் உள்ளன. அவற்றைத் திரும்பப் பெறவா?';
+  }
+
+  @override
+  String get reviewBidsButton => 'மதிப்பீடுகளை மதிப்பாய்வு செய்யவும்';
+
+  @override
+  String coverageWarningCount(int count) {
+    return '$count வழங்குநர்கள் இந்த பகுதியில் சேவை செய்கிறார்கள்';
+  }
+
+  @override
+  String get coverageWarningZero =>
+      'இந்த பிரிவில் உள்ள வழங்குநர்கள் இன்னும் இந்த பகுதியை உள்ளடக்கவில்லை. நீங்கள் இன்னும் பதிவிடலாம்.';
+
+  @override
+  String get myBidsActiveTab => 'செயலில்';
+
+  @override
+  String get myBidsPastTab => 'கடந்தவை';
+
+  @override
+  String get bidStatusPending => 'நிலுவையில்';
+
+  @override
+  String get bidStatusAccepted => 'ஏற்கப்பட்டது';
+
+  @override
+  String get bidStatusNotSelected => 'தேர்ந்தெடுக்கப்படவில்லை';
+
+  @override
+  String get bidStatusWithdrawn => 'திரும்பப் பெறப்பட்டது';
+
+  @override
+  String get bidStatusJobClosed => 'வேலை இனி கிடைக்காது';
+
+  @override
+  String get whenCanYouCome => 'நீங்கள் எப்போது வர முடியும்?';
+
+  @override
+  String get selectDayInsideWindow =>
+      'வாடிக்கையாளரின் சாளரத்திற்குள் ஒரு நாளைத் தேர்ந்தெடுக்கவும்';
 }

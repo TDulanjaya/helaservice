@@ -937,6 +937,18 @@ class BookingRepository {
           {int limit = 50}) =>
       streamBookingsForProvider(providerId, limit: limit);
 
+  Future<List<Booking>> getActiveBookingsForProvider(String providerId) async {
+    if (providerId.isEmpty) return const [];
+    final snap = await _col
+        .where('providerId', isEqualTo: providerId)
+        .where('status', whereIn: [
+      JobStatus.confirmed,
+      JobStatus.enRoute,
+      JobStatus.inProgress,
+    ]).get();
+    return snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
+  }
+
   Stream<List<Booking>> streamBookingsForCustomer(String customerId,
       {int limit = 50}) {
     return _col

@@ -5,6 +5,7 @@ import '../../../models/quote.dart';
 import '../../../models/booking.dart';
 import '../../../constants/firestore_paths.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../models/technician.dart';
 import '../../../services/category_service.dart';
@@ -24,6 +25,7 @@ import '../../../shared/widgets/job_location_picker.dart';
 import '../../../shared/widgets/job_schedule_picker.dart';
 import '../../../services/call_service.dart';
 import '../../shared/widgets/job_media_gallery.dart';
+import '../../../utils/schedule_helpers.dart';
 
 class JobQuotesScreen extends StatelessWidget {
   final String requestId;
@@ -78,7 +80,12 @@ class JobQuotesScreen extends StatelessWidget {
                         );
                       }
 
-                      final quotes = quotesSnap.data ?? [];
+                      final allQuotes = quotesSnap.data ?? [];
+                      final quotes = allQuotes
+                          .where((q) => q.status != 'withdrawn')
+                          .toList();
+                      final hasWithdrawn =
+                          allQuotes.any((q) => q.status == 'withdrawn');
 
                       if (request.status == 'assigned') {
                         return _buildAssignedView(context, request, quotes);
@@ -99,26 +106,63 @@ class JobQuotesScreen extends StatelessWidget {
                           if (index == 0) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.primary,
-                                      shape: BoxShape.circle,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${quotes.length} ${context.l10n.quotesReceived}',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          letterSpacing: 0.8,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${quotes.length} ${context.l10n.quotesReceived}',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      letterSpacing: 0.8,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.primary,
+                                  if (hasWithdrawn) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: context.themeSurfaceLow,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: context.themeBorder),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.info_outline_rounded,
+                                              size: 16,
+                                              color:
+                                                  context.themeTextSecondary),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'A provider withdrew their quote.',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color:
+                                                    context.themeTextSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             );
@@ -654,46 +698,92 @@ class JobQuotesScreen extends StatelessWidget {
   }
 
   Future<void> _deleteJob(BuildContext context, JobRequest request) async {
+    String selectedReason = context.l10n.cancelReasonNoLongerNeeded;
+    final reasons = [
+      context.l10n.cancelReasonFoundSomeone,
+      context.l10n.cancelReasonNoLongerNeeded,
+      context.l10n.cancelReasonTooExpensive,
+      context.l10n.cancelReasonOther,
+    ];
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.themeSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.deleteJob,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.deleteJobConfirm,
-            style: TextStyle(color: ctx.themeTextSecondary)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel)),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(context.l10n.deleteJob),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(context.l10n.cancelJobTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.cancelJobConfirmPrompt,
+                style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: reasons
+                    .map((r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setDialogState(() => selectedReason = val);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(context.l10n.confirmCancellation),
+            ),
+          ],
+        ),
       ),
     );
 
     if (confirmed == true && context.mounted) {
       try {
-        await JobRequestRepository().deleteJobRequest(request.id);
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'customer';
+        await JobRequestRepository().cancelJobRequest(
+          requestId: request.id,
+          reason: selectedReason,
+          cancelledBy: uid,
+        );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(context.l10n.deleteJobSuccess),
+                content: Text(context.l10n.bookingCancelledSuccess),
                 backgroundColor: AppColors.primary),
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
-        debugPrint('[JobQuotesScreen] Delete job failed: $e');
+        debugPrint('[JobQuotesScreen] Cancel job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1017,6 +1107,17 @@ class JobQuotesScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.l10n.quoteOutdatedDeclined),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+        return;
+      }
+      if (e.toString().contains('This quote is no longer available')) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.quoteNoLongerAvailable),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -1369,6 +1470,36 @@ class _QuoteCardState extends State<_QuoteCard> {
                       color: AppColors.primary,
                     ),
                   ),
+                  if (quote.proposedStartAt != null) ...[
+                    const SizedBox(height: 2),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.event_available_rounded,
+                              size: 10, color: AppColors.primary),
+                          const SizedBox(width: 3),
+                          Text(
+                            ScheduleHelpers.formatDate(quote.proposedStartAt!) +
+                                (quote.proposedSlot != null
+                                    ? ' (${ScheduleHelpers.slotLabel(quote.proposedSlot!, context)})'
+                                    : ''),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   Text(
                     '${context.l10n.etaLabel}: ${context.l10n.durationMins(quote.etaMinutes)}',
                     style: TextStyle(

@@ -12,14 +12,19 @@ import '../../../repositories/category_repository.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/schedule_helpers.dart';
 import 'job_quotes_screen.dart';
+import 'emergency_dispatch_screen.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/video_service.dart';
+import '../../../services/notification_service.dart';
+import '../../../constants/firestore_paths.dart';
+import '../../../utils/location_utils.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../utils/ticket_error_l10n.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // custom exception for media upload failure
 class MediaUploadException implements Exception {
@@ -57,10 +62,29 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   bool _uploadFailed = false;
   bool _saveFailed = false;
   bool _submitting = false;
-  String _scheduleMode = ScheduleHelpers.modeAsap;
-  DateTime _scheduledDate = DateTime.now().add(const Duration(days: 1));
+  String _scheduleMode = ScheduleHelpers.modeToday;
+  String _scheduledSlot = ScheduleHelpers.slotAnytime;
+  DateTime _scheduledDate = DateTime.now();
   TimeOfDay _fromTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _toTime = const TimeOfDay(hour: 12, minute: 0);
+  int _flexibleDays = 7;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    if (!ScheduleHelpers.canChooseToday(now)) {
+      _scheduleMode = ScheduleHelpers.modeDate;
+      _scheduledDate = now.add(const Duration(days: 1));
+    } else {
+      _scheduleMode = ScheduleHelpers.modeToday;
+      _scheduledDate = now;
+      if (!ScheduleHelpers.isSlotAvailableToday(
+          ScheduleHelpers.slotAnytime, now)) {
+        _scheduledSlot = ScheduleHelpers.slotEvening;
+      }
+    }
+  }
 
   static const int _maxPhotos = 10;
 
@@ -332,6 +356,56 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     }
   }
 
+  int? _coverageProviderCount;
+
+  Future<void> _updateCoverage() async {
+    final cat = _selectedCategory;
+    final loc = _selectedLocation;
+    if (cat == null || loc == null) {
+      if (_coverageProviderCount != null) {
+        setState(() => _coverageProviderCount = null);
+      }
+      return;
+    }
+
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .where('category', isEqualTo: cat)
+          .where('nicVerified', isEqualTo: true)
+          .get();
+
+      int count = 0;
+      for (final doc in snap.docs) {
+        final d = doc.data();
+        if (d['isBanned'] == true) continue;
+        final baseLat = (d['baseLatitude'] as num?)?.toDouble() ??
+            (d['latitude'] as num?)?.toDouble();
+        final baseLng = (d['baseLongitude'] as num?)?.toDouble() ??
+            (d['longitude'] as num?)?.toDouble();
+        if (baseLat == null || baseLng == null) continue;
+        final radius = (d['serviceRadiusKm'] as num?)?.toDouble() ?? 25.0;
+        final dist = LocationUtils.calculateDistanceKm(
+          loc.latitude,
+          loc.longitude,
+          baseLat,
+          baseLng,
+        );
+        if (dist <= radius) {
+          count++;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _coverageProviderCount = count;
+        });
+      }
+    } catch (e) {
+      debugPrint('[PostJobRequest] Coverage check error: $e');
+    }
+  }
+
   Future<void> _pickLocation() async {
     final result = await JobLocationPicker.pickLocation(
       context,
@@ -340,6 +414,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     if (result != null) {
       setState(() => _selectedLocation = result);
+      _updateCoverage();
     }
   }
 
@@ -364,9 +439,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     final schedRes = ScheduleHelpers.computeScheduleWindow(
       mode: _scheduleMode,
+      slot: _scheduledSlot,
       date: _scheduledDate,
       fromTime: _fromTime,
       toTime: _toTime,
+      flexibleDays: _flexibleDays,
     );
     if (!schedRes.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -379,8 +456,6 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     }
 
     final defaultCustomerRole = context.l10n.roleCustomer;
-    final timeRangeSlot =
-        '${_fromTime.format(context)} - ${_toTime.format(context)}';
 
     setState(() {
       _submitting = true;
@@ -561,19 +636,26 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         city: _selectedLocation!.city,
         directions: _selectedLocation!.directions,
         bookingType:
-            _scheduleMode == ScheduleHelpers.modeAsap ? 'asap' : 'scheduled',
-        scheduleMode: _scheduleMode,
+            _scheduleMode == ScheduleHelpers.modeToday ? 'asap' : 'scheduled',
+        scheduleMode: schedRes.scheduleMode,
         scheduledDate: schedRes.scheduledDate,
         scheduledStartAt: schedRes.scheduledStartAt,
         scheduledEndAt: schedRes.scheduledEndAt,
-        scheduledSlot: _scheduleMode == ScheduleHelpers.modeDateOnly
-            ? 'anytime'
-            : (_scheduleMode == ScheduleHelpers.modeTimeRange
-                ? timeRangeSlot
-                : null),
+        scheduledSlot: schedRes.scheduledSlot,
+        flexibleWindowDays: schedRes.flexibleWindowDays,
+        expiresAt: schedRes.expiresAt,
       );
 
       final requestId = await JobRequestRepository().createJobRequest(request);
+
+      try {
+        await NotificationService.instance.sendNotification(
+          event: 'job_posted',
+          docId: requestId,
+        );
+      } catch (e) {
+        debugPrint('[PostJobRequest] notify job_posted error: $e');
+      }
 
       // Clean up local temp video caches
       await VideoService.instance.cleanCache();
@@ -779,7 +861,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                               ),
                             ))
                         .toList(),
-                    onChanged: (v) => setState(() => _selectedCategory = v),
+                    onChanged: (v) {
+                      setState(() => _selectedCategory = v);
+                      _updateCoverage();
+                    },
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? context.l10n.selectCategoryError
                         : null,
@@ -917,7 +1002,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
               const SizedBox(height: 16),
 
-              // video section (optional, max 120s)
+              // optional video section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1121,7 +1206,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
               // timing selection
               Text(
-                context.l10n.selectTimeSlot,
+                context.l10n.whenDoYouNeedThis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -1130,90 +1215,157 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Mode chips: ASAP, Date Only, Time Range
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.bolt_rounded, size: 16),
-                        const SizedBox(width: 4),
-                        Text(context.l10n.scheduleModeAsap),
-                      ],
+              // mode options
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.bolt_rounded, size: 16),
+                          const SizedBox(width: 4),
+                          Text(context.l10n.scheduleModeToday),
+                        ],
+                      ),
+                      selected: _scheduleMode == ScheduleHelpers.modeToday,
+                      onSelected: ScheduleHelpers.canChooseToday()
+                          ? (sel) {
+                              if (sel) {
+                                setState(() {
+                                  _scheduleMode = ScheduleHelpers.modeToday;
+                                  if (_scheduledSlot ==
+                                      ScheduleHelpers.slotExact) {
+                                    _scheduledSlot =
+                                        ScheduleHelpers.slotAnytime;
+                                  }
+                                });
+                              }
+                            }
+                          : null,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _scheduleMode == ScheduleHelpers.modeToday
+                            ? AppColors.primary
+                            : (ScheduleHelpers.canChooseToday()
+                                ? context.themeTextSecondary
+                                : context.themeTextSecondary
+                                    .withValues(alpha: 0.4)),
+                      ),
                     ),
-                    selected: _scheduleMode == ScheduleHelpers.modeAsap,
-                    onSelected: (sel) {
-                      if (sel) {
-                        setState(
-                            () => _scheduleMode = ScheduleHelpers.modeAsap);
-                      }
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _scheduleMode == ScheduleHelpers.modeAsap
-                          ? AppColors.primary
-                          : context.themeTextSecondary,
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_today_rounded, size: 16),
+                          const SizedBox(width: 4),
+                          Text(context.l10n.scheduleModeSpecificDay),
+                        ],
+                      ),
+                      selected: _scheduleMode == ScheduleHelpers.modeDate,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(
+                              () => _scheduleMode = ScheduleHelpers.modeDate);
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _scheduleMode == ScheduleHelpers.modeDate
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
+                      ),
                     ),
-                  ),
-                  ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.calendar_today_rounded, size: 16),
-                        const SizedBox(width: 4),
-                        Text(context.l10n.scheduleModeDateOnly),
-                      ],
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.date_range_rounded, size: 16),
+                          const SizedBox(width: 4),
+                          Text(context.l10n.scheduleModeFlexible),
+                        ],
+                      ),
+                      selected: _scheduleMode == ScheduleHelpers.modeFlexible,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _scheduleMode = ScheduleHelpers.modeFlexible;
+                            _scheduledSlot = ScheduleHelpers.slotAnytime;
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _scheduleMode == ScheduleHelpers.modeFlexible
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
+                      ),
                     ),
-                    selected: _scheduleMode == ScheduleHelpers.modeDateOnly,
-                    onSelected: (sel) {
-                      if (sel) {
-                        setState(
-                            () => _scheduleMode = ScheduleHelpers.modeDateOnly);
-                      }
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _scheduleMode == ScheduleHelpers.modeDateOnly
-                          ? AppColors.primary
-                          : context.themeTextSecondary,
-                    ),
-                  ),
-                  ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.access_time_rounded, size: 16),
-                        const SizedBox(width: 4),
-                        Text(context.l10n.scheduleModeTimeRange),
-                      ],
-                    ),
-                    selected: _scheduleMode == ScheduleHelpers.modeTimeRange,
-                    onSelected: (sel) {
-                      if (sel) {
-                        setState(() =>
-                            _scheduleMode = ScheduleHelpers.modeTimeRange);
-                      }
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _scheduleMode == ScheduleHelpers.modeTimeRange
-                          ? AppColors.primary
-                          : context.themeTextSecondary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
-              if (_scheduleMode != ScheduleHelpers.modeAsap) ...[
+              if (!ScheduleHelpers.canChooseToday() &&
+                  _scheduleMode == ScheduleHelpers.modeToday) ...[
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.todayDisabledPast20,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w600),
+                ),
+              ],
+
+              // today fields
+              if (_scheduleMode == ScheduleHelpers.modeToday) ...[
+                const SizedBox(height: 12),
+                _buildScheduleSlotChips(isToday: true),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const EmergencyDispatchScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.emergency_outlined,
+                            size: 16, color: AppColors.error),
+                        const SizedBox(width: 6),
+                        Text(
+                          context.l10n.urgentHelpHint,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              // specific date fields
+              if (_scheduleMode == ScheduleHelpers.modeDate) ...[
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () => _pickScheduledDate(context),
@@ -1246,145 +1398,151 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     ),
                   ),
                 ),
-                if (ScheduleHelpers.isToday(_scheduledDate) &&
-                    !ScheduleHelpers.canChooseTodayForDateOnly()) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: AppColors.warning.withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.warning_amber_rounded,
-                            color: AppColors.warning, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            context.l10n.scheduleTodayPastCutoff,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.warning),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-
-              if (_scheduleMode == ScheduleHelpers.modeDateOnly) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
+                const SizedBox(height: 12),
+                _buildScheduleSlotChips(
+                    isToday: ScheduleHelpers.isToday(_scheduledDate)),
+                if (_scheduledSlot == ScheduleHelpers.slotExact) ...[
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded,
-                          size: 18, color: AppColors.primary),
-                      const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          context.l10n.scheduleAnyTime,
-                          style: const TextStyle(
-                              fontSize: 12.5, fontWeight: FontWeight.w600),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.scheduleFrom,
+                              style: const TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 6),
+                            InkWell(
+                              onTap: () => _pickScheduledTime(context, true),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: context.themeSurfaceLow,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: context.themeBorder),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _fromTime.format(context),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13.5),
+                                    ),
+                                    const Icon(Icons.access_time_rounded,
+                                        size: 16, color: AppColors.primary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.scheduleTo,
+                              style: const TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 6),
+                            InkWell(
+                              onTap: () => _pickScheduledTime(context, false),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: context.themeSurfaceLow,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: context.themeBorder),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _toTime.format(context),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13.5),
+                                    ),
+                                    const Icon(Icons.access_time_rounded,
+                                        size: 16, color: AppColors.primary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ] else if (_scheduleMode == ScheduleHelpers.modeTimeRange) ...[
+                ],
+              ],
+
+              // flexible fields
+              if (_scheduleMode == ScheduleHelpers.modeFlexible) ...[
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.scheduleFrom,
-                            style: const TextStyle(
-                                fontSize: 12.5, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          InkWell(
-                            onTap: () => _pickScheduledTime(context, true),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.themeBorder),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _fromTime.format(context),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13.5),
-                                  ),
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 16, color: AppColors.primary),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithin3Days),
+                      selected: _flexibleDays == 3,
+                      onSelected: (sel) {
+                        if (sel) setState(() => _flexibleDays = 3);
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _flexibleDays == 3
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.scheduleTo,
-                            style: const TextStyle(
-                                fontSize: 12.5, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          InkWell(
-                            onTap: () => _pickScheduledTime(context, false),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.themeBorder),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _toTime.format(context),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13.5),
-                                  ),
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 16, color: AppColors.primary),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithinWeek),
+                      selected: _flexibleDays == 7,
+                      onSelected: (sel) {
+                        if (sel) setState(() => _flexibleDays = 7);
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _flexibleDays == 7
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
+                      ),
+                    ),
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithin2Weeks),
+                      selected: _flexibleDays == 14,
+                      onSelected: (sel) {
+                        if (sel) setState(() => _flexibleDays = 14);
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _flexibleDays == 14
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
                       ),
                     ),
                   ],
@@ -1621,6 +1779,53 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   ),
                 ),
               ],
+              if (_selectedLocation != null &&
+                  _selectedCategory != null &&
+                  _coverageProviderCount != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _coverageProviderCount == 0
+                        ? AppColors.warning.withValues(alpha: 0.12)
+                        : AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _coverageProviderCount == 0
+                          ? AppColors.warning.withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _coverageProviderCount == 0
+                            ? Icons.info_outline_rounded
+                            : Icons.check_circle_outline_rounded,
+                        color: _coverageProviderCount == 0
+                            ? AppColors.warning
+                            : AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _coverageProviderCount == 0
+                              ? context.l10n.coverageWarningZero
+                              : context.l10n.coverageWarningCount(
+                                  _coverageProviderCount!),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               SizedBox(
                 height: 54,
@@ -1660,6 +1865,132 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    );
+  }
+
+  Widget _buildScheduleSlotChips({required bool isToday}) {
+    final now = DateTime.now();
+    final morningOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotMorning, now);
+    final afternoonOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(
+            ScheduleHelpers.slotAfternoon, now);
+    final eveningOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotEvening, now);
+    final anytimeOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotAnytime, now);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ChoiceChip(
+          label: Text(context.l10n.slotAnytimeShort),
+          selected: _scheduledSlot == ScheduleHelpers.slotAnytime,
+          onSelected: anytimeOk
+              ? (sel) {
+                  if (sel) {
+                    setState(
+                        () => _scheduledSlot = ScheduleHelpers.slotAnytime);
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _scheduledSlot == ScheduleHelpers.slotAnytime
+                ? AppColors.primary
+                : (anytimeOk
+                    ? context.themeTextSecondary
+                    : context.themeTextSecondary.withValues(alpha: 0.35)),
+          ),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotMorningShort),
+          selected: _scheduledSlot == ScheduleHelpers.slotMorning,
+          onSelected: morningOk
+              ? (sel) {
+                  if (sel) {
+                    setState(
+                        () => _scheduledSlot = ScheduleHelpers.slotMorning);
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _scheduledSlot == ScheduleHelpers.slotMorning
+                ? AppColors.primary
+                : (morningOk
+                    ? context.themeTextSecondary
+                    : context.themeTextSecondary.withValues(alpha: 0.35)),
+          ),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotAfternoonShort),
+          selected: _scheduledSlot == ScheduleHelpers.slotAfternoon,
+          onSelected: afternoonOk
+              ? (sel) {
+                  if (sel) {
+                    setState(
+                        () => _scheduledSlot = ScheduleHelpers.slotAfternoon);
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _scheduledSlot == ScheduleHelpers.slotAfternoon
+                ? AppColors.primary
+                : (afternoonOk
+                    ? context.themeTextSecondary
+                    : context.themeTextSecondary.withValues(alpha: 0.35)),
+          ),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotEveningShort),
+          selected: _scheduledSlot == ScheduleHelpers.slotEvening,
+          onSelected: eveningOk
+              ? (sel) {
+                  if (sel) {
+                    setState(
+                        () => _scheduledSlot = ScheduleHelpers.slotEvening);
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _scheduledSlot == ScheduleHelpers.slotEvening
+                ? AppColors.primary
+                : (eveningOk
+                    ? context.themeTextSecondary
+                    : context.themeTextSecondary.withValues(alpha: 0.35)),
+          ),
+        ),
+        if (_scheduleMode == ScheduleHelpers.modeDate)
+          ChoiceChip(
+            label: Text(context.l10n.slotExactTime),
+            selected: _scheduledSlot == ScheduleHelpers.slotExact,
+            onSelected: (sel) {
+              if (sel) {
+                setState(() => _scheduledSlot = ScheduleHelpers.slotExact);
+              }
+            },
+            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+            labelStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _scheduledSlot == ScheduleHelpers.slotExact
+                  ? AppColors.primary
+                  : context.themeTextSecondary,
+            ),
+          ),
+      ],
     );
   }
 }

@@ -97,6 +97,12 @@ class LocalizedData {
       case 'rejected':
       case 'declined':
         return context.l10n.statusDeclined;
+      case 'not_selected':
+        return context.l10n.bidStatusNotSelected;
+      case 'withdrawn':
+        return context.l10n.bidStatusWithdrawn;
+      case 'job_closed':
+        return context.l10n.bidStatusJobClosed;
       default:
         return status;
     }

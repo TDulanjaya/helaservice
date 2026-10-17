@@ -39,6 +39,7 @@ import '../../../models/technician.dart';
 import '../../../services/provider_tracking_service.dart';
 import '../../../services/live_location_service.dart';
 import '../../../utils/provider_location_helper.dart';
+import '../../../utils/schedule_helpers.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
   const ProviderDashboardScreen({super.key});
@@ -629,20 +630,28 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         .streamOpenRequestsForCategory(providerCategory),
                     builder: (context, snapshot) {
                       final rawRequests = snapshot.data ?? [];
-                      var requests = List<JobRequest>.from(rawRequests);
+                      var requests = rawRequests.where((req) {
+                        if (req.status != JobRequestStatus.open &&
+                            req.status != 'pending') {
+                          return false;
+                        }
+                        return !req.isExpired;
+                      }).toList();
 
                       if (_selectedRadiusKm != null) {
                         requests = requests.where((req) {
                           if (req.latitude == null || req.longitude == null) {
                             return false;
                           }
-                          final isScheduled = req.scheduledDate != null ||
-                              req.scheduleMode == 'scheduled' ||
-                              req.bookingType == 'scheduled';
-                          final pLat = (isScheduled && tech?.baseLat != null)
+                          final usesBase = ScheduleHelpers.usesBaseLocation(
+                            scheduleMode: req.scheduleMode,
+                            scheduledDate: req.scheduledDate,
+                            scheduledStartAt: req.scheduledStartAt,
+                          );
+                          final pLat = (usesBase && tech?.baseLat != null)
                               ? tech!.baseLat
                               : effectiveLoc.latitude;
-                          final pLng = (isScheduled && tech?.baseLng != null)
+                          final pLng = (usesBase && tech?.baseLng != null)
                               ? tech!.baseLng
                               : effectiveLoc.longitude;
                           if (pLat == null || pLng == null) return false;
@@ -665,22 +674,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           if (!hasA && !hasB) return 0;
                           if (!hasA) return 1;
                           if (!hasB) return -1;
-                          final isSchedA = a.scheduledDate != null ||
-                              a.scheduleMode == 'scheduled' ||
-                              a.bookingType == 'scheduled';
-                          final isSchedB = b.scheduledDate != null ||
-                              b.scheduleMode == 'scheduled' ||
-                              b.bookingType == 'scheduled';
-                          final pLatA = (isSchedA && tech?.baseLat != null)
+                          final usesBaseA = ScheduleHelpers.usesBaseLocation(
+                            scheduleMode: a.scheduleMode,
+                            scheduledDate: a.scheduledDate,
+                            scheduledStartAt: a.scheduledStartAt,
+                          );
+                          final usesBaseB = ScheduleHelpers.usesBaseLocation(
+                            scheduleMode: b.scheduleMode,
+                            scheduledDate: b.scheduledDate,
+                            scheduledStartAt: b.scheduledStartAt,
+                          );
+                          final pLatA = (usesBaseA && tech?.baseLat != null)
                               ? tech!.baseLat
                               : effectiveLoc.latitude;
-                          final pLngA = (isSchedA && tech?.baseLng != null)
+                          final pLngA = (usesBaseA && tech?.baseLng != null)
                               ? tech!.baseLng
                               : effectiveLoc.longitude;
-                          final pLatB = (isSchedB && tech?.baseLat != null)
+                          final pLatB = (usesBaseB && tech?.baseLat != null)
                               ? tech!.baseLat
                               : effectiveLoc.latitude;
-                          final pLngB = (isSchedB && tech?.baseLng != null)
+                          final pLngB = (usesBaseB && tech?.baseLng != null)
                               ? tech!.baseLng
                               : effectiveLoc.longitude;
                           if (pLatA == null || pLngA == null) return 0;
@@ -701,11 +714,76 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         });
                       } else {
                         requests.sort((a, b) {
-                          final dtA = a.createdAt ??
-                              DateTime.fromMillisecondsSinceEpoch(0);
-                          final dtB = b.createdAt ??
-                              DateTime.fromMillisecondsSinceEpoch(0);
-                          return dtB.compareTo(dtA);
+                          final isTodayA = ScheduleHelpers.isTodayJob(
+                            scheduleMode: a.scheduleMode,
+                            scheduledDate: a.scheduledDate,
+                            scheduledStartAt: a.scheduledStartAt,
+                          );
+                          final isTodayB = ScheduleHelpers.isTodayJob(
+                            scheduleMode: b.scheduleMode,
+                            scheduledDate: b.scheduledDate,
+                            scheduledStartAt: b.scheduledStartAt,
+                          );
+                          if (isTodayA && !isTodayB) return -1;
+                          if (!isTodayA && isTodayB) return 1;
+
+                          final dateA = a.scheduledStartAt ??
+                              a.scheduledDate ??
+                              a.createdAt ??
+                              DateTime(2100);
+                          final dateB = b.scheduledStartAt ??
+                              b.scheduledDate ??
+                              b.createdAt ??
+                              DateTime(2100);
+                          final dateComp = dateA.compareTo(dateB);
+                          if (dateComp != 0) return dateComp;
+
+                          final hasA =
+                              a.latitude != null && a.longitude != null;
+                          final hasB =
+                              b.latitude != null && b.longitude != null;
+                          if (!hasA || !hasB) return 0;
+                          final usesBaseA = ScheduleHelpers.usesBaseLocation(
+                            scheduleMode: a.scheduleMode,
+                            scheduledDate: a.scheduledDate,
+                            scheduledStartAt: a.scheduledStartAt,
+                          );
+                          final usesBaseB = ScheduleHelpers.usesBaseLocation(
+                            scheduleMode: b.scheduleMode,
+                            scheduledDate: b.scheduledDate,
+                            scheduledStartAt: b.scheduledStartAt,
+                          );
+                          final pLatA = (usesBaseA && tech?.baseLat != null)
+                              ? tech!.baseLat
+                              : effectiveLoc.latitude;
+                          final pLngA = (usesBaseA && tech?.baseLng != null)
+                              ? tech!.baseLng
+                              : effectiveLoc.longitude;
+                          final pLatB = (usesBaseB && tech?.baseLat != null)
+                              ? tech!.baseLat
+                              : effectiveLoc.latitude;
+                          final pLngB = (usesBaseB && tech?.baseLng != null)
+                              ? tech!.baseLng
+                              : effectiveLoc.longitude;
+                          if (pLatA == null ||
+                              pLngA == null ||
+                              pLatB == null ||
+                              pLngB == null) {
+                            return 0;
+                          }
+                          final distA = LocationUtils.calculateDistanceKm(
+                            pLatA,
+                            pLngA,
+                            a.latitude!,
+                            a.longitude!,
+                          );
+                          final distB = LocationUtils.calculateDistanceKm(
+                            pLatB,
+                            pLngB,
+                            b.latitude!,
+                            b.longitude!,
+                          );
+                          return distA.compareTo(distB);
                         });
                       }
 
@@ -873,26 +951,42 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               ),
                             )
                           else
-                            Column(
-                              children: requests.map((req) {
-                                final isScheduled = req.scheduledDate != null ||
-                                    req.scheduleMode == 'scheduled' ||
-                                    req.bookingType == 'scheduled';
-                                final pLat =
-                                    (isScheduled && tech?.baseLat != null)
-                                        ? tech!.baseLat
-                                        : effectiveLoc.latitude;
-                                final pLng =
-                                    (isScheduled && tech?.baseLng != null)
-                                        ? tech!.baseLng
-                                        : effectiveLoc.longitude;
-                                return _JobRequestCard(
-                                  request: req,
-                                  providerLat: pLat,
-                                  providerLng: pLng,
-                                  onSendQuote: () => _openSubmitQuoteSheet(req),
+                            StreamBuilder<List<Quote>>(
+                              stream: JobRequestRepository()
+                                  .streamProviderQuotes(user?.id ?? ''),
+                              builder: (context, quotesSnap) {
+                                final quotes =
+                                    quotesSnap.data ?? const <Quote>[];
+                                final quotesMap = <String, Quote>{
+                                  for (final q in quotes) q.requestId: q,
+                                };
+                                return Column(
+                                  children: requests.map((req) {
+                                    final usesBase =
+                                        ScheduleHelpers.usesBaseLocation(
+                                      scheduleMode: req.scheduleMode,
+                                      scheduledDate: req.scheduledDate,
+                                      scheduledStartAt: req.scheduledStartAt,
+                                    );
+                                    final pLat =
+                                        (usesBase && tech?.baseLat != null)
+                                            ? tech!.baseLat
+                                            : effectiveLoc.latitude;
+                                    final pLng =
+                                        (usesBase && tech?.baseLng != null)
+                                            ? tech!.baseLng
+                                            : effectiveLoc.longitude;
+                                    return _JobRequestCard(
+                                      request: req,
+                                      providerLat: pLat,
+                                      providerLng: pLng,
+                                      myQuote: quotesMap[req.id],
+                                      onSendQuote: () =>
+                                          _openSubmitQuoteSheet(req),
+                                    );
+                                  }).toList(),
                                 );
-                              }).toList(),
+                              },
                             ),
                         ],
                       );
@@ -1246,8 +1340,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 quotes.where((q) => q.status == 'pending').toList();
             final acceptedQuotes =
                 quotes.where((q) => q.status == 'accepted').toList();
-            final declinedQuotes =
-                quotes.where((q) => q.status == 'declined').toList();
+            final pastQuotes = quotes
+                .where((q) =>
+                    q.status == 'not_selected' ||
+                    q.status == 'withdrawn' ||
+                    q.status == 'job_closed' ||
+                    q.status == 'declined')
+                .toList();
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(
@@ -1288,6 +1387,57 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
+                if (quotes.isNotEmpty) ...[
+                  Builder(
+                    builder: (context) {
+                      final pendingWithClash = pendingQuotes.where((pq) {
+                        final pqStart = pq.proposedStartAt;
+                        final pqEnd = pq.proposedEndAt;
+                        if (pqStart == null || pqEnd == null) return false;
+                        return acceptedQuotes.any((aq) {
+                          final aqStart = aq.proposedStartAt;
+                          final aqEnd = aq.proposedEndAt;
+                          if (aqStart == null || aqEnd == null) return false;
+                          return ScheduleHelpers.windowsOverlap(
+                            start1: pqStart,
+                            end1: pqEnd,
+                            start2: aqStart,
+                            end2: aqEnd,
+                          );
+                        });
+                      }).toList();
+                      if (pendingWithClash.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: AppColors.warning.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded,
+                                color: AppColors.warning, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'You have ${pendingWithClash.length} other pending bid(s) overlapping an accepted job. Consider reviewing or withdrawing them.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.themeTextPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 if (quotes.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 80),
@@ -1324,10 +1474,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ...pendingQuotes.map((q) => _QuoteHistoryTile(quote: q)),
                     const SizedBox(height: 16),
                   ],
-                  if (declinedQuotes.isNotEmpty) ...[
-                    _sectionHeader(context, context.l10n.declinedCaps,
-                        context.themeTextSecondary, declinedQuotes.length),
-                    ...declinedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                  if (pastQuotes.isNotEmpty) ...[
+                    _sectionHeader(
+                        context,
+                        context.l10n.myBidsPastTab.toUpperCase(),
+                        context.themeTextSecondary,
+                        pastQuotes.length),
+                    ...pastQuotes.map((q) => _QuoteHistoryTile(quote: q)),
                   ],
                 ],
               ],
@@ -1566,12 +1719,14 @@ class _JobRequestCard extends StatelessWidget {
   final JobRequest request;
   final double? providerLat;
   final double? providerLng;
+  final Quote? myQuote;
   final VoidCallback onSendQuote;
 
   const _JobRequestCard({
     required this.request,
     this.providerLat,
     this.providerLng,
+    this.myQuote,
     required this.onSendQuote,
   });
 
@@ -1649,6 +1804,67 @@ class _JobRequestCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.4,
                         color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+                decoration: BoxDecoration(
+                  color: ScheduleHelpers.isTodayJob(
+                    scheduleMode: request.scheduleMode,
+                    scheduledDate: request.scheduledDate,
+                    scheduledStartAt: request.scheduledStartAt,
+                  )
+                      ? const Color(0xFF22C55E).withValues(alpha: 0.12)
+                      : context.themeSurfaceLow,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: ScheduleHelpers.isTodayJob(
+                      scheduleMode: request.scheduleMode,
+                      scheduledDate: request.scheduledDate,
+                      scheduledStartAt: request.scheduledStartAt,
+                    )
+                        ? const Color(0xFF22C55E).withValues(alpha: 0.3)
+                        : context.themeBorder,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      ScheduleHelpers.isTodayJob(
+                        scheduleMode: request.scheduleMode,
+                        scheduledDate: request.scheduledDate,
+                        scheduledStartAt: request.scheduledStartAt,
+                      )
+                          ? Icons.flash_on_rounded
+                          : Icons.calendar_today_rounded,
+                      size: 11,
+                      color: ScheduleHelpers.isTodayJob(
+                        scheduleMode: request.scheduleMode,
+                        scheduledDate: request.scheduledDate,
+                        scheduledStartAt: request.scheduledStartAt,
+                      )
+                          ? const Color(0xFF16A34A)
+                          : context.themeTextSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      request.scheduleLabel(context),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: ScheduleHelpers.isTodayJob(
+                          scheduleMode: request.scheduleMode,
+                          scheduledDate: request.scheduledDate,
+                          scheduledStartAt: request.scheduledStartAt,
+                        )
+                            ? const Color(0xFF16A34A)
+                            : context.themeTextPrimary,
                       ),
                     ),
                   ],
@@ -1880,15 +2096,92 @@ class _JobRequestCard extends StatelessWidget {
               ],
             ),
           ),
+          if (myQuote != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color:
+                    _quoteStatusColor(myQuote!.status).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _quoteStatusColor(myQuote!.status)
+                      .withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.gavel_rounded,
+                    size: 14,
+                    color: _quoteStatusColor(myQuote!.status),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You bid LKR ${myQuote!.quotedPrice.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _quoteStatusColor(myQuote!.status),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _quoteStatusColor(myQuote!.status),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _quoteStatusBadgeLabel(context, myQuote!.status),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
-          PrimaryButton(
-            label: context.l10n.sendPriceQuote,
-            leadingIcon: Icons.send_rounded,
-            onPressed: onSendQuote,
-          ),
+          if (myQuote == null)
+            PrimaryButton(
+              label: context.l10n.sendPriceQuote,
+              leadingIcon: Icons.send_rounded,
+              onPressed: onSendQuote,
+            )
+          else if (myQuote!.status == 'pending')
+            PrimaryButton(
+              label: 'Update Quote',
+              leadingIcon: Icons.edit_note_rounded,
+              onPressed: onSendQuote,
+            ),
         ],
       ),
     );
+  }
+
+  Color _quoteStatusColor(String status) {
+    return switch (status) {
+      'accepted' => const Color(0xFF22C55E),
+      'declined' || 'not_selected' => const Color(0xFF64748B),
+      'withdrawn' || 'job_closed' || 'cancelled' => const Color(0xFF94A3B8),
+      _ => AppColors.primary,
+    };
+  }
+
+  String _quoteStatusBadgeLabel(BuildContext context, String status) {
+    return switch (status) {
+      'accepted' => context.l10n.acceptedCaps,
+      'declined' || 'not_selected' => context.l10n.declinedCaps,
+      'withdrawn' => 'WITHDRAWN',
+      'job_closed' || 'cancelled' => 'CLOSED',
+      _ => context.l10n.pendingResponseCaps,
+    };
   }
 }
 
@@ -2037,17 +2330,77 @@ class _QuoteHistoryTile extends StatelessWidget {
     }
   }
 
+  Future<void> _withdrawBid(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          context.l10n.withdrawBid,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        content: Text(
+          context.l10n.withdrawBidConfirmPrompt,
+          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.withdrawBid),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().withdrawQuote(quote.requestId, quote.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.bidWithdrawnSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('[ProviderDashboard] withdrawQuote error: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.somethingWentWrong)),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAccepted = quote.status == 'accepted';
+    final isPending = quote.status == 'pending';
     final statusColor = switch (quote.status) {
       'accepted' => const Color(0xFF22C55E),
-      'declined' => AppColors.error,
+      'declined' || 'not_selected' => context.themeTextSecondary,
+      'withdrawn' => AppColors.warning,
+      'job_closed' => AppColors.error,
       _ => AppColors.primary,
     };
     final statusIcon = switch (quote.status) {
       'accepted' => Icons.check_circle_rounded,
-      'declined' => Icons.cancel_rounded,
+      'declined' || 'not_selected' => Icons.cancel_outlined,
+      'withdrawn' => Icons.remove_circle_outline,
+      'job_closed' => Icons.close_rounded,
       _ => Icons.hourglass_top_rounded,
     };
 
@@ -2154,6 +2507,28 @@ class _QuoteHistoryTile extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.cancel_outlined, size: 20),
                   onPressed: () => _cancelQuote(context),
+                ),
+              ],
+            ),
+          ] else if (isPending) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _withdrawBid(context),
+                  icon: const Icon(Icons.remove_circle_outline, size: 16),
+                  label: Text(context.l10n.withdrawBid),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: BorderSide(
+                        color: AppColors.error.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  ),
                 ),
               ],
             ),

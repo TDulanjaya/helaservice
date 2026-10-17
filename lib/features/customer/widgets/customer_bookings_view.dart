@@ -1977,46 +1977,92 @@ class _CustomerJobRequestCard extends StatelessWidget {
   }
 
   Future<void> _deleteJob(BuildContext context) async {
+    String selectedReason = context.l10n.cancelReasonNoLongerNeeded;
+    final reasons = [
+      context.l10n.cancelReasonFoundSomeone,
+      context.l10n.cancelReasonNoLongerNeeded,
+      context.l10n.cancelReasonTooExpensive,
+      context.l10n.cancelReasonOther,
+    ];
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.themeSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.deleteJob,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.deleteJobConfirm,
-            style: TextStyle(color: ctx.themeTextSecondary)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel)),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(context.l10n.deleteJob),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(context.l10n.cancelJobTitle,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.cancelJobConfirmPrompt,
+                style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+                items: reasons
+                    .map((r) => DropdownMenuItem(
+                        value: r,
+                        child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setDialogState(() => selectedReason = val);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(context.l10n.confirmCancellation),
+            ),
+          ],
+        ),
       ),
     );
 
     if (confirmed == true && context.mounted) {
       try {
-        await JobRequestRepository().deleteJobRequest(request.id);
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'customer';
+        await JobRequestRepository().cancelJobRequest(
+          requestId: request.id,
+          reason: selectedReason,
+          cancelledBy: uid,
+        );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.deleteJobSuccess),
+              content: Text(context.l10n.bookingCancelledSuccess),
               backgroundColor: AppColors.primary,
             ),
           );
         }
       } catch (e) {
-        debugPrint('[CustomerBookingsView] Error: $e');
+        debugPrint('[CustomerBookingsView] Cancel job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

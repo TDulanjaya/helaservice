@@ -5,32 +5,38 @@ import '../../utils/l10n_extension.dart';
 import '../../utils/schedule_helpers.dart';
 
 class JobScheduleResult {
-  final String scheduleMode; // 'date_only', 'time_range', 'asap'
+  final String scheduleMode;
+  final String? scheduledSlot;
   final DateTime? scheduledDate;
   final DateTime? scheduledStartAt;
   final DateTime? scheduledEndAt;
+  final DateTime? expiresAt;
+  final int? flexibleWindowDays;
   final String? legacySlot;
 
   const JobScheduleResult({
     required this.scheduleMode,
+    this.scheduledSlot,
     this.scheduledDate,
     this.scheduledStartAt,
     this.scheduledEndAt,
+    this.expiresAt,
+    this.flexibleWindowDays,
     this.legacySlot,
   });
 
-  // Backward compatibility getters for records like ({DateTime date, String slot})
   DateTime get date => scheduledDate ?? DateTime.now();
-  String get slot => legacySlot ?? 'anytime';
+  String get slot => scheduledSlot ?? legacySlot ?? 'anytime';
 }
 
-// sheet to pick a job schedule (date only or time range)
+// sheet to pick a job schedule
 class JobSchedulePicker extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialSlot;
   final String? initialMode;
   final TimeOfDay? initialFromTime;
   final TimeOfDay? initialToTime;
+  final int? initialFlexibleDays;
   final String? title;
 
   const JobSchedulePicker({
@@ -40,6 +46,7 @@ class JobSchedulePicker extends StatefulWidget {
     this.initialMode,
     this.initialFromTime,
     this.initialToTime,
+    this.initialFlexibleDays,
     this.title,
   });
 
@@ -50,6 +57,7 @@ class JobSchedulePicker extends StatefulWidget {
     String? initialMode,
     TimeOfDay? initialFromTime,
     TimeOfDay? initialToTime,
+    int? initialFlexibleDays,
     String? title,
   }) {
     return showModalBottomSheet<JobScheduleResult>(
@@ -62,6 +70,7 @@ class JobSchedulePicker extends StatefulWidget {
         initialMode: initialMode,
         initialFromTime: initialFromTime,
         initialToTime: initialToTime,
+        initialFlexibleDays: initialFlexibleDays,
         title: title,
       ),
     );
@@ -73,23 +82,36 @@ class JobSchedulePicker extends StatefulWidget {
 
 class _JobSchedulePickerState extends State<JobSchedulePicker> {
   late String _mode;
+  late String _slot;
   late DateTime _selectedDate;
   TimeOfDay _fromTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _toTime = const TimeOfDay(hour: 12, minute: 0);
+  int _flexibleDays = 7;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _mode = widget.initialMode ?? ScheduleHelpers.modeDateOnly;
-
     final now = DateTime.now();
+    final initialModeNorm = ScheduleHelpers.normalizeMode(widget.initialMode);
+
+    if (initialModeNorm == ScheduleHelpers.modeToday &&
+        !ScheduleHelpers.canChooseToday(now)) {
+      _mode = ScheduleHelpers.modeDate;
+    } else {
+      _mode = initialModeNorm;
+    }
+
+    _slot = widget.initialSlot ?? ScheduleHelpers.slotAnytime;
+    if (widget.initialFlexibleDays != null) {
+      _flexibleDays = widget.initialFlexibleDays!;
+    }
+
     if (widget.initialDate != null &&
         !widget.initialDate!.isBefore(DateTime(now.year, now.month, now.day))) {
       _selectedDate = widget.initialDate!;
     } else {
-      // Default to tomorrow if today is past cutoff
-      if (!ScheduleHelpers.canChooseTodayForDateOnly()) {
+      if (!ScheduleHelpers.canChooseToday()) {
         _selectedDate = now.add(const Duration(days: 1));
       } else {
         _selectedDate = now;
@@ -122,7 +144,6 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
       initialTime: isFrom ? _fromTime : _toTime,
     );
     if (picked != null) {
-      // Snap to 15-minute intervals
       final snappedMinute = (picked.minute / 15).round() * 15;
       final adjusted = snappedMinute == 60
           ? TimeOfDay(hour: (picked.hour + 1) % 24, minute: 0)
@@ -142,9 +163,11 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
   bool _validate() {
     final res = ScheduleHelpers.computeScheduleWindow(
       mode: _mode,
+      slot: _slot,
       date: _selectedDate,
       fromTime: _fromTime,
       toTime: _toTime,
+      flexibleDays: _flexibleDays,
     );
 
     setState(() {
@@ -159,9 +182,11 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
 
     final res = ScheduleHelpers.computeScheduleWindow(
       mode: _mode,
+      slot: _slot,
       date: _selectedDate,
       fromTime: _fromTime,
       toTime: _toTime,
+      flexibleDays: _flexibleDays,
     );
 
     if (!res.isValid) return;
@@ -170,12 +195,13 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
       context,
       JobScheduleResult(
         scheduleMode: _mode,
+        scheduledSlot: res.scheduledSlot,
         scheduledDate: res.scheduledDate,
         scheduledStartAt: res.scheduledStartAt,
         scheduledEndAt: res.scheduledEndAt,
-        legacySlot: _mode == ScheduleHelpers.modeDateOnly
-            ? 'anytime'
-            : '${_fromTime.format(context)} - ${_toTime.format(context)}',
+        expiresAt: res.expiresAt,
+        flexibleWindowDays: res.flexibleWindowDays,
+        legacySlot: res.scheduledSlot ?? 'anytime',
       ),
     );
   }
@@ -184,6 +210,7 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).languageCode;
     final formattedDate = DateFormat.yMMMd(locale).format(_selectedDate);
+    final isTodayAvailable = ScheduleHelpers.canChooseToday();
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -225,7 +252,7 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      widget.title ?? context.l10n.selectScheduledDate,
+                      widget.title ?? context.l10n.whenDoYouNeedThis,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -236,204 +263,209 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
               ),
               const SizedBox(height: 16),
 
-              // Mode toggle chips
-              Row(
-                children: [
-                  Expanded(
-                    child: ChoiceChip(
-                      label: Text(context.l10n.scheduleModeDateOnly),
-                      selected: _mode == ScheduleHelpers.modeDateOnly,
-                      onSelected: (sel) {
-                        if (sel) {
-                          setState(() {
-                            _mode = ScheduleHelpers.modeDateOnly;
-                            _validate();
-                          });
-                        }
-                      },
-                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _mode == ScheduleHelpers.modeDateOnly
-                            ? AppColors.primary
-                            : context.themeTextSecondary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ChoiceChip(
-                      label: Text(context.l10n.scheduleModeTimeRange),
-                      selected: _mode == ScheduleHelpers.modeTimeRange,
-                      onSelected: (sel) {
-                        if (sel) {
-                          setState(() {
-                            _mode = ScheduleHelpers.modeTimeRange;
-                            _validate();
-                          });
-                        }
-                      },
-                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _mode == ScheduleHelpers.modeTimeRange
-                            ? AppColors.primary
-                            : context.themeTextSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Date selection
-              Text(
-                context.l10n.selectScheduledDate,
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () => _pickDate(context),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: context.themeSurfaceLow,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.themeBorder),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.event_outlined,
-                          size: 20, color: AppColors.primary),
-                      const SizedBox(width: 10),
-                      Text(
-                        formattedDate,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.arrow_drop_down,
-                          color: AppColors.primary),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Mode-specific content
-              if (_mode == ScheduleHelpers.modeDateOnly) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline_rounded,
-                          size: 18, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          context.l10n.scheduleAnyTime,
-                          style: const TextStyle(
-                              fontSize: 12.5, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                // Time range selection
-                Row(
+              // mode selection chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.scheduleFrom,
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          InkWell(
-                            onTap: () => _pickTime(context, true),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.themeBorder),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _fromTime.format(context),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14),
-                                  ),
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 16, color: AppColors.primary),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    ChoiceChip(
+                      label: Text(context.l10n.scheduleModeToday),
+                      selected: _mode == ScheduleHelpers.modeToday,
+                      onSelected: isTodayAvailable
+                          ? (sel) {
+                              if (sel) {
+                                setState(() {
+                                  _mode = ScheduleHelpers.modeToday;
+                                  if (_slot == ScheduleHelpers.slotExact) {
+                                    _slot = ScheduleHelpers.slotAnytime;
+                                  }
+                                  _validate();
+                                });
+                              }
+                            }
+                          : null,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _mode == ScheduleHelpers.modeToday
+                            ? AppColors.primary
+                            : (isTodayAvailable
+                                ? context.themeTextSecondary
+                                : context.themeTextSecondary
+                                    .withValues(alpha: 0.4)),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.scheduleTo,
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          InkWell(
-                            onTap: () => _pickTime(context, false),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: context.themeSurfaceLow,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.themeBorder),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _toTime.format(context),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14),
-                                  ),
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 16, color: AppColors.primary),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text(context.l10n.scheduleModeSpecificDay),
+                      selected: _mode == ScheduleHelpers.modeDate,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _mode = ScheduleHelpers.modeDate;
+                            _validate();
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _mode == ScheduleHelpers.modeDate
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text(context.l10n.scheduleModeFlexible),
+                      selected: _mode == ScheduleHelpers.modeFlexible,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _mode = ScheduleHelpers.modeFlexible;
+                            _slot = ScheduleHelpers.slotAnytime;
+                            _validate();
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _mode == ScheduleHelpers.modeFlexible
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (!isTodayAvailable && _mode == ScheduleHelpers.modeToday) ...[
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.todayDisabledPast20,
+                  style:
+                      const TextStyle(fontSize: 11.5, color: AppColors.warning),
+                ),
+              ],
+
+              const SizedBox(height: 16),
+
+              // today options
+              if (_mode == ScheduleHelpers.modeToday) ...[
+                Text(
+                  context.l10n.selectTimeSlot,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                _buildSlotChoices(isToday: true),
+              ],
+
+              // date options
+              if (_mode == ScheduleHelpers.modeDate) ...[
+                Text(
+                  context.l10n.selectScheduledDate,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () => _pickDate(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.event_outlined,
+                            size: 20, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Text(
+                          formattedDate,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_drop_down,
+                            color: AppColors.primary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.selectTimeSlot,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                _buildSlotChoices(
+                    isToday: ScheduleHelpers.isToday(_selectedDate)),
+                if (_slot == ScheduleHelpers.slotExact) ...[
+                  const SizedBox(height: 12),
+                  _buildExactTimePickers(),
+                ],
+              ],
+
+              // flexible options
+              if (_mode == ScheduleHelpers.modeFlexible) ...[
+                Text(
+                  context.l10n.scheduleModeFlexible,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithin3Days),
+                      selected: _flexibleDays == 3,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _flexibleDays = 3;
+                            _validate();
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    ),
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithinWeek),
+                      selected: _flexibleDays == 7,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _flexibleDays = 7;
+                            _validate();
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                    ),
+                    ChoiceChip(
+                      label: Text(context.l10n.flexibleWithin2Weeks),
+                      selected: _flexibleDays == 14,
+                      onSelected: (sel) {
+                        if (sel) {
+                          setState(() {
+                            _flexibleDays = 14;
+                            _validate();
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     ),
                   ],
                 ),
@@ -505,6 +537,176 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSlotChoices({required bool isToday}) {
+    final now = DateTime.now();
+    final morningOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotMorning, now);
+    final afternoonOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(
+            ScheduleHelpers.slotAfternoon, now);
+    final eveningOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotEvening, now);
+    final anytimeOk = !isToday ||
+        ScheduleHelpers.isSlotAvailableToday(ScheduleHelpers.slotAnytime, now);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ChoiceChip(
+          label: Text(context.l10n.slotAnytimeShort),
+          selected: _slot == ScheduleHelpers.slotAnytime,
+          onSelected: anytimeOk
+              ? (sel) {
+                  if (sel) {
+                    setState(() {
+                      _slot = ScheduleHelpers.slotAnytime;
+                      _validate();
+                    });
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotMorningShort),
+          selected: _slot == ScheduleHelpers.slotMorning,
+          onSelected: morningOk
+              ? (sel) {
+                  if (sel) {
+                    setState(() {
+                      _slot = ScheduleHelpers.slotMorning;
+                      _validate();
+                    });
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotAfternoonShort),
+          selected: _slot == ScheduleHelpers.slotAfternoon,
+          onSelected: afternoonOk
+              ? (sel) {
+                  if (sel) {
+                    setState(() {
+                      _slot = ScheduleHelpers.slotAfternoon;
+                      _validate();
+                    });
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+        ),
+        ChoiceChip(
+          label: Text(context.l10n.slotEveningShort),
+          selected: _slot == ScheduleHelpers.slotEvening,
+          onSelected: eveningOk
+              ? (sel) {
+                  if (sel) {
+                    setState(() {
+                      _slot = ScheduleHelpers.slotEvening;
+                      _validate();
+                    });
+                  }
+                }
+              : null,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+        ),
+        if (_mode == ScheduleHelpers.modeDate)
+          ChoiceChip(
+            label: Text(context.l10n.slotExactTime),
+            selected: _slot == ScheduleHelpers.slotExact,
+            onSelected: (sel) {
+              if (sel) {
+                setState(() {
+                  _slot = ScheduleHelpers.slotExact;
+                  _validate();
+                });
+              }
+            },
+            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildExactTimePickers() {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.scheduleFrom,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              InkWell(
+                onTap: () => _pickTime(context, true),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(_fromTime.format(context),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14)),
+                      const Icon(Icons.access_time_rounded,
+                          size: 16, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.scheduleTo,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              InkWell(
+                onTap: () => _pickTime(context, false),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(_toTime.format(context),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14)),
+                      const Icon(Icons.access_time_rounded,
+                          size: 16, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -3452,5 +3452,60 @@
         "type": "String"
       }
     }
-  }
+  },
+  "whenDoYouNeedThis": "When do you need this?",
+  "scheduleModeToday": "Today",
+  "scheduleModeSpecificDay": "On a specific day",
+  "scheduleModeFlexible": "Flexible",
+  "urgentHelpHint": "Emergency? Use Urgent help.",
+  "todayDisabledPast20": "After 20:00, please pick a specific day.",
+  "slotAnytimeLabel": "Anytime (08:00 - 20:00)",
+  "slotMorningShort": "Morning",
+  "slotAfternoonShort": "Afternoon",
+  "slotEveningShort": "Evening",
+  "slotAnytimeShort": "Anytime",
+  "slotExactTime": "Exact time",
+  "flexibleWithin3Days": "Within 3 days",
+  "flexibleWithinWeek": "Within a week",
+  "flexibleWithin2Weeks": "Within 2 weeks",
+  "slotPassed": "Passed",
+  "cancelJobTitle": "Cancel Job Request",
+  "cancelJobConfirmPrompt": "Are you sure you want to cancel this job?",
+  "cancelReasonFoundSomeone": "Found someone else",
+  "cancelReasonNoLongerNeeded": "No longer needed",
+  "cancelReasonTooExpensive": "Too expensive",
+  "cancelReasonOther": "Other",
+  "withdrawBid": "Withdraw bid",
+  "withdrawBidConfirmPrompt": "Are you sure you want to withdraw your bid?",
+  "bidWithdrawnSuccess": "Bid withdrawn",
+  "quoteNoLongerAvailable": "This quote is no longer available.",
+  "providerWithdrewQuoteNotice": "A provider withdrew their quote",
+  "clashWarningBidding": "You already have a job at this time.",
+  "clashWarningPostWin": "You have {count} other bids at this time. Withdraw them?",
+  "@clashWarningPostWin": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewBidsButton": "Review Bids",
+  "coverageWarningCount": "{count} providers serve this area",
+  "@coverageWarningCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coverageWarningZero": "No providers in this category cover this area yet. You can still post.",
+  "myBidsActiveTab": "Active",
+  "myBidsPastTab": "Past",
+  "bidStatusPending": "Pending",
+  "bidStatusAccepted": "Accepted",
+  "bidStatusNotSelected": "Not Selected",
+  "bidStatusWithdrawn": "Withdrawn",
+  "bidStatusJobClosed": "Job no longer available",
+  "whenCanYouCome": "When can you come?",
+  "selectDayInsideWindow": "Select a day within the customer's window"
 }

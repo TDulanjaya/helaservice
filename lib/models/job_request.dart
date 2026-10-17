@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 import '../constants/job_status.dart';
+import '../utils/schedule_helpers.dart';
 
 class JobMediaItem {
   final String url;
@@ -68,7 +70,9 @@ class JobRequest {
   final String? acceptedQuoteId;
   final double? agreedPrice;
   final String? cancellationReason;
+  final String? cancelReason;
   final String? cancelledBy;
+  final DateTime? cancelledAt;
   final DateTime? createdAt;
   final DateTime? completedAt;
   final String bookingType;
@@ -77,8 +81,10 @@ class JobRequest {
   final DateTime? scheduledStartAt;
   final DateTime? scheduledEndAt;
   final String? scheduledSlot;
+  final int? flexibleWindowDays;
+  final DateTime? expiresAt;
 
-  // in-memory address details (never serialized to public doc)
+  // local address details kept private
   final double? accuracyMeters;
   final String? houseNo;
   final String? street;
@@ -108,15 +114,19 @@ class JobRequest {
     this.acceptedQuoteId,
     this.agreedPrice,
     this.cancellationReason,
+    this.cancelReason,
     this.cancelledBy,
+    this.cancelledAt,
     this.createdAt,
     this.completedAt,
     this.bookingType = 'asap',
-    this.scheduleMode = 'asap',
+    this.scheduleMode = 'today',
     this.scheduledDate,
     this.scheduledStartAt,
     this.scheduledEndAt,
     this.scheduledSlot,
+    this.flexibleWindowDays,
+    this.expiresAt,
     this.accuracyMeters,
     this.houseNo,
     this.street,
@@ -130,10 +140,31 @@ class JobRequest {
 
   String? get videoUrl => video?.url;
 
-  bool get isExpired =>
-      status == JobRequestStatus.open &&
-      createdAt != null &&
-      DateTime.now().difference(createdAt!).inDays >= 7;
+  String get effectiveCancelReason => cancelReason ?? cancellationReason ?? '';
+
+  bool get isExpired {
+    if (status != JobRequestStatus.open && status != 'pending') {
+      return false;
+    }
+    final exp = expiresAt ??
+        ScheduleHelpers.computeLegacyExpiresAt(
+          scheduledDate: scheduledDate,
+          createdAt: createdAt,
+        );
+    return DateTime.now().isAfter(exp);
+  }
+
+  String scheduleLabel(BuildContext context) {
+    return ScheduleHelpers.scheduleLabel(
+      scheduleMode: scheduleMode,
+      scheduledSlot: scheduledSlot,
+      scheduledDate: scheduledDate,
+      scheduledStartAt: scheduledStartAt,
+      scheduledEndAt: scheduledEndAt,
+      flexibleWindowDays: flexibleWindowDays,
+      context: context,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         'customerId': customerId,
@@ -152,12 +183,15 @@ class JobRequest {
           'selectedProviderId': selectedProviderId,
         if (acceptedQuoteId != null) 'acceptedQuoteId': acceptedQuoteId,
         if (agreedPrice != null) 'agreedPrice': agreedPrice,
-        if (cancellationReason != null)
-          'cancellationReason': cancellationReason,
+        if (cancelReason != null || cancellationReason != null)
+          'cancelReason': cancelReason ?? cancellationReason,
         if (cancelledBy != null) 'cancelledBy': cancelledBy,
+        if (cancelledAt != null)
+          'cancelledAt': Timestamp.fromDate(cancelledAt!),
         if (completedAt != null)
           'completedAt': Timestamp.fromDate(completedAt!),
-        'bookingType': bookingType,
+        'bookingType':
+            scheduleMode == ScheduleHelpers.modeToday ? 'asap' : 'scheduled',
         'scheduleMode': scheduleMode,
         if (scheduledDate != null)
           'scheduledDate': Timestamp.fromDate(scheduledDate!),
@@ -167,6 +201,9 @@ class JobRequest {
           'scheduledEndAt': Timestamp.fromDate(scheduledEndAt!),
         if (scheduledSlot != null && scheduledSlot!.isNotEmpty)
           'scheduledSlot': scheduledSlot,
+        if (flexibleWindowDays != null)
+          'flexibleWindowDays': flexibleWindowDays,
+        if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
@@ -175,9 +212,12 @@ class JobRequest {
   factory JobRequest.fromMap(String id, Map<String, dynamic> map) {
     final ts = map['createdAt'];
     final cat = map['completedAt'];
+    final cnat = map['cancelledAt'];
     final sdt = map['scheduledDate'];
     final ssa = map['scheduledStartAt'];
     final sea = map['scheduledEndAt'];
+    final exp = map['expiresAt'];
+
     DateTime? resolvedCreatedAt;
     if (ts is Timestamp) {
       resolvedCreatedAt = ts.toDate();
@@ -203,10 +243,11 @@ class JobRequest {
           JobVideoItem.fromMap(Map<String, dynamic>.from(map['video'] as Map));
     }
 
-    final mode = map['scheduleMode'] as String? ??
+    final rawMode = map['scheduleMode'] as String? ??
         (map['bookingType'] == 'scheduled'
-            ? 'date_only'
-            : (map['bookingType']?.toString() ?? 'asap'));
+            ? 'date'
+            : (map['bookingType']?.toString() == 'asap' ? 'today' : 'today'));
+    final mode = ScheduleHelpers.normalizeMode(rawMode);
 
     final noteRaw = map['note'] as String?;
     final landmarkRaw = map['landmark'] as String?;
@@ -223,6 +264,20 @@ class JobRequest {
         resolvedNote = parts.join(' · ');
       }
     }
+
+    final scheduledDate = sdt is Timestamp ? sdt.toDate() : null;
+    DateTime? resolvedExpiresAt;
+    if (exp is Timestamp) {
+      resolvedExpiresAt = exp.toDate();
+    } else {
+      resolvedExpiresAt = ScheduleHelpers.computeLegacyExpiresAt(
+        scheduledDate: scheduledDate,
+        createdAt: resolvedCreatedAt,
+      );
+    }
+
+    final reason =
+        (map['cancelReason'] ?? map['cancellationReason']) as String?;
 
     return JobRequest(
       id: id,
@@ -246,16 +301,21 @@ class JobRequest {
       selectedProviderId: map['selectedProviderId'],
       acceptedQuoteId: map['acceptedQuoteId'],
       agreedPrice: (map['agreedPrice'] as num?)?.toDouble(),
-      cancellationReason: map['cancellationReason'],
+      cancellationReason: reason,
+      cancelReason: reason,
       cancelledBy: map['cancelledBy'],
+      cancelledAt: cnat is Timestamp ? cnat.toDate() : null,
       createdAt: resolvedCreatedAt,
       completedAt: cat is Timestamp ? cat.toDate() : null,
-      bookingType: map['bookingType']?.toString() ?? 'asap',
+      bookingType: map['bookingType']?.toString() ??
+          (mode == 'today' ? 'asap' : 'scheduled'),
       scheduleMode: mode,
-      scheduledDate: sdt is Timestamp ? sdt.toDate() : null,
+      scheduledDate: scheduledDate,
       scheduledStartAt: ssa is Timestamp ? ssa.toDate() : null,
       scheduledEndAt: sea is Timestamp ? sea.toDate() : null,
       scheduledSlot: map['scheduledSlot'] as String?,
+      flexibleWindowDays: (map['flexibleWindowDays'] as num?)?.toInt(),
+      expiresAt: resolvedExpiresAt,
     );
   }
 
@@ -279,7 +339,9 @@ class JobRequest {
     String? acceptedQuoteId,
     double? agreedPrice,
     String? cancellationReason,
+    String? cancelReason,
     String? cancelledBy,
+    DateTime? cancelledAt,
     DateTime? createdAt,
     DateTime? completedAt,
     String? bookingType,
@@ -288,6 +350,8 @@ class JobRequest {
     DateTime? scheduledStartAt,
     DateTime? scheduledEndAt,
     String? scheduledSlot,
+    int? flexibleWindowDays,
+    DateTime? expiresAt,
     double? accuracyMeters,
     String? houseNo,
     String? street,
@@ -315,7 +379,9 @@ class JobRequest {
       acceptedQuoteId: acceptedQuoteId ?? this.acceptedQuoteId,
       agreedPrice: agreedPrice ?? this.agreedPrice,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      cancelReason: cancelReason ?? this.cancelReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
       bookingType: bookingType ?? this.bookingType,
@@ -324,6 +390,8 @@ class JobRequest {
       scheduledStartAt: scheduledStartAt ?? this.scheduledStartAt,
       scheduledEndAt: scheduledEndAt ?? this.scheduledEndAt,
       scheduledSlot: scheduledSlot ?? this.scheduledSlot,
+      flexibleWindowDays: flexibleWindowDays ?? this.flexibleWindowDays,
+      expiresAt: expiresAt ?? this.expiresAt,
       accuracyMeters: accuracyMeters ?? this.accuracyMeters,
       houseNo: houseNo ?? this.houseNo,
       street: street ?? this.street,

@@ -20,10 +20,14 @@ class Quote {
   final String status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? proposedStartAt;
+  final DateTime? proposedEndAt;
+  final String? proposedSlot;
+  final DateTime? withdrawnAt;
 
   // price breakdown
-  final String quoteType; // 'firm', 'estimate', 'inspect'
-  final String? priceUnit; // 'fixed', 'day', 'hour'
+  final String quoteType;
+  final String? priceUnit;
   final int? unitRateLkr;
   final double? quantity;
   final int? materialsEstimateLkr;
@@ -52,6 +56,10 @@ class Quote {
     this.status = 'pending',
     this.createdAt,
     this.updatedAt,
+    this.proposedStartAt,
+    this.proposedEndAt,
+    this.proposedSlot,
+    this.withdrawnAt,
     this.quoteType = 'inspect',
     this.priceUnit,
     this.unitRateLkr,
@@ -78,6 +86,14 @@ class Quote {
         'etaMinutes': etaMinutes,
         'notes': notes,
         'status': status,
+        if (proposedStartAt != null)
+          'proposedStartAt': Timestamp.fromDate(proposedStartAt!),
+        if (proposedEndAt != null)
+          'proposedEndAt': Timestamp.fromDate(proposedEndAt!),
+        if (proposedSlot != null && proposedSlot!.isNotEmpty)
+          'proposedSlot': proposedSlot,
+        if (withdrawnAt != null)
+          'withdrawnAt': Timestamp.fromDate(withdrawnAt!),
         'quoteType': quoteType,
         if (quoteType != 'inspect' && priceUnit != null) 'priceUnit': priceUnit,
         if (quoteType != 'inspect' && unitRateLkr != null)
@@ -99,6 +115,13 @@ class Quote {
   factory Quote.fromMap(String id, Map<String, dynamic> map) {
     final ts = map['createdAt'];
     final uts = map['updatedAt'];
+    final pStartTs = map['proposedStartAt'];
+    final pEndTs = map['proposedEndAt'];
+    final wTs = map['withdrawnAt'];
+    var rawStatus = map['status'] as String? ?? 'pending';
+    if (rawStatus == 'declined') rawStatus = 'not_selected';
+    if (rawStatus == 'cancelled') rawStatus = 'job_closed';
+
     return Quote(
       id: id,
       requestId: map['requestId'] ?? '',
@@ -120,9 +143,13 @@ class Quote {
           (map['providerDistrict'] as String?) ??
           (map['serviceArea'] as String?) ??
           '',
-      status: map['status'] ?? 'pending',
+      status: rawStatus,
       createdAt: ts is Timestamp ? ts.toDate() : null,
       updatedAt: uts is Timestamp ? uts.toDate() : null,
+      proposedStartAt: pStartTs is Timestamp ? pStartTs.toDate() : null,
+      proposedEndAt: pEndTs is Timestamp ? pEndTs.toDate() : null,
+      proposedSlot: map['proposedSlot'] as String?,
+      withdrawnAt: wTs is Timestamp ? wTs.toDate() : null,
       quoteType: map['quoteType'] as String? ?? 'inspect',
       priceUnit: map['priceUnit'] as String?,
       unitRateLkr: (map['unitRateLkr'] as num?)?.toInt(),

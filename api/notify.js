@@ -73,6 +73,16 @@ const templates = {
     si: { title: 'මිල පිළිගත්තා', body: 'පාරිභෝගිකයා ඔබේ මිල පිළිගත්තා.' },
     ta: { title: 'விலைப்புள்ளி ஏற்றுக்கொள்ளப்பட்டது', body: 'வாடிக்கையாளர் உங்கள் விலைப்புள்ளியை ஏற்றுக்கொண்டார்.' },
   },
+  quote_not_selected: {
+    en: { title: 'Quote Not Selected', body: 'The customer selected another quote for this job.' },
+    si: { title: 'මිල ගණන් තෝරා නොගැනුණි', body: 'පාරිභෝගිකයා මෙම වැඩය සඳහා වෙනත් මිල ගණන් තෝරාගන්නා ලදී.' },
+    ta: { title: 'மதிப்பீடு தேர்ந்தெடுக்கப்படவில்லை', body: 'வாடிக்கையாளர் இந்த வேலைக்கு மற்றொரு மதிப்பீட்டைத் தேர்ந்தெடுத்துள்ளார்.' },
+  },
+  job_closed: {
+    en: { title: 'Job no longer available', body: 'The job request has been closed or cancelled.' },
+    si: { title: 'වැඩය තවදුරටත් ලබා ගත නොහැක', body: 'මෙම වැඩය අවලංගු කර හෝ අවසන් කරන ලදී.' },
+    ta: { title: 'வேலை இனி கிடைக்காது', body: 'வேலை கோரிக்கை மூடப்பட்டது அல்லது ரத்து செய்யப்பட்டது.' },
+  },
   chat_message: {
     en: { title: 'New Message', body: 'You received a new chat message.' },
     si: { title: 'නව පණිවිඩයක්', body: 'ඔබට නව පණිවිඩයක් ලැබී ඇත.' },
@@ -138,7 +148,24 @@ const templates = {
     si: { title: 'ඉල්ලීම විසඳන ලදී', body: 'ඔබගේ සහාය ඉල්ලීම සාර්ථකව විසඳා ඇත.' },
     ta: { title: 'கோரிக்கை தீர்க்கப்பட்டது', body: 'உங்கள் ஆதரவு கோரிக்கை தீர்க்கப்பட்டது.' },
   },
+  job_posted: {
+    en: { title: 'New Job in Your Area', body: 'A new job matching your trade is available near you.' },
+    si: { title: 'ඔබගේ ප්‍රදේශයේ නව වැඩක්', body: 'ඔබගේ සේවාවට ගැළපෙන නව වැඩක් ඔබගේ ප්‍රදේශයේ ඇත.' },
+    ta: { title: 'உங்கள் பகுதியில் புதிய வேலை', body: 'உங்கள் துறைக்கு பொருந்தக்கூடிய புதிய வேலை உங்கள் பகுதியில் உள்ளது.' },
+  },
 };
+
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 // handle notification request with strict caller verification and server side templates
 module.exports = async function handler(req, res) {
@@ -160,7 +187,7 @@ module.exports = async function handler(req, res) {
   if (!decodedUser) return;
   const callerUid = decodedUser.uid;
 
-  // Caller must be verified (emailOtp claim) or an admin
+  // caller must be verified or an admin
   const isEmailOtpVerified = decodedUser.emailOtp === true;
   const isAdmin = !!(decodedUser.admin2faUntil || decodedUser.admin || decodedUser.superAdmin);
   if (!isEmailOtpVerified && !isAdmin) {
@@ -271,6 +298,215 @@ module.exports = async function handler(req, res) {
       }
       recipientUid = job.selectedProviderId;
       metadata.jobRequestId = docId;
+
+      // mark other bids as not selected
+      try {
+        const quotesSnap = await db.collection('jobRequests').doc(docId).collection('quotes').get();
+        const serverBatch = db.batch();
+        const unselectedProviders = [];
+        quotesSnap.forEach((qDoc) => {
+          const qData = qDoc.data() || {};
+          if (qDoc.id !== job.acceptedQuoteId && qData.status === 'pending') {
+            serverBatch.update(qDoc.ref, {
+              status: 'not_selected',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            if (qData.providerId && !unselectedProviders.includes(qData.providerId)) {
+              unselectedProviders.push(qData.providerId);
+            }
+          }
+        });
+        await serverBatch.commit();
+
+        for (const pUid of unselectedProviders) {
+          if (pUid !== recipientUid) {
+            try {
+              const pUserSnap = await db.collection('users').doc(pUid).get();
+              const pUser = pUserSnap.exists ? pUserSnap.data() : {};
+              const lang = (pUser && pUser.language) ? pUser.language : 'en';
+              const tmpl = templates.quote_not_selected[lang] || templates.quote_not_selected.en;
+              const notifRef = db.collection('users').doc(pUid).collection('notifications').doc();
+              await notifRef.set({
+                id: notifRef.id,
+                recipientUid: pUid,
+                eventType: 'quote_not_selected',
+                title: tmpl.title,
+                body: tmpl.body,
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                jobRequestId: docId,
+              });
+              if (pUser.fcmToken) {
+                await admin.messaging().send({
+                  token: pUser.fcmToken,
+                  notification: { title: tmpl.title, body: tmpl.body },
+                  data: { eventType: 'quote_not_selected', jobRequestId: docId },
+                }).catch(() => {});
+              }
+            } catch (pErr) {
+              console.error('Error notifying unselected provider:', pErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error updating unselected quotes:', err);
+      }
+    } else if (event === 'job_closed') {
+      const jobSnap = await db.collection('jobRequests').doc(docId).get();
+      if (!jobSnap.exists) {
+        return res.status(404).json({ error: 'Job request not found' });
+      }
+      const job = jobSnap.data() || {};
+      if (callerUid !== job.customerId) {
+        return res.status(403).json({ error: 'Unauthorized event actor' });
+      }
+      metadata.jobRequestId = docId;
+
+      try {
+        const quotesSnap = await db.collection('jobRequests').doc(docId).collection('quotes').get();
+        const notifiedProviders = [];
+        for (const qDoc of quotesSnap.docs) {
+          const qData = qDoc.data() || {};
+          const pUid = qData.providerId;
+          if (pUid && !notifiedProviders.includes(pUid) && pUid !== callerUid) {
+            notifiedProviders.push(pUid);
+            try {
+              const pUserSnap = await db.collection('users').doc(pUid).get();
+              const pUser = pUserSnap.exists ? pUserSnap.data() : {};
+              const lang = (pUser && pUser.language) ? pUser.language : 'en';
+              const tmpl = templates.job_closed[lang] || templates.job_closed.en;
+              const notifRef = db.collection('users').doc(pUid).collection('notifications').doc();
+              await notifRef.set({
+                id: notifRef.id,
+                recipientUid: pUid,
+                eventType: 'job_closed',
+                title: tmpl.title,
+                body: tmpl.body,
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                jobRequestId: docId,
+              });
+              if (pUser.fcmToken) {
+                await admin.messaging().send({
+                  token: pUser.fcmToken,
+                  notification: { title: tmpl.title, body: tmpl.body },
+                  data: { eventType: 'job_closed', jobRequestId: docId },
+                }).catch(() => {});
+              }
+            } catch (pErr) {
+              console.error('Error notifying provider for job_closed:', pErr);
+            }
+          }
+        }
+        return res.status(200).json({ success: true, notifiedCount: notifiedProviders.length });
+      } catch (err) {
+        console.error('Error in job_closed notifications:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    } else if (event === 'job_posted') {
+      const jobSnap = await db.collection('jobRequests').doc(docId).get();
+      if (!jobSnap.exists) {
+        return res.status(200).json({ success: true, skipped: 'not_found' });
+      }
+      const job = jobSnap.data() || {};
+      if (callerUid !== job.customerId) {
+        return res.status(200).json({ success: true, skipped: 'unauthorized_or_mismatch' });
+      }
+      if (job.status !== 'open') {
+        return res.status(200).json({ success: true, skipped: 'not_open' });
+      }
+      const markerRef = db.collection('jobRequests').doc(docId).collection('private').doc('notified');
+      const markerSnap = await markerRef.get();
+      if (markerSnap.exists) {
+        return res.status(200).json({ success: true, skipped: 'already_notified' });
+      }
+      await markerRef.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp() });
+
+      try {
+        const jobLat = job.latitude;
+        const jobLng = job.longitude;
+        if (typeof jobLat !== 'number' || typeof jobLng !== 'number') {
+          return res.status(200).json({ success: true, skipped: 'missing_coords' });
+        }
+
+        const techsSnap = await db.collection('technicians')
+          .where('category', '==', job.category)
+          .where('nicVerified', '==', true)
+          .get();
+
+        const candidateTechs = [];
+        const now = Date.now();
+        const thirtyMinMs = 30 * 60 * 1000;
+
+        for (const tDoc of techsSnap.docs) {
+          const tData = tDoc.data() || {};
+          if (tData.isBanned === true) continue;
+          if (tDoc.id === callerUid) continue;
+
+          let effectiveLat = typeof tData.baseLatitude === 'number' ? tData.baseLatitude : tData.latitude;
+          let effectiveLng = typeof tData.baseLongitude === 'number' ? tData.baseLongitude : tData.longitude;
+
+          try {
+            const liveSnap = await db.collection('liveLocations').doc(tDoc.id).get();
+            if (liveSnap.exists) {
+              const liveData = liveSnap.data() || {};
+              const liveTs = liveData.timestamp ? (liveData.timestamp.toMillis ? liveData.timestamp.toMillis() : new Date(liveData.timestamp).getTime()) : 0;
+              if (now - liveTs <= thirtyMinMs && typeof liveData.latitude === 'number' && typeof liveData.longitude === 'number') {
+                effectiveLat = liveData.latitude;
+                effectiveLng = liveData.longitude;
+              }
+            }
+          } catch (_) {}
+
+          if (typeof effectiveLat !== 'number' || typeof effectiveLng !== 'number') continue;
+
+          const dist = calculateDistanceKm(jobLat, jobLng, effectiveLat, effectiveLng);
+          const radius = typeof tData.serviceRadiusKm === 'number' ? tData.serviceRadiusKm : 25;
+          if (dist <= radius) {
+            candidateTechs.push({
+              uid: tDoc.id,
+              distance: dist,
+            });
+          }
+        }
+
+        candidateTechs.sort((a, b) => a.distance - b.distance);
+        const topTechs = candidateTechs.slice(0, 30);
+
+        for (const t of topTechs) {
+          try {
+            const uSnap = await db.collection('users').doc(t.uid).get();
+            const uData = uSnap.exists ? uSnap.data() : {};
+            const lang = (uData && uData.language) ? uData.language : 'en';
+            const tmpl = templates.job_posted[lang] || templates.job_posted.en;
+            const notifRef = db.collection('users').doc(t.uid).collection('notifications').doc();
+            await notifRef.set({
+              id: notifRef.id,
+              recipientUid: t.uid,
+              eventType: 'job_posted',
+              title: tmpl.title,
+              body: tmpl.body,
+              isRead: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              jobRequestId: docId,
+            });
+            if (uData.fcmToken) {
+              await admin.messaging().send({
+                token: uData.fcmToken,
+                notification: { title: tmpl.title, body: tmpl.body },
+                data: { eventType: 'job_posted', jobRequestId: docId },
+              }).catch(() => {});
+            }
+          } catch (tErr) {
+            console.error('Error dispatching job_posted to tech:', tErr);
+          }
+        }
+
+        return res.status(200).json({ success: true, notifiedCount: topTechs.length });
+      } catch (err) {
+        console.error('Error in job_posted dispatch:', err);
+        return res.status(200).json({ success: true, error: err.message });
+      }
     } else if (event === 'support_ticket_created') {
       const ticketSnap = await db.collection('complaints').doc(docId).get();
       if (!ticketSnap.exists) {
@@ -283,7 +519,7 @@ module.exports = async function handler(req, res) {
       metadata.complaintId = docId;
       metadata.ticketType = ticket.type || 'help';
 
-      // find active admins with handle_support or super admins (up to 20)
+      // find active support admins
       const adminList = [];
       const superSnap = await db.collection('superAdmins').limit(10).get();
       superSnap.forEach((d) => adminList.push(d.id));
@@ -325,7 +561,7 @@ module.exports = async function handler(req, res) {
       }
       const ticket = ticketSnap.data() || {};
 
-      // verify caller is authorized admin with active 2FA
+      // verify admin has active session
       const nowSec = Math.floor(Date.now() / 1000);
       if (!decodedUser.admin2faUntil || typeof decodedUser.admin2faUntil !== 'number' || decodedUser.admin2faUntil <= nowSec) {
         return res.status(403).json({ error: 'admin_2fa_required', message: 'Admin 2FA verification required or expired.' });

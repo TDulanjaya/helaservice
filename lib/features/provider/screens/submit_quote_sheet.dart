@@ -18,6 +18,9 @@ import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/provider_pricing_helper.dart';
 import '../../shared/widgets/job_media_gallery.dart';
+import '../../../models/booking.dart';
+import '../../../repositories/booking_repository.dart';
+import '../../../utils/schedule_helpers.dart';
 
 class SubmitQuoteSheet extends StatefulWidget {
   final JobRequest jobRequest;
@@ -50,11 +53,29 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   bool _addTravelCost = false;
   Technician? _technician;
 
+  // flexible scheduling proposal
+  DateTime? _proposedDate;
+  String _proposedSlot = ScheduleHelpers.slotMorning;
+  TimeOfDay? _proposedFromTime;
+  TimeOfDay? _proposedToTime;
+  List<Booking> _activeBookings = [];
+  bool _hasClash = false;
+
   static const List<int> _etaOptions = [15, 30, 45, 60, 90, 120];
 
   @override
   void initState() {
     super.initState();
+    final req = widget.jobRequest;
+    if (req.scheduleMode == 'flexible') {
+      final minDate = req.scheduledStartAt ?? req.createdAt ?? DateTime.now();
+      _proposedDate = DateTime(minDate.year, minDate.month, minDate.day);
+      final todayZero = DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      if (_proposedDate!.isBefore(todayZero)) {
+        _proposedDate = todayZero;
+      }
+    }
     _loadTechnicianRates();
   }
 
@@ -120,7 +141,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         }
         _prefillUnitRate(_selectedPriceUnit, tech);
 
-        // prefill visit fee (used in inspect mode)
+        // fill default visit fee
         final fee = tech.effectiveVisitFeeLkr;
         _visitFeeController.text = fee > 0 ? '$fee' : '';
 
@@ -135,9 +156,74 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         }
         _calculateEstimatedDistance(tech, profile);
       }
+      try {
+        _activeBookings =
+            await BookingRepository().getActiveBookingsForProvider(user.uid);
+      } catch (_) {}
+      if (mounted) {
+        _checkClash();
+      }
     }
     if (mounted) {
       setState(() => _loadingRates = false);
+    }
+  }
+
+  void _checkClash() {
+    if (_activeBookings.isEmpty) {
+      if (_hasClash) setState(() => _hasClash = false);
+      return;
+    }
+
+    DateTime? targetStart;
+    DateTime? targetEnd;
+
+    if (widget.jobRequest.scheduleMode == 'flexible') {
+      if (_proposedDate == null) return;
+      final win = ScheduleHelpers.computeScheduleWindow(
+        mode: ScheduleHelpers.modeDate,
+        date: _proposedDate,
+        slot: _proposedSlot,
+        fromTime: _proposedFromTime,
+        toTime: _proposedToTime,
+      );
+      targetStart = win.scheduledStartAt;
+      targetEnd = win.scheduledEndAt;
+    } else {
+      targetStart = widget.jobRequest.scheduledStartAt;
+      targetEnd = widget.jobRequest.scheduledEndAt;
+      if (targetStart == null && widget.jobRequest.scheduledDate != null) {
+        final win = ScheduleHelpers.computeScheduleWindow(
+          mode: widget.jobRequest.scheduleMode,
+          date: widget.jobRequest.scheduledDate,
+          slot: widget.jobRequest.scheduledSlot ?? ScheduleHelpers.slotAnytime,
+        );
+        targetStart = win.scheduledStartAt;
+        targetEnd = win.scheduledEndAt;
+      }
+    }
+
+    if (targetStart == null || targetEnd == null) {
+      if (_hasClash) setState(() => _hasClash = false);
+      return;
+    }
+
+    bool clashFound = false;
+    for (final b in _activeBookings) {
+      final bWin = ScheduleHelpers.getBookingWindow(b);
+      if (ScheduleHelpers.windowsOverlap(
+        start1: targetStart,
+        end1: targetEnd,
+        start2: bWin.startAt,
+        end2: bWin.endAt,
+      )) {
+        clashFound = true;
+        break;
+      }
+    }
+
+    if (_hasClash != clashFound) {
+      setState(() => _hasClash = clashFound);
     }
   }
 
@@ -301,6 +387,42 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         if (e.toString().contains('pending admin approval')) rethrow;
       }
 
+      DateTime? pStart;
+      DateTime? pEnd;
+      String? pSlot;
+
+      if (widget.jobRequest.scheduleMode == 'flexible') {
+        if (_proposedDate == null) {
+          throw Exception('Please select a proposed arrival date.');
+        }
+        final win = ScheduleHelpers.computeScheduleWindow(
+          mode: ScheduleHelpers.modeDate,
+          date: _proposedDate,
+          slot: _proposedSlot,
+          fromTime: _proposedFromTime,
+          toTime: _proposedToTime,
+        );
+        if (!win.isValid ||
+            win.scheduledStartAt == null ||
+            win.scheduledEndAt == null) {
+          throw Exception(win.errorMessage ?? 'Invalid schedule selection.');
+        }
+        if (widget.jobRequest.scheduledStartAt != null &&
+            win.scheduledStartAt!
+                .isBefore(widget.jobRequest.scheduledStartAt!)) {
+          throw Exception(
+              'Proposed arrival is before customer’s available window.');
+        }
+        if (widget.jobRequest.scheduledEndAt != null &&
+            win.scheduledEndAt!.isAfter(widget.jobRequest.scheduledEndAt!)) {
+          throw Exception(
+              'Proposed arrival is after customer’s available window.');
+        }
+        pStart = win.scheduledStartAt;
+        pEnd = win.scheduledEndAt;
+        pSlot = _proposedSlot;
+      }
+
       final quote = Quote(
         requestId: widget.jobRequest.id,
         providerId: user.uid,
@@ -313,6 +435,9 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         quotedPrice: quotedPrice.toDouble(),
         etaMinutes: _selectedEta,
         notes: notes,
+        proposedStartAt: pStart,
+        proposedEndAt: pEnd,
+        proposedSlot: pSlot,
         quoteType: _selectedQuoteType,
         priceUnit: _selectedQuoteType == 'inspect' ? null : _selectedPriceUnit,
         unitRateLkr: unitRate,
@@ -533,9 +658,177 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                 ),
               ),
 
+              if (req.scheduleMode == 'flexible') ...[
+                const SizedBox(height: 18),
+                const Text(
+                  'When can you come?',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Customer is flexible within ${req.scheduleLabel(context)}. Pick your proposed date and time slot.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  onTap: () async {
+                    final firstDate =
+                        req.scheduledStartAt ?? req.createdAt ?? DateTime.now();
+                    final lastDate = req.scheduledEndAt ??
+                        firstDate
+                            .add(Duration(days: req.flexibleWindowDays ?? 7));
+                    final initial = _proposedDate ?? firstDate;
+                    final validInitial = initial.isBefore(firstDate)
+                        ? firstDate
+                        : (initial.isAfter(lastDate) ? lastDate : initial);
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: validInitial,
+                      firstDate: DateTime(
+                          firstDate.year, firstDate.month, firstDate.day),
+                      lastDate:
+                          DateTime(lastDate.year, lastDate.month, lastDate.day),
+                    );
+                    if (picked != null) {
+                      setState(() => _proposedDate = picked);
+                      _checkClash();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: context.themeSurfaceLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded,
+                            size: 16, color: AppColors.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _proposedDate != null
+                                ? ScheduleHelpers.formatDate(_proposedDate!)
+                                : 'Select proposed date',
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down,
+                            color: context.themeTextSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _buildSlotChip(
+                        ScheduleHelpers.slotMorning, 'Morning (8-12)'),
+                    const SizedBox(width: 8),
+                    _buildSlotChip(
+                        ScheduleHelpers.slotAfternoon, 'Afternoon (12-16)'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _buildSlotChip(
+                        ScheduleHelpers.slotEvening, 'Evening (16-20)'),
+                    const SizedBox(width: 8),
+                    _buildSlotChip(ScheduleHelpers.slotExact, 'Exact Time'),
+                  ],
+                ),
+                if (_proposedSlot == ScheduleHelpers.slotExact) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            final picked = await showTimePicker(
+                              context: context,
+                              initialTime: _proposedFromTime ??
+                                  const TimeOfDay(hour: 9, minute: 0),
+                            );
+                            if (picked != null) {
+                              setState(() => _proposedFromTime = picked);
+                              _checkClash();
+                            }
+                          },
+                          child: Text(_proposedFromTime != null
+                              ? 'From: ${_proposedFromTime!.format(context)}'
+                              : 'Select From'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            final picked = await showTimePicker(
+                              context: context,
+                              initialTime: _proposedToTime ??
+                                  const TimeOfDay(hour: 11, minute: 0),
+                            );
+                            if (picked != null) {
+                              setState(() => _proposedToTime = picked);
+                              _checkClash();
+                            }
+                          },
+                          child: Text(_proposedToTime != null
+                              ? 'To: ${_proposedToTime!.format(context)}'
+                              : 'Select To'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+
+              if (_hasClash) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: AppColors.warning, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'You already have a job at this time.',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 20),
 
-              // Quote Type Selector (3 Types: firm, estimate, inspect)
+              // quote type options
               Text(
                 context.l10n.quoteType,
                 style: const TextStyle(
@@ -603,7 +896,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                         prefixText: 'LKR ', hintText: context.l10n.hintAmount),
                   ),
                 ] else ...[
-                  // Firm / Estimate Mode
+                  // standard pricing fields
                   if (_selectedPriceUnit == 'fixed') ...[
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -851,7 +1144,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
 
                 const SizedBox(height: 16),
 
-                // Breakdown & Total Card
+                // summary and total card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -1101,6 +1394,45 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlotChip(String slot, String label) {
+    final isSelected = _proposedSlot == slot;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() => _proposedSlot = slot);
+          _checkClash();
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : context.themeSurfaceLow,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : context.themeBorder,
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color:
+                    isSelected ? AppColors.primary : context.themeTextPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
       ),

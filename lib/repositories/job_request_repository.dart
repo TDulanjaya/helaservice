@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../constants/firestore_paths.dart';
@@ -200,7 +201,14 @@ class JobRequestRepository {
         .collection(FirestorePaths.quotes)
         .doc(quoteId)
         .get();
+    if (!quoteDoc.exists) {
+      throw Exception('This quote is no longer available');
+    }
     final quoteData = quoteDoc.data();
+    final quoteStatus = quoteData?['status'] as String?;
+    if (quoteStatus != 'pending') {
+      throw Exception('This quote is no longer available');
+    }
     final rawQuoteType = quoteData?['quoteType'] as String?;
     if (rawQuoteType == null || rawQuoteType.isEmpty) {
       try {
@@ -359,16 +367,31 @@ class JobRequestRepository {
       'proposalCount': 0,
       'type': request.bookingType,
       'scheduleMode': request.scheduleMode,
-      if (request.scheduledDate != null)
-        'scheduledDate': Timestamp.fromDate(request.scheduledDate!),
-      if (request.scheduledStartAt != null)
-        'scheduledStartAt': Timestamp.fromDate(request.scheduledStartAt!)
-      else if (scheduledStartAt != null)
-        'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
-      if (request.scheduledEndAt != null)
-        'scheduledEndAt': Timestamp.fromDate(request.scheduledEndAt!),
-      if (request.scheduledSlot != null && request.scheduledSlot!.isNotEmpty)
-        'scheduledSlot': request.scheduledSlot,
+      if (request.scheduleMode == 'flexible' &&
+          resolvedQuote.proposedStartAt != null) ...{
+        'scheduledDate': Timestamp.fromDate(DateTime(
+          resolvedQuote.proposedStartAt!.year,
+          resolvedQuote.proposedStartAt!.month,
+          resolvedQuote.proposedStartAt!.day,
+        )),
+        'scheduledStartAt': Timestamp.fromDate(resolvedQuote.proposedStartAt!),
+        if (resolvedQuote.proposedEndAt != null)
+          'scheduledEndAt': Timestamp.fromDate(resolvedQuote.proposedEndAt!),
+        if (resolvedQuote.proposedSlot != null &&
+            resolvedQuote.proposedSlot!.isNotEmpty)
+          'scheduledSlot': resolvedQuote.proposedSlot,
+      } else ...{
+        if (request.scheduledDate != null)
+          'scheduledDate': Timestamp.fromDate(request.scheduledDate!),
+        if (request.scheduledStartAt != null)
+          'scheduledStartAt': Timestamp.fromDate(request.scheduledStartAt!)
+        else if (scheduledStartAt != null)
+          'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+        if (request.scheduledEndAt != null)
+          'scheduledEndAt': Timestamp.fromDate(request.scheduledEndAt!),
+        if (request.scheduledSlot != null && request.scheduledSlot!.isNotEmpty)
+          'scheduledSlot': request.scheduledSlot,
+      },
       if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
       if (houseNo != null && houseNo.isNotEmpty) 'houseNo': houseNo,
       if (street != null && street.isNotEmpty) 'street': street,
@@ -392,26 +415,23 @@ class JobRequestRepository {
 
     await batch.commit();
 
-    final allQuotes = await quotesCol.get();
-    final declineBatch = FirebaseFirestore.instance.batch();
-    bool hasQuotesToDecline = false;
-    for (final doc in allQuotes.docs) {
-      if (doc.id != quoteId && doc.data()['status'] != 'declined') {
-        declineBatch.update(doc.reference, {'status': 'declined'});
-        hasQuotesToDecline = true;
-      }
-    }
-    if (hasQuotesToDecline) {
-      await declineBatch.commit();
-    }
-
-    // notify provider of acceptance
+    // notify provider that quote was accepted
     NotificationService.instance.sendNotification(
       event: 'quote_accepted',
       docId: requestId,
     );
 
     return bookingRef.id;
+  }
+
+  Future<void> withdrawQuote(String requestId, String quoteId) async {
+    final quoteRef =
+        _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId);
+    await quoteRef.update({
+      'status': 'withdrawn',
+      'withdrawnAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<Map<String, dynamic>?> getJobContact(String requestId) async {
@@ -593,6 +613,46 @@ class JobRequestRepository {
     }
     batch.delete(_col.doc(requestId));
     await batch.commit();
+  }
+
+  Future<void> cancelJobRequest({
+    required String requestId,
+    required String reason,
+    required String cancelledBy,
+  }) async {
+    final batch = FirebaseFirestore.instance.batch();
+    batch.update(_col.doc(requestId), {
+      'status': JobRequestStatus.cancelled,
+      'cancelReason': reason,
+      'cancellationReason': reason,
+      'cancelledAt': FieldValue.serverTimestamp(),
+      'cancelledBy': cancelledBy,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    final quotesSnap = await _col
+        .doc(requestId)
+        .collection(FirestorePaths.quotes)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    for (final doc in quotesSnap.docs) {
+      batch.update(doc.reference, {
+        'status': 'job_closed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+
+    try {
+      await NotificationService.instance.sendNotification(
+        event: 'job_closed',
+        docId: requestId,
+      );
+    } catch (e) {
+      debugPrint('[JobRepo] notify job_closed error: $e');
+    }
   }
 
   Future<void> updateRequestStatus(String requestId, String status) async {

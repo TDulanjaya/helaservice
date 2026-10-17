@@ -3878,7 +3878,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get cancelReasonPriceDispute => 'මිල හෝ ගාස්තු පිළිබඳ එකඟ නොවීම';
 
   @override
-  String get cancelReasonOther => 'වෙනත් හේතුවක්';
+  String get cancelReasonOther => 'වෙනත්';
 
   @override
   String get confirmCancellation => 'අවලංගු කිරීම තහවුරු කරන්න';
@@ -6889,4 +6889,134 @@ class AppLocalizationsSi extends AppLocalizations {
   String ratePerKm(String amount) {
     return 'LKR $amount/කි.මී.';
   }
+
+  @override
+  String get whenDoYouNeedThis => 'ඔබට මෙම වැඩය අවශ්‍ය වන්නේ කවදාද?';
+
+  @override
+  String get scheduleModeToday => 'අද';
+
+  @override
+  String get scheduleModeSpecificDay => 'නියමිත දිනයකදී';
+
+  @override
+  String get scheduleModeFlexible => 'නම්‍යශීලී';
+
+  @override
+  String get urgentHelpHint => 'හදිසි අවස්ථාවක්ද? හදිසි සේවාව භාවිතා කරන්න.';
+
+  @override
+  String get todayDisabledPast20 =>
+      'රාත්‍රී 8:00න් පසු කරුණාකර වෙනත් දිනයක් තෝරන්න.';
+
+  @override
+  String get slotAnytimeLabel => 'ඕනෑම වේලාවක (08:00 - 20:00)';
+
+  @override
+  String get slotMorningShort => 'උදෑසන';
+
+  @override
+  String get slotAfternoonShort => 'දහවල්';
+
+  @override
+  String get slotEveningShort => 'සවස';
+
+  @override
+  String get slotAnytimeShort => 'ඕනෑම වේලාවක';
+
+  @override
+  String get slotExactTime => 'නියමිත වේලාව';
+
+  @override
+  String get flexibleWithin3Days => 'දින 3ක් තුළ';
+
+  @override
+  String get flexibleWithinWeek => 'සතියක් තුළ';
+
+  @override
+  String get flexibleWithin2Weeks => 'සති 2ක් තුළ';
+
+  @override
+  String get slotPassed => 'පසු විය';
+
+  @override
+  String get cancelJobTitle => 'වැඩ ඉල්ලීම අවලංගු කරන්න';
+
+  @override
+  String get cancelJobConfirmPrompt =>
+      'ඔබට මෙම වැඩය අවලංගු කිරීමට අවශ්‍ය බව තහවුරු කරන්නද?';
+
+  @override
+  String get cancelReasonFoundSomeone => 'වෙනත් අයෙකු සොයාගත්තා';
+
+  @override
+  String get cancelReasonNoLongerNeeded => 'තවදුරටත් අවශ්‍ය නොවේ';
+
+  @override
+  String get cancelReasonTooExpensive => 'මිල වැඩියි';
+
+  @override
+  String get withdrawBid => 'මිල ගණන් ඉල්ලා අස්කරගන්න';
+
+  @override
+  String get withdrawBidConfirmPrompt =>
+      'ඔබගේ මිල ගණන් ඉල්ලා අස්කර ගැනීමට අවශ්‍ය බව තහවුරු කරන්නද?';
+
+  @override
+  String get bidWithdrawnSuccess => 'මිල ගණන් ඉල්ලා අස්කරගන්නා ලදී';
+
+  @override
+  String get quoteNoLongerAvailable => 'මෙම මිල ගණන් තවදුරටත් ලබාගත නොහැක.';
+
+  @override
+  String get providerWithdrewQuoteNotice =>
+      'සේවා සපයන්නෙකු ඔවුන්ගේ මිල ගණන් ඉල්ලා අස්කරගත්තේය';
+
+  @override
+  String get clashWarningBidding => 'මෙම වේලාවේදී ඔබට දැනටමත් වැඩක් ඇත.';
+
+  @override
+  String clashWarningPostWin(int count) {
+    return 'මෙම වේලාවේදී ඔබට වෙනත් මිල ගණන් $countක් ඇත. ඒවා ඉල්ලා අස්කරගන්නද?';
+  }
+
+  @override
+  String get reviewBidsButton => 'මිල ගණන් පරීක්ෂා කරන්න';
+
+  @override
+  String coverageWarningCount(int count) {
+    return 'සේවා සපයන්නන් $countක් මෙම ප්‍රදේශයට සේවය සපයයි';
+  }
+
+  @override
+  String get coverageWarningZero =>
+      'මෙම කාණ්ඩයේ සේවා සපයන්නන් තවමත් මෙම ප්‍රදේශයට සේවය නොකරයි. ඔබට තවමත් පළ කළ හැක.';
+
+  @override
+  String get myBidsActiveTab => 'ක්‍රියාකාරී';
+
+  @override
+  String get myBidsPastTab => 'පසුගිය';
+
+  @override
+  String get bidStatusPending => 'පොරොත්තුවෙන්';
+
+  @override
+  String get bidStatusAccepted => 'පිළිගන්නා ලදී';
+
+  @override
+  String get bidStatusNotSelected => 'තෝරා නොගත්තේය';
+
+  @override
+  String get bidStatusWithdrawn => 'ඉල්ලා අස්කරගත්';
+
+  @override
+  String get bidStatusJobClosed => 'වැඩය තවදුරටත් ලබා ගත නොහැක';
+
+  @override
+  String get whenCanYouCome => 'ඔබට පැමිණිය හැක්කේ කවදාද?';
+
+  @override
+  String get selectDayInsideWindow =>
+      'පාරිභෝගිකයාගේ කාල පරාසය තුළ දිනයක් තෝරන්න';
 }

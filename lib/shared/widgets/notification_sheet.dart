@@ -13,6 +13,7 @@ import '../screens/conversations_inbox_screen.dart';
 import '../../features/customer/screens/live_tracking_screen.dart';
 import '../../features/customer/screens/job_quotes_screen.dart';
 import '../../features/provider/screens/en_route_navigation_screen.dart';
+import '../../features/provider/screens/provider_dashboard_screen.dart';
 
 // bottom sheet for alerts and notifications
 class NotificationSheet extends StatelessWidget {
@@ -273,19 +274,47 @@ class _NotificationCard extends StatelessWidget {
 
     if (!context.mounted) return;
 
-    if (notification.jobRequestId != null &&
-        notification.jobRequestId!.isNotEmpty &&
-        !isProvider) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => JobQuotesScreen(
-            requestId: notification.jobRequestId!,
-            jobTitle: notification.title,
+    if (isProvider) {
+      if (notification.eventType == 'job_posted') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProviderDashboardScreen(
+              initialNavIndex: 0,
+              openJobRequestId: notification.jobRequestId,
+            ),
           ),
-        ),
-      );
-      return;
+          (route) => false,
+        );
+        return;
+      }
+      if (notification.eventType == 'quote_not_selected' ||
+          notification.eventType == 'job_closed') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ProviderDashboardScreen(
+              initialNavIndex: 1,
+            ),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+    } else {
+      if (notification.jobRequestId != null &&
+          notification.jobRequestId!.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => JobQuotesScreen(
+              requestId: notification.jobRequestId!,
+              jobTitle: notification.title,
+            ),
+          ),
+        );
+        return;
+      }
     }
 
     if (notification.chatRoomId != null ||

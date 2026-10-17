@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../state/role_provider.dart';
@@ -340,11 +341,13 @@ class _CategoryDistrictManagementScreenState
                     );
                   }
                 } catch (e) {
+                  if (kDebugMode) {
+                    debugPrint('[CategoryManagement] publish error: $e');
+                  }
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text(e.toString().replaceAll('Exception: ', '')),
+                        content: Text(context.l10n.somethingWentWrong),
                         backgroundColor: AppColors.error,
                       ),
                     );
@@ -672,11 +675,13 @@ class _CategoryDistrictManagementScreenState
                     );
                   }
                 } catch (e) {
+                  if (kDebugMode) {
+                    debugPrint('[CategoryManagement] save changes error: $e');
+                  }
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text(e.toString().replaceAll('Exception: ', '')),
+                        content: Text(context.l10n.somethingWentWrong),
                         backgroundColor: AppColors.error,
                       ),
                     );
@@ -747,11 +752,14 @@ class _CategoryDistrictManagementScreenState
                   );
                 }
               } catch (e) {
+                if (kDebugMode) {
+                  debugPrint('[CategoryManagement] delete error: $e');
+                }
                 if (dialogCtx.mounted) Navigator.pop(dialogCtx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      content: Text(context.l10n.somethingWentWrong),
                       backgroundColor: AppColors.error,
                       duration: const Duration(seconds: 4),
                     ),

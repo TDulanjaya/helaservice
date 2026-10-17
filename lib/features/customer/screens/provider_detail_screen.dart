@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/technician.dart';
@@ -1153,6 +1154,10 @@ class ProviderDetailScreen extends StatelessWidget {
                                 ),
                               );
                             } catch (e) {
+                              if (kDebugMode) {
+                                debugPrint(
+                                    '[ProviderDetail] create booking error: $e');
+                              }
                               if (context.mounted) {
                                 final message =
                                     e.toString().contains('LOCATION_REQUIRED')
@@ -1161,7 +1166,7 @@ class ProviderDetailScreen extends StatelessWidget {
                                                 'PROVIDER_CATEGORY_MISSING')
                                             ? context.l10n
                                                 .errorProviderCategoryMissing
-                                            : e.toString());
+                                            : context.l10n.somethingWentWrong);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(message),

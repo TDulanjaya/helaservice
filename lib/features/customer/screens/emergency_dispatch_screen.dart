@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -724,12 +724,15 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[EmergencyDispatch] booking error: $e');
+      }
       if (mounted) {
         final message = e.toString().contains('LOCATION_REQUIRED')
             ? context.l10n.locationRequiredToBook
             : (e.toString().contains('PROVIDER_CATEGORY_MISSING')
                 ? context.l10n.errorProviderCategoryMissing
-                : e.toString());
+                : context.l10n.somethingWentWrong);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),

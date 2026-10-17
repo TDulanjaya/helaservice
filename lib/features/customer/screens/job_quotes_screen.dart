@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/job_request.dart';
 import '../../../models/quote.dart';
@@ -870,11 +871,14 @@ class JobQuotesScreen extends StatelessWidget {
           await _acceptQuote(context, quote, updatedRequest);
         }
       } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[JobQuotes] update location error: $e');
+        }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content:
-                  Text(context.l10n.failedToUpdateJobLocation(e.toString())),
+              content: Text(context.l10n
+                  .failedToUpdateJobLocation(context.l10n.somethingWentWrong)),
               backgroundColor: AppColors.error,
             ),
           );
@@ -916,10 +920,13 @@ class JobQuotesScreen extends StatelessWidget {
           await _acceptQuote(context, quote, updatedRequest);
         }
       } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[JobQuotes] update schedule error: $e');
+        }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.toString()),
+              content: Text(context.l10n.somethingWentWrong),
               backgroundColor: AppColors.error,
             ),
           );

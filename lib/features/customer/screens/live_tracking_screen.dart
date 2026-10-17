@@ -1025,10 +1025,13 @@ class LiveTrackingScreen extends StatelessWidget {
                         jobRequestId: booking.jobRequestId,
                       );
                     } catch (e) {
+                      if (kDebugMode) {
+                        debugPrint('[LiveTracking] confirm arrival error: $e');
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(e.toString()),
+                              content: Text(context.l10n.somethingWentWrong),
                               backgroundColor: AppColors.error),
                         );
                       }
@@ -1059,10 +1062,13 @@ class LiveTrackingScreen extends StatelessWidget {
                         currentDeniedCount: booking.arrivalDeniedCount,
                       );
                     } catch (e) {
+                      if (kDebugMode) {
+                        debugPrint('[LiveTracking] deny arrival error: $e');
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(e.toString()),
+                              content: Text(context.l10n.somethingWentWrong),
                               backgroundColor: AppColors.error),
                         );
                       }
@@ -1126,10 +1132,13 @@ class LiveTrackingScreen extends StatelessWidget {
           );
         }
       } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[LiveTracking] report no-show error: $e');
+        }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.toString()),
+              content: Text(context.l10n.somethingWentWrong),
               backgroundColor: AppColors.error,
             ),
           );

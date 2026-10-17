@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/admin_user.dart';
 import '../../../repositories/admin_repository.dart';
@@ -95,10 +96,14 @@ class _EditAdminPermissionsDialogState
         ),
       );
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[EditAdminPermissions] update permissions error: $e');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.l10n.editPermFailed('$e')),
+          content: Text(
+              context.l10n.editPermFailed(context.l10n.somethingWentWrong)),
           backgroundColor: AppColors.error,
         ),
       );

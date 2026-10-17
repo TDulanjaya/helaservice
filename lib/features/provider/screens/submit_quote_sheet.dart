@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as pv;
@@ -461,13 +462,16 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[SubmitQuoteSheet] submit quote error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.failedToSubmitQuote(
-                e.toString() == 'Exception: Not logged in'
+                e.toString().contains('Not logged in')
                     ? context.l10n.provNotLoggedIn
-                    : e.toString())),
+                    : context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );

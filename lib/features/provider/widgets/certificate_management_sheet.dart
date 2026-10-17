@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../services/storage_service.dart';
 import '../../../shared/widgets/primary_button.dart';
@@ -88,10 +89,13 @@ class _CertificateManagementSheetState
         _newItems.clear();
       });
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CertificateManagement] save error: $e');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(context.l10n.somethingWentWrong),
           backgroundColor: AppColors.error,
         ),
       );
@@ -109,10 +113,13 @@ class _CertificateManagementSheetState
           .doc(docId)
           .delete();
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CertificateManagement] delete error: $e');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(context.l10n.somethingWentWrong),
           backgroundColor: AppColors.error,
         ),
       );

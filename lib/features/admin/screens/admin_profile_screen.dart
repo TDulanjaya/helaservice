@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as pv;
@@ -144,10 +145,14 @@ class AdminProfileScreen extends StatelessWidget {
                   );
                 }
               } catch (e) {
+                if (kDebugMode) {
+                  debugPrint('[AdminProfile] broadcast error: $e');
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(context.l10n.adminSetBroadcastFailed('$e')),
+                      content: Text(context.l10n.adminSetBroadcastFailed(
+                          context.l10n.somethingWentWrong)),
                       backgroundColor: AppColors.error,
                     ),
                   );

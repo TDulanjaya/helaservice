@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -737,10 +738,14 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                         jobRequestId: booking.jobRequestId,
                       );
                     } catch (e) {
+                      if (kDebugMode) {
+                        debugPrint(
+                            '[CustomerBookings] confirm arrival error: $e');
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(e.toString()),
+                              content: Text(context.l10n.somethingWentWrong),
                               backgroundColor: AppColors.error),
                         );
                       }
@@ -771,10 +776,13 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                         currentDeniedCount: booking.arrivalDeniedCount,
                       );
                     } catch (e) {
+                      if (kDebugMode) {
+                        debugPrint('[CustomerBookings] deny arrival error: $e');
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(e.toString()),
+                              content: Text(context.l10n.somethingWentWrong),
                               backgroundColor: AppColors.error),
                         );
                       }
@@ -838,10 +846,13 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
           );
         }
       } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[CustomerBookings] report no-show error: $e');
+        }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.toString()),
+              content: Text(context.l10n.somethingWentWrong),
               backgroundColor: AppColors.error,
             ),
           );

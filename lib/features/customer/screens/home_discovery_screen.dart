@@ -912,6 +912,12 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final navItems = [
       NavItem(Icons.explore, context.l10n.navExplore),

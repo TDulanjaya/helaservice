@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../models/complaint.dart';
@@ -1547,10 +1548,14 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
       _replyController.clear();
       widget.onStatusChanged();
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AdminComplaints] _sendReply error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString()), backgroundColor: AppColors.error),
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -1582,10 +1587,14 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AdminComplaints] _assignToMe error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString()), backgroundColor: AppColors.error),
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error),
         );
       }
     }

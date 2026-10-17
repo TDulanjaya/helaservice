@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -331,12 +331,16 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           _uploadedVideoSource = null;
         });
       } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[PostJobRequest] process video error: $e');
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(e.toString().contains('120')
                   ? context.l10n.videoExceedsMax120s
-                  : context.l10n.failedToProcessVideo('$e')),
+                  : context.l10n
+                      .failedToProcessVideo(context.l10n.somethingWentWrong)),
               backgroundColor: AppColors.error,
             ),
           );

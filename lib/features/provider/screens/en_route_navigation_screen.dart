@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart' as pv;
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -766,10 +767,13 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[EnRouteNavigation] _handleArrivalClaim error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -793,10 +797,13 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[EnRouteNavigation] _handleAutoStart error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );

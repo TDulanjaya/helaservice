@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../models/portfolio_item.dart';
 import '../../../repositories/portfolio_repository.dart';
@@ -383,11 +383,15 @@ class _AddPortfolioItemModalState extends State<_AddPortfolioItemModal> {
         widget.onSuccess();
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PortfolioManagement] save showcase error: $e');
+      }
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToSaveShowcase(e.toString())),
+            content: Text(context.l10n
+                .failedToSaveShowcase(context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );

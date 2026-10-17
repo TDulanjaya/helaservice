@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../services/review_service.dart';
@@ -42,7 +43,14 @@ import '../../../utils/provider_location_helper.dart';
 import '../../../utils/schedule_helpers.dart';
 
 class ProviderDashboardScreen extends StatefulWidget {
-  const ProviderDashboardScreen({super.key});
+  final int initialNavIndex;
+  final String? openJobRequestId;
+
+  const ProviderDashboardScreen({
+    super.key,
+    this.initialNavIndex = 0,
+    this.openJobRequestId,
+  });
 
   @override
   State<ProviderDashboardScreen> createState() =>
@@ -52,19 +60,53 @@ class ProviderDashboardScreen extends StatefulWidget {
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   static bool _hasCheckedEnRouteResume = false;
   bool _online = true;
-  int _navIndex = 0;
+  late int _navIndex;
   bool _sortByClosest = true;
   double? _selectedRadiusKm;
 
   @override
   void initState() {
     super.initState();
+    _navIndex = widget.initialNavIndex;
     _initProviderTracking();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         PermissionUtils.checkAndPromptInitialPermissions(context);
+        if (widget.openJobRequestId != null &&
+            widget.openJobRequestId!.isNotEmpty) {
+          _handleInitialJobRequest(widget.openJobRequestId!);
+        }
       }
     });
+  }
+
+  Future<void> _handleInitialJobRequest(String jobId) async {
+    try {
+      final job = await JobRequestRepository().getById(jobId);
+      if (!mounted) return;
+      if (job != null && job.status == 'open' && !job.isExpired) {
+        _openSubmitQuoteSheet(job);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.bidStatusJobClosed),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[ProviderDashboard] _handleInitialJobRequest error: $e');
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.bidStatusJobClosed),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _initProviderTracking() async {

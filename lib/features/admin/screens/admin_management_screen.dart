@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../models/admin_user.dart';
@@ -74,10 +75,14 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
         ),
       );
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AdminManagement] toggle status error: $e');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.l10n.teamFailedUpdateStatus('$e')),
+          content: Text(context.l10n
+              .teamFailedUpdateStatus(context.l10n.somethingWentWrong)),
           backgroundColor: AppColors.error,
         ),
       );

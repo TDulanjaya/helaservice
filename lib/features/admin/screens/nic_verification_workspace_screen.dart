@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart' as pv;
@@ -83,10 +84,14 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] approve photo error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.errorApprovingPhoto(e.toString())),
+            content: Text(context.l10n
+                .errorApprovingPhoto(context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -144,10 +149,14 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] approve nic error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.errorApprovingNic(e.toString())),
+            content: Text(context.l10n
+                .errorApprovingNic(context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -226,10 +235,13 @@ class _NicVerificationWorkspaceScreenState
         _showZoomDialog(context, presignedUrl, title);
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] open cert error: $e');
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -323,10 +335,13 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] approve single cert error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -455,10 +470,13 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] reject single cert error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -545,10 +563,13 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] approve all certs error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(context.l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );
@@ -649,10 +670,14 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] full approve error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.nicDeskErrorApproving('$e')),
+            content: Text(context.l10n
+                .nicDeskErrorApproving(context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -893,10 +918,14 @@ class _NicVerificationWorkspaceScreenState
         );
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NicVerificationWorkspace] reject error: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.nicDeskErrorRejecting('$e')),
+            content: Text(context.l10n
+                .nicDeskErrorRejecting(context.l10n.somethingWentWrong)),
             backgroundColor: AppColors.error,
           ),
         );

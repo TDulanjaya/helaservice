@@ -28,7 +28,7 @@ import '../../../services/call_service.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../../utils/schedule_helpers.dart';
 
-class JobQuotesScreen extends StatelessWidget {
+class JobQuotesScreen extends StatefulWidget {
   final String requestId;
   final String jobTitle;
 
@@ -39,8 +39,142 @@ class JobQuotesScreen extends StatelessWidget {
   });
 
   @override
+  State<JobQuotesScreen> createState() => _JobQuotesScreenState();
+}
+
+class _JobQuotesScreenState extends State<JobQuotesScreen> {
+  final JobRequestRepository _repo = JobRequestRepository();
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> _jobStream;
+  bool _hadPendingWrites = false;
+
+  String get requestId => widget.requestId;
+  String get jobTitle => widget.jobTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _initStream();
+  }
+
+  void _initStream() {
+    _jobStream = _repo.streamJobRequestSnapshot(widget.requestId);
+  }
+
+  void _retrySubscription() {
+    setState(() {
+      _initStream();
+    });
+  }
+
+  Widget _buildPendingWritesBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.warning),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.pendingJobPostBanner,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.jobLoadErrorTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _retrySubscription,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: Text(context.l10n.retryAction),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotFoundOrFailedState(BuildContext context,
+      {required bool isFailed}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isFailed ? Icons.warning_amber_rounded : Icons.search_off_rounded,
+              size: 48,
+              color: isFailed ? AppColors.error : context.themeTextSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isFailed
+                  ? context.l10n.jobPostFailedTitle
+                  : context.l10n.jobNotFoundTitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.maybePop(context),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: Text(context.l10n.backAction),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repo = JobRequestRepository();
     return Scaffold(
       appBar: AppBar(
         leading: Center(
@@ -57,21 +191,54 @@ class JobQuotesScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: StreamBuilder<JobRequest?>(
-          stream: repo.streamJobRequest(requestId),
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _jobStream,
           builder: (context, requestSnap) {
-            final request = requestSnap.data;
-            if (request == null) {
+            if (requestSnap.hasError) {
+              debugPrint(
+                  '[JobQuotesScreen] stream error: ${requestSnap.error}');
+              return _buildErrorState(context);
+            }
+
+            if (requestSnap.connectionState == ConnectionState.waiting &&
+                !requestSnap.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
+            final docSnap = requestSnap.data;
+            if (docSnap == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final exists = docSnap.exists && docSnap.data() != null;
+            final isFromCache = docSnap.metadata.isFromCache;
+            final hasPendingWrites = docSnap.metadata.hasPendingWrites;
+
+            if (exists && hasPendingWrites) {
+              _hadPendingWrites = true;
+            }
+
+            // while not exists and from local cache, keep showing spinner
+            if (!exists && isFromCache) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            // if not exists and from server: check if it failed after pending write or not found
+            if (!exists) {
+              return _buildNotFoundOrFailedState(context,
+                  isFailed: _hadPendingWrites);
+            }
+
+            final request = JobRequest.fromMap(docSnap.id, docSnap.data()!);
+
             return Column(
               children: [
+                if (hasPendingWrites) _buildPendingWritesBanner(context),
                 _JobSummaryCard(request: request),
                 const SizedBox(height: 4),
                 Expanded(
                   child: StreamBuilder<List<Quote>>(
-                    stream: repo.streamQuotesForRequest(requestId),
+                    stream: _repo.streamQuotesForRequest(requestId),
                     builder: (context, quotesSnap) {
                       if (quotesSnap.connectionState ==
                               ConnectionState.waiting &&

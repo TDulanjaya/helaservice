@@ -28,6 +28,30 @@ class JobMediaUploadResult {
   const JobMediaUploadResult({required this.url, required this.key});
 }
 
+// top-level worker for compute()
+Uint8List _compressImageWorker(Map<String, dynamic> params) {
+  final rawBytes = params['bytes'] as Uint8List;
+  final maxDimension = params['maxDimension'] as int;
+  final quality = params['quality'] as int;
+
+  final decoded = img.decodeImage(rawBytes);
+  if (decoded == null) {
+    throw Exception('Failed to decode image');
+  }
+  final oriented = img.bakeOrientation(decoded);
+  img.Image resized = oriented;
+  if (oriented.width > maxDimension || oriented.height > maxDimension) {
+    if (oriented.width >= oriented.height) {
+      resized = img.copyResize(oriented, width: maxDimension);
+    } else {
+      resized = img.copyResize(oriented, height: maxDimension);
+    }
+  }
+  resized.exif = img.ExifData();
+  final compressedBytes = img.encodeJpg(resized, quality: quality);
+  return Uint8List.fromList(compressedBytes);
+}
+
 class StorageService {
   StorageService._();
   static final StorageService instance = StorageService._();
@@ -61,28 +85,30 @@ class StorageService {
     }
   }
 
-  // strip gps/exif and compress
-  Uint8List stripExifAndCompressImage(
+  // strip gps/exif and compress in background isolate
+  Future<Uint8List> stripExifAndCompressImage(
     Uint8List rawBytes, {
     int maxDimension = 1600,
     int quality = 80,
   }) {
-    final decoded = img.decodeImage(rawBytes);
-    if (decoded == null) {
-      throw Exception('Failed to decode image');
-    }
-    final oriented = img.bakeOrientation(decoded);
-    img.Image resized = oriented;
-    if (oriented.width > maxDimension || oriented.height > maxDimension) {
-      if (oriented.width >= oriented.height) {
-        resized = img.copyResize(oriented, width: maxDimension);
-      } else {
-        resized = img.copyResize(oriented, height: maxDimension);
-      }
-    }
-    resized.exif = img.ExifData();
-    final compressedBytes = img.encodeJpg(resized, quality: quality);
-    return Uint8List.fromList(compressedBytes);
+    return compute(_compressImageWorker, {
+      'bytes': rawBytes,
+      'maxDimension': maxDimension,
+      'quality': quality,
+    });
+  }
+
+  // synchronous version preserved
+  Uint8List stripExifAndCompressImageSync(
+    Uint8List rawBytes, {
+    int maxDimension = 1600,
+    int quality = 80,
+  }) {
+    return _compressImageWorker({
+      'bytes': rawBytes,
+      'maxDimension': maxDimension,
+      'quality': quality,
+    });
   }
 
   // upload job media directly to b2
@@ -101,7 +127,7 @@ class StorageService {
     }
     final token = await user.getIdToken();
 
-    // get presigned url
+    // get presigned url with 15s timeout
     final presignRes = await http
         .post(
           uri,
@@ -117,7 +143,7 @@ class StorageService {
             'sizeBytes': bytes.length,
           }),
         )
-        .timeout(const Duration(seconds: 20));
+        .timeout(const Duration(seconds: 15));
 
     if (presignRes.statusCode != 200) {
       debugPrint(
@@ -156,8 +182,10 @@ class StorageService {
       streamedReq.sink.close();
     }();
 
-    final streamedRes =
-        await streamedReq.send().timeout(const Duration(seconds: 90));
+    final isVideo = contentType.toLowerCase().contains('video');
+    final uploadTimeout =
+        isVideo ? const Duration(seconds: 90) : const Duration(seconds: 60);
+    final streamedRes = await streamedReq.send().timeout(uploadTimeout);
     final putRes = await http.Response.fromStream(streamedRes);
 
     if (putRes.statusCode < 200 || putRes.statusCode >= 300) {
@@ -250,7 +278,7 @@ class StorageService {
     Uint8List bytesToUpload = bytes;
     if (mimeType.startsWith('image/')) {
       try {
-        bytesToUpload = stripExifAndCompressImage(bytes);
+        bytesToUpload = await stripExifAndCompressImage(bytes);
       } catch (_) {}
     }
 

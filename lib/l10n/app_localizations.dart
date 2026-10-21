@@ -12677,6 +12677,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a day within the customer\'s window'**
   String get selectDayInsideWindow;
+
+  /// No description provided for @pendingJobPostBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for connection, your job will post automatically'**
+  String get pendingJobPostBanner;
+
+  /// No description provided for @jobNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job request not found'**
+  String get jobNotFoundTitle;
+
+  /// No description provided for @jobPostFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your job could not be posted. Please try again.'**
+  String get jobPostFailedTitle;
+
+  /// No description provided for @jobLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load job details. Please check your connection.'**
+  String get jobLoadErrorTitle;
+
+  /// No description provided for @cancelUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Upload'**
+  String get cancelUpload;
+
+  /// No description provided for @backAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back'**
+  String get backAction;
 }
 
 class _AppLocalizationsDelegate

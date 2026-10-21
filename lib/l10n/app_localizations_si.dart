@@ -7019,4 +7019,25 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get selectDayInsideWindow =>
       'පාරිභෝගිකයාගේ කාල පරාසය තුළ දිනයක් තෝරන්න';
+
+  @override
+  String get pendingJobPostBanner =>
+      'අන්තර්ජාල සම්බන්ධතාවය එනතුරු රැඳී සිටී. ඔබගේ කාර්යය ස්වයංක්‍රීයව පළ වනු ඇත.';
+
+  @override
+  String get jobNotFoundTitle => 'කාර්ය ඉල්ලීම හමු නොවීය';
+
+  @override
+  String get jobPostFailedTitle =>
+      'ඔබගේ කාර්යය පළ කිරීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get jobLoadErrorTitle =>
+      'කාර්ය විස්තර පූරණය කිරීමට නොහැකි විය. කරුණාකර ඔබගේ සම්බන්ධතාවය පරීක්ෂා කරන්න.';
+
+  @override
+  String get cancelUpload => 'උඩුගත කිරීම අවලංගු කරන්න';
+
+  @override
+  String get backAction => 'ආපසු යන්න';
 }

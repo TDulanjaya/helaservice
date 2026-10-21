@@ -7180,4 +7180,25 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get selectDayInsideWindow =>
       'வாடிக்கையாளரின் சாளரத்திற்குள் ஒரு நாளைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get pendingJobPostBanner =>
+      'இணைப்பிற்காக காத்திருக்கிறது, உங்கள் பணி தானாகவே பதிவிடப்படும்';
+
+  @override
+  String get jobNotFoundTitle => 'பணி கோரிக்கை கிடைக்கவில்லை';
+
+  @override
+  String get jobPostFailedTitle =>
+      'உங்கள் பணியை பதிவிட முடியவில்லை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get jobLoadErrorTitle =>
+      'பணி விவரங்களை ஏற்றுவதில் தோல்வி. உங்கள் இணைய இணைப்பை சரிபார்க்கவும்.';
+
+  @override
+  String get cancelUpload => 'பதிவேற்றத்தை ரத்து செய்';
+
+  @override
+  String get backAction => 'பின்செல்லவும்';
 }

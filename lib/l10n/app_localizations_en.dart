@@ -7010,4 +7010,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get selectDayInsideWindow =>
       'Select a day within the customer\'s window';
+
+  @override
+  String get pendingJobPostBanner =>
+      'Waiting for connection, your job will post automatically';
+
+  @override
+  String get jobNotFoundTitle => 'Job request not found';
+
+  @override
+  String get jobPostFailedTitle =>
+      'Your job could not be posted. Please try again.';
+
+  @override
+  String get jobLoadErrorTitle =>
+      'Unable to load job details. Please check your connection.';
+
+  @override
+  String get cancelUpload => 'Cancel Upload';
+
+  @override
+  String get backAction => 'Go Back';
 }

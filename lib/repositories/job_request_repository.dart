@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -71,7 +72,17 @@ class JobRequestRepository {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    await batch.commit();
+    final commitFuture = batch.commit();
+    try {
+      await commitFuture.timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      debugPrint(
+          '[JobRequestRepo] batch commit timed out after 15s; queued write pending');
+      commitFuture.catchError((e) {
+        debugPrint('[JobRequestRepo] background commit failed: $e');
+      });
+    }
+
     return docRef.id;
   }
 
@@ -126,6 +137,12 @@ class JobRequestRepository {
       if (!snap.exists || snap.data() == null) return null;
       return JobRequest.fromMap(snap.id, snap.data()!);
     });
+  }
+
+  // stream raw snapshot with metadata for pending write tracking
+  Stream<DocumentSnapshot<Map<String, dynamic>>> streamJobRequestSnapshot(
+      String requestId) {
+    return _col.doc(requestId).snapshots(includeMetadataChanges: true);
   }
 
   Future<JobRequest?> getById(String requestId) async {

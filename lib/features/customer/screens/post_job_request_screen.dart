@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   bool _uploadFailed = false;
   bool _saveFailed = false;
   bool _submitting = false;
+  int _submitGeneration = 0;
+  bool _isUploadingMedia = false;
   String _scheduleMode = ScheduleHelpers.modeToday;
   String _scheduledSlot = ScheduleHelpers.slotAnytime;
   DateTime _scheduledDate = DateTime.now();
@@ -422,7 +425,23 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     }
   }
 
+  void _cancelMediaUpload() {
+    if (!_submitting || !_isUploadingMedia) return;
+    _submitGeneration++;
+    if (mounted) {
+      setState(() {
+        _submitting = false;
+        _isUploadingMedia = false;
+        _uploadFailed = false;
+        _saveFailed = false;
+        _uploadProgressFraction = 0.0;
+        _uploadProgressText = null;
+      });
+    }
+  }
+
   Future<void> _submitRequest() async {
+    if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -461,8 +480,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     final defaultCustomerRole = context.l10n.roleCustomer;
 
+    _submitGeneration++;
+    final currentGen = _submitGeneration;
+    final hasMediaToUpload = _photos.isNotEmpty || _processedVideo != null;
+
     setState(() {
       _submitting = true;
+      _isUploadingMedia = hasMediaToUpload;
       _uploadFailed = false;
       _saveFailed = false;
       _uploadProgressFraction = 0.0;
@@ -475,24 +499,34 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         throw Exception('Not logged in');
       }
 
+      if (_submitGeneration != currentGen) return;
+
       final List<JobMediaItem> photosList = [];
       for (int i = 0; i < _photos.length; i++) {
+        if (_submitGeneration != currentGen) return;
+
         final attachment = _photos[i];
         if (_uploadedPhotos.containsKey(attachment)) {
           photosList.add(_uploadedPhotos[attachment]!);
           continue;
         }
 
-        setState(() {
-          _uploadProgressFraction = 0.0;
-          _uploadProgressText =
-              context.l10n.uploadingPhotoProgress(i + 1, _photos.length);
-        });
+        if (mounted && _submitGeneration == currentGen) {
+          setState(() {
+            _uploadProgressFraction = 0.0;
+            _uploadProgressText =
+                context.l10n.uploadingPhotoProgress(i + 1, _photos.length);
+          });
+        }
         final rawBytes = attachment.bytes;
         final stripped =
-            StorageService.instance.stripExifAndCompressImage(rawBytes);
+            await StorageService.instance.stripExifAndCompressImage(rawBytes);
+
+        if (_submitGeneration != currentGen) return;
+
         JobMediaUploadResult? res;
         for (int attempt = 0; attempt < 3; attempt++) {
+          if (_submitGeneration != currentGen) return;
           try {
             final photoName = 'photo_$i.jpg';
             res = await StorageService.instance.uploadJobMedia(
@@ -500,11 +534,12 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               filename: photoName,
               contentType: 'image/jpeg',
               onProgress: (sent, total) {
-                if (mounted) {
+                if (mounted && _submitGeneration == currentGen) {
                   setState(() {
                     _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
                     final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
-                    final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
+                    final totalMb =
+                        (total / (1024 * 1024)).toStringAsFixed(1);
                     _uploadProgressText = context.l10n.uploadPhotoBytesProgress(
                         i + 1, _photos.length, sentMb, totalMb);
                   });
@@ -513,13 +548,16 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             );
             break;
           } catch (e) {
+            if (_submitGeneration != currentGen) return;
             debugPrint('[PostJobRequest] photo $i attempt $attempt error: $e');
             if (attempt == 2) {
               throw MediaUploadException('Photo ${i + 1} upload failed: $e');
             }
             await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+            if (_submitGeneration != currentGen) return;
           }
         }
+        if (_submitGeneration != currentGen) return;
         if (res != null) {
           final item = JobMediaItem(url: res.url, key: res.key);
           _uploadedPhotos[attachment] = item;
@@ -529,21 +567,29 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       JobVideoItem? videoItem;
       if (_processedVideo != null) {
+        if (_submitGeneration != currentGen) return;
         if (_uploadedVideoItem != null &&
             _uploadedVideoSource == _processedVideo) {
           videoItem = _uploadedVideoItem;
         } else {
           JobMediaUploadResult? thumbRes = _uploadedVideoThumb;
           if (thumbRes == null || _uploadedVideoSource != _processedVideo) {
-            setState(() {
-              _uploadProgressFraction = 0.0;
-              _uploadProgressText = context.l10n.uploadingVideoThumbnail;
-            });
+            if (mounted && _submitGeneration == currentGen) {
+              setState(() {
+                _uploadProgressFraction = 0.0;
+                _uploadProgressText = context.l10n.uploadingVideoThumbnail;
+              });
+            }
             final thumbBytes =
                 await _processedVideo!.thumbnailFile.readAsBytes();
+            if (_submitGeneration != currentGen) return;
+
             final thumbStripped =
-                StorageService.instance.stripExifAndCompressImage(thumbBytes);
+                await StorageService.instance.stripExifAndCompressImage(thumbBytes);
+            if (_submitGeneration != currentGen) return;
+
             for (int attempt = 0; attempt < 3; attempt++) {
+              if (_submitGeneration != currentGen) return;
               try {
                 thumbRes = await StorageService.instance.uploadJobMedia(
                   bytes: thumbStripped,
@@ -553,6 +599,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 _uploadedVideoThumb = thumbRes;
                 break;
               } catch (e) {
+                if (_submitGeneration != currentGen) return;
                 debugPrint(
                     '[PostJobRequest] video thumb attempt $attempt error: $e');
                 if (attempt == 2) {
@@ -560,18 +607,26 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 }
                 await Future.delayed(
                     Duration(milliseconds: 500 * (attempt + 1)));
+                if (_submitGeneration != currentGen) return;
               }
             }
           }
 
-          setState(() {
-            _uploadProgressFraction = 0.0;
-            _uploadProgressText = context.l10n.uploadingVideoFile;
-          });
+          if (_submitGeneration != currentGen) return;
+
+          if (mounted && _submitGeneration == currentGen) {
+            setState(() {
+              _uploadProgressFraction = 0.0;
+              _uploadProgressText = context.l10n.uploadingVideoFile;
+            });
+          }
           final videoBytes =
               await _processedVideo!.compressedFile.readAsBytes();
+          if (_submitGeneration != currentGen) return;
+
           JobMediaUploadResult? videoRes;
           for (int attempt = 0; attempt < 3; attempt++) {
+            if (_submitGeneration != currentGen) return;
             try {
               const videoName = 'video.mp4';
               videoRes = await StorageService.instance.uploadJobMedia(
@@ -579,7 +634,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 filename: videoName,
                 contentType: 'video/mp4',
                 onProgress: (sent, total) {
-                  if (mounted) {
+                  if (mounted && _submitGeneration == currentGen) {
                     setState(() {
                       _uploadProgressFraction =
                           total > 0 ? (sent / total) : 0.0;
@@ -594,14 +649,18 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               );
               break;
             } catch (e) {
+              if (_submitGeneration != currentGen) return;
               debugPrint(
                   '[PostJobRequest] video upload attempt $attempt error: $e');
               if (attempt == 2) {
                 throw MediaUploadException('Video upload failed: $e');
               }
               await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+              if (_submitGeneration != currentGen) return;
             }
           }
+
+          if (_submitGeneration != currentGen) return;
 
           if (thumbRes != null && videoRes != null) {
             videoItem = JobVideoItem(
@@ -614,6 +673,15 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             _uploadedVideoSource = _processedVideo;
           }
         }
+      }
+
+      if (_submitGeneration != currentGen) return;
+
+      // media upload phase is finished, entering createJobRequest phase: cancel no longer allowed
+      if (mounted) {
+        setState(() {
+          _isUploadingMedia = false;
+        });
       }
 
       final request = JobRequest(
@@ -652,17 +720,19 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
       final requestId = await JobRequestRepository().createJobRequest(request);
 
-      try {
-        await NotificationService.instance.sendNotification(
-          event: 'job_posted',
-          docId: requestId,
-        );
-      } catch (e) {
+      // fire-and-forget notification without awaiting
+      unawaited(NotificationService.instance
+          .sendNotification(
+            event: 'job_posted',
+            docId: requestId,
+          )
+          .catchError((e) {
         debugPrint('[PostJobRequest] notify job_posted error: $e');
-      }
+        return false;
+      }));
 
-      // Clean up local temp video caches
-      await VideoService.instance.cleanCache();
+      // clean up local temp video caches in background
+      unawaited(VideoService.instance.cleanCache());
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -675,11 +745,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         );
       }
     } on MediaUploadException catch (e) {
+      if (_submitGeneration != currentGen) return;
       debugPrint('[PostJobRequest] media upload failed: $e');
       if (mounted) {
         setState(() {
           _uploadFailed = true;
           _saveFailed = false;
+          _isUploadingMedia = false;
           _uploadProgressText = context.l10n.mediaUploadFailedRetry;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -690,12 +762,14 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         );
       }
     } catch (e) {
+      if (_submitGeneration != currentGen) return;
       debugPrint('[PostJobRequest] create job error: $e');
       if (mounted) {
         final friendlyMsg = jobPostErrorMessage(context, e);
         setState(() {
           _uploadFailed = false;
           _saveFailed = true;
+          _isUploadingMedia = false;
           _uploadProgressText = friendlyMsg;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -706,9 +780,10 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && _submitGeneration == currentGen) {
         setState(() {
           _submitting = false;
+          _isUploadingMedia = false;
           if (!_uploadFailed && !_saveFailed) {
             _uploadProgressText = null;
           }
@@ -1732,6 +1807,23 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                                 AppColors.primary.withValues(alpha: 0.15),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                                 AppColors.primary),
+                          ),
+                        ),
+                      ],
+                      if (_submitting && _isUploadingMedia) ...[
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: _cancelMediaUpload,
+                            icon: const Icon(Icons.close_rounded, size: 16),
+                            label: Text(context.l10n.cancelUpload),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: const BorderSide(color: AppColors.error),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                            ),
                           ),
                         ),
                       ],

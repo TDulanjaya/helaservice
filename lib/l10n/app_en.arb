@@ -3507,5 +3507,11 @@
   "bidStatusWithdrawn": "Withdrawn",
   "bidStatusJobClosed": "Job no longer available",
   "whenCanYouCome": "When can you come?",
-  "selectDayInsideWindow": "Select a day within the customer's window"
+  "selectDayInsideWindow": "Select a day within the customer's window",
+  "pendingJobPostBanner": "Waiting for connection, your job will post automatically",
+  "jobNotFoundTitle": "Job request not found",
+  "jobPostFailedTitle": "Your job could not be posted. Please try again.",
+  "jobLoadErrorTitle": "Unable to load job details. Please check your connection.",
+  "cancelUpload": "Cancel Upload",
+  "backAction": "Go Back"
 }

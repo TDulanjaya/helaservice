@@ -12,6 +12,7 @@ import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../repositories/technician_repository.dart';
+import '../../../services/session_guard.dart';
 import '../../../state/role_provider.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
@@ -579,6 +580,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               stream: BookingRepository().streamBookingsForProvider(
                   FirebaseAuth.instance.currentUser?.uid ?? ''),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  SessionGuard.handlePermissionDenied(snapshot.error);
+                }
                 final bookings = snapshot.data ?? [];
                 final completed =
                     bookings.where((b) => b.status == 'completed').length;
@@ -593,6 +597,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   stream: ReviewService.instance.streamProviderReviews(
                       FirebaseAuth.instance.currentUser?.uid ?? ''),
                   builder: (context, reviewSnap) {
+                    if (reviewSnap.hasError) {
+                      SessionGuard.handlePermissionDenied(reviewSnap.error);
+                    }
                     final reviews = reviewSnap.data ?? [];
                     double avgRating = 5.0;
                     if (reviews.isNotEmpty) {
@@ -671,6 +678,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     stream: JobRequestRepository()
                         .streamOpenRequestsForCategory(providerCategory),
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        SessionGuard.handlePermissionDenied(snapshot.error);
+                      }
                       final rawRequests = snapshot.data ?? [];
                       var requests = rawRequests.where((req) {
                         if (req.status != JobRequestStatus.open &&
@@ -997,6 +1007,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                               stream: JobRequestRepository()
                                   .streamProviderQuotes(user?.id ?? ''),
                               builder: (context, quotesSnap) {
+                                if (quotesSnap.hasError) {
+                                  SessionGuard.handlePermissionDenied(
+                                      quotesSnap.error);
+                                }
                                 final quotes =
                                     quotesSnap.data ?? const <Quote>[];
                                 final quotesMap = <String, Quote>{
@@ -1062,6 +1076,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               stream: BookingRepository().streamBookingsForProvider(
                   FirebaseAuth.instance.currentUser?.uid ?? ''),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  SessionGuard.handlePermissionDenied(snapshot.error);
+                }
                 final bookings = snapshot.data ?? [];
                 if (bookings.isEmpty) {
                   return Container(
@@ -1376,6 +1393,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         child: StreamBuilder<List<Quote>>(
           stream: JobRequestRepository().streamProviderQuotes(uid),
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              SessionGuard.handlePermissionDenied(snapshot.error);
+            }
             final quotes = snapshot.data ?? [];
 
             final pendingQuotes =

@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
+import 'api_client.dart';
+import 'session_guard.dart';
 
 class ReviewService {
   ReviewService._();
@@ -61,22 +62,17 @@ class ReviewService {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final token = await user.getIdToken();
-      if (token == null || token.isEmpty) return;
-
       final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
       final uri = Uri.parse('$baseUrl/review-submitted');
 
-      await http
-          .post(
-            uri,
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: jsonEncode({'bookingId': bookingId}),
-          )
-          .timeout(const Duration(seconds: 10));
+      await ApiClient.instance.post(
+        uri: uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'bookingId': bookingId}),
+        timeout: const Duration(seconds: 10),
+      );
     } catch (e) {
       debugPrint('review submitted notify error $e');
     }
@@ -90,6 +86,7 @@ class ReviewService {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
+        .withSessionGuard()
         .map(
             (snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList());
   }

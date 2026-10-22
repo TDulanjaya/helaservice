@@ -1,13 +1,29 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 
-class OtpCooldownException implements Exception {
+class OtpException implements Exception {
+  final String code;
+  final int? retryAfter;
+  const OtpException(this.code, {this.retryAfter});
+
+  @override
+  String toString() => code;
+}
+
+class OtpCooldownException implements OtpException {
+  @override
+  final String code = 'cooldown';
+  @override
   final int retryAfter;
   final String message;
-  const OtpCooldownException({required this.retryAfter, required this.message});
+  const OtpCooldownException({
+    required this.retryAfter,
+    this.message = 'cooldown',
+  });
 
   @override
   String toString() => message;
@@ -127,48 +143,54 @@ class OtpService {
       final response = await postFuture.timeout(const Duration(seconds: 15));
 
       final data = _parseResponseBody(response.body);
+      final statusCode = response.statusCode;
+      final serverCode = (data['code'] as String? ?? '').trim();
 
-      if (response.statusCode == 200) {
+      // log server code and status for debugging (no tokens)
+      debugPrint('[OtpService.sendOtp] status=$statusCode code=$serverCode');
+
+      if (statusCode == 200) {
         _lastSentAt = DateTime.now();
         return;
       }
 
-      if (response.statusCode == 429) {
-        final serverCode = (data['code'] as String? ?? '').trim();
+      if (statusCode == 429) {
         final retryAfter = (data['retryAfter'] as num?)?.toInt() ?? 60;
-        final errorMsg = data['error'] as String? ??
-            'Too many requests. Please wait before requesting another code.';
+        _lastSentAt = DateTime.now();
         if (serverCode == 'cooldown' || data.containsKey('retryAfter')) {
-          _lastSentAt = DateTime.now();
-          throw OtpCooldownException(retryAfter: retryAfter, message: errorMsg);
+          throw OtpCooldownException(retryAfter: retryAfter);
         }
-        throw Exception(errorMsg);
+        throw OtpException(
+          serverCode.isNotEmpty ? serverCode : 'rate_limited_ip',
+          retryAfter: retryAfter,
+        );
       }
 
-      if (response.statusCode == 400) {
-        throw Exception(data['error'] as String? ?? 'Invalid email address.');
+      if (serverCode.isNotEmpty) {
+        throw OtpException(serverCode);
       }
 
-      if (response.statusCode == 401 || response.statusCode == 500) {
-        final errorMsg = data['error'] as String? ?? '';
-        if (errorMsg.contains('Valid API key required') ||
-            errorMsg.contains('Server misconfigured') ||
-            response.statusCode == 500) {
-          throw Exception('Service temporarily unavailable. Please try again.');
-        }
-        throw Exception(
-            errorMsg.isNotEmpty ? errorMsg : 'Authentication failed.');
+      if (statusCode == 400) {
+        throw const OtpException('invalid_request');
       }
 
-      throw Exception(
-        data['error'] as String? ??
-            'Failed to send verification code (Error ${response.statusCode}).',
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[OtpService sendOtp Error] $e');
+      if (statusCode == 401 || statusCode == 403) {
+        throw const OtpException('not_admin');
       }
+
+      if (statusCode >= 500) {
+        throw const OtpException('server_error');
+      }
+
+      throw const OtpException('unknown');
+    } on TimeoutException {
+      debugPrint('[OtpService.sendOtp] error=timeout');
+      throw const OtpException('timeout');
+    } on OtpException {
       rethrow;
+    } catch (e) {
+      debugPrint('[OtpService.sendOtp] error=network_error');
+      throw const OtpException('network_error');
     }
   }
 
@@ -242,224 +264,70 @@ class OtpService {
       final response = await postFuture.timeout(const Duration(seconds: 15));
 
       final data = _parseResponseBody(response.body);
+      final statusCode = response.statusCode;
+      final serverCode = (data['code'] as String? ?? '').trim();
+      final attemptsRemaining = (data['attemptsRemaining'] as num?)?.toInt();
 
-      if (response.statusCode == 200) {
+      // log server code and status for debugging (no tokens)
+      debugPrint('[OtpService.verifyOtp] status=$statusCode code=$serverCode');
+
+      if (statusCode == 200) {
         // refresh claims on user
         await user?.getIdToken(true);
         return const OtpVerificationResult(isValid: true);
       }
 
-      final serverCode = (data['code'] as String? ?? '').trim();
-      final errText = data['error'] as String? ?? '';
-      final attemptsRemaining = (data['attemptsRemaining'] as num?)?.toInt();
-
       // match by server code
       if (serverCode.isNotEmpty) {
-        switch (serverCode) {
-          case 'otp_no_session':
-            return OtpVerificationResult(
-              isValid: false,
-              errorCode: 'OTP_NO_SESSION',
-              errorMessage: errText.isNotEmpty ? errText : null,
-            );
-          case 'otp_expired':
-            return OtpVerificationResult(
-              isValid: false,
-              errorCode: 'OTP_EXPIRED',
-              errorMessage: errText.isNotEmpty ? errText : null,
-            );
-          case 'otp_incorrect':
-            return OtpVerificationResult(
-              isValid: false,
-              errorCode: 'OTP_INCORRECT',
-              errorMessage: errText.isNotEmpty ? errText : null,
-              attemptsRemaining: attemptsRemaining,
-            );
-          case 'otp_max_attempts':
-            return OtpVerificationResult(
-              isValid: false,
-              errorCode: 'OTP_MAX_ATTEMPTS',
-              errorMessage: errText.isNotEmpty ? errText : null,
-            );
-          case 'not_admin':
-            return OtpVerificationResult(
-              isValid: false,
-              errorCode: 'NOT_ADMIN',
-              errorMessage: errText.isNotEmpty ? errText : null,
-            );
-          case 'server_error':
-            return const OtpVerificationResult(
-              isValid: false,
-              errorCode: 'SERVICE_UNAVAILABLE',
-              errorMessage:
-                  'Service temporarily unavailable. Please try again.',
-            );
-        }
-      }
-
-      // fallback if no code sent
-      if (response.statusCode == 400) {
-        if (errText.contains('No active verification session')) {
-          return OtpVerificationResult(
-            isValid: false,
-            errorCode: 'OTP_NO_SESSION',
-            errorMessage: errText.isNotEmpty ? errText : null,
-          );
-        }
         return OtpVerificationResult(
           isValid: false,
-          errorCode: 'OTP_EXPIRED',
-          errorMessage: errText.isNotEmpty ? errText : null,
-        );
-      }
-
-      if (response.statusCode == 401) {
-        if (errText.contains('Valid API key required')) {
-          return const OtpVerificationResult(
-            isValid: false,
-            errorCode: 'SERVICE_UNAVAILABLE',
-            errorMessage: 'Service temporarily unavailable. Please try again.',
-          );
-        }
-        return OtpVerificationResult(
-          isValid: false,
-          errorCode: 'OTP_INCORRECT',
-          errorMessage: errText.isNotEmpty ? errText : null,
+          errorCode: serverCode,
           attemptsRemaining: attemptsRemaining,
         );
       }
 
-      if (response.statusCode == 403) {
-        return OtpVerificationResult(
-          isValid: false,
-          errorCode: 'OTP_MAX_ATTEMPTS',
-          errorMessage: errText.isNotEmpty ? errText : null,
-        );
-      }
-
-      if (response.statusCode == 500) {
+      // fallback if server did not send a code field
+      if (statusCode == 400) {
         return const OtpVerificationResult(
           isValid: false,
-          errorCode: 'SERVICE_UNAVAILABLE',
-          errorMessage: 'Service temporarily unavailable. Please try again.',
+          errorCode: 'otp_expired',
         );
       }
 
-      return OtpVerificationResult(
-        isValid: false,
-        errorCode: 'OTP_FAILED',
-        errorMessage: errText.isNotEmpty ? errText : null,
-      );
-    } catch (e) {
-      return const OtpVerificationResult(
-        isValid: false,
-        errorCode: 'OTP_NETWORK_ERROR',
-      );
-    }
-  }
-
-  // send sms otp
-  Future<void> sendSmsOtp(String phone) async {
-    final cleanPhone = phone.trim();
-
-    if (_lastSentAt != null && remainingCooldownSeconds > 0) {
-      throw Exception(
-        'Please wait $remainingCooldownSeconds seconds before requesting a new code.',
-      );
-    }
-
-    final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.parse('$baseUrl/send-sms-otp');
-
-    try {
-      final response = await http
-          .post(
-            uri,
-            headers: {
-              'Content-Type': 'application/json',
-              'x-helaservice-key': AppConfig.apiSecretKey,
-            },
-            body: jsonEncode({'phone': cleanPhone}),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final data = _parseResponseBody(response.body);
-
-      if (response.statusCode == 200) {
-        _lastSentAt = DateTime.now();
-        return;
-      }
-
-      if (response.statusCode == 429) {
-        _lastSentAt = DateTime.now();
-        final errorMsg = data['error'] as String? ??
-            'Too many requests. Please wait before requesting another code.';
-        throw Exception(errorMsg);
-      }
-
-      throw Exception(
-        data['error'] as String? ??
-            'Failed to send SMS code (Error ${response.statusCode}).',
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('sms otp send error: $e');
-      }
-      rethrow;
-    }
-  }
-
-  // verify sms otp
-  Future<OtpVerificationResult> verifySmsOtp(
-    String phone,
-    String enteredCode,
-  ) async {
-    final cleanPhone = phone.trim();
-    final code = enteredCode.trim();
-
-    if (code.length != 6) {
-      return const OtpVerificationResult(
-        isValid: false,
-        errorCode: 'OTP_CODE_INCOMPLETE',
-      );
-    }
-
-    final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.parse('$baseUrl/verify-sms-otp');
-
-    try {
-      final response = await http
-          .post(
-            uri,
-            headers: {
-              'Content-Type': 'application/json',
-              'x-helaservice-key': AppConfig.apiSecretKey,
-            },
-            body: jsonEncode({'phone': cleanPhone, 'otp': code}),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final data = _parseResponseBody(response.body);
-
-      if (response.statusCode == 200) {
+      if (statusCode == 401 || statusCode == 403) {
         return OtpVerificationResult(
-          isValid: true,
-          customToken: data['customToken'] as String?,
+          isValid: false,
+          errorCode: 'otp_incorrect',
+          attemptsRemaining: attemptsRemaining,
         );
       }
 
-      return OtpVerificationResult(
-        isValid: false,
-        errorCode: 'OTP_FAILED',
-        errorMessage: data['error'] as String?,
-      );
-    } catch (e) {
+      if (statusCode >= 500) {
+        return const OtpVerificationResult(
+          isValid: false,
+          errorCode: 'server_error',
+        );
+      }
+
       return const OtpVerificationResult(
         isValid: false,
-        errorCode: 'OTP_NETWORK_ERROR',
+        errorCode: 'unknown',
+      );
+    } on TimeoutException {
+      debugPrint('[OtpService.verifyOtp] error=timeout');
+      return const OtpVerificationResult(
+        isValid: false,
+        errorCode: 'timeout',
+      );
+    } catch (e) {
+      debugPrint('[OtpService.verifyOtp] error=network_error');
+      return const OtpVerificationResult(
+        isValid: false,
+        errorCode: 'network_error',
       );
     }
   }
+
 
   // alias for older callers
   Future<OtpVerificationResult> verifyEmailOtp(

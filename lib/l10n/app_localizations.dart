@@ -526,12 +526,6 @@ abstract class AppLocalizations {
   /// **'or sign up with email'**
   String get orSignUpWithEmail;
 
-  /// No description provided for @smsNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'We\'ll send a 6-digit OTP code to verify your phone number.'**
-  String get smsNotice;
-
   /// No description provided for @completeProfileTitle.
   ///
   /// In en, this message translates to:
@@ -10985,6 +10979,18 @@ abstract class AppLocalizations {
   /// **'Enter the 6-digit code sent to your admin email to authenticate your session.'**
   String get admin2faSubtitle;
 
+  /// No description provided for @loginVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Verification'**
+  String get loginVerificationTitle;
+
+  /// No description provided for @loginVerificationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit login code to {email}'**
+  String loginVerificationSubtitle(String email);
+
   /// No description provided for @useDifferentAccount.
   ///
   /// In en, this message translates to:
@@ -12300,24 +12306,6 @@ abstract class AppLocalizations {
   /// **'Selected location is outside Sri Lanka. Please select a location within Sri Lanka.'**
   String get locationOutsideSriLanka;
 
-  /// No description provided for @nearLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Near'**
-  String get nearLabel;
-
-  /// No description provided for @setLocationToSeeNearby.
-  ///
-  /// In en, this message translates to:
-  /// **'Set your location to see providers near you'**
-  String get setLocationToSeeNearby;
-
-  /// No description provided for @changeAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Change'**
-  String get changeAction;
-
   /// No description provided for @setAction.
   ///
   /// In en, this message translates to:
@@ -12713,6 +12701,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go Back'**
   String get backAction;
+
+  /// No description provided for @tapLocationToSeeNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the location button to see verified artisans near you'**
+  String get tapLocationToSeeNearby;
+
+  /// No description provided for @locationPermissionOrGpsDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission or GPS is disabled.'**
+  String get locationPermissionOrGpsDisabled;
+
+  /// No description provided for @yourLocationOutsideSriLanka.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location is outside Sri Lanka'**
+  String get yourLocationOutsideSriLanka;
+
+  /// No description provided for @setLocationManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Set location manually'**
+  String get setLocationManually;
+
+  /// No description provided for @shareLocationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get shareLocationAction;
+
+  /// No description provided for @nearMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Near me'**
+  String get nearMe;
+
+  /// No description provided for @showNearbyArtisans.
+  ///
+  /// In en, this message translates to:
+  /// **'Show nearby artisans'**
+  String get showNearbyArtisans;
+
+  /// No description provided for @chooseAnotherArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another area'**
+  String get chooseAnotherArea;
+
+  /// No description provided for @locationOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Location options'**
+  String get locationOptions;
+
+  /// No description provided for @invalidRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid request. Please try again.'**
+  String get invalidRequest;
+
+  /// No description provided for @loginOtpRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification required to continue.'**
+  String get loginOtpRequired;
+
+  /// No description provided for @requestTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out. Please check your internet connection.'**
+  String get requestTimeout;
 }
 
 class _AppLocalizationsDelegate

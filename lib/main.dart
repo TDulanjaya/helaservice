@@ -16,6 +16,7 @@ import 'shared/widgets/offline_banner.dart';
 import 'theme/app_theme.dart';
 import 'splash_screen.dart';
 import 'constants/app_config.dart';
+import 'services/session_guard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +79,9 @@ void main() async {
   ));
 }
 
-class HelaServiceApp extends StatelessWidget {
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
+class HelaServiceApp extends StatefulWidget {
   final ThemeMode initialThemeMode;
   final Locale initialLocale;
 
@@ -89,15 +92,40 @@ class HelaServiceApp extends StatelessWidget {
   });
 
   @override
+  State<HelaServiceApp> createState() => _HelaServiceAppState();
+}
+
+class _HelaServiceAppState extends State<HelaServiceApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SessionGuard.instance.checkSessionValid(fromResume: true);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return pv.MultiProvider(
       providers: [
         pv.ChangeNotifierProvider<RoleProvider>(create: (_) => RoleProvider()),
         pv.ChangeNotifierProvider<ThemeProvider>(
-          create: (_) => ThemeProvider(initialMode: initialThemeMode),
+          create: (_) => ThemeProvider(initialMode: widget.initialThemeMode),
         ),
         pv.ChangeNotifierProvider<LocaleProvider>(
-          create: (_) => LocaleProvider(initialLocale: initialLocale),
+          create: (_) => LocaleProvider(initialLocale: widget.initialLocale),
         ),
         pv.ChangeNotifierProvider<CategoryService>.value(
           value: CategoryService.instance,
@@ -106,6 +134,7 @@ class HelaServiceApp extends StatelessWidget {
       child: pv.Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, _) {
           return MaterialApp(
+            navigatorKey: appNavigatorKey,
             key: ValueKey(localeProvider.languageCode),
             title: 'HelaService',
             debugShowCheckedModeBanner: false,

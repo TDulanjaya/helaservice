@@ -13,6 +13,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
+import '../../../services/session_guard.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -168,6 +169,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         if (snapshot.hasError) {
+          SessionGuard.handlePermissionDenied(snapshot.error);
           return Center(
             child: Text(
               'Error loading bookings: ${snapshot.error}',
@@ -870,6 +872,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         if (snapshot.hasError) {
+          SessionGuard.handlePermissionDenied(snapshot.error);
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -1004,6 +1007,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         if (snapshot.hasError) {
+          SessionGuard.handlePermissionDenied(snapshot.error);
           return Center(
             child: Text(
               'Error loading history: ${snapshot.error}',

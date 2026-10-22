@@ -8,6 +8,7 @@ import '../constants/job_status.dart';
 import '../models/job_request.dart';
 import '../models/quote.dart';
 import '../services/notification_service.dart';
+import '../services/session_guard.dart';
 import '../utils/exact_location_helper.dart';
 import 'booking_repository.dart';
 
@@ -107,6 +108,7 @@ class JobRequestRepository {
         .where('category', isEqualTo: category)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final items =
           snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
@@ -123,6 +125,7 @@ class JobRequestRepository {
         .where('customerId', isEqualTo: customerId)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final items =
           snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
@@ -133,7 +136,7 @@ class JobRequestRepository {
   }
 
   Stream<JobRequest?> streamJobRequest(String requestId) {
-    return _col.doc(requestId).snapshots().map((snap) {
+    return _col.doc(requestId).snapshots().withSessionGuard().map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       return JobRequest.fromMap(snap.id, snap.data()!);
     });
@@ -313,25 +316,18 @@ class JobRequestRepository {
     batch.update(quotesCol.doc(quoteId), {'status': 'accepted'});
 
     // get provider phone for contact info
-    String providerPhone = '';
-    try {
-      final techDoc = await FirebaseFirestore.instance
-          .collection(FirestorePaths.technicians)
-          .doc(providerId)
-          .get();
-      if (techDoc.exists && techDoc.data() != null) {
-        providerPhone = (techDoc.data()?['phone'] as String?) ?? '';
-      }
-      if (providerPhone.isEmpty) {
-        final userDoc = await FirebaseFirestore.instance
-            .collection(FirestorePaths.users)
+    String providerPhone = resolvedQuote.providerPhone;
+    if (providerPhone.isEmpty) {
+      try {
+        final techDoc = await FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
             .doc(providerId)
             .get();
-        if (userDoc.exists && userDoc.data() != null) {
-          providerPhone = (userDoc.data()?['phone'] as String?) ?? '';
+        if (techDoc.exists && techDoc.data() != null) {
+          providerPhone = (techDoc.data()?['phone'] as String?) ?? '';
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
 
     final bookingPrice = resolvedQuote.quotedPrice.round();
 
@@ -520,6 +516,7 @@ class JobRequestRepository {
         .orderBy('createdAt', descending: true)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) =>
             snap.docs.map((d) => Quote.fromMap(d.id, d.data())).toList());
   }
@@ -533,7 +530,7 @@ class JobRequestRepository {
           .orderBy('createdAt', descending: true)
           .limit(limit);
     }
-    return query.snapshots().map((snap) => snap.docs
+    return query.snapshots().withSessionGuard().map((snap) => snap.docs
         .map((d) => JobRequest.fromMap(d.id, d.data() as Map<String, dynamic>))
         .toList());
   }

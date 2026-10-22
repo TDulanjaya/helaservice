@@ -5,6 +5,7 @@ import 'package:provider/provider.dart' as pv;
 import '../../features/customer/screens/direct_chat_screen.dart';
 import '../../features/support/screens/help_support_screen.dart';
 import '../../services/chat_service.dart';
+import '../../services/session_guard.dart';
 import '../../state/role_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/map_launcher.dart';
@@ -178,6 +179,7 @@ class _ConversationsInboxScreenState extends State<ConversationsInboxScreen> {
                         }
 
                         if (snapshot.hasError) {
+                          SessionGuard.handlePermissionDenied(snapshot.error);
                           return Center(
                             child: Padding(
                               padding: const EdgeInsets.all(24.0),

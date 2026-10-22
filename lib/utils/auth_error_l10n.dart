@@ -2,11 +2,86 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/widgets.dart';
 
 import '../services/auth_service.dart';
+import '../services/otp_service.dart';
 import 'l10n_extension.dart';
+
+// map otp server error codes to localized messages
+String mapOtpErrorCode(
+  BuildContext context,
+  String? code, {
+  int? attemptsRemaining,
+}) {
+  final l10n = context.l10n;
+  final normalized = (code ?? '').trim().toLowerCase();
+
+  switch (normalized) {
+    case 'otp_required':
+    case 'otp_code_incomplete':
+    case 'empty_otp':
+      return l10n.enterOtp;
+
+    case 'invalid_purpose':
+    case 'invalid_request':
+      return l10n.invalidRequest;
+
+    case 'otp_no_session':
+      return l10n.otpNoSession;
+
+    case 'otp_expired':
+      return l10n.otpExpiredResend;
+
+    case 'otp_max_attempts':
+      return l10n.otpMaxAttemptsResend;
+
+    case 'otp_incorrect':
+      if (attemptsRemaining != null && attemptsRemaining > 0) {
+        return l10n.otpIncorrectTriesLeft(attemptsRemaining);
+      }
+      return l10n.codeIncorrect;
+
+    case 'rate_limited_ip':
+    case 'rate_limited_uid':
+    case 'cooldown':
+    case 'too_many_requests':
+      return l10n.authErrTooManyRequests;
+
+    case 'login_otp_required':
+      return l10n.loginOtpRequired;
+
+    case 'network_error':
+    case 'otp_network_error':
+    case 'network':
+      return l10n.authErrNetwork;
+
+    case 'timeout':
+      return l10n.requestTimeout;
+
+    case 'not_admin':
+      return l10n.unauthorizedAdminAccess;
+
+    case 'no_email':
+      return l10n.authErrInvalidEmail;
+
+    default:
+      return l10n.somethingWentWrong;
+  }
+}
+
+// helper to map any error caught in otp flows to localized message
+String mapOtpError(BuildContext context, Object error) {
+  if (error is OtpException) {
+    return mapOtpErrorCode(context, error.code);
+  }
+  return authErrorMessage(context, error);
+}
 
 // auth error translations
 String authErrorMessage(BuildContext context, Object error) {
   final l10n = context.l10n;
+
+  if (error is OtpException) {
+    return mapOtpErrorCode(context, error.code);
+  }
 
   if (error is AuthFlowException) {
     switch (error.code) {
@@ -83,7 +158,7 @@ String authErrorMessage(BuildContext context, Object error) {
   // Google Sign-In PlatformException / ApiException patterns
   if (readable.contains('ApiException: 10') ||
       readable.contains('DEVELOPER_ERROR')) {
-    return 'Google Sign-In configuration error. Please try again later.';
+    return l10n.somethingWentWrong;
   }
   if (readable.contains('12501') ||
       readable.contains('sign_in_canceled') ||
@@ -96,7 +171,7 @@ String authErrorMessage(BuildContext context, Object error) {
   }
   if (readable.contains('Valid API key required') ||
       readable.contains('Server misconfigured')) {
-    return 'Service temporarily unavailable. Please try again.';
+    return l10n.somethingWentWrong;
   }
 
   const authFailedPrefix = 'Authentication failed for ';
@@ -118,5 +193,6 @@ String authErrorMessage(BuildContext context, Object error) {
     return l10n.authErrNoRegisteredUser(noUserMatch.group(1) ?? '');
   }
 
-  return readable;
+  debugPrint('[authErrorMessage] unmapped error: $error');
+  return l10n.somethingWentWrong;
 }

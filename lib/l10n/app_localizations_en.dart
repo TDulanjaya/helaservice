@@ -229,10 +229,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orSignUpWithEmail => 'or sign up with email';
 
   @override
-  String get smsNotice =>
-      'We\'ll send a 6-digit OTP code to verify your phone number.';
-
-  @override
   String get completeProfileTitle => 'Choose Role & Profile';
 
   @override
@@ -6051,6 +6047,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the 6-digit code sent to your admin email to authenticate your session.';
 
   @override
+  String get loginVerificationTitle => 'Login Verification';
+
+  @override
+  String loginVerificationSubtitle(String email) {
+    return 'We sent a 6-digit login code to $email';
+  }
+
+  @override
   String get useDifferentAccount => 'Use a different account';
 
   @override
@@ -6799,16 +6803,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Selected location is outside Sri Lanka. Please select a location within Sri Lanka.';
 
   @override
-  String get nearLabel => 'Near';
-
-  @override
-  String get setLocationToSeeNearby =>
-      'Set your location to see providers near you';
-
-  @override
-  String get changeAction => 'Change';
-
-  @override
   String get setAction => 'Set location';
 
   @override
@@ -7031,4 +7025,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backAction => 'Go Back';
+
+  @override
+  String get tapLocationToSeeNearby =>
+      'Tap the location button to see verified artisans near you';
+
+  @override
+  String get locationPermissionOrGpsDisabled =>
+      'Location permission or GPS is disabled.';
+
+  @override
+  String get yourLocationOutsideSriLanka =>
+      'Your location is outside Sri Lanka';
+
+  @override
+  String get setLocationManually => 'Set location manually';
+
+  @override
+  String get shareLocationAction => 'Share Location';
+
+  @override
+  String get nearMe => 'Near me';
+
+  @override
+  String get showNearbyArtisans => 'Show nearby artisans';
+
+  @override
+  String get chooseAnotherArea => 'Choose another area';
+
+  @override
+  String get locationOptions => 'Location options';
+
+  @override
+  String get invalidRequest => 'Invalid request. Please try again.';
+
+  @override
+  String get loginOtpRequired => 'Verification required to continue.';
+
+  @override
+  String get requestTimeout =>
+      'Request timed out. Please check your internet connection.';
 }

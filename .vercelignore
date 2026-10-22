@@ -14,11 +14,13 @@ build/
 *.apk
 *.aab
 *.jks
+key.properties
 node_modules/
 .env*
+scratch/
+scripts/
+backups/
 !package.json
 !package-lock.json
 !vercel.json
 !api/
-scripts/
-backups/

@@ -23,7 +23,7 @@ function verifyApiKey(req, res) {
 }
 
 // check firebase token
-async function verifyFirebaseToken(req, res) {
+async function verifyFirebaseToken(req, res, { requireLoginOtp = true } = {}) {
   const authHeader = (req.headers.authorization || '').trim();
   if (!authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Unauthorized: Valid Firebase session token required.' });
@@ -38,6 +38,16 @@ async function verifyFirebaseToken(req, res) {
 
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
+
+    if (requireLoginOtp) {
+      const authTime = decoded.auth_time;
+      const loginOtpTimes = Array.isArray(decoded.loginOtpTimes) ? decoded.loginOtpTimes : [];
+      if (!authTime || !loginOtpTimes.includes(authTime)) {
+        res.status(403).json({ error: 'login_otp_required' });
+        return null;
+      }
+    }
+
     return decoded;
   } catch (err) {
     res.status(401).json({ error: 'Unauthorized: Invalid Firebase session token.' });

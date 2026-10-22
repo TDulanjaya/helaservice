@@ -3,13 +3,14 @@ import '../constants/firestore_paths.dart';
 import '../models/technician.dart';
 import '../utils/provider_location_helper.dart';
 import '../utils/provider_pricing_helper.dart';
+import '../services/session_guard.dart';
 
 class TechnicianRepository {
   final _col =
       FirebaseFirestore.instance.collection(FirestorePaths.technicians);
 
   Stream<List<Technician>> streamTechnicians() {
-    return _col.snapshots().map((snap) {
+    return _col.snapshots().withSessionGuard().map((snap) {
       final items =
           snap.docs.map((d) => Technician.fromMap(d.id, d.data())).toList();
       items.sort((a, b) => (b.rating ?? 0.0).compareTo(a.rating ?? 0.0));
@@ -18,7 +19,7 @@ class TechnicianRepository {
   }
 
   Stream<List<Technician>> streamApprovedTechnicians() {
-    return _col.snapshots().map((snap) {
+    return _col.snapshots().withSessionGuard().map((snap) {
       final items = snap.docs
           .map((d) => Technician.fromMap(d.id, d.data()))
           .where((t) => t.isApproved)
@@ -36,7 +37,7 @@ class TechnicianRepository {
 
   Stream<Technician?> streamById(String id) {
     if (id.isEmpty) return Stream.value(null);
-    return _col.doc(id).snapshots().map((snap) {
+    return _col.doc(id).snapshots().withSessionGuard().map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       return Technician.fromMap(snap.id, snap.data()!);
     });

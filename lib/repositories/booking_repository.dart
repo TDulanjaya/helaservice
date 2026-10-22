@@ -9,6 +9,7 @@ import '../models/booking.dart';
 import '../models/booking_extra.dart';
 import '../models/booking_timeline_event.dart';
 import '../services/notification_service.dart';
+import '../services/session_guard.dart';
 import '../utils/schedule_helpers.dart';
 
 class PinVerificationResult {
@@ -924,6 +925,7 @@ class BookingRepository {
         .where('providerId', isEqualTo: providerId)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final items =
           snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
@@ -955,6 +957,7 @@ class BookingRepository {
         .where('customerId', isEqualTo: customerId)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final items =
           snap.docs.map((d) => Booking.fromMap(d.id, d.data())).toList();
@@ -970,7 +973,7 @@ class BookingRepository {
 
   Stream<Booking?> streamBooking(String bookingId) {
     if (bookingId.isEmpty) return Stream.value(null);
-    return _col.doc(bookingId).snapshots().map((snap) {
+    return _col.doc(bookingId).snapshots().withSessionGuard().map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       return Booking.fromMap(snap.id, snap.data()!);
     });

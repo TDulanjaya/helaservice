@@ -228,10 +228,6 @@ class AppLocalizationsSi extends AppLocalizations {
   String get orSignUpWithEmail => 'නැතහොත් ඊමේල් මගින් ලියාපදිංචි වන්න';
 
   @override
-  String get smsNotice =>
-      'ඔබගේ දුරකථන අංකය තහවුරු කිරීමට ඉලක්කම් 6ක OTP කේතයක් එවනු ලැබේ.';
-
-  @override
   String get completeProfileTitle => 'භූමිකාව සහ පැතිකඩ තෝරන්න';
 
   @override
@@ -6049,6 +6045,14 @@ class AppLocalizationsSi extends AppLocalizations {
       'ඔබගේ පරිපාලක ඊමේල් එකට ආ ඉලක්කම් 6ක කේතය ඇතුළත් කරන්න.';
 
   @override
+  String get loginVerificationTitle => 'පිවිසුම තහවුරු කරන්න';
+
+  @override
+  String loginVerificationSubtitle(String email) {
+    return 'අපි ඔබගේ $email වෙත ඉලක්කම් 6ක පිවිසුම් කේතයක් යැව්වා';
+  }
+
+  @override
   String get useDifferentAccount => 'වෙනත් ගිණුමක් භාවිතා කරන්න';
 
   @override
@@ -6806,16 +6810,6 @@ class AppLocalizationsSi extends AppLocalizations {
       'තෝරාගත් ස්ථානය ශ්‍රී ලංකාවෙන් පිටත පිහිටා ඇත. කරුණාකර ශ්‍රී ලංකාව තුළ ස්ථානයක් තෝරන්න.';
 
   @override
-  String get nearLabel => 'ආසන්න';
-
-  @override
-  String get setLocationToSeeNearby =>
-      'ඔබ අසල සේවා සපයන්නන් බැලීමට ඔබේ ස්ථානය සකසන්න';
-
-  @override
-  String get changeAction => 'වෙනස් කරන්න';
-
-  @override
   String get setAction => 'ස්ථානය සකසන්න';
 
   @override
@@ -7040,4 +7034,44 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get backAction => 'ආපසු යන්න';
+
+  @override
+  String get tapLocationToSeeNearby =>
+      'ඔබ අසල සිටින සත්‍යාපිත ශිල්පීන් දැකීමට ස්ථාන බොත්තම ඔබන්න';
+
+  @override
+  String get locationPermissionOrGpsDisabled =>
+      'ස්ථාන අවසරය හෝ GPS අක්‍රිය කර ඇත.';
+
+  @override
+  String get yourLocationOutsideSriLanka =>
+      'ඔබගේ ස්ථානය ශ්‍රී ලංකාවෙන් පිටත පිහිටා ඇත';
+
+  @override
+  String get setLocationManually => 'ස්ථානය ඔබම තෝරන්න';
+
+  @override
+  String get shareLocationAction => 'ස්ථානය බෙදාගන්න';
+
+  @override
+  String get nearMe => 'මා අසල';
+
+  @override
+  String get showNearbyArtisans => 'අසල සිටින ශිල්පීන් පෙන්වන්න';
+
+  @override
+  String get chooseAnotherArea => 'Choose another area';
+
+  @override
+  String get locationOptions => 'ස්ථාන විකල්ප';
+
+  @override
+  String get invalidRequest => 'අවලංගු ඉල්ලීමකි. කරුණාකර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String get loginOtpRequired => 'ඉදිරියට යාමට තහවුරු කිරීම අවශ්‍ය වේ.';
+
+  @override
+  String get requestTimeout =>
+      'කාලය ඉකුත් විය. කරුණාකර ඔබගේ අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.';
 }

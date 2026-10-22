@@ -230,10 +230,6 @@ class AppLocalizationsTa extends AppLocalizations {
   String get orSignUpWithEmail => 'மின்னஞ்சல் மூலம் பதிவு செய்யுங்கள்';
 
   @override
-  String get smsNotice =>
-      'உங்கள் தொலைபேசி எண்ணைச் சரிபார்க்க 6 இலக்க OTP குறியீட்டை அனுப்புவோம்.';
-
-  @override
   String get completeProfileTitle => 'பங்கு & சுயவிவரத்தைத் தேர்ந்தெடுக்கவும்';
 
   @override
@@ -6176,6 +6172,14 @@ class AppLocalizationsTa extends AppLocalizations {
       'உங்கள் அமர்வை அங்கீகரிக்க உங்கள் நிர்வாகி மின்னஞ்சலுக்கு அனுப்பப்பட்ட 6 இலக்கக் குறியீட்டை உள்ளிடவும்.';
 
   @override
+  String get loginVerificationTitle => 'உள்நுழைவு சரிபார்ப்பு';
+
+  @override
+  String loginVerificationSubtitle(String email) {
+    return 'உங்கள் $email முகவரிக்கு 6 இலக்க உள்நுழைவுக் குறியீட்டை அனுப்பியுள்ளோம்';
+  }
+
+  @override
   String get useDifferentAccount => 'வேறு கணக்கைப் பயன்படுத்தவும்';
 
   @override
@@ -6966,16 +6970,6 @@ class AppLocalizationsTa extends AppLocalizations {
       'தேர்ந்தெடுக்கப்பட்ட இடம் இலங்கைக்கு வெளியே உள்ளது. இலங்கைக்குள் ஒரு இடத்தைத் தேர்ந்தெடுக்கவும்.';
 
   @override
-  String get nearLabel => 'அருகில்';
-
-  @override
-  String get setLocationToSeeNearby =>
-      'உங்களுக்கு அருகிலுள்ள சேவை வழங்குநர்களைக் காண உங்கள் இருப்பிடத்தை அமைக்கவும்';
-
-  @override
-  String get changeAction => 'மாற்றவும்';
-
-  @override
   String get setAction => 'இருப்பிடத்தை அமைக்கவும்';
 
   @override
@@ -7201,4 +7195,45 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get backAction => 'பின்செல்லவும்';
+
+  @override
+  String get tapLocationToSeeNearby =>
+      'உங்களுக்கு அருகிலுள்ள சரிபார்க்கப்பட்ட கைவினைஞர்களைப் பார்க்க இருப்பிட பொத்தானைத் தட்டவும்';
+
+  @override
+  String get locationPermissionOrGpsDisabled =>
+      'இருப்பிட அனுமதி அல்லது GPS முடக்கப்பட்டுள்ளது.';
+
+  @override
+  String get yourLocationOutsideSriLanka =>
+      'உங்கள் இருப்பிடம் இலங்கைக்கு வெளியே உள்ளது';
+
+  @override
+  String get setLocationManually => 'இருப்பிடத்தை கைமுறையாக அமைக்கவும்';
+
+  @override
+  String get shareLocationAction => 'இருப்பிடத்தைப் பகிரவும்';
+
+  @override
+  String get nearMe => 'என் அருகில்';
+
+  @override
+  String get showNearbyArtisans => 'அருகிலுள்ள கைவினைஞர்களைக் காட்டு';
+
+  @override
+  String get chooseAnotherArea => 'Choose another area';
+
+  @override
+  String get locationOptions => 'இருப்பிட விருப்பங்கள்';
+
+  @override
+  String get invalidRequest =>
+      'செல்லுபடியாகாத கோரிக்கை. மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String get loginOtpRequired => 'தொடர சரிபார்ப்பு தேவைப்படுகிறது.';
+
+  @override
+  String get requestTimeout =>
+      'கோரிக்கையின் நேரம் முடிந்தது. உங்கள் இணைய இணைப்பைச் சரிபார்க்கவும்.';
 }

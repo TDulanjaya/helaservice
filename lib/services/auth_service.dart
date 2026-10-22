@@ -6,13 +6,13 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile.dart';
 import '../models/admin_user.dart';
 import '../state/role_provider.dart';
-import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 import '../utils/provider_location_helper.dart';
 import '../utils/provider_pricing_helper.dart';
 import 'live_location_service.dart';
 import 'provider_tracking_service.dart';
+import 'api_client.dart';
 
 // sign in errors shown by the ui
 class AuthFlowException implements Exception {
@@ -781,18 +781,17 @@ class AuthService {
     if (user == null) return;
 
     try {
-      final token = await user.getIdToken();
       final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
       final uri = Uri.parse('$baseUrl/nic-hash');
 
-      final res = await http.post(
-        uri,
+      final res = await ApiClient.instance.post(
+        uri: uri,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
           'x-helaservice-key': AppConfig.apiSecretKey,
         },
-      ).timeout(const Duration(seconds: 15));
+        timeout: const Duration(seconds: 15),
+      );
 
       if (res.statusCode != 200) {
         debugPrint(
@@ -810,18 +809,17 @@ class AuthService {
     if (user == null) return;
 
     try {
-      final token = await user.getIdToken();
       final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
       final uri = Uri.parse('$baseUrl/delete-account');
 
-      await http.post(
-        uri,
+      await ApiClient.instance.post(
+        uri: uri,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
           'x-helaservice-key': AppConfig.apiSecretKey,
         },
-      ).timeout(const Duration(seconds: 15));
+        timeout: const Duration(seconds: 15),
+      );
     } catch (e) {
       debugPrint('remote delete account note: $e');
     }

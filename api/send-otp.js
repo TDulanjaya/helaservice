@@ -48,6 +48,29 @@ function getEmailTemplates({ otp, purpose, language }) {
       securityNote = 'Never share this code with anyone. HelaService staff will never ask for your code.';
       footer = 'If this wasn\'t you, your password may be compromised. Please change it immediately.';
     }
+  } else if (purpose === 'login') {
+    if (isSi) {
+      subject = `ඔබගේ HelaService පිවිසුම් කේතය: ${otp}`;
+      title = 'පිවිසුම තහවුරු කරන්න';
+      purposeDescription = 'ඔබගේ HelaService ගිණුමට පිවිසීම තහවුරු කිරීමට මෙම කේතය භාවිත කරන්න.';
+      subtitle = 'මෙම කේතය <strong>විනාඩි 10ක්</strong> සඳහා වලංගු වේ.';
+      securityNote = 'මෙම කේතය කිසිවෙකු සමඟ බෙදා නොගන්න. HelaService කාර්ය මණ්ඩලය කිසි විටෙකත් ඔබෙන් මෙම කේතය ඉල්ලන්නේ නැත.';
+      footer = 'ඔබ පිවිසීමට උත්සාහ නොකළේ නම්, වහාම ඔබගේ මුරපදය වෙනස් කර ගිණුම ආරක්ෂා කරගන්න.';
+    } else if (isTa) {
+      subject = `உங்கள் HelaService உள்நுழைவு குறியீடு: ${otp}`;
+      title = 'உள்நுழைவை சரிபார்க்கவும்';
+      purposeDescription = 'HelaService கணக்கில் உள்நுழைவதை உறுதிப்படுத்த இந்தக் குறியீட்டைப் பயன்படுத்தவும்.';
+      subtitle = 'இந்த குறியீடு <strong>10 நிமிடங்களுக்கு</strong> செல்லுபடியாகும்.';
+      securityNote = 'இந்தக் குறியீட்டை யாருடனும் பகிர வேண்டாம். HelaService ஊழியர்கள் ஒருபோதும் உங்கள் குறியீட்டைக் கேட்க மாட்டார்கள்.';
+      footer = 'நீங்கள் உள்நுழைய முயற்சிக்கவில்லை என்றால், உடனடியாக உங்கள் கணக்கைப் பாதுகாக்கவும்.';
+    } else {
+      subject = `Your HelaService login code: ${otp}`;
+      title = 'Login Verification';
+      purposeDescription = 'Use this verification code to confirm your sign-in to HelaService.';
+      subtitle = 'This code is valid for <strong>10 minutes</strong>.';
+      securityNote = 'Never share this code with anyone. HelaService staff will never ask for your code.';
+      footer = 'If you didn\'t attempt to log in, please secure your account immediately.';
+    }
   } else {
     // signup mode
     if (isSi) {
@@ -134,8 +157,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // check user token
-  const decodedToken = await verifyFirebaseToken(req, res);
+  // check user token without requiring login OTP (token not yet verified)
+  const decodedToken = await verifyFirebaseToken(req, res, { requireLoginOtp: false });
   if (!decodedToken) {
     return;
   }
@@ -153,9 +176,9 @@ module.exports = async function handler(req, res) {
   try {
     const { purpose = 'signup', language = 'en' } = req.body || {};
 
-    if (purpose !== 'signup' && purpose !== 'admin_login') {
+    if (purpose !== 'signup' && purpose !== 'admin_login' && purpose !== 'login') {
       return res.status(400).json({
-        error: 'Invalid purpose. Must be "signup" or "admin_login".',
+        error: 'Invalid request.',
         code: 'invalid_purpose',
       });
     }

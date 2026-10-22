@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
   }
 
   // check user token
-  const decodedToken = await verifyFirebaseToken(req, res);
+  const decodedToken = await verifyFirebaseToken(req, res, { requireLoginOtp: false });
   if (!decodedToken) {
     return;
   }
@@ -38,9 +38,9 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'OTP is required.', code: 'otp_required' });
     }
 
-    if (purpose !== 'signup' && purpose !== 'admin_login') {
+    if (purpose !== 'signup' && purpose !== 'admin_login' && purpose !== 'login') {
       return res.status(400).json({
-        error: 'Invalid purpose. Must be "signup" or "admin_login".',
+        error: 'Invalid request.',
         code: 'invalid_purpose',
       });
     }
@@ -118,9 +118,23 @@ module.exports = async function handler(req, res) {
     const userRecord = await admin.auth().getUser(callerUid);
     const currentClaims = userRecord.customClaims || {};
 
+    // save session time, keep last 2 devices
+    const authTime = decodedToken.auth_time;
+    let loginOtpTimes = Array.isArray(currentClaims.loginOtpTimes)
+      ? [...currentClaims.loginOtpTimes]
+      : [];
+    if (typeof authTime === 'number') {
+      if (!loginOtpTimes.includes(authTime)) {
+        loginOtpTimes.push(authTime);
+      }
+      if (loginOtpTimes.length > 2) {
+        loginOtpTimes = loginOtpTimes.slice(-2);
+      }
+    }
+
     if (purpose === 'signup') {
-      // set verified claim
-      const newClaims = { ...currentClaims, emailOtp: true };
+      // mark email verified and allow session
+      const newClaims = { ...currentClaims, emailOtp: true, loginOtpTimes };
       await admin.auth().setCustomUserClaims(callerUid, newClaims);
 
       // update user doc
@@ -158,12 +172,8 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // valid for twelve hours
-      const nowSec = Math.floor(Date.now() / 1000);
-      const admin2faUntil = nowSec + 12 * 3600;
-
-      // save admin claim
-      const newClaims = { ...currentClaims, admin2faUntil };
+      // allow admin session
+      const newClaims = { ...currentClaims, loginOtpTimes };
       await admin.auth().setCustomUserClaims(callerUid, newClaims);
 
       // write audit log
@@ -178,7 +188,6 @@ module.exports = async function handler(req, res) {
         adminEmail: userEmail,
         role,
         ip: clientIp,
-        expiresAt: admin2faUntil,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -186,13 +195,17 @@ module.exports = async function handler(req, res) {
         success: true,
         message: 'Admin 2FA verified successfully.',
         purpose,
-        admin2faUntil,
       });
     }
 
+    // regular user login
+    const newClaims = { ...currentClaims, loginOtpTimes };
+    await admin.auth().setCustomUserClaims(callerUid, newClaims);
+
     return res.status(200).json({
       success: true,
-      message: 'Verified successfully.',
+      message: 'Login OTP verified successfully.',
+      purpose,
     });
   } catch (error) {
     console.error('[verify-otp Error]', error);

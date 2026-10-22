@@ -9,6 +9,7 @@ import 'models/admin_user.dart';
 import 'services/auth_service.dart';
 import 'services/app_version_service.dart';
 import 'services/notification_service.dart';
+import 'services/session_guard.dart';
 import 'repositories/admin_repository.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/email_otp_screen.dart';
@@ -35,7 +36,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    SessionGuard.enterAuthScreen();
     _resolveDestination();
+  }
+
+  @override
+  void dispose() {
+    SessionGuard.exitAuthScreen();
+    super.dispose();
   }
 
   void _retry() {
@@ -76,13 +84,30 @@ class _SplashScreenState extends State<SplashScreen> {
           return;
         }
 
-        final tokenResult = await fbUser.getIdTokenResult();
-        final admin2faUntil =
-            (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
-        final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        final is2faValid = admin2faUntil > nowSec;
+        var tokenResult = await fbUser.getIdTokenResult();
+        final authTime = tokenResult.authTime?.millisecondsSinceEpoch != null
+            ? (tokenResult.authTime!.millisecondsSinceEpoch ~/ 1000)
+            : null;
+        var rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+        var loginOtpTimes = (rawLoginTimes is List)
+            ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+            : <int>[];
+        var isLoginOtpVerified =
+            authTime != null && loginOtpTimes.contains(authTime);
 
-        if (is2faValid) {
+        // try refreshing token in case claims updated
+        if (!isLoginOtpVerified) {
+          await fbUser.getIdToken(true);
+          tokenResult = await fbUser.getIdTokenResult();
+          rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+          loginOtpTimes = (rawLoginTimes is List)
+              ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+              : <int>[];
+          isLoginOtpVerified =
+              authTime != null && loginOtpTimes.contains(authTime);
+        }
+
+        if (isLoginOtpVerified) {
           AdminRepository().touchLastActive(fbUser.uid);
           await minDelay;
           if (!mounted) return;
@@ -91,11 +116,23 @@ class _SplashScreenState extends State<SplashScreen> {
           );
           return;
         } else {
-          // admin code expired so go to login screen
+          // admin otp required for this session
+          final sendOnOpen = authTime == null ||
+              !SessionGuard.hasOtpBeenSent(fbUser.uid, authTime);
+          if (authTime != null && sendOnOpen) {
+            SessionGuard.markOtpSent(fbUser.uid, authTime);
+          }
           await minDelay;
           if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => EmailOtpScreen(
+                email: fbUser.email ?? '',
+                purpose: 'admin_login',
+                sendOnOpen: sendOnOpen,
+              ),
+            ),
+            (route) => false,
           );
           return;
         }
@@ -166,7 +203,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!isEmailOtpVerified) {
         await minDelay;
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (_) => EmailOtpScreen(
               email: fbUser.email ?? profile.email,
@@ -174,6 +211,50 @@ class _SplashScreenState extends State<SplashScreen> {
               sendOnOpen: true,
             ),
           ),
+          (route) => false,
+        );
+        return;
+      }
+
+      // check if this device session has completed login otp
+      final authTime = tokenResult.authTime?.millisecondsSinceEpoch != null
+          ? (tokenResult.authTime!.millisecondsSinceEpoch ~/ 1000)
+          : null;
+      var rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+      var loginOtpTimes = (rawLoginTimes is List)
+          ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+          : <int>[];
+      var isLoginOtpVerified =
+          authTime != null && loginOtpTimes.contains(authTime);
+
+      if (!isLoginOtpVerified) {
+        await fbUser.getIdToken(true);
+        tokenResult = await fbUser.getIdTokenResult();
+        rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+        loginOtpTimes = (rawLoginTimes is List)
+            ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+            : <int>[];
+        isLoginOtpVerified =
+            authTime != null && loginOtpTimes.contains(authTime);
+      }
+
+      if (!isLoginOtpVerified) {
+        final sendOnOpen = authTime == null ||
+            !SessionGuard.hasOtpBeenSent(fbUser.uid, authTime);
+        if (authTime != null && sendOnOpen) {
+          SessionGuard.markOtpSent(fbUser.uid, authTime);
+        }
+        await minDelay;
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => EmailOtpScreen(
+              email: fbUser.email ?? profile.email,
+              purpose: 'login',
+              sendOnOpen: sendOnOpen,
+            ),
+          ),
+          (route) => false,
         );
         return;
       }

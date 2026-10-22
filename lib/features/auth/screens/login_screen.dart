@@ -16,6 +16,7 @@ import 'role_choice_screen.dart';
 import 'register_screen.dart';
 import 'email_otp_screen.dart';
 import '../../../services/otp_service.dart';
+import '../../../services/session_guard.dart';
 import '../../customer/screens/home_discovery_screen.dart';
 import '../../provider/screens/provider_dashboard_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
@@ -42,12 +43,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    SessionGuard.enterAuthScreen();
     _emailController.clear();
     _passwordController.clear();
   }
 
   @override
   void dispose() {
+    SessionGuard.exitAuthScreen();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -86,12 +89,20 @@ class _LoginScreenState extends State<LoginScreen> {
           }
 
           final tokenResult = await fbUser.getIdTokenResult();
-          final admin2faUntil =
-              (tokenResult.claims?['admin2faUntil'] as num?)?.toInt() ?? 0;
-          final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-          final is2faValid = admin2faUntil > nowSec;
+          final authTime = tokenResult.authTime?.millisecondsSinceEpoch != null
+              ? (tokenResult.authTime!.millisecondsSinceEpoch ~/ 1000)
+              : null;
+          final rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+          final List<int> loginOtpTimes = (rawLoginTimes is List)
+              ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+              : <int>[];
+          final isLoginOtpVerified =
+              authTime != null && loginOtpTimes.contains(authTime);
 
-          if (!is2faValid) {
+          if (!isLoginOtpVerified) {
+            if (authTime != null) {
+              SessionGuard.markOtpSent(fbUser.uid, authTime);
+            }
             await OtpService().sendEmailOtp(
               fbUser.email ?? user.email,
               purpose: 'admin_login',
@@ -138,6 +149,39 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (_) => EmailOtpScreen(
               email: fbUser.email ?? user.email,
               purpose: 'signup',
+            ),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
+      // check if this login was already verified
+      final authTime = tokenResult.authTime?.millisecondsSinceEpoch != null
+          ? (tokenResult.authTime!.millisecondsSinceEpoch ~/ 1000)
+          : null;
+      final rawLoginTimes = tokenResult.claims?['loginOtpTimes'];
+      final List<int> loginOtpTimes = (rawLoginTimes is List)
+          ? rawLoginTimes.map((e) => (e as num).toInt()).toList()
+          : <int>[];
+      final isLoginOtpVerified =
+          authTime != null && loginOtpTimes.contains(authTime);
+
+      if (!isLoginOtpVerified) {
+        if (authTime != null) {
+          SessionGuard.markOtpSent(fbUser.uid, authTime);
+        }
+        await OtpService().sendEmailOtp(
+          fbUser.email ?? user.email,
+          purpose: 'login',
+          language: currentLocale,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => EmailOtpScreen(
+              email: fbUser.email ?? user.email,
+              purpose: 'login',
             ),
           ),
           (route) => false,
@@ -255,8 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains('12501')) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                '${context.l10n.googleSignInExisting}: ${authErrorMessage(context, e)}'),
+            content: Text(authErrorMessage(context, e)),
             backgroundColor: AppColors.error,
           ),
         );

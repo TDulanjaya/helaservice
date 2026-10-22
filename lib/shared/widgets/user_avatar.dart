@@ -158,11 +158,11 @@ class _UserAvatarState extends State<UserAvatar> {
         );
       }
     } catch (e) {
+      debugPrint('[UserAvatar] Profile picture upload error: $e');
       if (mounted) {
-        final msg = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(msg),
+            content: Text(context.l10n.failedToUploadImage),
             backgroundColor: AppColors.error,
             duration: const Duration(seconds: 4),
           ),

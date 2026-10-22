@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../services/chat_service.dart';
 import '../../../services/storage_service.dart';
+import '../../../services/session_guard.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/user_avatar.dart';
@@ -721,6 +722,9 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     return StreamBuilder<List<ChatMessageModel>>(
       stream: _chatService.streamMessages(_chatRoomId!),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          SessionGuard.handlePermissionDenied(snapshot.error);
+        }
         final messages = snapshot.data ?? [];
 
         if (messages.isEmpty) {

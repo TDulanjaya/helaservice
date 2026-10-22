@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../constants/firestore_paths.dart';
+import '../../services/session_guard.dart';
 import '../../shared/widgets/app_bottom_nav.dart';
 import '../../utils/l10n_extension.dart';
 import '../../state/role_provider.dart';
@@ -38,8 +39,12 @@ class _AdminShellState extends State<AdminShell> {
           .collection(FirestorePaths.verificationQueue)
           .where('status', isEqualTo: 'pending')
           .snapshots()
+          .withSessionGuard()
           .map((s) => s.docs.length),
       builder: (context, countSnapshot) {
+        if (countSnapshot.hasError) {
+          SessionGuard.handlePermissionDenied(countSnapshot.error);
+        }
         final pendingCount = countSnapshot.data ?? 0;
         final verifyBadge = pendingCount > 0 ? '$pendingCount' : null;
 
@@ -48,8 +53,12 @@ class _AdminShellState extends State<AdminShell> {
               .collection(FirestorePaths.complaints)
               .where('status', isEqualTo: 'pending')
               .snapshots()
+              .withSessionGuard()
               .map((s) => s.docs.length),
           builder: (context, complaintCountSnap) {
+            if (complaintCountSnap.hasError) {
+              SessionGuard.handlePermissionDenied(complaintCountSnap.error);
+            }
             final pendingComplaints = complaintCountSnap.data ?? 0;
             final complaintsBadge =
                 pendingComplaints > 0 ? '$pendingComplaints' : null;

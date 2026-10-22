@@ -8,6 +8,7 @@ import '../../../shared/widgets/google_sign_in_button.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/otp_service.dart';
+import '../../../services/session_guard.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/auth_error_l10n.dart';
 import '../../../models/user_profile.dart';
@@ -39,7 +40,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isGoogleLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    SessionGuard.enterAuthScreen();
+  }
+
+  @override
   void dispose() {
+    SessionGuard.exitAuthScreen();
     _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -123,11 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              e.toString().contains('Exception:')
-                  ? e.toString().replaceFirst('Exception: ', '')
-                  : authErrorMessage(context, e),
-            ),
+            content: Text(authErrorMessage(context, e)),
             backgroundColor: AppColors.error,
           ),
         );

@@ -11,15 +11,21 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function loginVerified() {
+      return isAuthenticated() &&
+        'auth_time' in request.auth.token &&
+        request.auth.token.get('loginOtpTimes', []).hasAny([request.auth.token.auth_time]);
+    }
+
     function isSuperAdmin() {
       return isAuthenticated() &&
-        request.auth.token.get('admin2faUntil', 0) > request.time.toMillis() / 1000 &&
+        loginVerified() &&
         exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid));
     }
 
     function isStaffAdmin() {
       return isAuthenticated() &&
-        request.auth.token.get('admin2faUntil', 0) > request.time.toMillis() / 1000 &&
+        loginVerified() &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.status == 'active';
     }
@@ -38,7 +44,8 @@ service cloud.firestore {
 
     // check if user is active and email OTP verified
     function isUserActive() {
-      return isAuthenticated() && (
+      return isAuthenticated() &&
+        loginVerified() && (
         isAdmin() ||
         (
           (
@@ -334,7 +341,7 @@ service cloud.firestore {
 
     // user profiles
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow create: if !request.resource.data.keys().hasAny(['latitude', 'longitude']) && (
         isAdmin() || (
           isOwner(userId) &&

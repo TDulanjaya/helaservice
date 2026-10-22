@@ -71,7 +71,6 @@
   "exploreAsGuest": "Explore Services as Guest",
   "orContinueWith": "or continue with",
   "orSignUpWithEmail": "or sign up with email",
-  "smsNotice": "We'll send a 6-digit OTP code to verify your phone number.",
   "completeProfileTitle": "Choose Role & Profile",
   "completeProfileSubtitle": "Tell us a bit about yourself to get started",
   "selectAccountType": "Select Account Type",
@@ -2982,6 +2981,15 @@
   "outsideWorkingHoursWarning": "Outside your working hours",
   "admin2faTitle": "Admin Verification",
   "admin2faSubtitle": "Enter the 6-digit code sent to your admin email to authenticate your session.",
+  "loginVerificationTitle": "Login Verification",
+  "loginVerificationSubtitle": "We sent a 6-digit login code to {email}",
+  "@loginVerificationSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "useDifferentAccount": "Use a different account",
   "continueAsCustomer": "Continue as Customer",
   "otpNoSession": "No code sent yet — tap Resend",
@@ -3388,9 +3396,6 @@
     }
   },
   "locationOutsideSriLanka": "Selected location is outside Sri Lanka. Please select a location within Sri Lanka.",
-  "nearLabel": "Near",
-  "setLocationToSeeNearby": "Set your location to see providers near you",
-  "changeAction": "Change",
   "setAction": "Set location",
   "distanceFilter": "Distance",
   "anyDistance": "Any distance",
@@ -3513,5 +3518,17 @@
   "jobPostFailedTitle": "Your job could not be posted. Please try again.",
   "jobLoadErrorTitle": "Unable to load job details. Please check your connection.",
   "cancelUpload": "Cancel Upload",
-  "backAction": "Go Back"
+  "backAction": "Go Back",
+  "tapLocationToSeeNearby": "Tap the location button to see verified artisans near you",
+  "locationPermissionOrGpsDisabled": "Location permission or GPS is disabled.",
+  "yourLocationOutsideSriLanka": "Your location is outside Sri Lanka",
+  "setLocationManually": "Set location manually",
+  "shareLocationAction": "Share Location",
+  "nearMe": "Near me",
+  "showNearbyArtisans": "Show nearby artisans",
+  "chooseAnotherArea": "Choose another area",
+  "locationOptions": "Location options",
+  "invalidRequest": "Invalid request. Please try again.",
+  "loginOtpRequired": "Verification required to continue.",
+  "requestTimeout": "Request timed out. Please check your internet connection."
 }

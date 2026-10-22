@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 import 'notification_service.dart';
 import 'storage_service.dart';
+import 'session_guard.dart';
 
 // chat message model with optional photo support
 class ChatMessageModel {
@@ -256,6 +257,7 @@ class ChatService {
         .where('participants', arrayContains: userId)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final list = snap.docs
           .map((d) => ChatRoomSummary.fromMap(d.id, d.data()))
@@ -276,6 +278,7 @@ class ChatService {
         .collection(FirestorePaths.chatRooms)
         .limit(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) {
       final list = snap.docs
           .map((d) => ChatRoomSummary.fromMap(d.id, d.data()))
@@ -420,6 +423,7 @@ class ChatService {
         .orderBy('createdAt', descending: false)
         .limitToLast(limit)
         .snapshots()
+        .withSessionGuard()
         .map((snap) => snap.docs
             .map((d) => ChatMessageModel.fromMap(d.id, d.data()))
             .toList());

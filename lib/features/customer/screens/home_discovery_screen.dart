@@ -13,6 +13,7 @@ import '../../../services/category_service.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../state/role_provider.dart';
+import '../../../services/session_guard.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../utils/customer_location_prefs.dart';
@@ -49,10 +50,14 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   final TechnicianRepository _techRepo = TechnicianRepository();
   final TextEditingController _searchController = TextEditingController();
 
+  static const double _initialDistanceKm = 20.0;
+  static const String _initialSortBy = 'nearest';
+
   CustomerHomeLocation? _homeLocation;
-  double? _selectedDistanceKm = 20.0; // 5, 10, 20 (default), 50, null for Any
+  bool _isLocatingGps = false;
+  double? _selectedDistanceKm = _initialDistanceKm; // 5, 10, 20 (default), 50, null for Any
   bool _onlyServesMyArea = false;
-  String _sortBy = 'nearest'; // 'nearest' or 'rating'
+  String _sortBy = _initialSortBy; // 'nearest' or 'rating'
 
   int _selectedCategoryIndex = -1;
   String _selectedCategoryId = '';
@@ -68,9 +73,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       _onlineOnly ||
       _emergencyOnly ||
       _minRating > 0.0 ||
-      _selectedDistanceKm != 20.0 ||
+      _selectedDistanceKm != _initialDistanceKm ||
       _onlyServesMyArea ||
-      _sortBy != 'nearest';
+      _sortBy != _initialSortBy;
 
   @override
   void initState() {
@@ -141,123 +146,70 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
     _initCustomerLocation();
   }
 
+  // restore cached location
   Future<void> _initCustomerLocation() async {
     final home = await CustomerLocationPrefs.getHomeLocation();
-    if (home != null) {
-      if (mounted) setState(() => _homeLocation = home);
-      return;
+    if (home != null && mounted) {
+      setState(() => _homeLocation = home);
     }
+  }
 
-    final hasPrompted = await CustomerLocationPrefs.hasPromptedLocation();
-    if (!hasPrompted && mounted) {
-      await CustomerLocationPrefs.markPromptedLocation();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _promptSetLocationDialog();
+  // clear saved location and restore default filters
+  Future<void> _turnOffLocation() async {
+    await CustomerLocationPrefs.clearHomeLocation();
+    if (mounted) {
+      setState(() {
+        _homeLocation = null;
+        _sortBy = _initialSortBy;
+        _selectedDistanceKm = _initialDistanceKm;
       });
     }
   }
 
-  Future<void> _promptSetLocationDialog() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.themeSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: context.themeBorder,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.location_on_rounded,
-                      color: AppColors.primary, size: 24),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.l10n.setLocationToSeeNearby,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: context.themeInk,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.my_location_rounded,
-                      color: AppColors.primary, size: 20),
-                ),
-                title: Text(
-                  context.l10n.useCurrentLocationAction,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await _useGpsForHomeLocation();
-                },
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.map_rounded,
-                      color: AppColors.primary, size: 20),
-                ),
-                title: Text(
-                  context.l10n.searchPlaceAction,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await _pickOnMapForHomeLocation();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // fetch gps and refresh nearby artisans
+  Future<void> _handleLocationButtonTap() async {
+    if (_isLocatingGps) return;
 
-  Future<void> _useGpsForHomeLocation() async {
-    try {
-      final perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        final req = await Geolocator.requestPermission();
-        if (req == LocationPermission.denied ||
-            req == LocationPermission.deniedForever) {
-          return;
-        }
+    // prompt if location services are off
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        _showLocationErrorSheet(
+          message: context.l10n.locationPermissionOrGpsDisabled,
+          isGpsOff: true,
+        );
       }
+      return;
+    }
 
+    // request permission if needed
+    var perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied) {
+      perm = await Geolocator.requestPermission();
+      if (perm == LocationPermission.denied) {
+        if (mounted) {
+          _showLocationErrorSheet(
+            message: context.l10n.locationPermissionOrGpsDisabled,
+            isDeniedForever: false,
+          );
+        }
+        return;
+      }
+    }
+
+    if (perm == LocationPermission.deniedForever) {
+      if (mounted) {
+        _showLocationErrorSheet(
+          message: context.l10n.locationPermissionOrGpsDisabled,
+          isDeniedForever: true,
+        );
+      }
+      return;
+    }
+
+    setState(() => _isLocatingGps = true);
+
+    try {
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
@@ -268,11 +220,9 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       if (!LocationSearchHelper.isWithinSriLanka(
           lat: pos.latitude, lon: pos.longitude)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.locationOutsideSriLanka),
-              backgroundColor: AppColors.error,
-            ),
+          _showLocationErrorSheet(
+            message: context.l10n.yourLocationOutsideSriLanka,
+            showManualOnly: true,
           );
         }
         return;
@@ -284,32 +234,159 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
         longitude: pos.longitude,
         shortArea: area,
       );
+
+      // persist locally
       await CustomerLocationPrefs.setHomeLocation(homeLoc);
+
       if (mounted) {
-        setState(() => _homeLocation = homeLoc);
+        setState(() {
+          _homeLocation = homeLoc;
+          _sortBy = _initialSortBy;
+          _selectedDistanceKm = _initialDistanceKm;
+        });
       }
     } catch (_) {
+      // fallback to recent fix (< 10m old)
       try {
         final last = await Geolocator.getLastKnownPosition();
         if (last != null &&
-            DateTime.now().difference(last.timestamp).inMinutes <= 10) {
-          if (LocationSearchHelper.isWithinSriLanka(
-              lat: last.latitude, lon: last.longitude)) {
-            final area =
-                await _reverseGeocodeToArea(last.latitude, last.longitude);
-            final homeLoc = CustomerHomeLocation(
-              latitude: last.latitude,
-              longitude: last.longitude,
-              shortArea: area,
-            );
-            await CustomerLocationPrefs.setHomeLocation(homeLoc);
-            if (mounted) {
-              setState(() => _homeLocation = homeLoc);
-            }
+            DateTime.now().difference(last.timestamp).inMinutes <= 10 &&
+            LocationSearchHelper.isWithinSriLanka(
+                lat: last.latitude, lon: last.longitude)) {
+          final area =
+              await _reverseGeocodeToArea(last.latitude, last.longitude);
+          final homeLoc = CustomerHomeLocation(
+            latitude: last.latitude,
+            longitude: last.longitude,
+            shortArea: area,
+          );
+          await CustomerLocationPrefs.setHomeLocation(homeLoc);
+          if (mounted) {
+            setState(() {
+              _homeLocation = homeLoc;
+              _sortBy = _initialSortBy;
+              _selectedDistanceKm = _initialDistanceKm;
+            });
           }
+          return;
         }
       } catch (_) {}
+
+      if (mounted) {
+        _showLocationErrorSheet(
+          message: context.l10n.locationPermissionOrGpsDisabled,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLocatingGps = false);
+      }
     }
+  }
+
+  // backward compat
+  Future<void> _useGpsForHomeLocation() => _handleLocationButtonTap();
+
+  // show options when gps or permission fails
+  Future<void> _showLocationErrorSheet({
+    required String message,
+    bool isGpsOff = false,
+    bool isDeniedForever = false,
+    bool showManualOnly = false,
+  }) async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.location_off_rounded,
+                      color: AppColors.primary, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeInk,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              if (!showManualOnly && (isGpsOff || isDeniedForever)) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      if (isGpsOff) {
+                        Geolocator.openLocationSettings();
+                      } else {
+                        Geolocator.openAppSettings();
+                      }
+                    },
+                    icon: const Icon(Icons.settings_rounded, size: 18),
+                    label: Text(context.l10n.openSettings),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _showChangeLocationSheet();
+                  },
+                  icon: const Icon(Icons.edit_location_alt_rounded, size: 18),
+                  label: Text(context.l10n.setLocationManually),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.themeInk,
+                    side: BorderSide(color: context.themeBorder),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _pickOnMapForHomeLocation() async {
@@ -330,7 +407,11 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       );
       await CustomerLocationPrefs.setHomeLocation(homeLoc);
       if (mounted) {
-        setState(() => _homeLocation = homeLoc);
+        setState(() {
+          _homeLocation = homeLoc;
+          _sortBy = _initialSortBy;
+          _selectedDistanceKm = _initialDistanceKm;
+        });
       }
     }
   }
@@ -405,10 +486,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                   if (_homeLocation != null)
                     TextButton(
                       onPressed: () async {
-                        await CustomerLocationPrefs.clearHomeLocation();
-                        if (mounted) {
-                          setState(() => _homeLocation = null);
-                        }
+                        await _turnOffLocation();
                         if (ctx.mounted) Navigator.pop(ctx);
                       },
                       child: const Text(
@@ -491,7 +569,11 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                         );
                         await CustomerLocationPrefs.setHomeLocation(homeLoc);
                         if (mounted) {
-                          setState(() => _homeLocation = homeLoc);
+                          setState(() {
+                            _homeLocation = homeLoc;
+                            _sortBy = _initialSortBy;
+                            _selectedDistanceKm = _initialDistanceKm;
+                          });
                         }
                         if (ctx.mounted) Navigator.pop(ctx);
                       },
@@ -502,6 +584,292 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // show location options sheet to refresh gps or select another area
+  Future<void> _showLocationOptionsMenu() async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.themeSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: context.themeBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.my_location_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  context.l10n.useCurrentLocationAction,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handleLocationButtonTap();
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.map_outlined,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  context.l10n.chooseAnotherArea,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showChangeLocationSheet();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // header location toggle controls with pill switch and more options button
+  Widget _buildLocationHeaderControls() {
+    final hasLocation = _homeLocation != null;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasLocation) ...[
+          Tooltip(
+            message: context.l10n.locationOptions,
+            child: InkWell(
+              onTap: _isLocatingGps ? null : _showLocationOptionsMenu,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 36,
+                height: 40,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.more_horiz_rounded,
+                  size: 20,
+                  color: _isLocatingGps
+                      ? context.themeTextSecondary.withValues(alpha: 0.4)
+                      : context.themeTextSecondary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
+        MergeSemantics(
+          child: Semantics(
+            button: true,
+            toggled: hasLocation,
+            label: context.l10n.showNearbyArtisans,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _isLocatingGps
+                    ? null
+                    : () {
+                        if (hasLocation) {
+                          _turnOffLocation();
+                        } else {
+                          _handleLocationButtonTap();
+                        }
+                      },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  height: 40,
+                  constraints: const BoxConstraints(minHeight: 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: hasLocation
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : context.themeSurface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: hasLocation
+                          ? AppColors.primary
+                          : context.themeBorder,
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasLocation
+                            ? Icons.location_on_rounded
+                            : Icons.near_me_outlined,
+                        size: 16,
+                        color: hasLocation
+                            ? AppColors.primary
+                            : context.themeTextSecondary,
+                      ),
+                      const SizedBox(width: 5),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 72),
+                        child: Text(
+                          hasLocation
+                              ? _homeLocation!.shortArea
+                              : context.l10n.nearMe,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: hasLocation
+                                ? context.themeInk
+                                : context.themeTextSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      if (_isLocatingGps)
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Center(
+                            child: SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      else
+                        IgnorePointer(
+                          child: Transform.scale(
+                            scale: 0.72,
+                            child: Switch(
+                              value: hasLocation,
+                              onChanged: (_) {},
+                              activeThumbColor: AppColors.primary,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // prompt to share location
+  Widget _buildNoLocationNearbyCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: context.themeSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.themeBorder),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.near_me_outlined,
+              color: AppColors.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.tapLocationToSeeNearby,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.themeInk,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _isLocatingGps ? null : _handleLocationButtonTap,
+            icon: _isLocatingGps
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.my_location_rounded, size: 18),
+            label: Text(context.l10n.shareLocationAction),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _showChangeLocationSheet,
+            child: Text(
+              context.l10n.setLocationManually,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -555,17 +923,17 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                                 _onlineOnly = false;
                                 _emergencyOnly = false;
                                 _minRating = 0.0;
-                                _selectedDistanceKm = 20.0;
+                                _selectedDistanceKm = _initialDistanceKm;
                                 _onlyServesMyArea = false;
-                                _sortBy = 'nearest';
+                                _sortBy = _initialSortBy;
                               });
                               setState(() {
                                 _onlineOnly = false;
                                 _emergencyOnly = false;
                                 _minRating = 0.0;
-                                _selectedDistanceKm = 20.0;
+                                _selectedDistanceKm = _initialDistanceKm;
                                 _onlyServesMyArea = false;
-                                _sortBy = 'nearest';
+                                _sortBy = _initialSortBy;
                               });
                             },
                             child: Text(
@@ -1062,87 +1430,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 color: context.themeTextSecondary,
               ),
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on_rounded,
-                      color: AppColors.primary, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${context.l10n.nearLabel}: ${_homeLocation?.shortArea ?? context.l10n.islandWideBadge}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: context.themeInk,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _showChangeLocationSheet,
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    child: Text(
-                      context.l10n.changeAction,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_homeLocation == null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded,
-                        color: AppColors.primary, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        context.l10n.setLocationToSeeNearby,
-                        style: TextStyle(fontSize: 12, color: context.themeInk),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _showChangeLocationSheet,
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: Text(
-                        context.l10n.setAction,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -1497,28 +1785,44 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _selectedCategoryName.isNotEmpty
-                      ? '${context.l10n.topArtisans} — $_selectedCategoryName'
-                      : (_homeLocation != null
-                          ? context.l10n
-                              .providersNearArea(_homeLocation!.shortArea)
-                          : context.l10n.nearbyArtisans),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
+                Expanded(
+                  child: Text(
+                    _selectedCategoryName.isNotEmpty
+                        ? '${context.l10n.topArtisans} — $_selectedCategoryName'
+                        : (_homeLocation != null
+                            ? context.l10n
+                                .providersNearArea(_homeLocation!.shortArea)
+                            : context.l10n.nearbyArtisans),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
+                const SizedBox(width: 8),
+                _buildLocationHeaderControls(),
               ],
             ),
             const SizedBox(height: 12),
             StreamBuilder<List<Technician>>(
               stream: _techRepo.streamApprovedTechnicians(),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  SessionGuard.handlePermissionDenied(snapshot.error);
+                }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                       child: Padding(
                     padding: EdgeInsets.all(24),
                     child: CircularProgressIndicator(),
                   ));
+                }
+
+                // require location before loading the general feed
+                if (_homeLocation == null &&
+                    _selectedCategoryId.isEmpty &&
+                    _searchQuery.isEmpty) {
+                  return _buildNoLocationNearbyCard(context);
                 }
 
                 final rawList = snapshot.data ?? [];

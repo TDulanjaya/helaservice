@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:http/http.dart' as http;
 import '../constants/app_config.dart';
 import '../constants/firestore_paths.dart';
 import '../models/app_notification.dart';
+import 'api_client.dart';
 
 // push and in app notification service
 class NotificationService {
@@ -176,15 +176,11 @@ class NotificationService {
       final user = _auth.currentUser;
       if (user == null) return false;
 
-      final token = await user.getIdToken();
-      if (token == null || token.isEmpty) return false;
-
       final baseUrl = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
       final uri = Uri.parse('$baseUrl/notify');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
       };
 
       final payload = jsonEncode({
@@ -192,9 +188,12 @@ class NotificationService {
         'docId': docId,
       });
 
-      final response = await http
-          .post(uri, headers: headers, body: payload)
-          .timeout(const Duration(seconds: 10));
+      final response = await ApiClient.instance.post(
+        uri: uri,
+        headers: headers,
+        body: payload,
+        timeout: const Duration(seconds: 10),
+      );
 
       return response.statusCode == 200;
     } catch (e) {

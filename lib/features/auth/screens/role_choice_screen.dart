@@ -5,6 +5,7 @@ import '../../../theme/app_theme.dart';
 import '../../../state/role_provider.dart';
 import '../../../models/user_profile.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/session_guard.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/responsive.dart';
 import 'complete_profile_screen.dart';
@@ -21,6 +22,18 @@ class RoleChoiceScreen extends StatefulWidget {
 class _RoleChoiceScreenState extends State<RoleChoiceScreen> {
   bool _isProcessing = false;
   AppRole? _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    SessionGuard.enterAuthScreen();
+  }
+
+  @override
+  void dispose() {
+    SessionGuard.exitAuthScreen();
+    super.dispose();
+  }
 
   Future<void> _selectRole(AppRole role) async {
     if (_isProcessing) return;

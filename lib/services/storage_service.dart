@@ -6,6 +6,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_config.dart';
+import 'api_client.dart';
 
 class PickedAttachment {
   final XFile file;
@@ -125,30 +126,28 @@ class StorageService {
     if (user == null) {
       throw Exception('User must be logged in to upload media');
     }
-    final token = await user.getIdToken();
 
     // get presigned url with 15s timeout
-    final presignRes = await http
-        .post(
-          uri,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'mode': 'presign',
-            'purpose': 'job_media',
-            'filename': filename,
-            'contentType': contentType,
-            'sizeBytes': bytes.length,
-          }),
-        )
-        .timeout(const Duration(seconds: 15));
+    final presignRes = await ApiClient.instance.post(
+      uri: uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'mode': 'presign',
+        'purpose': 'job_media',
+        'filename': filename,
+        'contentType': contentType,
+        'sizeBytes': bytes.length,
+      }),
+      timeout: const Duration(seconds: 15),
+    );
 
     if (presignRes.statusCode != 200) {
       debugPrint(
           '[StorageService] Presign error: ${presignRes.statusCode} - ${presignRes.body}');
-      throw Exception('Failed to get upload authorization: ${presignRes.body}');
+      throw Exception(
+          'Failed to get upload authorization (${presignRes.statusCode})');
     }
 
     final presignData = jsonDecode(presignRes.body) as Map<String, dynamic>;
@@ -319,12 +318,11 @@ class StorageService {
       }
       debugPrint(
           '[StorageService] Server returned ${response.statusCode}: ${response.body}');
-      throw Exception(
-          'Upload failed (${response.statusCode}): ${response.body}');
+      throw Exception('Upload failed (${response.statusCode})');
     } catch (e) {
       debugPrint('[StorageService] Remote upload exception: $e');
       if (e is Exception) rethrow;
-      throw Exception('Upload failed: $e');
+      throw Exception('Upload failed');
     }
   }
 }

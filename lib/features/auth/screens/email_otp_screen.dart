@@ -8,7 +8,9 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../services/otp_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/session_guard.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/auth_error_l10n.dart';
 import '../../../state/role_provider.dart';
 import '../../../splash_screen.dart';
 import '../../customer/screens/home_discovery_screen.dart';
@@ -38,6 +40,8 @@ class EmailOtpScreen extends StatefulWidget {
     this.otpService,
   });
 
+  static bool isScreenActive = false;
+
   @override
   State<EmailOtpScreen> createState() => _EmailOtpScreenState();
 }
@@ -63,6 +67,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   @override
   void initState() {
     super.initState();
+    SessionGuard.enterAuthScreen();
+    EmailOtpScreen.isScreenActive = true;
     if (widget.sendOnOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _sendOnOpen();
@@ -73,7 +79,24 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   }
 
   Future<void> _sendOnOpen() async {
-    final lang = context.l10n.localeName;
+    final lang = mounted ? context.l10n.localeName : 'en';
+    final user = AuthService().currentFirebaseUser;
+    if (user != null) {
+      try {
+        final tokenResult = await user.getIdTokenResult();
+        final authTime = tokenResult.authTime?.millisecondsSinceEpoch != null
+            ? (tokenResult.authTime!.millisecondsSinceEpoch ~/ 1000)
+            : null;
+        if (authTime != null) {
+          if (SessionGuard.hasOtpBeenSent(user.uid, authTime)) {
+            _startCountdown();
+            return;
+          }
+          SessionGuard.markOtpSent(user.uid, authTime);
+        }
+      } catch (_) {}
+    }
+
     try {
       await _effectiveOtpService.sendEmailOtp(
         widget.email,
@@ -93,7 +116,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = mapOtpError(context, e);
         });
       }
     }
@@ -131,6 +154,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
 
   @override
   void dispose() {
+    SessionGuard.exitAuthScreen();
+    EmailOtpScreen.isScreenActive = false;
     _timer?.cancel();
     for (final c in _controllers) {
       c.dispose();
@@ -206,7 +231,8 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
       );
 
       if (!result.isValid) {
-        if (result.errorCode == 'OTP_NO_SESSION') {
+        final code = (result.errorCode ?? '').toLowerCase();
+        if (code == 'otp_no_session') {
           _clearCodeBoxes();
           _timer?.cancel();
           setState(() {
@@ -216,7 +242,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
           return;
         }
 
-        if (result.errorCode == 'OTP_EXPIRED') {
+        if (code == 'otp_expired') {
           _clearCodeBoxes();
           _timer?.cancel();
           setState(() {
@@ -226,7 +252,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
           return;
         }
 
-        if (result.errorCode == 'OTP_MAX_ATTEMPTS') {
+        if (code == 'otp_max_attempts') {
           _clearCodeBoxes();
           _timer?.cancel();
           setState(() {
@@ -236,32 +262,22 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
           return;
         }
 
-        if (result.errorCode == 'OTP_INCORRECT') {
+        if (code == 'otp_incorrect') {
           final remaining = result.attemptsRemaining;
           setState(() {
-            _errorMessage = remaining != null
+            _errorMessage = remaining != null && remaining > 0
                 ? l10n.otpIncorrectTriesLeft(remaining)
-                : (result.errorMessage ?? l10n.codeIncorrect);
+                : l10n.codeIncorrect;
           });
           return;
         }
 
-        String msg;
-        switch (result.errorCode) {
-          case 'OTP_CODE_INCOMPLETE':
-            msg = l10n.enterOtp;
-            break;
-          case 'OTP_NETWORK_ERROR':
-            msg = l10n.authErrNetwork;
-            break;
-          case 'SERVICE_UNAVAILABLE':
-            msg = result.errorMessage ?? l10n.authErrNetwork;
-            break;
-          default:
-            msg = result.errorMessage ?? l10n.codeIncorrect;
-        }
         setState(() {
-          _errorMessage = msg;
+          _errorMessage = mapOtpErrorCode(
+            context,
+            result.errorCode,
+            attemptsRemaining: result.attemptsRemaining,
+          );
         });
         return;
       }
@@ -293,7 +309,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = mapOtpError(context, e);
         });
       }
     } finally {
@@ -341,7 +357,7 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = mapOtpError(context, e);
         });
       }
     } finally {
@@ -360,26 +376,32 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
     final title = widget.title ??
         (widget.purpose == 'admin_login'
             ? context.l10n.admin2faTitle
-            : context.l10n.verifyYourEmail);
+            : (widget.purpose == 'login'
+                ? context.l10n.loginVerificationTitle
+                : context.l10n.verifyYourEmail));
     final subtitle = widget.subtitle ??
         (widget.purpose == 'admin_login'
             ? context.l10n.admin2faSubtitle
-            : context.l10n.verifyEmailSubtitle(widget.email));
+            : (widget.purpose == 'login'
+                ? context.l10n.loginVerificationSubtitle(widget.email)
+                : context.l10n.verifyEmailSubtitle(widget.email)));
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Center(
-            child: IconSquareButton(
-              icon: Icons.arrow_back_rounded,
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ),
+        leading: Navigator.of(context).canPop()
+            ? Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Center(
+                  child: IconSquareButton(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              )
+            : null,
       ),
       body: SafeArea(
         child: ResponsiveCenter(

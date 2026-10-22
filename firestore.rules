@@ -124,7 +124,7 @@ service cloud.firestore {
         photos[i] is map &&
         photos[i].url is string &&
         photos[i].key is string &&
-        photos[i].url.matches('^https://f005[.]backblazeb2[.]com/file/helaservice-objects/uploads/' + customerId + '/.*') &&
+        photos[i].url.matches('^https://helaservice[.]vercel[.]app/api/media[?]key=uploads/' + customerId + '/.*') &&
         photos[i].key.matches('^uploads/' + customerId + '/.*')
       );
     }
@@ -150,7 +150,7 @@ service cloud.firestore {
         data.video is map &&
         data.video.url is string &&
         data.video.key is string &&
-        data.video.url.matches('^https://f005[.]backblazeb2[.]com/file/helaservice-objects/uploads/' + customerId + '/.*') &&
+        data.video.url.matches('^https://helaservice[.]vercel[.]app/api/media[?]key=uploads/' + customerId + '/.*') &&
         data.video.key.matches('^uploads/' + customerId + '/.*') &&
         (!('durationSec' in data.video) || (data.video.durationSec is number && data.video.durationSec > 0 && data.video.durationSec <= 120))
       );

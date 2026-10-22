@@ -3,10 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../models/job_request.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../utils/media_url.dart';
 
-// gallery for job request photos and video preview
+// gallery for job photos and video
 class JobMediaGallery extends StatelessWidget {
   final List<JobMediaItem> photos;
   final JobVideoItem? video;
@@ -97,16 +99,19 @@ class JobMediaGallery extends StatelessWidget {
           color: Colors.black87,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          image: thumbUrl != null && thumbUrl.isNotEmpty
-              ? DecorationImage(
-                  image: NetworkImage(thumbUrl),
-                  fit: BoxFit.cover,
-                )
-              : null,
         ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (thumbUrl != null && thumbUrl.isNotEmpty)
+                Positioned.fill(
+                  child: AppNetworkImage(
+                    url: thumbUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -169,7 +174,8 @@ class JobMediaGallery extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildPhotosRow(BuildContext context, List<String> urls) {
@@ -214,10 +220,10 @@ class JobMediaGallery extends StatelessWidget {
             child: Icon(Icons.broken_image, size: 28, color: Colors.grey));
       }
     }
-    return Image.network(
-      url,
+    return AppNetworkImage(
+      url: url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Center(
+      errorWidget: const Center(
         child: Icon(Icons.broken_image, size: 28, color: Colors.grey),
       ),
     );
@@ -304,10 +310,10 @@ class _FullScreenPhotoViewerState extends State<_FullScreenPhotoViewer> {
                             size: 48, color: Colors.white54),
                       ),
                     )
-                  : Image.network(
-                      widget.urls[i],
+                  : AppNetworkImage(
+                      url: widget.urls[i],
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorWidget: const Center(
                         child: Icon(Icons.broken_image,
                             size: 48, color: Colors.white54),
                       ),
@@ -331,34 +337,78 @@ class _FullScreenVideoPlayer extends StatefulWidget {
 }
 
 class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isInitialized = false;
   String? _error;
+  Duration _lastPosition = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() => _isInitialized = true);
-          _controller.play();
-        }
-      }).catchError((e) {
-        if (mounted) {
-          setState(() => _error = e.toString());
-        }
+    _initVideo();
+  }
+
+  // start video playback
+  Future<void> _initVideo() async {
+    try {
+      final directUrl =
+          await resolveMediaUrlForVideo(widget.videoUrl) ?? widget.videoUrl;
+      final uri = Uri.parse(directUrl);
+      final controller = VideoPlayerController.networkUrl(uri);
+      _controller = controller;
+
+      await controller.initialize();
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+
+      if (_lastPosition > Duration.zero) {
+        await controller.seekTo(_lastPosition);
+      }
+
+      controller.addListener(_onControllerUpdate);
+
+      setState(() {
+        _isInitialized = true;
+        _error = null;
       });
+      controller.play();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = e.toString());
+      }
+    }
+  }
+
+  // handle url expiry and reconnect
+  void _onControllerUpdate() {
+    final c = _controller;
+    if (c == null) return;
+    if (c.value.isInitialized) {
+      _lastPosition = c.value.position;
+    }
+    if (c.value.hasError) {
+      c.removeListener(_onControllerUpdate);
+      c.dispose();
+      _controller = null;
+      if (mounted) {
+        setState(() => _isInitialized = false);
+        _initVideo();
+      }
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.removeListener(_onControllerUpdate);
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = _controller;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -377,15 +427,15 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
                   textAlign: TextAlign.center,
                 ),
               )
-            : !_isInitialized
+            : (!_isInitialized || c == null)
                 ? const CircularProgressIndicator(color: AppColors.primary)
                 : AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
+                    aspectRatio: c.value.aspectRatio,
                     child: Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
-                        VideoPlayer(_controller),
-                        _buildControls(),
+                        VideoPlayer(c),
+                        _buildControls(c),
                       ],
                     ),
                   ),
@@ -393,7 +443,7 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(VideoPlayerController c) {
     return Container(
       color: Colors.black38,
       padding: const EdgeInsets.all(8),
@@ -401,7 +451,7 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
         children: [
           IconButton(
             icon: Icon(
-              _controller.value.isPlaying
+              c.value.isPlaying
                   ? Icons.pause_rounded
                   : Icons.play_arrow_rounded,
               color: Colors.white,
@@ -409,15 +459,13 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
             ),
             onPressed: () {
               setState(() {
-                _controller.value.isPlaying
-                    ? _controller.pause()
-                    : _controller.play();
+                c.value.isPlaying ? c.pause() : c.play();
               });
             },
           ),
           Expanded(
             child: VideoProgressIndicator(
-              _controller,
+              c,
               allowScrubbing: true,
               colors: const VideoProgressColors(
                 playedColor: AppColors.primary,

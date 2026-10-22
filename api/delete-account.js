@@ -97,6 +97,12 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid user ID token' });
   }
 
+  const bucketName = (process.env.B2_BUCKET_NAME || '').trim();
+  if (!bucketName) {
+    console.error('B2_BUCKET_NAME is not configured');
+    return res.status(500).json({ error: 'storage_not_configured' });
+  }
+
   try {
     // refuse deletion for administrators
     const superAdminDoc = await db.collection('superAdmins').doc(uid).get();
@@ -244,8 +250,7 @@ module.exports = async function handler(req, res) {
     // delete storage files in backblaze
     await runStep('delete_public_storage', async () => {
       const publicS3 = getS3Client(false);
-      const publicBucket = (process.env.B2_BUCKET_NAME || 'helaservice-storage').trim();
-      await deleteS3Prefix(publicS3, publicBucket, `uploads/${uid}/`);
+      await deleteS3Prefix(publicS3, bucketName, `uploads/${uid}/`);
     });
 
     await runStep('delete_private_storage', async () => {

@@ -5,6 +5,7 @@ import '../../repositories/booking_repository.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
+import 'app_network_image.dart';
 import 'photo_viewer_dialog.dart';
 
 class JobPhotosSheet extends StatefulWidget {
@@ -374,8 +375,8 @@ class _JobPhotosSheetState extends State<JobPhotosSheet> {
                       borderRadius: BorderRadius.circular(12),
                       child: Stack(
                         children: [
-                          Image.network(
-                            photoUrl,
+                          AppNetworkImage(
+                            url: photoUrl,
                             width: 110,
                             height: 110,
                             fit: BoxFit.cover,

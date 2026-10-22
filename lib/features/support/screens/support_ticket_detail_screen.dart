@@ -6,6 +6,7 @@ import '../../../models/complaint.dart';
 import '../../../models/support_message.dart';
 import '../../../repositories/complaint_repository.dart';
 import '../../../services/storage_service.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
@@ -266,8 +267,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                           separatorBuilder: (_, __) => const SizedBox(width: 8),
                           itemBuilder: (ctx, i) => ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              ticket.photos[i],
+                            child: AppNetworkImage(
+                              url: ticket.photos[i],
                               width: 60,
                               height: 60,
                               fit: BoxFit.cover,
@@ -389,7 +390,8 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
                                     children: m.photos.map((pUrl) {
                                       return ClipRRect(
                                         borderRadius: BorderRadius.circular(6),
-                                        child: Image.network(pUrl,
+                                        child: AppNetworkImage(
+                                            url: pUrl,
                                             width: 80,
                                             height: 80,
                                             fit: BoxFit.cover),

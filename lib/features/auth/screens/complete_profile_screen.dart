@@ -8,6 +8,7 @@ import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../state/role_provider.dart';
 import '../../../state/locale_provider.dart';
 import '../../../models/user_profile.dart';
@@ -1297,8 +1298,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                             )
                                           : (profile?.photoUrl != null &&
                                                   profile!.photoUrl!.isNotEmpty)
-                                              ? Image.network(
-                                                  profile.photoUrl!,
+                                              ? AppNetworkImage(
+                                                  url: profile.photoUrl!,
                                                   fit: BoxFit.cover,
                                                 )
                                               : Icon(
@@ -2064,7 +2065,7 @@ class _DocUploadBox extends StatelessWidget {
                     child: bytes != null
                         ? Image.memory(bytes!, fit: BoxFit.cover)
                         : (networkUrl != null && networkUrl!.isNotEmpty
-                            ? Image.network(networkUrl!, fit: BoxFit.cover)
+                            ? AppNetworkImage(url: networkUrl!, fit: BoxFit.cover)
                             : const SizedBox.shrink()),
                   ),
                   Positioned(

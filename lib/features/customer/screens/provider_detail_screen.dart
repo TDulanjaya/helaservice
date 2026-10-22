@@ -12,6 +12,7 @@ import '../../../repositories/technician_repository.dart';
 import '../../../shared/widgets/pill_badge.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/photo_viewer_dialog.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../shared/widgets/block_report_dialog.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -704,11 +705,11 @@ class ProviderDetailScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
-                                    child: Image.network(
-                                      p.photoUrl,
+                                    child: AppNetworkImage(
+                                      url: p.photoUrl,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
+                                      errorWidget: Container(
                                         color: context.themeSurface,
                                         child: const Icon(
                                             Icons.broken_image_rounded),

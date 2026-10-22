@@ -41,8 +41,13 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing cron secret' });
   }
 
+  const bucketName = (process.env.B2_BUCKET_NAME || '').trim();
+  if (!bucketName) {
+    console.error('B2_BUCKET_NAME is not configured');
+    return res.status(500).json({ error: 'storage_not_configured' });
+  }
+
   const s3 = getS3Client();
-  const bucketName = (process.env.B2_BUCKET_NAME || 'helaservice-storage').trim();
   if (!s3) {
     return res.status(500).json({ error: 'B2 storage credentials not configured' });
   }
@@ -96,7 +101,7 @@ module.exports = async function handler(req, res) {
       if (Array.isArray(data.photoUrls)) {
         for (const url of data.photoUrls) {
           if (typeof url === 'string') {
-            const match = url.match(/uploads\/[^?]+/);
+            const match = url.match(/uploads\/[^?&]+/);
             if (match) keysToDelete.push(match[0]);
           }
         }

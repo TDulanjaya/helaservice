@@ -14,6 +14,7 @@ import '../../../services/admin_log_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
 import '../../../utils/nic_decoder.dart';
@@ -1335,8 +1336,8 @@ class _NicVerificationWorkspaceScreenState
             height: 44,
             color: context.themeSoft,
             child: (item.photoUrl != null && item.photoUrl!.isNotEmpty)
-                ? Image.network(
-                    item.photoUrl!,
+                ? AppNetworkImage(
+                    url: item.photoUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Icon(item.tradeIcon,
                         size: 20, color: AppColors.primary),
@@ -2389,8 +2390,8 @@ class _NicVerificationWorkspaceScreenState
                                   base64Decode(certUrl.split(',').last),
                                   fit: BoxFit.cover,
                                 )
-                              : Image.network(
-                                  certUrl,
+                              : AppNetworkImage(
+                                  url: certUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => const Icon(
                                     Icons.broken_image_outlined,
@@ -2941,8 +2942,8 @@ class _ZoomableDocDialogState extends State<_ZoomableDocDialog> {
                                   base64Decode(widget.imageUrl.split(',').last),
                                   fit: BoxFit.contain,
                                 )
-                              : Image.network(
-                                  widget.imageUrl,
+                              : AppNetworkImage(
+                                  url: widget.imageUrl,
                                   fit: BoxFit.contain,
                                   loadingBuilder: (_, child, prog) =>
                                       prog == null
@@ -3130,8 +3131,8 @@ class _NicDocImagePreview extends StatelessWidget {
                           errorBuilder: (_, __, ___) => Icon(fallbackIcon,
                               color: context.themeTextSecondary),
                         )
-                      : Image.network(
-                          url,
+                      : AppNetworkImage(
+                          url: url,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Icon(fallbackIcon,
                               color: context.themeTextSecondary),

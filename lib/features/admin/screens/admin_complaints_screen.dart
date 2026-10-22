@@ -12,6 +12,7 @@ import '../../customer/screens/direct_chat_screen.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../../models/support_message.dart';
 import '../../../services/admin_log_service.dart';
@@ -1221,19 +1222,20 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                     showDialog(
                       context: context,
                       builder: (dCtx) => Dialog(
-                        child: Image.network(complaint.photos[i],
+                        child: AppNetworkImage(
+                            url: complaint.photos[i],
                             fit: BoxFit.contain),
                       ),
                     );
                   },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      complaint.photos[i],
+                    child: AppNetworkImage(
+                      url: complaint.photos[i],
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorWidget: Container(
                         width: 64,
                         height: 64,
                         color: context.themeSurfaceLow,
@@ -1720,15 +1722,16 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
                           showDialog(
                             context: context,
                             builder: (dCtx) => Dialog(
-                              child: Image.network(c.photos[i],
+                              child: AppNetworkImage(
+                                  url: c.photos[i],
                                   fit: BoxFit.contain),
                             ),
                           );
                         },
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            c.photos[i],
+                          child: AppNetworkImage(
+                            url: c.photos[i],
                             width: 80,
                             height: 80,
                             fit: BoxFit.cover,

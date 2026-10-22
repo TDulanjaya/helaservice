@@ -90,6 +90,15 @@ module.exports = async (req, res) => {
     if (!process.env.B2_PRIVATE_BUCKET || !process.env.B2_PRIVATE_KEY_ID || !process.env.B2_PRIVATE_KEY) {
       return res.status(500).json({ error: 'private_storage_not_configured' });
     }
+  } else {
+    if (!process.env.B2_BUCKET_NAME || !process.env.B2_BUCKET_NAME.trim()) {
+      console.error('B2_BUCKET_NAME is not configured');
+      return res.status(500).json({ error: 'storage_not_configured' });
+    }
+    if (!process.env.MEDIA_URL_BASE || !process.env.MEDIA_URL_BASE.trim()) {
+      console.error('MEDIA_URL_BASE is not configured');
+      return res.status(500).json({ error: 'storage_not_configured' });
+    }
   }
 
   const s3 = getS3Client(isPrivatePurpose);
@@ -104,15 +113,7 @@ module.exports = async (req, res) => {
 
   const bucketName = (isPrivatePurpose
     ? process.env.B2_PRIVATE_BUCKET
-    : (process.env.B2_BUCKET_NAME || 'helaservice-storage')).trim();
-
-  let publicPrefix = (process.env.B2_PUBLIC_URL_PREFIX || '').trim();
-  if (!publicPrefix) {
-    const rawEndpoint = (process.env.B2_ENDPOINT || 's3.us-west-004.backblazeb2.com').trim();
-    const clusterMatch = rawEndpoint.match(/00\d+/);
-    const cluster = clusterMatch ? clusterMatch[0] : '004';
-    publicPrefix = `https://f${cluster}.backblazeb2.com/file/${bucketName}`;
-  }
+    : process.env.B2_BUCKET_NAME).trim();
 
   // JSON mode: presigned URL generation for job media uploads
   let body = req.body;
@@ -187,8 +188,8 @@ module.exports = async (req, res) => {
 
     try {
       const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 600 });
-      const cleanPrefix = publicPrefix.replace(/\/+$/, '');
-      const publicUrl = `${cleanPrefix}/${key}`;
+      const mediaBase = process.env.MEDIA_URL_BASE.trim().replace(/\/+$/, '');
+      const publicUrl = `${mediaBase}/api/media?key=${key}`;
       return res.status(200).json({ uploadUrl, key, publicUrl });
     } catch (err) {
       return res.status(500).json({ error: `Presign generation failed: ${err.message}` });
@@ -247,8 +248,8 @@ module.exports = async (req, res) => {
             if (isPrivatePurpose) {
               return { key };
             }
-            const cleanPrefix = publicPrefix.replace(/\/+$/, '');
-            const publicUrl = `${cleanPrefix}/${key}`;
+            const mediaBase = process.env.MEDIA_URL_BASE.trim().replace(/\/+$/, '');
+            const publicUrl = `${mediaBase}/api/media?key=${key}`;
             return { url: publicUrl, key };
           });
       });

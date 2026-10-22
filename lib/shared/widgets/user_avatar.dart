@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/profile_image_service.dart';
+import 'app_network_image.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
 import '../../utils/permission_utils.dart';
@@ -268,6 +269,16 @@ class _UserAvatarState extends State<UserAvatar> {
     if (dpBytes != null && dpBytes.isNotEmpty) {
       return Image.memory(
         dpBytes,
+        width: diameter,
+        height: diameter,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildFallback(diameter),
+      );
+    }
+
+    if (widget.photoUrl != null && widget.photoUrl!.isNotEmpty) {
+      return AppNetworkImage(
+        url: widget.photoUrl!,
         width: diameter,
         height: diameter,
         fit: BoxFit.cover,

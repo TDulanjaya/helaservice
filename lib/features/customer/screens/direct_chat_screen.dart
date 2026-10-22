@@ -7,6 +7,7 @@ import '../../../services/storage_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/user_avatar.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../shared/widgets/icon_square_button.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../models/complaint.dart';
@@ -906,8 +907,8 @@ class _ChatBubble extends StatelessWidget {
               clipBehavior: Clip.none,
               minScale: 0.8,
               maxScale: 4.0,
-              child: Image.network(
-                url,
+              child: AppNetworkImage(
+                url: url,
                 fit: BoxFit.contain,
                 loadingBuilder: (ctx, child, progress) {
                   if (progress == null) return child;
@@ -978,8 +979,8 @@ class _ChatBubble extends StatelessWidget {
                             maxHeight: 240,
                             maxWidth: 240,
                           ),
-                          child: Image.network(
-                            imageUrl!,
+                          child: AppNetworkImage(
+                            url: imageUrl!,
                             fit: BoxFit.cover,
                             loadingBuilder: (ctx, child, progress) {
                               if (progress == null) return child;

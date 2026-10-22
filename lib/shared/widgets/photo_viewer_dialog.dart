@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/l10n_extension.dart';
+import 'app_network_image.dart';
 
 class PhotoViewerDialog extends StatelessWidget {
   final String photoUrl;
@@ -67,8 +68,8 @@ class PhotoViewerDialog extends StatelessWidget {
                 child: InteractiveViewer(
                   minScale: 0.8,
                   maxScale: 4.0,
-                  child: Image.network(
-                    photoUrl,
+                  child: AppNetworkImage(
+                    url: photoUrl,
                     fit: BoxFit.contain,
                     loadingBuilder: (context, child, progress) {
                       if (progress == null) return child;

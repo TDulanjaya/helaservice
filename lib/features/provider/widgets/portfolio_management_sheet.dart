@@ -5,6 +5,7 @@ import '../../../models/portfolio_item.dart';
 import '../../../repositories/portfolio_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../services/storage_service.dart';
+import '../../../shared/widgets/app_network_image.dart';
 import '../../../shared/widgets/photo_viewer_dialog.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../theme/app_theme.dart';
@@ -213,10 +214,10 @@ class _PortfolioManagementSheetState extends State<PortfolioManagementSheet> {
                                       photoUrl: item.photoUrl,
                                       title: item.title,
                                     ),
-                                    child: Image.network(
-                                      item.photoUrl,
+                                    child: AppNetworkImage(
+                                      url: item.photoUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
+                                      errorWidget: Container(
                                         color: context.themeSurface,
                                         child: const Icon(
                                             Icons.broken_image_rounded),

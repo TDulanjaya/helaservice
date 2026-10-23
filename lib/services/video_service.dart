@@ -18,7 +18,7 @@ class VideoService {
   VideoService._();
   static final VideoService instance = VideoService._();
 
-  // compress video <= 120s and make thumbnail
+  // compress video <= 120s
   Future<ProcessedVideoResult> processJobVideo(File rawVideoFile) async {
     if (kIsWeb) {
       throw UnsupportedError(
@@ -40,12 +40,13 @@ class VideoService {
         quality: 80,
       );
 
-      // compress to 720p
+      // compress to 480p
       final mediaInfo = await VideoCompress.compressVideo(
         rawVideoFile.path,
-        quality: VideoQuality.Res1280x720Quality,
+        quality: VideoQuality.Res640x480Quality,
         deleteOrigin: false,
         includeAudio: true,
+        frameRate: 24,
       );
 
       if (mediaInfo == null || mediaInfo.file == null) {
@@ -67,7 +68,7 @@ class VideoService {
     }
   }
 
-  // clean up video cache
+  // clear video cache
   Future<void> cleanCache() async {
     if (kIsWeb) return;
     try {

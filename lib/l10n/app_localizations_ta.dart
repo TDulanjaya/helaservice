@@ -7236,4 +7236,7 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get requestTimeout =>
       'கோரிக்கையின் நேரம் முடிந்தது. உங்கள் இணைய இணைப்பைச் சரிபார்க்கவும்.';
+
+  @override
+  String get waitingForConnection => 'இணைப்பிற்காக காத்திருக்கிறது...';
 }

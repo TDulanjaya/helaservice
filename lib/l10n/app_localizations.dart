@@ -12773,6 +12773,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request timed out. Please check your internet connection.'**
   String get requestTimeout;
+
+  /// No description provided for @waitingForConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for connection...'**
+  String get waitingForConnection;
 }
 
 class _AppLocalizationsDelegate

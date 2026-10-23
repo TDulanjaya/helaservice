@@ -7065,4 +7065,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestTimeout =>
       'Request timed out. Please check your internet connection.';
+
+  @override
+  String get waitingForConnection => 'Waiting for connection...';
 }

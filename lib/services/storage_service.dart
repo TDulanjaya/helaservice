@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,32 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_config.dart';
 import 'api_client.dart';
+
+// stream request with chunk progress
+class _ProgressUploadRequest extends http.BaseRequest {
+  final Stream<List<int>> _stream;
+
+  _ProgressUploadRequest(super.method, super.url, this._stream);
+
+  @override
+  http.ByteStream finalize() {
+    super.finalize();
+    return http.ByteStream(_stream);
+  }
+}
+
+// upload error with status code
+class MediaUploadHttpException implements Exception {
+  final String message;
+  final int? statusCode;
+  final bool isRetryable;
+
+  const MediaUploadHttpException(this.message,
+      {this.statusCode, this.isRetryable = true});
+
+  @override
+  String toString() => message;
+}
 
 class PickedAttachment {
   final XFile file;
@@ -29,7 +56,7 @@ class JobMediaUploadResult {
   const JobMediaUploadResult({required this.url, required this.key});
 }
 
-// top-level worker for compute()
+// worker for compute()
 Uint8List _compressImageWorker(Map<String, dynamic> params) {
   final rawBytes = params['bytes'] as Uint8List;
   final maxDimension = params['maxDimension'] as int;
@@ -86,11 +113,11 @@ class StorageService {
     }
   }
 
-  // strip gps/exif and compress in background isolate
+  // strip exif and compress
   Future<Uint8List> stripExifAndCompressImage(
     Uint8List rawBytes, {
-    int maxDimension = 1600,
-    int quality = 80,
+    int maxDimension = 1280,
+    int quality = 75,
   }) {
     return compute(_compressImageWorker, {
       'bytes': rawBytes,
@@ -99,11 +126,11 @@ class StorageService {
     });
   }
 
-  // synchronous version preserved
+  // sync version
   Uint8List stripExifAndCompressImageSync(
     Uint8List rawBytes, {
-    int maxDimension = 1600,
-    int quality = 80,
+    int maxDimension = 1280,
+    int quality = 75,
   }) {
     return _compressImageWorker({
       'bytes': rawBytes,
@@ -112,12 +139,13 @@ class StorageService {
     });
   }
 
-  // upload job media directly to b2
+  // upload job media to b2
   Future<JobMediaUploadResult> uploadJobMedia({
     required Uint8List bytes,
     required String filename,
     required String contentType,
     void Function(int sentBytes, int totalBytes)? onProgress,
+    Future<void>? cancelTrigger,
   }) async {
     final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
     final uri = Uri.parse('$cleanBase/upload');
@@ -127,30 +155,71 @@ class StorageService {
       throw Exception('User must be logged in to upload media');
     }
 
-    // get presigned url with 15s timeout
-    final presignRes = await ApiClient.instance.post(
-      uri: uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'mode': 'presign',
-        'purpose': 'job_media',
-        'filename': filename,
-        'contentType': contentType,
-        'sizeBytes': bytes.length,
-      }),
-      timeout: const Duration(seconds: 15),
-    );
+    // presign with 1 retry
+    http.Response? presignRes;
+    for (int presignAttempt = 0; presignAttempt < 2; presignAttempt++) {
+      try {
+        presignRes = await ApiClient.instance.post(
+          uri: uri,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'mode': 'presign',
+            'purpose': 'job_media',
+            'filename': filename,
+            'contentType': contentType,
+            'sizeBytes': bytes.length,
+          }),
+          timeout: const Duration(seconds: 20),
+        );
+      } catch (e) {
+        // retry network errors once
+        if (presignAttempt == 0) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          continue;
+        }
+        throw MediaUploadHttpException('Presign connection failed: $e',
+            isRetryable: true);
+      }
 
-    if (presignRes.statusCode != 200) {
+      if (presignRes.statusCode == 200) {
+        break;
+      }
+
+      // do not retry 4xx
+      final code = presignRes.statusCode;
+      if (code == 400 ||
+          code == 401 ||
+          code == 403 ||
+          code == 413 ||
+          code == 415 ||
+          code == 429) {
+        debugPrint(
+            '[StorageService] Non-retryable presign error: $code - ${presignRes.body}');
+        throw MediaUploadHttpException(
+          'Failed to get upload authorization ($code)',
+          statusCode: code,
+          isRetryable: false,
+        );
+      }
+
+      // retry 5xx once
+      if (presignAttempt == 0) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        continue;
+      }
+
       debugPrint(
-          '[StorageService] Presign error: ${presignRes.statusCode} - ${presignRes.body}');
-      throw Exception(
-          'Failed to get upload authorization (${presignRes.statusCode})');
+          '[StorageService] Presign error: $code - ${presignRes.body}');
+      throw MediaUploadHttpException(
+        'Failed to get upload authorization ($code)',
+        statusCode: code,
+        isRetryable: code >= 500,
+      );
     }
 
-    final presignData = jsonDecode(presignRes.body) as Map<String, dynamic>;
+    final presignData = jsonDecode(presignRes!.body) as Map<String, dynamic>;
     final uploadUrl = presignData['uploadUrl'] as String;
     final publicUrl = presignData['publicUrl'] as String;
     final key = presignData['key'] as String;
@@ -159,44 +228,101 @@ class StorageService {
         ) ??
         {};
 
-    // stream upload to b2 with byte progress
-    final streamedReq = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
-    streamedReq.headers.addAll({
-      'Content-Type': contentType,
-      ...headersMap,
-    });
-    streamedReq.contentLength = bytes.length;
+    final isVideo = contentType.toLowerCase().contains('video');
+    final client = http.Client();
+    Timer? inactivityTimer;
+    Timer? safetyCapTimer;
+    bool aborted = false;
+    String? abortReason;
 
-    const chunkSize = 64 * 1024;
-    () async {
+    // abort if stalled 30s
+    void resetInactivityTimer() {
+      inactivityTimer?.cancel();
+      inactivityTimer = Timer(const Duration(seconds: 30), () {
+        aborted = true;
+        abortReason = 'Upload stalled: no data sent for 30 seconds';
+        client.close();
+      });
+    }
+
+    // safety cap: 3m image, 10m video
+    final safetyDuration =
+        isVideo ? const Duration(minutes: 10) : const Duration(minutes: 3);
+    safetyCapTimer = Timer(safetyDuration, () {
+      aborted = true;
+      abortReason = 'Upload exceeded maximum safety duration';
+      client.close();
+    });
+
+    // cancel listener
+    cancelTrigger?.then((_) {
+      if (!aborted) {
+        aborted = true;
+        abortReason = 'Upload cancelled';
+        client.close();
+      }
+    });
+
+    // pipe chunks with progress
+    Stream<List<int>> createChunkStream() async* {
+      const chunkSize = 64 * 1024;
       int sent = 0;
       for (int i = 0; i < bytes.length; i += chunkSize) {
+        if (aborted) break;
         final end =
             (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
         final chunk = bytes.sublist(i, end);
-        streamedReq.sink.add(chunk);
+        yield chunk;
         sent += chunk.length;
+        resetInactivityTimer();
         onProgress?.call(sent, bytes.length);
       }
-      streamedReq.sink.close();
-    }();
-
-    final isVideo = contentType.toLowerCase().contains('video');
-    final uploadTimeout =
-        isVideo ? const Duration(seconds: 90) : const Duration(seconds: 60);
-    final streamedRes = await streamedReq.send().timeout(uploadTimeout);
-    final putRes = await http.Response.fromStream(streamedRes);
-
-    if (putRes.statusCode < 200 || putRes.statusCode >= 300) {
-      debugPrint(
-          '[StorageService] B2 direct upload error: ${putRes.statusCode} - ${putRes.body}');
-      throw Exception('B2 upload failed (${putRes.statusCode})');
     }
 
-    return JobMediaUploadResult(url: publicUrl, key: key);
+    resetInactivityTimer();
+
+    try {
+      final uploadReq = _ProgressUploadRequest(
+        'PUT',
+        Uri.parse(uploadUrl),
+        createChunkStream(),
+      );
+      uploadReq.headers.addAll({
+        'Content-Type': contentType,
+        ...headersMap,
+      });
+      uploadReq.contentLength = bytes.length;
+
+      final streamedRes = await client.send(uploadReq);
+      final putRes = await http.Response.fromStream(streamedRes);
+
+      if (putRes.statusCode < 200 || putRes.statusCode >= 300) {
+        debugPrint(
+            '[StorageService] B2 direct upload error: ${putRes.statusCode} - ${putRes.body}');
+        final code = putRes.statusCode;
+        final isRetryable = code >= 500;
+        throw MediaUploadHttpException(
+          'B2 upload failed ($code)',
+          statusCode: code,
+          isRetryable: isRetryable,
+        );
+      }
+
+      return JobMediaUploadResult(url: publicUrl, key: key);
+    } catch (e) {
+      if (aborted) {
+        throw TimeoutException(abortReason ?? 'Upload timed out');
+      }
+      if (e is MediaUploadHttpException) rethrow;
+      throw MediaUploadHttpException('B2 upload failed: $e', isRetryable: true);
+    } finally {
+      inactivityTimer?.cancel();
+      safetyCapTimer.cancel();
+      client.close();
+    }
   }
 
-  // upload image picked from image picker
+  // upload picked image
   Future<String> uploadPickedImage(
     XFile file, {
     String purpose = 'job_photo',
@@ -237,7 +363,7 @@ class StorageService {
     return uploadFile(target, filename: filename, purpose: 'job_photo');
   }
 
-  // upload file to storage api (legacy multipart)
+  // legacy multipart upload
   Future<String> uploadFile(dynamic file,
       {String? filename, String? purpose}) async {
     try {
@@ -261,7 +387,7 @@ class StorageService {
     }
   }
 
-  // upload file bytes (legacy multipart)
+  // legacy byte upload
   Future<String> uploadBytes(Uint8List bytes,
       {required String filename, String? purpose}) async {
     final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');

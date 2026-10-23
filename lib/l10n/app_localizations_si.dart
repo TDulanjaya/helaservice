@@ -7074,4 +7074,7 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get requestTimeout =>
       'කාලය ඉකුත් විය. කරුණාකර ඔබගේ අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.';
+
+  @override
+  String get waitingForConnection => 'සම්බන්ධතාවය එනතුරු රැඳී සිටී...';
 }

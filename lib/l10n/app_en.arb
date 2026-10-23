@@ -3530,5 +3530,6 @@
   "locationOptions": "Location options",
   "invalidRequest": "Invalid request. Please try again.",
   "loginOtpRequired": "Verification required to continue.",
-  "requestTimeout": "Request timed out. Please check your internet connection."
+  "requestTimeout": "Request timed out. Please check your internet connection.",
+  "waitingForConnection": "Waiting for connection..."
 }

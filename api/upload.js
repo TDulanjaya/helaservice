@@ -4,7 +4,7 @@ const busboy = require('busboy');
 const { verifyFirebaseToken } = require('./_auth');
 const { admin, db } = require('./_firebase');
 
-// initialize storage client
+// s3 client
 function getS3Client(isPrivate = false) {
   const keyId = (isPrivate
     ? (process.env.B2_PRIVATE_KEY_ID || '')
@@ -50,7 +50,7 @@ const MIME_TO_EXT = {
 };
 
 module.exports = async (req, res) => {
-  // allow cross origin
+  // cors
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -63,14 +63,14 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // require valid firebase token
+  // verify token
   const decodedToken = await verifyFirebaseToken(req, res);
   if (!decodedToken) {
     return;
   }
   const authUid = decodedToken.uid;
 
-  // Caller must be verified (emailOtp claim) or an admin
+  // require verified user or admin
   const isEmailOtpVerified = decodedToken.emailOtp === true;
   const isAdmin = !!(decodedToken.admin2faUntil || decodedToken.admin || decodedToken.superAdmin);
   if (!isEmailOtpVerified && !isAdmin) {
@@ -117,7 +117,7 @@ module.exports = async (req, res) => {
     ? process.env.B2_PRIVATE_BUCKET
     : process.env.B2_BUCKET_NAME).trim();
 
-  // JSON mode: presigned URL generation for job media uploads
+  // presign mode
   let body = req.body;
   if (typeof body === 'string') {
     try {
@@ -149,7 +149,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Rate limiting: 40 presigns per user per hour
+    // rate limit: 40/hr
     const now = Date.now();
     const oneHourMs = 60 * 60 * 1000;
     const rateRef = db.collection('upload_rate_limits').doc(authUid);
@@ -189,7 +189,9 @@ module.exports = async (req, res) => {
     });
 
     try {
-      const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 600 });
+      // presign expiry: 30m video, 15m image
+      const expiresIn = isVideo ? 1800 : 900;
+      const uploadUrl = await getSignedUrl(s3, command, { expiresIn });
       const mediaBase = process.env.MEDIA_URL_BASE.trim().replace(/\/+$/, '');
       const publicUrl = `${mediaBase}/api/media?key=${key}`;
       return res.status(200).json({ uploadUrl, key, publicUrl });

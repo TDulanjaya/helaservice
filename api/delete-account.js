@@ -34,6 +34,8 @@ function getS3Client(isPrivate = false) {
       accessKeyId: keyId,
       secretAccessKey: appKey,
     },
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 }
 

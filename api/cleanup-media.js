@@ -24,6 +24,8 @@ function getS3Client() {
       accessKeyId: keyId,
       secretAccessKey: appKey,
     },
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 }
 

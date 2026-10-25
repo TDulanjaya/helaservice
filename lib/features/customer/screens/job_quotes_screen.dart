@@ -6,7 +6,6 @@ import '../../../models/quote.dart';
 import '../../../models/booking.dart';
 import '../../../constants/firestore_paths.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../models/technician.dart';
 import '../../../services/category_service.dart';
@@ -17,6 +16,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
 import 'live_tracking_screen.dart';
 import 'direct_chat_screen.dart';
+import 'post_job_request_screen.dart';
 import '../../../services/chat_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -475,7 +475,59 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PostJobRequestScreen(editJob: request),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(context.l10n.editJobPost),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => request.canDelete
+                      ? _deleteJob(context, request)
+                      : _cancelJob(context, request),
+                  icon: Icon(
+                    request.canDelete
+                        ? Icons.delete_outline
+                        : Icons.cancel_outlined,
+                    size: 16,
+                    color: AppColors.error,
+                  ),
+                  label: Text(
+                    request.canDelete
+                        ? context.l10n.deleteJobPost
+                        : context.l10n.cancelJobTitle,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back, size: 16),
@@ -684,10 +736,17 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
             ],
             const SizedBox(height: 20),
             PrimaryButton(
-              label: context.l10n.repostJob,
-              leadingIcon: Icons.refresh,
+              label: context.l10n.postAgain,
+              leadingIcon: Icons.refresh_rounded,
               expand: false,
-              onPressed: () => _repostJob(context, request),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PostJobRequestScreen(prefillJob: request),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -814,29 +873,41 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
     }
   }
 
-  Future<void> _repostJob(BuildContext context, JobRequest request) async {
+  Future<void> _deleteJob(BuildContext context, JobRequest request) async {
+    final isPermanent = request.canDelete;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.repostJob,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.repostJobConfirm,
-            style: TextStyle(color: ctx.themeTextSecondary)),
+        title: Text(
+          isPermanent
+              ? context.l10n.deleteJobPost
+              : context.l10n.removeFromHistory,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          isPermanent
+              ? context.l10n.deleteJobPostConfirm
+              : context.l10n.removeFromHistoryConfirm,
+          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(context.l10n.repostJob),
+            child: Text(
+              isPermanent ? context.l10n.deleteJobPost : context.l10n.removeFromHistory,
+            ),
           ),
         ],
       ),
@@ -844,119 +915,32 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
 
     if (confirmed == true && context.mounted) {
       try {
-        await JobRequestRepository().repostJobRequest(request.id);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(context.l10n.repostJobSuccess),
-                backgroundColor: AppColors.primary),
-          );
+        if (isPermanent) {
+          await JobRequestRepository().deleteJobPost(request.id);
+        } else {
+          await JobRequestRepository().hideJobPostFromCustomer(request.id);
         }
-      } catch (e) {
-        debugPrint('[JobQuotesScreen] Repost job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(context.l10n.somethingWentWrong),
-                backgroundColor: AppColors.error),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _deleteJob(BuildContext context, JobRequest request) async {
-    String selectedReason = context.l10n.cancelReasonNoLongerNeeded;
-    final reasons = [
-      context.l10n.cancelReasonFoundSomeone,
-      context.l10n.cancelReasonNoLongerNeeded,
-      context.l10n.cancelReasonTooExpensive,
-      context.l10n.cancelReasonOther,
-    ];
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: ctx.themeSurface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(context.l10n.cancelJobTitle,
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.cancelJobConfirmPrompt,
-                style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+              content: Text(
+                isPermanent
+                    ? context.l10n.deleteJobPostSuccess
+                    : context.l10n.removeFromHistorySuccess,
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: selectedReason,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                items: reasons
-                    .map((r) => DropdownMenuItem(
-                        value: r,
-                        child: Text(r, style: const TextStyle(fontSize: 13))))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setDialogState(() => selectedReason = val);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel),
+              backgroundColor: AppColors.primary,
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(context.l10n.confirmCancellation),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'customer';
-        await JobRequestRepository().cancelJobRequest(
-          requestId: request.id,
-          reason: selectedReason,
-          cancelledBy: uid,
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(context.l10n.bookingCancelledSuccess),
-                backgroundColor: AppColors.primary),
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
-        debugPrint('[JobQuotesScreen] Cancel job failed: $e');
+        debugPrint('[JobQuotesScreen] Delete job error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(context.l10n.somethingWentWrong),
-                backgroundColor: AppColors.error),
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       }

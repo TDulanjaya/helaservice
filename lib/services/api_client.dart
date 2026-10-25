@@ -32,6 +32,49 @@ class ApiClient {
     );
   }
 
+  // get with auth
+  Future<http.Response> get({
+    required Uri uri,
+    Map<String, String>? headers,
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    return _sendWithRetry(
+      () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final token = await user?.getIdToken();
+        final effectiveHeaders = <String, String>{
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
+          ...?headers,
+        };
+        return http.get(uri, headers: effectiveHeaders).timeout(timeout);
+      },
+    );
+  }
+
+  // delete with auth
+  Future<http.Response> delete({
+    required Uri uri,
+    Map<String, String>? headers,
+    Object? body,
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    return _sendWithRetry(
+      () async {
+        final user = FirebaseAuth.instance.currentUser;
+        final token = await user?.getIdToken();
+        final effectiveHeaders = <String, String>{
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
+          ...?headers,
+        };
+        return http
+            .delete(uri, headers: effectiveHeaders, body: body)
+            .timeout(timeout);
+      },
+    );
+  }
+
   Future<http.Response> _sendWithRetry(
     Future<http.Response> Function() requestFn,
   ) async {

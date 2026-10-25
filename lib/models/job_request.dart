@@ -68,6 +68,7 @@ class JobRequest {
   final int quoteCount;
   final String? selectedProviderId;
   final String? acceptedQuoteId;
+  final String? bookingId;
   final double? agreedPrice;
   final String? cancellationReason;
   final String? cancelReason;
@@ -75,6 +76,13 @@ class JobRequest {
   final DateTime? cancelledAt;
   final DateTime? createdAt;
   final DateTime? completedAt;
+  final DateTime? mediaDeletedAt;
+  final bool hiddenByCustomer;
+  final DateTime? jobUpdatedAt;
+  final DateTime? deletedAt;
+  final DateTime? renewedAt;
+  final DateTime? mediaWarningSentAt;
+  final String? previousStatus;
   final String bookingType;
   final String scheduleMode;
   final DateTime? scheduledDate;
@@ -112,6 +120,7 @@ class JobRequest {
     this.quoteCount = 0,
     this.selectedProviderId,
     this.acceptedQuoteId,
+    this.bookingId,
     this.agreedPrice,
     this.cancellationReason,
     this.cancelReason,
@@ -119,6 +128,13 @@ class JobRequest {
     this.cancelledAt,
     this.createdAt,
     this.completedAt,
+    this.mediaDeletedAt,
+    this.hiddenByCustomer = false,
+    this.jobUpdatedAt,
+    this.deletedAt,
+    this.renewedAt,
+    this.mediaWarningSentAt,
+    this.previousStatus,
     this.bookingType = 'asap',
     this.scheduleMode = 'today',
     this.scheduledDate,
@@ -134,6 +150,14 @@ class JobRequest {
     this.directions,
     this.note,
   }) : _legacyPhotoUrls = photoUrls;
+
+  bool get hasQuotes => quoteCount > 0;
+  bool get canDelete => quoteCount == 0;
+  bool get becameBooking =>
+      (bookingId != null && bookingId!.isNotEmpty) ||
+      (selectedProviderId != null && selectedProviderId!.isNotEmpty) ||
+      (acceptedQuoteId != null && acceptedQuoteId!.isNotEmpty);
+  bool get isPhotosRemoved => mediaDeletedAt != null;
 
   List<String> get photoUrls =>
       photos.isNotEmpty ? photos.map((p) => p.url).toList() : _legacyPhotoUrls;
@@ -182,6 +206,7 @@ class JobRequest {
         if (selectedProviderId != null)
           'selectedProviderId': selectedProviderId,
         if (acceptedQuoteId != null) 'acceptedQuoteId': acceptedQuoteId,
+        if (bookingId != null) 'bookingId': bookingId,
         if (agreedPrice != null) 'agreedPrice': agreedPrice,
         if (cancelReason != null || cancellationReason != null)
           'cancelReason': cancelReason ?? cancellationReason,
@@ -190,6 +215,19 @@ class JobRequest {
           'cancelledAt': Timestamp.fromDate(cancelledAt!),
         if (completedAt != null)
           'completedAt': Timestamp.fromDate(completedAt!),
+        if (mediaDeletedAt != null)
+          'mediaDeletedAt': Timestamp.fromDate(mediaDeletedAt!),
+        if (hiddenByCustomer) 'hiddenByCustomer': true,
+        if (jobUpdatedAt != null)
+          'jobUpdatedAt': Timestamp.fromDate(jobUpdatedAt!),
+        if (deletedAt != null)
+          'deletedAt': Timestamp.fromDate(deletedAt!),
+        if (renewedAt != null)
+          'renewedAt': Timestamp.fromDate(renewedAt!),
+        if (mediaWarningSentAt != null)
+          'mediaWarningSentAt': Timestamp.fromDate(mediaWarningSentAt!),
+        if (previousStatus != null && previousStatus!.isNotEmpty)
+          'previousStatus': previousStatus,
         'bookingType':
             scheduleMode == ScheduleHelpers.modeToday ? 'asap' : 'scheduled',
         'scheduleMode': scheduleMode,
@@ -217,6 +255,12 @@ class JobRequest {
     final ssa = map['scheduledStartAt'];
     final sea = map['scheduledEndAt'];
     final exp = map['expiresAt'];
+    final mda = map['mediaDeletedAt'];
+    final jua = map['jobUpdatedAt'];
+    final dat = map['deletedAt'];
+    final rnat = map['renewedAt'];
+    final mwsa = map['mediaWarningSentAt'];
+    final prevStat = map['previousStatus'] as String?;
 
     DateTime? resolvedCreatedAt;
     if (ts is Timestamp) {
@@ -279,6 +323,11 @@ class JobRequest {
     final reason =
         (map['cancelReason'] ?? map['cancellationReason']) as String?;
 
+    // lock if quote count missing
+    final rawQuoteCount = map['quoteCount'];
+    final resolvedQuoteCount =
+        (rawQuoteCount is num) ? rawQuoteCount.toInt() : 1;
+
     return JobRequest(
       id: id,
       customerId: map['customerId'] ?? '',
@@ -297,9 +346,10 @@ class JobRequest {
       landmark: landmarkRaw,
       note: resolvedNote,
       status: map['status'] ?? JobRequestStatus.open,
-      quoteCount: map['quoteCount'] ?? 0,
+      quoteCount: resolvedQuoteCount,
       selectedProviderId: map['selectedProviderId'],
       acceptedQuoteId: map['acceptedQuoteId'],
+      bookingId: map['bookingId'] as String?,
       agreedPrice: (map['agreedPrice'] as num?)?.toDouble(),
       cancellationReason: reason,
       cancelReason: reason,
@@ -307,6 +357,13 @@ class JobRequest {
       cancelledAt: cnat is Timestamp ? cnat.toDate() : null,
       createdAt: resolvedCreatedAt,
       completedAt: cat is Timestamp ? cat.toDate() : null,
+      mediaDeletedAt: mda is Timestamp ? mda.toDate() : null,
+      hiddenByCustomer: map['hiddenByCustomer'] == true,
+      jobUpdatedAt: jua is Timestamp ? jua.toDate() : null,
+      deletedAt: dat is Timestamp ? dat.toDate() : null,
+      renewedAt: rnat is Timestamp ? rnat.toDate() : null,
+      mediaWarningSentAt: mwsa is Timestamp ? mwsa.toDate() : null,
+      previousStatus: prevStat,
       bookingType: map['bookingType']?.toString() ??
           (mode == 'today' ? 'asap' : 'scheduled'),
       scheduleMode: mode,
@@ -337,6 +394,7 @@ class JobRequest {
     int? quoteCount,
     String? selectedProviderId,
     String? acceptedQuoteId,
+    String? bookingId,
     double? agreedPrice,
     String? cancellationReason,
     String? cancelReason,
@@ -344,6 +402,13 @@ class JobRequest {
     DateTime? cancelledAt,
     DateTime? createdAt,
     DateTime? completedAt,
+    DateTime? mediaDeletedAt,
+    bool? hiddenByCustomer,
+    DateTime? jobUpdatedAt,
+    DateTime? deletedAt,
+    DateTime? renewedAt,
+    DateTime? mediaWarningSentAt,
+    String? previousStatus,
     String? bookingType,
     String? scheduleMode,
     DateTime? scheduledDate,
@@ -377,6 +442,7 @@ class JobRequest {
       quoteCount: quoteCount ?? this.quoteCount,
       selectedProviderId: selectedProviderId ?? this.selectedProviderId,
       acceptedQuoteId: acceptedQuoteId ?? this.acceptedQuoteId,
+      bookingId: bookingId ?? this.bookingId,
       agreedPrice: agreedPrice ?? this.agreedPrice,
       cancellationReason: cancellationReason ?? this.cancellationReason,
       cancelReason: cancelReason ?? this.cancelReason,
@@ -384,6 +450,13 @@ class JobRequest {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
+      mediaDeletedAt: mediaDeletedAt ?? this.mediaDeletedAt,
+      hiddenByCustomer: hiddenByCustomer ?? this.hiddenByCustomer,
+      jobUpdatedAt: jobUpdatedAt ?? this.jobUpdatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      renewedAt: renewedAt ?? this.renewedAt,
+      mediaWarningSentAt: mediaWarningSentAt ?? this.mediaWarningSentAt,
+      previousStatus: previousStatus ?? this.previousStatus,
       bookingType: bookingType ?? this.bookingType,
       scheduleMode: scheduleMode ?? this.scheduleMode,
       scheduledDate: scheduledDate ?? this.scheduledDate,

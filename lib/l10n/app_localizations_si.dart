@@ -7060,7 +7060,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get showNearbyArtisans => 'අසල සිටින ශිල්පීන් පෙන්වන්න';
 
   @override
-  String get chooseAnotherArea => 'Choose another area';
+  String get chooseAnotherArea => 'වෙනත් ප්‍රදේශයක් තෝරන්න';
 
   @override
   String get locationOptions => 'ස්ථාන විකල්ප';
@@ -7077,4 +7077,104 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get waitingForConnection => 'සම්බන්ධතාවය එනතුරු රැඳී සිටී...';
+
+  @override
+  String get postAgain => 'නැවත පළකරන්න';
+
+  @override
+  String get postAgainSuccess => 'වැඩය සාර්ථකව නැවත පළ කරන ලදී';
+
+  @override
+  String get oldPhotosUnavailable =>
+      'පැරණි ඡායාරූප තවදුරටත් නොමැත, කරුණාකර අලුත් ඒවා එක්කරන්න';
+
+  @override
+  String get videoNotCopiedNote =>
+      'වීඩියෝව පිටපත් නොකෙරේ, අවශ්‍ය නම් නැවත එක්කළ හැක';
+
+  @override
+  String get somePhotosFailedDownload => 'සමහර ඡායාරූප ලබාගත නොහැකි විය';
+
+  @override
+  String get photosRemoved => 'ඡායාරූප ඉවත් කර ඇත';
+
+  @override
+  String get locationLockedHasQuotes =>
+      'මිල ගණන් ලැබී ඇති බැවින් ස්ථානය වෙනස් කළ නොහැක';
+
+  @override
+  String get categoryCannotBeEdited =>
+      'කාණ්ඩය වෙනස් කළ නොහැක. වෙනත් සේවාවක් සඳහා කරුණාකර නැවත පළකරන්න.';
+
+  @override
+  String get editJobPost => 'වැඩ පළකිරීම සංස්කරණය';
+
+  @override
+  String get editJobSuccess => 'වැඩ පළකිරීම සාර්ථකව යාවත්කාලීන කරන ලදී';
+
+  @override
+  String get jobUpdatedBadge => 'වැඩය යාවත්කාලීන විය, ඔබගේ මිල පරීක්ෂා කරන්න';
+
+  @override
+  String get deleteJobPost => 'වැඩ පළකිරීම මකන්න';
+
+  @override
+  String get deleteJobPostConfirm =>
+      'මෙම වැඩ පළකිරීම මැකීමට ඔබට විශ්වාසද? මෙය නැවත වෙනස් කළ නොහැක.';
+
+  @override
+  String get deleteJobPostSuccess => 'වැඩ පළකිරීම මකා දමන ලදී';
+
+  @override
+  String get removeFromHistory => 'ඉතිහාසයෙන් ඉවත් කරන්න';
+
+  @override
+  String get removeFromHistoryConfirm =>
+      'මෙම වැඩ පළකිරීම ඔබගේ ඉතිහාසයෙන් ඉවත් කරන්නද?';
+
+  @override
+  String get removeFromHistorySuccess => 'වැඩ පළකිරීම ඉතිහාසයෙන් ඉවත් කරන ලදී';
+
+  @override
+  String get jobExpiredTitle => 'වැඩ පළකිරීම කල් ඉකුත් විය';
+
+  @override
+  String get jobExpiredBody => 'ඔබේ වැඩ පළකිරීම කල් ඉකුත් විය. නැවත පළකරන්නද?';
+
+  @override
+  String get historyTab => 'ඉතිහාසය';
+
+  @override
+  String quoteCountBids(int count) {
+    return 'මිල ගණන් $count';
+  }
+
+  @override
+  String get renewPost => 'අලුත් කරන්න';
+
+  @override
+  String get renewPostTitle => 'වැඩ පළකිරීම අලුත් කරන්න';
+
+  @override
+  String get renewPostPrompt => 'මෙම වැඩය සඳහා නව වේලාවක් තෝරන්න.';
+
+  @override
+  String get renewPostSuccess => 'වැඩය සාර්ථකව අලුත් කරන ලදී';
+
+  @override
+  String get undo => 'අස් කරන්න';
+
+  @override
+  String get undoDeletePostSuccess => 'වැඩ පළකිරීම නැවත ලබා ගන්නා ලදී';
+
+  @override
+  String get providerCancellationsCount => 'අවලංගු කිරීම්';
+
+  @override
+  String get providerCancelledPrompt =>
+      'සේවා සපයන්නා අවලංගු කළා. ඔබගේ ලංසු වලින් වෙනත් සපයන්නෙකු තෝරන්න හෝ නැවත දමන්න.';
+
+  @override
+  String get providerCancelledExpiredPrompt =>
+      'සේවා සපයන්නා අවලංගු කළා. අලුත් කරන්න හෝ නැවත දමන්න.';
 }

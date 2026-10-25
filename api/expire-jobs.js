@@ -23,6 +23,51 @@ const notSelectedTemplates = {
   ta: { title: 'மதிப்பீடு தேர்ந்தெடுக்கப்படவில்லை', body: 'வாடிக்கையாளர் இந்த வேலைக்கு மற்றொரு மதிப்பீட்டைத் தேர்ந்தெடுத்துள்ளார்.' },
 };
 
+// customer expiry templates
+const expiredTemplates = {
+  en: { title: 'Job Post Expired', body: 'Your job post expired. Post again?' },
+  si: { title: 'වැඩ පළකිරීම කල් ඉකුත් විය', body: 'ඔබේ වැඩ පළකිරීම කල් ඉකුත් විය. නැවත පළකරන්නද?' },
+  ta: { title: 'வேலை பதிவு காலாவதியானது', body: 'உங்கள் வேலை பதிவு காலாவதியானது. மீண்டும் பதிவு செய்யவா?' },
+};
+
+// deliver fcm push
+async function sendPushToUserTokens(uid, notification, data) {
+  try {
+    const tokenSnap = await db.collection('users').doc(uid).collection('fcmTokens').get();
+    const tokens = [];
+    tokenSnap.forEach((doc) => {
+      const tData = doc.data();
+      if (tData && tData.token) tokens.push(tData.token);
+    });
+
+    if (tokens.length > 0 && admin.messaging) {
+      const payload = {
+        notification,
+        data,
+        tokens,
+      };
+      const response = await admin.messaging().sendEachForMulticast(payload);
+      const cleanupPromises = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success && resp.error) {
+          const errCode = resp.error.code;
+          if (
+            errCode === 'messaging/invalid-registration-token' ||
+            errCode === 'messaging/registration-token-not-registered'
+          ) {
+            cleanupPromises.push(tokenSnap.docs[idx].ref.delete());
+          }
+        }
+      });
+      if (cleanupPromises.length > 0) {
+        await Promise.all(cleanupPromises);
+      }
+    }
+  } catch (fcmErr) {
+    console.error('[expire-jobs] fcm delivery note:', fcmErr.message);
+  }
+}
+
 // colombo end of day calculation
 function getColomboEndOfDay(dateObj) {
   const colomboTimeMs = dateObj.getTime() + 5.5 * 60 * 60 * 1000;
@@ -108,7 +153,8 @@ module.exports = async function handler(req, res) {
     for (let i = 0; i < expiredJobsToProcess.length; i += chunkSize) {
       const chunk = expiredJobsToProcess.slice(i, i + chunkSize);
       const batch = db.batch();
-      const notificationsToSend = [];
+      const providerNotifications = [];
+      const customerNotifications = [];
 
       for (const item of chunk) {
         const { doc, data, calculatedExpiresAt } = item;
@@ -125,6 +171,14 @@ module.exports = async function handler(req, res) {
         batch.update(doc.ref, jobUpdate);
         expiredJobsCount++;
 
+        if (data.customerId) {
+          customerNotifications.push({
+            recipientUid: data.customerId,
+            jobTitle: data.title || '',
+            jobId: doc.id,
+          });
+        }
+
         // find pending quotes
         const quotesSnap = await doc.ref.collection('quotes').where('status', '==', 'pending').get();
         quotesSnap.forEach((qDoc) => {
@@ -136,7 +190,7 @@ module.exports = async function handler(req, res) {
 
           const qData = qDoc.data() || {};
           if (qData.providerId) {
-            notificationsToSend.push({
+            providerNotifications.push({
               recipientUid: qData.providerId,
               jobTitle: data.title || '',
               jobId: doc.id,
@@ -147,8 +201,38 @@ module.exports = async function handler(req, res) {
 
       await batch.commit();
 
-      // send notifications
-      for (const notif of notificationsToSend) {
+      // notify customer
+      for (const notif of customerNotifications) {
+        try {
+          const userDoc = await db.collection('users').doc(notif.recipientUid).get();
+          const lang = (userDoc.exists && userDoc.data() && (userDoc.data().language || userDoc.data().preferredLanguage)) || 'en';
+          const tmpl = expiredTemplates[lang] || expiredTemplates.en;
+          const { title, body } = tmpl;
+
+          const notifRef = db.collection('users').doc(notif.recipientUid).collection('notifications').doc();
+          await notifRef.set({
+            id: notifRef.id,
+            recipientUid: notif.recipientUid,
+            eventType: 'job_expired',
+            title,
+            body,
+            isRead: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            jobRequestId: notif.jobId,
+          });
+
+          await sendPushToUserTokens(
+            notif.recipientUid,
+            { title, body },
+            { eventType: 'job_expired', jobRequestId: notif.jobId }
+          );
+        } catch (cErr) {
+          console.error('[expire-jobs] customer notification note:', cErr.message);
+        }
+      }
+
+      // notify provider
+      for (const notif of providerNotifications) {
         try {
           const userDoc = await db.collection('users').doc(notif.recipientUid).get();
           const lang = (userDoc.exists && userDoc.data() && (userDoc.data().language || userDoc.data().preferredLanguage)) || 'en';
@@ -167,16 +251,11 @@ module.exports = async function handler(req, res) {
             jobRequestId: notif.jobId,
           });
 
-          if (userDoc.exists && userDoc.data() && userDoc.data().fcmToken) {
-            await admin.messaging().send({
-              token: userDoc.data().fcmToken,
-              notification: { title, body },
-              data: {
-                eventType: 'job_closed',
-                jobRequestId: notif.jobId,
-              },
-            }).catch(() => {});
-          }
+          await sendPushToUserTokens(
+            notif.recipientUid,
+            { title, body },
+            { eventType: 'job_closed', jobRequestId: notif.jobId }
+          );
         } catch (notifErr) {
           console.error('[expire-jobs] notification note:', notifErr.message);
         }
@@ -237,13 +316,11 @@ module.exports = async function handler(req, res) {
                   jobRequestId: aDoc.id,
                 });
 
-                if (pData && pData.fcmToken) {
-                  await admin.messaging().send({
-                    token: pData.fcmToken,
-                    notification: { title: tmpl.title, body: tmpl.body },
-                    data: { eventType: 'quote_not_selected', jobRequestId: aDoc.id },
-                  }).catch(() => {});
-                }
+                await sendPushToUserTokens(
+                  pUid,
+                  { title: tmpl.title, body: tmpl.body },
+                  { eventType: 'quote_not_selected', jobRequestId: aDoc.id }
+                );
               }
             } catch (pErr) {
               console.error('[expire-jobs] safety net notify note:', pErr.message);

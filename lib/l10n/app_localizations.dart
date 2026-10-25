@@ -12779,6 +12779,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for connection...'**
   String get waitingForConnection;
+
+  /// No description provided for @postAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Again'**
+  String get postAgain;
+
+  /// No description provided for @postAgainSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job posted again successfully'**
+  String get postAgainSuccess;
+
+  /// No description provided for @oldPhotosUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Old photos are no longer available, please add new ones'**
+  String get oldPhotosUnavailable;
+
+  /// No description provided for @videoNotCopiedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Video is not copied and can be added again'**
+  String get videoNotCopiedNote;
+
+  /// No description provided for @somePhotosFailedDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Some photos could not be loaded'**
+  String get somePhotosFailedDownload;
+
+  /// No description provided for @photosRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos removed'**
+  String get photosRemoved;
+
+  /// No description provided for @locationLockedHasQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Location cannot be changed because quotes have been received'**
+  String get locationLockedHasQuotes;
+
+  /// No description provided for @categoryCannotBeEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Category cannot be changed. If you need a different trade, please post again.'**
+  String get categoryCannotBeEdited;
+
+  /// No description provided for @editJobPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Job Post'**
+  String get editJobPost;
+
+  /// No description provided for @editJobSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job post updated successfully'**
+  String get editJobSuccess;
+
+  /// No description provided for @jobUpdatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Job updated, review your bid'**
+  String get jobUpdatedBadge;
+
+  /// No description provided for @deleteJobPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Job Post'**
+  String get deleteJobPost;
+
+  /// No description provided for @deleteJobPostConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this job post? It will be permanently removed.'**
+  String get deleteJobPostConfirm;
+
+  /// No description provided for @deleteJobPostSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job post deleted'**
+  String get deleteJobPostSuccess;
+
+  /// No description provided for @removeFromHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from History'**
+  String get removeFromHistory;
+
+  /// No description provided for @removeFromHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this job post from your history?'**
+  String get removeFromHistoryConfirm;
+
+  /// No description provided for @removeFromHistorySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job post removed from history'**
+  String get removeFromHistorySuccess;
+
+  /// No description provided for @jobExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job Post Expired'**
+  String get jobExpiredTitle;
+
+  /// No description provided for @jobExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your job post expired. Post again?'**
+  String get jobExpiredBody;
+
+  /// No description provided for @historyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTab;
+
+  /// No description provided for @quoteCountBids.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 quote} other{{count} quotes}}'**
+  String quoteCountBids(int count);
+
+  /// No description provided for @renewPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew'**
+  String get renewPost;
+
+  /// No description provided for @renewPostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew Job Post'**
+  String get renewPostTitle;
+
+  /// No description provided for @renewPostPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new schedule for this job post.'**
+  String get renewPostPrompt;
+
+  /// No description provided for @renewPostSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job post renewed successfully'**
+  String get renewPostSuccess;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @undoDeletePostSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Job post restored'**
+  String get undoDeletePostSuccess;
+
+  /// No description provided for @providerCancellationsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellations'**
+  String get providerCancellationsCount;
+
+  /// No description provided for @providerCancelledPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider cancelled. Choose another provider from your bids or post again.'**
+  String get providerCancelledPrompt;
+
+  /// No description provided for @providerCancelledExpiredPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider cancelled. Renew or post again.'**
+  String get providerCancelledExpiredPrompt;
 }
 
 class _AppLocalizationsDelegate

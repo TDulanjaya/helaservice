@@ -290,20 +290,56 @@ class BookingRepository {
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final batch = FirebaseFirestore.instance.batch();
+    final effectiveReason = reason ?? 'Provider unavailable';
+
     batch.update(_col.doc(bookingId), {
       'status': JobStatus.declined,
       'declinedAt': FieldValue.serverTimestamp(),
-      'declineReason': reason ?? 'Provider unavailable',
+      'declineReason': effectiveReason,
+      'cancelledBy': uid,
+      'cancelledAt': FieldValue.serverTimestamp(),
     });
 
     if (jobRequestId != null && jobRequestId.isNotEmpty) {
-      final reqRef = FirebaseFirestore.instance
+      final reqDoc = await FirebaseFirestore.instance
           .collection(FirestorePaths.jobRequests)
-          .doc(jobRequestId);
-      batch.update(reqRef, {
-        'status': JobRequestStatus.cancelled,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+          .doc(jobRequestId)
+          .get();
+      if (reqDoc.exists) {
+        final reqData = reqDoc.data() ?? {};
+        final expTs = reqData['expiresAt'];
+        DateTime? exp;
+        if (expTs is Timestamp) {
+          exp = expTs.toDate();
+        }
+        final isPast = exp != null && DateTime.now().isAfter(exp);
+        final newJobStatus =
+            isPast ? JobRequestStatus.expired : JobRequestStatus.open;
+
+        batch.update(reqDoc.reference, {
+          'status': newJobStatus,
+          'selectedProviderId': FieldValue.delete(),
+          'acceptedQuoteId': FieldValue.delete(),
+          'bookingId': FieldValue.delete(),
+          'agreedPrice': FieldValue.delete(),
+          'cancellationReason': effectiveReason,
+          'cancelledBy': uid,
+          'cancelledAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final qSnap = await reqDoc.reference
+            .collection(FirestorePaths.quotes)
+            .where('providerId', isEqualTo: uid)
+            .get();
+        for (final q in qSnap.docs) {
+          batch.update(q.reference, {
+            'status': 'cancelled_by_provider',
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
     }
 
     addTimelineEventToBatch(
@@ -311,12 +347,21 @@ class BookingRepository {
       bookingId: bookingId,
       action: 'declined',
       title: 'Provider Declined',
-      description: reason ?? 'Provider unavailable',
+      description: effectiveReason,
       actorUid: uid,
       actorRole: 'provider',
     );
 
     await batch.commit();
+
+    try {
+      await NotificationService.instance.sendNotification(
+        event: 'provider_cancelled',
+        docId: bookingId,
+      );
+    } catch (e) {
+      debugPrint('[BookingRepo] notify provider decline error: $e');
+    }
   }
 
   // provider starts travel
@@ -814,32 +859,77 @@ class BookingRepository {
   }) async {
     final doc = await _col.doc(bookingId).get();
     if (!doc.exists) throw Exception('Booking not found');
-    final currentStatus = doc.data()?['status'] as String? ?? JobStatus.pending;
+    final bData = doc.data() ?? {};
+    final currentStatus = bData['status'] as String? ?? JobStatus.pending;
 
     if (!JobStatus.canCancel(currentStatus)) {
       throw Exception(
           'Cannot cancel booking in progress. Please contact support.');
     }
 
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? cancelledBy;
+    final isCustomer = bData['customerId'] == uid;
     final batch = FirebaseFirestore.instance.batch();
+
     batch.update(_col.doc(bookingId), {
       'status': JobStatus.cancelled,
       'cancellationReason': reason,
       'cancelledBy': cancelledBy,
       'cancelledAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    final reqId = jobRequestId ?? doc.data()?['jobRequestId'] as String?;
+    final reqId = jobRequestId ?? bData['jobRequestId'] as String?;
     if (reqId != null && reqId.isNotEmpty) {
       final reqRef = FirebaseFirestore.instance
           .collection(FirestorePaths.jobRequests)
           .doc(reqId);
-      batch.update(reqRef, {
-        'status': JobRequestStatus.cancelled,
-        'cancellationReason': reason,
-        'cancelledBy': cancelledBy,
-        'cancelledAt': FieldValue.serverTimestamp(),
-      });
+
+      if (isCustomer) {
+        batch.update(reqRef, {
+          'status': JobRequestStatus.cancelled,
+          'cancellationReason': reason,
+          'cancelledBy': cancelledBy,
+          'cancelledAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // provider cancelling
+        final reqDoc = await reqRef.get();
+        final reqData = reqDoc.data() ?? {};
+        final expTs = reqData['expiresAt'];
+        DateTime? exp;
+        if (expTs is Timestamp) {
+          exp = expTs.toDate();
+        }
+        final isPast = exp != null && DateTime.now().isAfter(exp);
+        final newJobStatus =
+            isPast ? JobRequestStatus.expired : JobRequestStatus.open;
+
+        batch.update(reqRef, {
+          'status': newJobStatus,
+          'selectedProviderId': FieldValue.delete(),
+          'acceptedQuoteId': FieldValue.delete(),
+          'bookingId': FieldValue.delete(),
+          'agreedPrice': FieldValue.delete(),
+          'cancellationReason': reason,
+          'cancelledBy': cancelledBy,
+          'cancelledAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final qSnap = await reqRef
+            .collection(FirestorePaths.quotes)
+            .where('providerId', isEqualTo: cancelledBy)
+            .get();
+        for (final q in qSnap.docs) {
+          batch.update(q.reference, {
+            'status': 'cancelled_by_provider',
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
     }
 
     addTimelineEventToBatch(
@@ -849,11 +939,27 @@ class BookingRepository {
       title: 'Booking Cancelled',
       description: reason,
       actorUid: cancelledBy,
-      actorRole: 'user',
+      actorRole: isCustomer ? 'customer' : 'provider',
       metadata: {'reason': reason, 'cancelledBy': cancelledBy},
     );
 
     await batch.commit();
+
+    try {
+      if (isCustomer) {
+        await NotificationService.instance.sendNotification(
+          event: 'booking_cancelled',
+          docId: bookingId,
+        );
+      } else {
+        await NotificationService.instance.sendNotification(
+          event: 'provider_cancelled',
+          docId: bookingId,
+        );
+      }
+    } catch (e) {
+      debugPrint('[BookingRepo] notify cancel error: $e');
+    }
   }
 
   Future<void> updateStatus(String bookingId, String status) async {

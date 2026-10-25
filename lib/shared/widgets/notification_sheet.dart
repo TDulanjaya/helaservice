@@ -12,8 +12,10 @@ import '../widgets/app_card.dart';
 import '../screens/conversations_inbox_screen.dart';
 import '../../features/customer/screens/live_tracking_screen.dart';
 import '../../features/customer/screens/job_quotes_screen.dart';
+import '../../features/customer/screens/post_job_request_screen.dart';
 import '../../features/provider/screens/en_route_navigation_screen.dart';
 import '../../features/provider/screens/provider_dashboard_screen.dart';
+import '../../repositories/job_request_repository.dart';
 
 // bottom sheet for alerts and notifications
 class NotificationSheet extends StatelessWidget {
@@ -194,6 +196,10 @@ class _NotificationCard extends StatelessWidget {
         return Icons.money_off_rounded;
       case 'job_closed':
         return Icons.cancel_outlined;
+      case 'job_expired':
+        return Icons.timer_off_outlined;
+      case 'job_updated':
+        return Icons.edit_notifications_outlined;
       case 'provider_en_route':
         return Icons.directions_car_outlined;
       case 'provider_arrived':
@@ -219,6 +225,10 @@ class _NotificationCard extends StatelessWidget {
         return const Color(0xFF94A3B8);
       case 'job_closed':
         return AppColors.error;
+      case 'job_expired':
+        return AppColors.warning;
+      case 'job_updated':
+        return const Color(0xFF3B82F6);
       case 'provider_en_route':
       case 'provider_arrived':
         return AppColors.primary;
@@ -275,7 +285,8 @@ class _NotificationCard extends StatelessWidget {
     if (!context.mounted) return;
 
     if (isProvider) {
-      if (notification.eventType == 'job_posted') {
+      if (notification.eventType == 'job_posted' ||
+          notification.eventType == 'job_updated') {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
@@ -302,6 +313,22 @@ class _NotificationCard extends StatelessWidget {
         return;
       }
     } else {
+      if (notification.eventType == 'job_expired' &&
+          notification.jobRequestId != null &&
+          notification.jobRequestId!.isNotEmpty) {
+        final job = await JobRequestRepository()
+            .getById(notification.jobRequestId!);
+        if (job != null && context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PostJobRequestScreen(prefillJob: job),
+            ),
+          );
+          return;
+        }
+      }
+      if (!context.mounted) return;
       if (notification.jobRequestId != null &&
           notification.jobRequestId!.isNotEmpty) {
         Navigator.push(
@@ -317,6 +344,7 @@ class _NotificationCard extends StatelessWidget {
       }
     }
 
+    if (!context.mounted) return;
     if (notification.chatRoomId != null ||
         notification.eventType == 'new_chat_message') {
       Navigator.push(

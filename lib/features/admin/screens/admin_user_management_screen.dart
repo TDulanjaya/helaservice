@@ -2270,8 +2270,13 @@ class _ProviderArrivalStatsWidget extends StatefulWidget {
 class _ProviderArrivalStatsWidgetState
     extends State<_ProviderArrivalStatsWidget> {
   late Future<
-          ({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
-      _statsFuture;
+          ({
+            int noShows,
+            int arrivalDenials,
+            int mockedGps,
+            int outsideZone,
+            int cancellations
+          })> _statsFuture;
 
   @override
   void initState() {
@@ -2287,12 +2292,22 @@ class _ProviderArrivalStatsWidgetState
     }
   }
 
-  Future<({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>
-      _fetchStats() async {
+  Future<
+      ({
+        int noShows,
+        int arrivalDenials,
+        int mockedGps,
+        int outsideZone,
+        int cancellations
+      })> _fetchStats() async {
     final cutoff = Timestamp.fromDate(
       DateTime.now().subtract(const Duration(days: 90)),
     );
     final bookingsCol = FirebaseFirestore.instance.collection('bookings');
+    final techDocFuture = FirebaseFirestore.instance
+        .collection('technicians')
+        .doc(widget.providerId)
+        .get();
 
     final results = await Future.wait([
       bookingsCol
@@ -2319,20 +2334,32 @@ class _ProviderArrivalStatsWidgetState
           .where('createdAt', isGreaterThanOrEqualTo: cutoff)
           .count()
           .get(),
+      techDocFuture,
     ]);
 
+    final techDoc = results[4] as DocumentSnapshot<Map<String, dynamic>>;
+    final cancelCount =
+        ((techDoc.data()?['cancellationCount'] ?? 0) as num).toInt();
+
     return (
-      noShows: results[0].count ?? 0,
-      arrivalDenials: results[1].count ?? 0,
-      mockedGps: results[2].count ?? 0,
-      outsideZone: results[3].count ?? 0,
+      noShows: (results[0] as AggregateQuerySnapshot).count ?? 0,
+      arrivalDenials: (results[1] as AggregateQuerySnapshot).count ?? 0,
+      mockedGps: (results[2] as AggregateQuerySnapshot).count ?? 0,
+      outsideZone: (results[3] as AggregateQuerySnapshot).count ?? 0,
+      cancellations: cancelCount,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<
-        ({int noShows, int arrivalDenials, int mockedGps, int outsideZone})>(
+        ({
+          int noShows,
+          int arrivalDenials,
+          int mockedGps,
+          int outsideZone,
+          int cancellations
+        })>(
       future: _statsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -2455,6 +2482,12 @@ class _ProviderArrivalStatsWidgetState
                     count: data.outsideZone,
                     icon: Icons.wrong_location_rounded,
                     activeColor: AppColors.warning,
+                  ),
+                  buildBadge(
+                    label: context.l10n.providerCancellationsCount,
+                    count: data.cancellations,
+                    icon: Icons.cancel_presentation_rounded,
+                    activeColor: AppColors.error,
                   ),
                 ],
               ),

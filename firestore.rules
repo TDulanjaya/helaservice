@@ -58,7 +58,7 @@ service cloud.firestore {
           (
             !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
             (
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBanned != true &&
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isBanned', false) != true &&
               (
                 !("suspendedUntil" in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspendedUntil == null ||
@@ -94,7 +94,8 @@ service cloud.firestore {
         'customerId','providerId','agreedPrice','jobRequestId',
         'customerLatitude','customerLongitude','createdAt','type',
         'quoteType','estimatedTotalLkr','visitFeeLkr','travelCostLkr',
-        'priceUnit','unitRateLkr','quantity','materialsEstimateLkr'
+        'priceUnit','unitRateLkr','quantity','materialsEstimateLkr',
+        'providerCancellationProcessed'
       ]);
     }
 
@@ -311,6 +312,18 @@ service cloud.firestore {
         );
     }
 
+    function getDeletedPostGraceDays() {
+      return exists(/databases/$(database)/documents/app_config/cleanup)
+        ? get(/databases/$(database)/documents/app_config/cleanup).data.get('deletedPostGraceDays', 1)
+        : 1;
+    }
+
+    // app configuration
+    match /app_config/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // super admin collection
     match /superAdmins/{adminId} {
       allow read: if request.auth.uid == adminId || isAdmin();
@@ -428,6 +441,8 @@ service cloud.firestore {
         (!('rating' in request.resource.data) || request.resource.data.rating == null) &&
         request.resource.data.get('reviewCount', 0) == 0 &&
         request.resource.data.get('jobsCount', 0) == 0 &&
+        (!('cancellationCount' in request.resource.data) || request.resource.data.cancellationCount == 0) &&
+        !('providerCancellationProcessed' in request.resource.data) &&
         (!('status' in request.resource.data) || request.resource.data.status == 'pending') &&
         (!('hasApprovedCertificates' in request.resource.data) || request.resource.data.hasApprovedCertificates == false) &&
         (!('certificateTitles' in request.resource.data) || request.resource.data.certificateTitles == []) &&
@@ -442,7 +457,7 @@ service cloud.firestore {
       ) || (
         isOwner(techId) && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount', 'certificateTitles', 'hasApprovedCertificates'
+            'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount', 'cancellationCount', 'providerCancellationProcessed', 'certificateTitles', 'hasApprovedCertificates'
           ]) &&
           (
             !('category' in resource.data) ||
@@ -521,6 +536,7 @@ service cloud.firestore {
         !isLockedNewProvider() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isProfileComplete', false) == true &&
         request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.get('quoteCount', 0) == 0 &&
         request.resource.data.latitude is number &&
         request.resource.data.longitude is number &&
         !('customerPhone' in request.resource.data) &&
@@ -538,7 +554,8 @@ service cloud.firestore {
       allow update: if isAdmin() ||
         (
           isUserActive() && resource.data.customerId == request.auth.uid &&
-          !changed().hasAny(['customerId']) &&
+          !changed().hasAny(['customerId', 'quoteCount', 'category']) &&
+          (!changed().hasAny(['latitude', 'longitude']) || resource.data.get('quoteCount', 0) == 0) &&
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
           !('landmark' in request.resource.data) &&
@@ -553,11 +570,44 @@ service cloud.firestore {
           (
             !changed().hasAny(['scheduleMode', 'scheduledDate', 'scheduledStartAt', 'scheduledEndAt']) ||
             validSchedule(request.resource.data)
+          ) &&
+          (
+            (resource.data.status == 'open' && request.resource.data.status in ['open', 'cancelled', 'assigned']) ||
+            (resource.data.status == 'open' && request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
+            (resource.data.status == 'pending_provider' && request.resource.data.status == 'cancelled') ||
+            (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
+            (resource.data.status in ['expired', 'cancelled'] && request.resource.data.status == resource.data.status) ||
+            (resource.data.status in ['expired', 'cancelled'] && request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
+            (
+              // Renew: expired -> open
+              resource.data.status == 'expired' && request.resource.data.status == 'open' &&
+              !('mediaDeletedAt' in resource.data) &&
+              validSchedule(request.resource.data) &&
+              request.resource.data.expiresAt is timestamp &&
+              request.resource.data.expiresAt > request.time &&
+              !changed().hasAny(['latitude', 'longitude'])
+            ) ||
+            (
+              // Undo soft delete within grace period
+              resource.data.status == 'deleted' &&
+              request.resource.data.status == resource.data.get('previousStatus', 'open') &&
+              resource.data.get('quoteCount', 0) == 0 &&
+              request.time <= resource.data.deletedAt + duration.value(getDeletedPostGraceDays(), 'd')
+            )
           )
         ) ||
         (
+          isUserActive() &&
+          !isPendingProvider() &&
+          changed().hasOnly(['quoteCount', 'updatedAt']) &&
+          request.resource.data.quoteCount == resource.data.get('quoteCount', 0) + 1 &&
+          !exists(/databases/$(database)/documents/jobRequests/$(jobId)/quotes/$(request.auth.uid)) &&
+          existsAfter(/databases/$(database)/documents/jobRequests/$(jobId)/quotes/$(request.auth.uid)) &&
+          getAfter(/databases/$(database)/documents/jobRequests/$(jobId)/quotes/$(request.auth.uid)).data.providerId == request.auth.uid
+        ) ||
+        (
           isUserActive() && resource.data.selectedProviderId == request.auth.uid &&
-          changed().hasOnly(['status', 'updatedAt', 'completedAt', 'arrivedAt', 'inProgressAt', 'assignedAt', 'cancelledAt', 'cancellationReason']) &&
+          changed().hasOnly(['status', 'updatedAt', 'completedAt', 'arrivedAt', 'inProgressAt', 'assignedAt', 'cancelledAt', 'cancelledBy', 'cancellationReason', 'selectedProviderId', 'acceptedQuoteId', 'bookingId', 'agreedPrice']) &&
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
           !('landmark' in request.resource.data) &&
@@ -568,13 +618,31 @@ service cloud.firestore {
           !('accuracyMeters' in request.resource.data) &&
           !('note' in request.resource.data) &&
           (
-            (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled']) ||
-            (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
+            (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled', 'open', 'expired']) ||
+            (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled', 'open', 'expired']) ||
             (resource.data.status == 'in_progress' && request.resource.data.status == 'completed')
+          ) &&
+          (
+            request.resource.data.status in ['open', 'expired']
+              ? (
+                  !('selectedProviderId' in request.resource.data) &&
+                  !('acceptedQuoteId' in request.resource.data) &&
+                  !('bookingId' in request.resource.data) &&
+                  (!('agreedPrice' in request.resource.data) || !changed().hasAny(['agreedPrice'])) &&
+                  'bookingId' in resource.data &&
+                  existsAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)) &&
+                  getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.status in ['cancelled', 'declined'] &&
+                  (
+                    getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.get('cancelledBy', '') == request.auth.uid ||
+                    getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.get('declinedBy', '') == request.auth.uid
+                  )
+                )
+              : !changed().hasAny(['selectedProviderId', 'acceptedQuoteId', 'bookingId'])
           )
         );
       allow delete: if isAdmin() || (
-        isUserActive() && resource.data.customerId == request.auth.uid
+        isUserActive() && resource.data.customerId == request.auth.uid &&
+        resource.data.get('quoteCount', 0) == 0
       );
 
       // private details like customer contact
@@ -593,7 +661,11 @@ service cloud.firestore {
         allow create, update: if isAdmin() || (
           isUserActive() &&
           (
-            (exists(/databases/$(database)/documents/jobRequests/$(jobId)) && get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid) ||
+            (exists(/databases/$(database)/documents/jobRequests/$(jobId)) &&
+             get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
+             (resource == null || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['latitude', 'longitude']) ||
+              get(/databases/$(database)/documents/jobRequests/$(jobId)).data.get('quoteCount', 0) == 0)
+            ) ||
             (existsAfter(/databases/$(database)/documents/jobRequests/$(jobId)) && getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid)
           ) &&
           validPrivateContact(request.resource.data)
@@ -638,6 +710,22 @@ service cloud.firestore {
           ) ||
           (
             resource.data.providerId == request.auth.uid &&
+            resource.data.status == 'accepted' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'cancelledAt']) &&
+            request.resource.data.status == 'cancelled_by_provider'
+          ) ||
+          (
+            resource.data.providerId == request.auth.uid &&
+            !isPendingProvider() &&
+            resource.data.status in ['job_closed', 'withdrawn'] &&
+            request.resource.data.status == 'pending' &&
+            get(/databases/$(database)/documents/jobRequests/$(jobId)).data.status == 'open' &&
+            (!('expiresAt' in get(/databases/$(database)/documents/jobRequests/$(jobId)).data) || get(/databases/$(database)/documents/jobRequests/$(jobId)).data.expiresAt > request.time) &&
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['providerId', 'requestId', 'jobRequestId', 'createdBy', 'createdAt']) &&
+            validQuoteFields(request.resource.data)
+          ) ||
+          (
+            resource.data.providerId == request.auth.uid &&
             !isPendingProvider() &&
             resource.data.status == 'pending' &&
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'providerId', 'requestId', 'jobRequestId', 'createdBy', 'createdAt']) &&
@@ -672,6 +760,7 @@ service cloud.firestore {
         request.resource.data.customerLongitude is number &&
         !('completionPin' in request.resource.data) &&
         !('enteredPin' in request.resource.data) &&
+        !('providerCancellationProcessed' in request.resource.data) &&
         (
           request.resource.data.get('type', 'standard') != 'urgent' ||
           (
@@ -886,7 +975,7 @@ service cloud.firestore {
             // decline booking
             resource.data.status == 'pending' &&
             request.resource.data.status == 'declined' &&
-            changed().hasOnly(['status','declinedAt','declineReason'])
+            changed().hasOnly(['status','declinedAt','declineReason','cancelledBy','cancelledAt','updatedAt'])
           ) ||
           (
             // start travel
@@ -919,7 +1008,7 @@ service cloud.firestore {
             resource.data.status in ['confirmed','en_route'] &&
             request.resource.data.status == 'cancelled' &&
             !('noShow' in request.resource.data) &&
-            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy','updatedAt']) &&
             request.resource.data.cancellationReason is string &&
             request.resource.data.cancellationReason.size() > 0
           ) ||

@@ -24,6 +24,7 @@ class Quote {
   final DateTime? proposedEndAt;
   final String? proposedSlot;
   final DateTime? withdrawnAt;
+  final DateTime? jobUpdatedAt;
 
   // price breakdown
   final String quoteType;
@@ -60,6 +61,7 @@ class Quote {
     this.proposedEndAt,
     this.proposedSlot,
     this.withdrawnAt,
+    this.jobUpdatedAt,
     this.quoteType = 'inspect',
     this.priceUnit,
     this.unitRateLkr,
@@ -94,6 +96,8 @@ class Quote {
           'proposedSlot': proposedSlot,
         if (withdrawnAt != null)
           'withdrawnAt': Timestamp.fromDate(withdrawnAt!),
+        if (jobUpdatedAt != null)
+          'jobUpdatedAt': Timestamp.fromDate(jobUpdatedAt!),
         'quoteType': quoteType,
         if (quoteType != 'inspect' && priceUnit != null) 'priceUnit': priceUnit,
         if (quoteType != 'inspect' && unitRateLkr != null)
@@ -118,6 +122,7 @@ class Quote {
     final pStartTs = map['proposedStartAt'];
     final pEndTs = map['proposedEndAt'];
     final wTs = map['withdrawnAt'];
+    final juaTs = map['jobUpdatedAt'];
     var rawStatus = map['status'] as String? ?? 'pending';
     if (rawStatus == 'declined') rawStatus = 'not_selected';
     if (rawStatus == 'cancelled') rawStatus = 'job_closed';
@@ -150,6 +155,7 @@ class Quote {
       proposedEndAt: pEndTs is Timestamp ? pEndTs.toDate() : null,
       proposedSlot: map['proposedSlot'] as String?,
       withdrawnAt: wTs is Timestamp ? wTs.toDate() : null,
+      jobUpdatedAt: juaTs is Timestamp ? juaTs.toDate() : null,
       quoteType: map['quoteType'] as String? ?? 'inspect',
       priceUnit: map['priceUnit'] as String?,
       unitRateLkr: (map['unitRateLkr'] as num?)?.toInt(),

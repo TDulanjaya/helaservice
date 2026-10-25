@@ -2160,6 +2160,39 @@ class _JobRequestCard extends StatelessWidget {
           ),
           if (myQuote != null) ...[
             const SizedBox(height: 12),
+            if (myQuote!.status == 'pending' &&
+                request.jobUpdatedAt != null &&
+                (myQuote!.createdAt == null ||
+                    request.jobUpdatedAt!.isAfter(myQuote!.createdAt!))) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        size: 14, color: AppColors.warning),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        context.l10n.jobUpdatedBadge,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -2220,6 +2253,14 @@ class _JobRequestCard extends StatelessWidget {
             PrimaryButton(
               label: 'Update Quote',
               leadingIcon: Icons.edit_note_rounded,
+              onPressed: onSendQuote,
+            )
+          else if (request.status == 'open' &&
+              (myQuote!.status == 'job_closed' ||
+                  myQuote!.status == 'withdrawn'))
+            PrimaryButton(
+              label: context.l10n.sendPriceQuote,
+              leadingIcon: Icons.send_rounded,
               onPressed: onSendQuote,
             ),
         ],
@@ -2545,6 +2586,38 @@ class _QuoteHistoryTile extends StatelessWidget {
               ),
             ],
           ),
+          if (isPending &&
+              quote.jobUpdatedAt != null &&
+              (quote.createdAt == null ||
+                  quote.jobUpdatedAt!.isAfter(quote.createdAt!))) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border:
+                    Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded,
+                      size: 14, color: AppColors.warning),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      context.l10n.jobUpdatedBadge,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.warning,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (isAccepted) ...[
             const SizedBox(height: 12),
             Row(

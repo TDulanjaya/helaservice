@@ -1,4 +1,4 @@
-const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
+const { S3Client, ListObjectVersionsCommand, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 const { admin, db } = require('./_firebase');
 const { verifyFirebaseToken } = require('./_auth');
 
@@ -39,26 +39,77 @@ function getS3Client(isPrivate = false) {
   });
 }
 
-// delete files under a prefix in s3
+// delete all versions and delete markers under prefix with pagination and retries
 async function deleteS3Prefix(s3, bucket, prefix) {
-  if (!s3 || !bucket || !prefix) return;
+  if (!s3 || !bucket || !prefix) return 0;
+  let keyMarker = undefined;
+  let versionIdMarker = undefined;
+  let isTruncated = true;
+  let totalDeleted = 0;
+
   try {
-    const listCmd = new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: prefix,
-    });
-    const listRes = await s3.send(listCmd);
-    if (listRes.Contents && listRes.Contents.length > 0) {
-      const deleteCmd = new DeleteObjectsCommand({
+    while (isTruncated) {
+      const listParams = {
         Bucket: bucket,
-        Delete: {
-          Objects: listRes.Contents.map((item) => ({ Key: item.Key })),
-        },
-      });
-      await s3.send(deleteCmd);
+        Prefix: prefix,
+      };
+      if (keyMarker) listParams.KeyMarker = keyMarker;
+      if (versionIdMarker) listParams.VersionIdMarker = versionIdMarker;
+
+      const listCmd = new ListObjectVersionsCommand(listParams);
+      const listRes = await s3.send(listCmd);
+
+      const objectsToDelete = [];
+      if (Array.isArray(listRes.Versions)) {
+        for (const v of listRes.Versions) {
+          if (v && v.Key) objectsToDelete.push({ Key: v.Key, VersionId: v.VersionId });
+        }
+      }
+      if (Array.isArray(listRes.DeleteMarkers)) {
+        for (const m of listRes.DeleteMarkers) {
+          if (m && m.Key) objectsToDelete.push({ Key: m.Key, VersionId: m.VersionId });
+        }
+      }
+
+      if (objectsToDelete.length > 0) {
+        // chunk up to 1000 per DeleteObjectsCommand
+        for (let i = 0; i < objectsToDelete.length; i += 1000) {
+          const chunk = objectsToDelete.slice(i, i + 1000);
+          let retries = 3;
+          let deletedOk = false;
+          while (retries > 0 && !deletedOk) {
+            try {
+              const deleteCmd = new DeleteObjectsCommand({
+                Bucket: bucket,
+                Delete: {
+                  Objects: chunk,
+                  Quiet: true,
+                },
+              });
+              await s3.send(deleteCmd);
+              deletedOk = true;
+              totalDeleted += chunk.length;
+            } catch (delErr) {
+              retries--;
+              if (retries === 0) {
+                console.error(`[deleteS3Prefix] Batch delete failed after 3 retries: ${delErr.message}`);
+                throw delErr;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 500 * (4 - retries)));
+            }
+          }
+        }
+      }
+
+      isTruncated = listRes.IsTruncated || false;
+      keyMarker = listRes.NextKeyMarker;
+      versionIdMarker = listRes.NextVersionIdMarker;
     }
+
+    console.log(`[deleteS3Prefix] Deleted ${totalDeleted} versions/markers under prefix`);
+    return totalDeleted;
   } catch (err) {
-    console.error(`Failed to delete S3 files for prefix ${prefix}:`, err.message);
+    console.error(`[deleteS3Prefix] Error: ${err.message}`);
     throw err;
   }
 }
@@ -203,53 +254,7 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    // close open job requests
-    await runStep('cancel_job_requests', async () => {
-      const openJobRequests = await db
-        .collection('jobRequests')
-        .where('customerId', '==', uid)
-        .where('status', 'in', ['open', 'pending', 'pending_provider'])
-        .get();
-
-      for (const jDoc of openJobRequests.docs) {
-        await jDoc.ref.update({
-          status: 'cancelled',
-          cancellationReason: 'account_deleted',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-    });
-
-    // delete subcollections of user profile
-    await runStep('delete_user_profile', async () => {
-      const userRef = db.collection('users').doc(uid);
-      await deleteCollection(userRef.collection('savedAddresses'));
-      await deleteCollection(userRef.collection('blocked'));
-      await deleteCollection(userRef.collection('private'));
-      await deleteCollection(userRef.collection('fcmTokens'));
-      await deleteCollection(userRef.collection('notifications'));
-      await userRef.delete();
-    });
-
-    // delete subcollections of technician profile
-    await runStep('delete_technician_profile', async () => {
-      const techRef = db.collection('technicians').doc(uid);
-      await deleteCollection(techRef.collection('private'));
-      await deleteCollection(techRef.collection('portfolio'));
-      await techRef.delete();
-    });
-
-    // delete verification queue record
-    await runStep('delete_verification_queue', async () => {
-      await db.collection('verificationQueue').doc(uid).delete();
-    });
-
-    // delete live location record
-    await runStep('delete_live_location', async () => {
-      await db.collection('liveLocations').doc(uid).delete();
-    });
-
-    // delete storage files in backblaze
+    // delete storage files in backblaze (all versions and delete markers)
     await runStep('delete_public_storage', async () => {
       const publicS3 = getS3Client(false);
       await deleteS3Prefix(publicS3, bucketName, `uploads/${uid}/`);
@@ -260,6 +265,58 @@ module.exports = async function handler(req, res) {
       const privateBucket = (process.env.B2_PRIVATE_BUCKET || '').trim();
       if (privateBucket) {
         await deleteS3Prefix(privateS3, privateBucket, `nic/${uid}/`);
+        await deleteS3Prefix(privateS3, privateBucket, `certs/${uid}/`);
+      }
+    });
+
+    // process customer job requests: delete private subcollection, anonymize or delete post
+    await runStep('process_customer_job_requests', async () => {
+      const custJobsSnap = await db
+        .collection('jobRequests')
+        .where('customerId', '==', uid)
+        .get();
+
+      for (const jDoc of custJobsSnap.docs) {
+        // delete private subcollection docs
+        const privSnap = await jDoc.ref.collection('private').get();
+        for (const p of privSnap.docs) {
+          await p.ref.delete();
+        }
+
+        // check if any booking or provider's quote depends on it
+        const bSnap = await db.collection('bookings').where('jobRequestId', '==', jDoc.id).limit(1).get();
+        const hasBooking = !bSnap.empty;
+
+        const qSnap = await jDoc.ref.collection('quotes').get();
+        const hasQuote = !qSnap.empty;
+
+        if (hasBooking || hasQuote) {
+          // anonymize job doc
+          await jDoc.ref.update({
+            status: 'cancelled',
+            customerName: 'Deleted user',
+            customerPhone: admin.firestore.FieldValue.delete(),
+            address: admin.firestore.FieldValue.delete(),
+            landmark: admin.firestore.FieldValue.delete(),
+            houseNo: admin.firestore.FieldValue.delete(),
+            street: admin.firestore.FieldValue.delete(),
+            city: admin.firestore.FieldValue.delete(),
+            directions: admin.firestore.FieldValue.delete(),
+            accuracyMeters: admin.firestore.FieldValue.delete(),
+            note: admin.firestore.FieldValue.delete(),
+            photos: [],
+            photoUrls: [],
+            video: null,
+            videoUrl: null,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        } else {
+          // delete quotes subcollection docs and delete the job doc fully
+          for (const q of qSnap.docs) {
+            await q.ref.delete();
+          }
+          await jDoc.ref.delete();
+        }
       }
     });
 
@@ -267,10 +324,28 @@ module.exports = async function handler(req, res) {
     await runStep('anonymize_customer_bookings', async () => {
       const custHistory = await db.collection('bookings').where('customerId', '==', uid).get();
       for (const doc of custHistory.docs) {
-        await doc.ref.update({
+        const bData = doc.data() || {};
+        const updates = {
           customerName: 'Deleted user',
           customerPhone: admin.firestore.FieldValue.delete(),
-        });
+          customerAddress: admin.firestore.FieldValue.delete(),
+          address: admin.firestore.FieldValue.delete(),
+          entryInstructions: admin.firestore.FieldValue.delete(),
+          directions: admin.firestore.FieldValue.delete(),
+          houseNo: admin.firestore.FieldValue.delete(),
+          street: admin.firestore.FieldValue.delete(),
+          landmark: admin.firestore.FieldValue.delete(),
+          accuracyMeters: admin.firestore.FieldValue.delete(),
+          note: admin.firestore.FieldValue.delete(),
+        };
+        // round coordinates to keep area only (~1km)
+        if (typeof bData.customerLatitude === 'number') {
+          updates.customerLatitude = Math.round(bData.customerLatitude * 100) / 100;
+        }
+        if (typeof bData.customerLongitude === 'number') {
+          updates.customerLongitude = Math.round(bData.customerLongitude * 100) / 100;
+        }
+        await doc.ref.update(updates);
       }
     });
 
@@ -334,6 +409,35 @@ module.exports = async function handler(req, res) {
           calleePhone: admin.firestore.FieldValue.delete(),
         });
       }
+    });
+
+    // delete subcollections of user profile
+    await runStep('delete_user_profile', async () => {
+      const userRef = db.collection('users').doc(uid);
+      await deleteCollection(userRef.collection('savedAddresses'));
+      await deleteCollection(userRef.collection('blocked'));
+      await deleteCollection(userRef.collection('private'));
+      await deleteCollection(userRef.collection('fcmTokens'));
+      await deleteCollection(userRef.collection('notifications'));
+      await userRef.delete();
+    });
+
+    // delete subcollections of technician profile
+    await runStep('delete_technician_profile', async () => {
+      const techRef = db.collection('technicians').doc(uid);
+      await deleteCollection(techRef.collection('private'));
+      await deleteCollection(techRef.collection('portfolio'));
+      await techRef.delete();
+    });
+
+    // delete verification queue record
+    await runStep('delete_verification_queue', async () => {
+      await db.collection('verificationQueue').doc(uid).delete();
+    });
+
+    // delete live location record
+    await runStep('delete_live_location', async () => {
+      await db.collection('liveLocations').doc(uid).delete();
     });
 
     // delete firebase auth user last

@@ -34,6 +34,7 @@ import '../../admin/widgets/booking_timeline_sheet.dart';
 import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
+import '../../../shared/widgets/job_schedule_picker.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
 
@@ -97,7 +98,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   children: [
                     _buildTabButton(0, context.l10n.myBookings),
                     _buildTabButton(1, context.l10n.myJobPosts),
-                    _buildTabButton(2, 'History'),
+                    _buildTabButton(2, context.l10n.historyTab),
                   ],
                 ),
               ),
@@ -1001,79 +1002,108 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
   Widget _buildHistoryStream(BuildContext context, String customerId) {
     return StreamBuilder<List<Booking>>(
       stream: BookingRepository().streamBookingsForCustomer(customerId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      builder: (context, bookingSnap) {
+        return StreamBuilder<List<JobRequest>>(
+          stream: JobRequestRepository().streamCustomerRequests(customerId),
+          builder: (context, jobSnap) {
+            if (bookingSnap.connectionState == ConnectionState.waiting &&
+                jobSnap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        if (snapshot.hasError) {
-          SessionGuard.handlePermissionDenied(snapshot.error);
-          return Center(
-            child: Text(
-              'Error loading history: ${snapshot.error}',
-              style: TextStyle(color: context.themeTextSecondary),
-            ),
-          );
-        }
+            if (bookingSnap.hasError) {
+              SessionGuard.handlePermissionDenied(bookingSnap.error);
+            }
+            if (jobSnap.hasError) {
+              SessionGuard.handlePermissionDenied(jobSnap.error);
+            }
 
-        final bookings = snapshot.data ?? [];
-        final historyBookings =
-            bookings.where((b) => JobStatus.isTerminal(b.status)).toList();
+            final bookings = bookingSnap.data ?? [];
+            final historyBookings =
+                bookings.where((b) => JobStatus.isTerminal(b.status)).toList();
 
-        if (historyBookings.isEmpty) {
-          return Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.history_rounded,
-                      size: 44,
-                      color: AppColors.primary,
-                    ),
+            final allRequests = jobSnap.data ?? [];
+            final closedJobs = allRequests
+                .where((r) =>
+                    !r.becameBooking &&
+                    !r.hiddenByCustomer &&
+                    ((r.status == 'expired' || r.status == 'cancelled') ||
+                        (r.status == 'deleted' &&
+                            r.deletedAt != null &&
+                            DateTime.now().difference(r.deletedAt!).inDays < 1)))
+                .toList();
+
+            final List<_HistoryItem> items = [
+              ...historyBookings.map((b) => _HistoryItem.booking(b)),
+              ...closedJobs.map((r) => _HistoryItem.jobRequest(r)),
+            ];
+
+            items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+            if (items.isEmpty) {
+              return Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.history_rounded,
+                          size: 44,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        context.l10n.noServiceHistoryYet,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        context.l10n.noServiceHistorySubtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.l10n.noServiceHistoryYet,
-                    style: const TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    context.l10n.noServiceHistorySubtitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.themeTextSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+                ),
+              );
+            }
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(
-              16, 8, 16, AppBottomNav.contentBottomPadding),
-          children: [
-            Text(
-              context.l10n.pastCompletedServices,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-            ...historyBookings.map((b) => _HistoryBookingCard(
-                  booking: b,
-                  onTap: () => _showJobHistoryDetailModal(context, b),
-                )),
-          ],
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(
+                  16, 8, 16, AppBottomNav.contentBottomPadding),
+              children: [
+                Text(
+                  context.l10n.pastCompletedServices,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+                ...items.map((item) {
+                  if (item.isBooking) {
+                    return _HistoryBookingCard(
+                      booking: item.booking!,
+                      onTap: () =>
+                          _showJobHistoryDetailModal(context, item.booking!),
+                    );
+                  } else {
+                    return _HistoryJobRequestCard(request: item.jobRequest!);
+                  }
+                }),
+              ],
+            );
+          },
         );
       },
     );
@@ -1294,6 +1324,55 @@ class _HistoryBookingCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (booking.status == JobStatus.cancelled ||
+                booking.status == JobStatus.declined) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    JobRequest? prefillJob;
+                    if (booking.jobRequestId != null &&
+                        booking.jobRequestId!.isNotEmpty) {
+                      prefillJob = await JobRequestRepository()
+                          .getById(booking.jobRequestId!);
+                    }
+                    if (prefillJob == null && context.mounted) {
+                      prefillJob = JobRequest(
+                        id: '',
+                        customerId: booking.customerId,
+                        customerName: booking.customerName,
+                        title: booking.title,
+                        description: '',
+                        category: '',
+                        latitude: booking.customerLatitude,
+                        longitude: booking.customerLongitude,
+                        address: booking.location,
+                      );
+                    }
+                    if (context.mounted && prefillJob != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              PostJobRequestScreen(prefillJob: prefillJob),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text(context.l10n.postAgain),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1837,131 +1916,141 @@ class _CustomerJobRequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          if (request.status == 'cancelled') ...[
-            if (request.cancellationReason != null &&
-                request.cancellationReason!.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  '${context.l10n.cancellationReasonPrompt}: ${request.cancellationReason}',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.error.withValues(alpha: 0.9),
-                  ),
-                ),
-              ),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _repostJob(context),
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: Text(context.l10n.repostJob),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+          StreamBuilder<List<Quote>>(
+            stream: JobRequestRepository().streamQuotesForRequest(request.id),
+            builder: (ctx, quoteSnap) {
+              final quotes = quoteSnap.data ?? [];
+              final quotesCount = quotes.length;
+
+              return Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => JobQuotesScreen(
+                              requestId: request.id,
+                              jobTitle: request.title,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                      icon: Icon(
+                        quotesCount > 0
+                            ? Icons.mark_chat_unread_outlined
+                            : Icons.remove_red_eye_outlined,
+                        size: 17,
+                      ),
+                      label: Text(
+                        quotesCount > 0
+                            ? context.l10n.reviewQuotesCount(quotesCount)
+                            : context.l10n.waitingForQuotes,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _deleteJob(context),
-                  icon: const Icon(Icons.delete_outline,
-                      size: 16, color: AppColors.error),
-                  label: Text(context.l10n.deleteJob,
-                      style: const TextStyle(color: AppColors.error)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.error),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ] else
-            StreamBuilder<List<Quote>>(
-              stream: JobRequestRepository().streamQuotesForRequest(request.id),
-              builder: (ctx, quoteSnap) {
-                final quotes = quoteSnap.data ?? [];
-                final quotesCount = quotes.length;
-
-                return SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => JobQuotesScreen(
-                            requestId: request.id,
-                            jobTitle: request.title,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    PostJobRequestScreen(editJob: request),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: Text(context.l10n.editJobPost),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                    ),
-                    icon: Icon(
-                      quotesCount > 0
-                          ? Icons.mark_chat_unread_outlined
-                          : Icons.remove_red_eye_outlined,
-                      size: 17,
-                    ),
-                    label: Text(
-                      quotesCount > 0
-                          ? context.l10n.reviewQuotesCount(quotesCount)
-                          : context.l10n.waitingForQuotes,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => request.canDelete
+                              ? _deleteJobPost(context)
+                              : _cancelJob(context),
+                          icon: Icon(
+                            request.canDelete
+                                ? Icons.delete_outline
+                                : Icons.cancel_outlined,
+                            size: 16,
+                            color: AppColors.error,
+                          ),
+                          label: Text(
+                            request.canDelete
+                                ? context.l10n.deleteJobPost
+                                : context.l10n.cancelJobTitle,
+                            style: const TextStyle(color: AppColors.error),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.error),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _repostJob(BuildContext context) async {
+  Future<void> _deleteJobPost(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.themeSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.repostJob,
+        title: Text(context.l10n.deleteJobPost,
             style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(context.l10n.repostJobConfirm,
-            style: TextStyle(color: ctx.themeTextSecondary)),
+        content: Text(
+          context.l10n.deleteJobPostConfirm,
+          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel)),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(context.l10n.repostJob),
+            child: Text(context.l10n.deleteJobPost),
           ),
         ],
       ),
@@ -1969,29 +2058,44 @@ class _CustomerJobRequestCard extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await JobRequestRepository().repostJobRequest(request.id);
+        final prevStatus = request.status;
+        await JobRequestRepository()
+            .deleteJobPost(request.id, previousStatus: prevStatus);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.repostJobSuccess),
+              content: Text(context.l10n.deleteJobPostSuccess),
               backgroundColor: AppColors.primary,
+              action: SnackBarAction(
+                label: context.l10n.undo,
+                textColor: Colors.white,
+                onPressed: () async {
+                  try {
+                    await JobRequestRepository()
+                        .undoDeleteJobPost(request.id, prevStatus);
+                  } catch (e) {
+                    debugPrint('[CustomerBookingsView] Undo delete error: $e');
+                  }
+                },
+              ),
             ),
           );
         }
       } catch (e) {
-        debugPrint('[CustomerBookingsView] Error: $e');
+        debugPrint('[CustomerBookingsView] Delete job error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(context.l10n.somethingWentWrong),
-                backgroundColor: AppColors.error),
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       }
     }
   }
 
-  Future<void> _deleteJob(BuildContext context) async {
+  Future<void> _cancelJob(BuildContext context) async {
     String selectedReason = context.l10n.cancelReasonNoLongerNeeded;
     final reasons = [
       context.l10n.cancelReasonFoundSomeone,
@@ -2083,6 +2187,419 @@ class _CustomerJobRequestCard extends StatelessWidget {
             SnackBar(
                 content: Text(context.l10n.somethingWentWrong),
                 backgroundColor: AppColors.error),
+          );
+        }
+      }
+    }
+  }
+}
+
+class _HistoryItem {
+  final Booking? booking;
+  final JobRequest? jobRequest;
+  final DateTime timestamp;
+
+  _HistoryItem.booking(Booking b)
+      : booking = b,
+        jobRequest = null,
+        timestamp = b.completedAt ??
+            b.scheduledDate ??
+            b.createdAt ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+
+  _HistoryItem.jobRequest(JobRequest r)
+      : booking = null,
+        jobRequest = r,
+        timestamp = r.cancelledAt ??
+            r.expiresAt ??
+            r.createdAt ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+
+  bool get isBooking => booking != null;
+}
+
+class _HistoryJobRequestCard extends StatelessWidget {
+  final JobRequest request;
+
+  const _HistoryJobRequestCard({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final date = request.cancelledAt ?? request.expiresAt ?? request.createdAt;
+    final dateStr = date != null ? '${date.day}/${date.month}/${date.year}' : '';
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  request.title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              StatusPill.fromStatus(request.status),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  request.category,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              if (dateStr.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text(
+                  dateStr,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ],
+              const Spacer(),
+              Text(
+                context.l10n.quoteCountBids(request.quoteCount),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: context.themeTextSecondary,
+                ),
+              ),
+            ],
+          ),
+          if (request.description.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              request.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.themeTextSecondary,
+              ),
+            ),
+          ],
+          if (request.isPhotosRemoved) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.photo_outlined,
+                    size: 14, color: context.themeTextSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  context.l10n.photosRemoved,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          if (request.status == 'deleted') ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _handleUndo(context),
+                icon: const Icon(Icons.undo_rounded, size: 16),
+                label: Text(context.l10n.undo),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            Row(
+              children: [
+                if (request.status == 'expired' && !request.isPhotosRemoved) ...[
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _handleRenew(context),
+                      icon: const Icon(Icons.update_rounded, size: 16),
+                      label: Text(context.l10n.renewPost),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              PostJobRequestScreen(prefillJob: request),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: Text(context.l10n.postAgain),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _handleRemove(context),
+                  icon: const Icon(Icons.delete_outline,
+                      size: 16, color: AppColors.error),
+                  label: Text(
+                    context.l10n.removeFromHistory,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleRenew(BuildContext context) async {
+    final result = await showModalBottomSheet<JobScheduleResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => JobSchedulePicker(
+        initialDate: DateTime.now().add(const Duration(days: 1)),
+        initialMode: request.scheduleMode,
+        initialSlot: request.scheduledSlot,
+        title: context.l10n.renewPostTitle,
+      ),
+    );
+
+    if (result == null || !context.mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.l10n.renewPostTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+          context.l10n.renewPostPrompt,
+          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(context.l10n.renewPost),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await JobRequestRepository().renewJobPost(
+          requestId: request.id,
+          scheduleMode: result.scheduleMode,
+          scheduledDate: result.scheduledDate,
+          scheduledStartAt: result.scheduledStartAt,
+          scheduledEndAt: result.scheduledEndAt,
+          scheduledSlot: result.scheduledSlot,
+          flexibleWindowDays: result.flexibleWindowDays,
+          expiresAt: result.expiresAt,
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.renewPostSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('[HistoryJobRequestCard] Renew error: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleUndo(BuildContext context) async {
+    try {
+      await JobRequestRepository().undoDeleteJobPost(
+        request.id,
+        request.previousStatus ?? 'expired',
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.undoDeletePostSuccess),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[HistoryJobRequestCard] Undo error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.somethingWentWrong),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleRemove(BuildContext context) async {
+    final isPermanentDelete = request.canDelete;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.themeSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          isPermanentDelete
+              ? context.l10n.deleteJobPost
+              : context.l10n.removeFromHistory,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          isPermanentDelete
+              ? context.l10n.deleteJobPostConfirm
+              : context.l10n.removeFromHistoryConfirm,
+          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              isPermanentDelete
+                  ? context.l10n.deleteJobPost
+                  : context.l10n.removeFromHistory,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        if (isPermanentDelete) {
+          final prevStatus = request.status;
+          await JobRequestRepository()
+              .deleteJobPost(request.id, previousStatus: prevStatus);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.deleteJobPostSuccess),
+                backgroundColor: AppColors.primary,
+                action: SnackBarAction(
+                  label: context.l10n.undo,
+                  textColor: Colors.white,
+                  onPressed: () async {
+                    try {
+                      await JobRequestRepository()
+                          .undoDeleteJobPost(request.id, prevStatus);
+                    } catch (e) {
+                      debugPrint('[HistoryJobRequestCard] Undo error: $e');
+                    }
+                  },
+                ),
+              ),
+            );
+          }
+        } else {
+          await JobRequestRepository().hideJobPostFromCustomer(request.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.removeFromHistorySuccess),
+                backgroundColor: AppColors.primary,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('[HistoryJobRequestCard] remove error: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.somethingWentWrong),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       }

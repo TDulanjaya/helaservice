@@ -83,6 +83,11 @@ const templates = {
     si: { title: 'වැඩය තවදුරටත් ලබා ගත නොහැක', body: 'මෙම වැඩය අවලංගු කර හෝ අවසන් කරන ලදී.' },
     ta: { title: 'வேலை இனி கிடைக்காது', body: 'வேலை கோரிக்கை மூடப்பட்டது அல்லது ரத்து செய்யப்பட்டது.' },
   },
+  job_updated: {
+    en: { title: 'Job Updated', body: 'The customer updated the job details. Review your quote.' },
+    si: { title: 'වැඩය යාවත්කාලීන විය', body: 'පාරිභෝගිකයා වැඩයේ විස්තර යාවත්කාලීන කළේය. ඔබගේ මිල පරීක්ෂා කරන්න.' },
+    ta: { title: 'வேலை புதுப்பிக்கப்பட்டது', body: 'வாடிக்கையாளர் வேலை விவரங்களை மாற்றியுள்ளார். உங்கள் மதிப்பீட்டை மதிப்பாய்வு செய்யவும்.' },
+  },
   chat_message: {
     en: { title: 'New Message', body: 'You received a new chat message.' },
     si: { title: 'නව පණිවිඩයක්', body: 'ඔබට නව පණිවිඩයක් ලැබී ඇත.' },
@@ -153,6 +158,16 @@ const templates = {
     si: { title: 'ඔබගේ ප්‍රදේශයේ නව වැඩක්', body: 'ඔබගේ සේවාවට ගැළපෙන නව වැඩක් ඔබගේ ප්‍රදේශයේ ඇත.' },
     ta: { title: 'உங்கள் பகுதியில் புதிய வேலை', body: 'உங்கள் துறைக்கு பொருந்தக்கூடிய புதிய வேலை உங்கள் பகுதியில் உள்ளது.' },
   },
+  provider_cancelled: {
+    en: { title: 'Provider Cancelled', body: 'The provider cancelled the booking.' },
+    si: { title: 'සේවා සපයන්නා අවලංගු කළා', body: 'සේවා සපයන්නා වෙන්කිරීම අවලංගු කළේය.' },
+    ta: { title: 'வழங்குநர் ரத்து செய்தார்', body: 'சேவை வழங்குநர் முன்பதிவை ரத்து செய்தார்.' },
+  },
+  job_reopened: {
+    en: { title: 'Job Available Again', body: 'The job is open again. Your bid is active.' },
+    si: { title: 'වැඩය නැවත විවෘතයි', body: 'වැඩය නැවත විවෘත විය. ඔබගේ ලංසුව සක්‍රීයයි.' },
+    ta: { title: 'வேலை மீண்டும் கிடைக்கிறது', body: 'வேலை மீண்டும் திறக்கப்பட்டுள்ளது. உங்கள் ஏலம் செயலில் உள்ளது.' },
+  },
 };
 
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
@@ -211,6 +226,170 @@ module.exports = async function handler(req, res) {
   try {
     let recipientUid = null;
     let metadata = { docId, event };
+
+    if (event === 'provider_cancelled') {
+      const bSnap = await db.collection('bookings').doc(docId).get();
+      if (!bSnap.exists) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+      const b = bSnap.data() || {};
+      if (b.status !== 'cancelled' && b.status !== 'declined') {
+        return res.status(400).json({ error: 'Booking is not cancelled or declined' });
+      }
+      if (b.cancelledBy !== callerUid && b.providerId !== callerUid) {
+        return res.status(403).json({ error: 'Caller is not the cancelling provider' });
+      }
+
+      // idempotency check
+      if (b.providerCancellationProcessed) {
+        return res.status(200).json({ success: true, alreadyProcessed: true });
+      }
+
+      await bSnap.ref.update({
+        providerCancellationProcessed: true,
+      });
+
+      // increment technician cancellationCount
+      const provUid = b.providerId || callerUid;
+      await db.collection('technicians').doc(provUid).set({
+        cancellationCount: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      const custId = b.customerId;
+      const jobId = b.jobRequestId;
+      let jobStatus = 'open';
+      const restoredProviders = [];
+
+      if (jobId) {
+        const jobSnap = await db.collection('jobRequests').doc(jobId).get();
+        if (jobSnap.exists) {
+          jobStatus = jobSnap.data()?.status || 'open';
+        }
+
+        // restore other not_selected quotes to pending (skip withdrawn)
+        const quotesSnap = await db.collection('jobRequests').doc(jobId).collection('quotes').get();
+        const batch = db.batch();
+        quotesSnap.forEach((qDoc) => {
+          const qData = qDoc.data() || {};
+          if (qData.status === 'not_selected' && qData.providerId !== provUid && qDoc.id !== provUid) {
+            batch.update(qDoc.ref, {
+              status: 'pending',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            if (qData.providerId) restoredProviders.push(qData.providerId);
+          }
+        });
+        await batch.commit();
+      }
+
+      // notify customer
+      if (custId) {
+        try {
+          const custUserSnap = await db.collection('users').doc(custId).get();
+          const custUser = custUserSnap.exists ? custUserSnap.data() || {} : {};
+          const lang = custUser.language || 'en';
+
+          const provName = b.providerName || 'Provider';
+          let notifBody = '';
+          if (jobStatus === 'expired') {
+            notifBody = lang === 'si'
+              ? `${provName} අවලංගු කළා. අලුත් කරන්න හෝ නැවත දමන්න.`
+              : (lang === 'ta'
+                ? `${provName} ரத்து செய்தார். புதுப்பிக்கவும் அல்லது மீண்டும் பதிவிடவும்.`
+                : `${provName} cancelled. Renew or post again.`);
+          } else {
+            notifBody = lang === 'si'
+              ? `${provName} අවලංගු කළා. ඔබගේ ලංසු වලින් වෙනත් සපයන්නෙකු තෝරන්න හෝ නැවත දමන්න.`
+              : (lang === 'ta'
+                ? `${provName} ரத்து செய்தார். உங்கள் ஏலங்களிலிருந்து மற்றொரு வழங்குநரைத் தேர்ந்தெடுக்கவும் அல்லது மீண்டும் பதிவிடவும்.`
+                : `${provName} cancelled. Choose another provider from your bids or post again.`);
+          }
+
+          const notifTitle = lang === 'si' ? 'සේවා සපයන්නා අවලංගු කළා' : (lang === 'ta' ? 'வழங்குநர் ரத்து செய்தார்' : 'Provider Cancelled');
+
+          const notifRef = db.collection('users').doc(custId).collection('notifications').doc();
+          await notifRef.set({
+            id: notifRef.id,
+            recipientUid: custId,
+            eventType: 'provider_cancelled',
+            title: notifTitle,
+            body: notifBody,
+            isRead: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            jobRequestId: jobId,
+            bookingId: docId,
+          });
+
+          // send FCM push
+          const tokenSnap = await db.collection('users').doc(custId).collection('fcmTokens').get();
+          const tokens = [];
+          tokenSnap.forEach((d) => {
+            const td = d.data();
+            if (td && td.token) tokens.push(td.token);
+          });
+          if (tokens.length > 0 && admin.messaging) {
+            await admin.messaging().sendEachForMulticast({
+              notification: { title: notifTitle, body: notifBody },
+              data: {
+                eventType: 'provider_cancelled',
+                jobRequestId: jobId || '',
+                bookingId: docId,
+              },
+              tokens,
+            }).catch(() => {});
+          }
+        } catch (cErr) {
+          console.error('[provider_cancelled] Error notifying customer:', cErr);
+        }
+      }
+
+      // notify other restored bidders
+      for (const pUid of restoredProviders) {
+        try {
+          const pUserSnap = await db.collection('users').doc(pUid).get();
+          const pUser = pUserSnap.exists ? pUserSnap.data() || {} : {};
+          const lang = pUser.language || 'en';
+          const tmpl = templates.job_reopened[lang] || templates.job_reopened.en;
+
+          const notifRef = db.collection('users').doc(pUid).collection('notifications').doc();
+          await notifRef.set({
+            id: notifRef.id,
+            recipientUid: pUid,
+            eventType: 'job_reopened',
+            title: tmpl.title,
+            body: tmpl.body,
+            isRead: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            jobRequestId: jobId,
+          });
+
+          const pTokensSnap = await db.collection('users').doc(pUid).collection('fcmTokens').get();
+          const pTokens = [];
+          pTokensSnap.forEach((d) => {
+            const td = d.data();
+            if (td && td.token) pTokens.push(td.token);
+          });
+          if (pTokens.length > 0 && admin.messaging) {
+            await admin.messaging().sendEachForMulticast({
+              notification: { title: tmpl.title, body: tmpl.body },
+              data: {
+                eventType: 'job_reopened',
+                jobRequestId: jobId || '',
+              },
+              tokens: pTokens,
+            }).catch(() => {});
+          }
+        } catch (pErr) {
+          console.error('[provider_cancelled] Error notifying restored bidder:', pErr);
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        restoredQuotesCount: restoredProviders.length,
+      });
+    }
 
     if (
       event.startsWith('booking_') ||
@@ -277,6 +456,12 @@ module.exports = async function handler(req, res) {
       } else if (event === 'arrival_confirmed' || event === 'arrival_denied' || event === 'no_show_reported') {
         if (callerUid !== custId) return res.status(403).json({ error: 'Unauthorized event actor' });
         recipientUid = provId;
+      }
+      if (event === 'booking_cancelled' && b.cancellationReason) {
+        metadata.cancellationReason = b.cancellationReason;
+      }
+      if (event === 'booking_declined' && b.declineReason) {
+        metadata.declineReason = b.declineReason;
       }
       metadata.bookingId = docId;
     } else if (event === 'quote_received') {
@@ -401,6 +586,94 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ success: true, notifiedCount: notifiedProviders.length });
       } catch (err) {
         console.error('Error in job_closed notifications:', err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    } else if (event === 'job_updated') {
+      const jobSnap = await db.collection('jobRequests').doc(docId).get();
+      if (!jobSnap.exists) {
+        return res.status(404).json({ error: 'Job request not found' });
+      }
+      const job = jobSnap.data() || {};
+      if (callerUid !== job.customerId) {
+        return res.status(403).json({ error: 'Unauthorized event actor' });
+      }
+      metadata.jobRequestId = docId;
+
+      try {
+        const quotesSnap = await db.collection('jobRequests').doc(docId).collection('quotes').where('status', '==', 'pending').get();
+        const notifiedProviders = [];
+        const quoteBatch = db.batch();
+
+        for (const qDoc of quotesSnap.docs) {
+          quoteBatch.update(qDoc.ref, {
+            jobUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          const qData = qDoc.data() || {};
+          const pUid = qData.providerId;
+          if (pUid && !notifiedProviders.includes(pUid) && pUid !== callerUid) {
+            notifiedProviders.push(pUid);
+          }
+        }
+
+        if (!quotesSnap.empty) {
+          await quoteBatch.commit();
+        }
+
+        for (const pUid of notifiedProviders) {
+          try {
+            const pUserSnap = await db.collection('users').doc(pUid).get();
+            const pUser = pUserSnap.exists ? pUserSnap.data() : {};
+            const lang = (pUser && pUser.language) ? pUser.language : 'en';
+            const tmpl = templates.job_updated[lang] || templates.job_updated.en;
+            const notifRef = db.collection('users').doc(pUid).collection('notifications').doc();
+            await notifRef.set({
+              id: notifRef.id,
+              recipientUid: pUid,
+              eventType: 'job_updated',
+              title: tmpl.title,
+              body: tmpl.body,
+              isRead: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              jobRequestId: docId,
+            });
+
+            const tokenSnap = await db.collection('users').doc(pUid).collection('fcmTokens').get();
+            const tokens = [];
+            tokenSnap.forEach((tDoc) => {
+              const tData = tDoc.data();
+              if (tData && tData.token) tokens.push(tData.token);
+            });
+
+            if (tokens.length > 0 && admin.messaging) {
+              const payload = {
+                notification: { title: tmpl.title, body: tmpl.body },
+                data: { eventType: 'job_updated', jobRequestId: docId },
+                tokens,
+              };
+              const response = await admin.messaging().sendEachForMulticast(payload);
+              const cleanupPromises = [];
+              response.responses.forEach((resp, idx) => {
+                if (!resp.success && resp.error) {
+                  const errCode = resp.error.code;
+                  if (
+                    errCode === 'messaging/invalid-registration-token' ||
+                    errCode === 'messaging/registration-token-not-registered'
+                  ) {
+                    cleanupPromises.push(tokenSnap.docs[idx].ref.delete());
+                  }
+                }
+              });
+              if (cleanupPromises.length > 0) {
+                await Promise.all(cleanupPromises);
+              }
+            }
+          } catch (pErr) {
+            console.error('[notify] error notifying provider for job_updated:', pErr);
+          }
+        }
+        return res.status(200).json({ success: true, notifiedCount: notifiedProviders.length });
+      } catch (err) {
+        console.error('[notify] error in job_updated notifications:', err);
         return res.status(500).json({ error: 'Internal server error' });
       }
     } else if (event === 'job_posted') {
@@ -610,7 +883,13 @@ module.exports = async function handler(req, res) {
     };
 
     const title = entry.title;
-    const body = entry.body;
+    let body = entry.body;
+
+    if (event === 'booking_cancelled' && metadata.cancellationReason) {
+      body = `${body}: ${metadata.cancellationReason}`;
+    } else if (event === 'booking_declined' && metadata.declineReason) {
+      body = `${body}: ${metadata.declineReason}`;
+    }
 
     // write notification document to user subcollection
     const notifRef = db.collection('users').doc(recipientUid).collection('notifications').doc();

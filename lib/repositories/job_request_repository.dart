@@ -159,7 +159,31 @@ class JobRequestRepository {
         .doc(requestId)
         .collection(FirestorePaths.quotes)
         .doc(quote.providerId);
-    await quoteRef.set(quote.toMap());
+    final existingSnap = await quoteRef.get();
+    final batch = FirebaseFirestore.instance.batch();
+
+    final isRebid = existingSnap.exists &&
+        (existingSnap.data()?['status'] == 'job_closed' ||
+            existingSnap.data()?['status'] == 'withdrawn');
+
+    if (isRebid) {
+      final updateData = quote.toMap();
+      updateData['status'] = 'pending';
+      updateData['updatedAt'] = FieldValue.serverTimestamp();
+      updateData.remove('createdAt');
+      updateData.remove('providerId');
+      updateData.remove('requestId');
+      updateData.remove('jobRequestId');
+      updateData.remove('createdBy');
+      batch.update(quoteRef, updateData);
+    } else {
+      batch.set(quoteRef, quote.toMap());
+      batch.update(_col.doc(requestId), {
+        'quoteCount': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
 
     // send alert to customer
     NotificationService.instance.sendNotification(
@@ -543,90 +567,333 @@ class JobRequestRepository {
     String? cancelledBy,
     String? cancelledByRole,
   }) async {
-    final effectiveCancelledBy = cancelledByRole ?? cancelledBy;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final effectiveCancelledBy = cancelledByRole ?? cancelledBy ?? currentUid;
+    final isCustomerCancelling = cancelledByRole == 'customer';
     final batch = FirebaseFirestore.instance.batch();
 
-    batch.update(_col.doc(requestId), {
-      'status': JobRequestStatus.cancelled,
+    // locate booking id if not passed
+    String? resolvedBookingId = bookingId;
+    if (resolvedBookingId == null || resolvedBookingId.isEmpty) {
+      final reqDoc = await _col.doc(requestId).get();
+      resolvedBookingId = reqDoc.data()?['bookingId'] as String?;
+      if (resolvedBookingId == null || resolvedBookingId.isEmpty) {
+        final bSnap = await FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .where('jobRequestId', isEqualTo: requestId)
+            .limit(1)
+            .get();
+        if (bSnap.docs.isNotEmpty) {
+          resolvedBookingId = bSnap.docs.first.id;
+        }
+      }
+    }
+
+    if (isCustomerCancelling) {
+      // customer cancels accepted booking
+      batch.update(_col.doc(requestId), {
+        'status': JobRequestStatus.cancelled,
+        'cancellationReason': reason,
+        'cancelledBy': effectiveCancelledBy,
+        'cancelledAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .doc(resolvedBookingId),
+          {
+            'status': JobStatus.cancelled,
+            'cancellationReason': reason,
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'cancelledBy': effectiveCancelledBy,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      await batch.commit();
+
+      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
+        try {
+          await NotificationService.instance.sendNotification(
+            event: 'booking_cancelled',
+            docId: resolvedBookingId,
+          );
+        } catch (e) {
+          debugPrint('[JobRequestRepo] notify customer cancel error: $e');
+        }
+      }
+    } else {
+      // provider cancels / unassigns
+      final reqDoc = await _col.doc(requestId).get();
+      final reqData = reqDoc.data() ?? {};
+      final expTs = reqData['expiresAt'];
+      DateTime? exp;
+      if (expTs is Timestamp) {
+        exp = expTs.toDate();
+      }
+      final isPast = exp != null && DateTime.now().isAfter(exp);
+      final newJobStatus =
+          isPast ? JobRequestStatus.expired : JobRequestStatus.open;
+
+      batch.update(_col.doc(requestId), {
+        'status': newJobStatus,
+        'selectedProviderId': FieldValue.delete(),
+        'acceptedQuoteId': FieldValue.delete(),
+        'bookingId': FieldValue.delete(),
+        'agreedPrice': FieldValue.delete(),
+        'cancellationReason': reason,
+        'cancelledBy': currentUid,
+        'cancelledAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // update provider's own quote to cancelled_by_provider
+      if (quoteId != null && quoteId.isNotEmpty) {
+        batch.update(
+          _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId),
+          {
+            'status': 'cancelled_by_provider',
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      } else {
+        final qSnap = await _col
+            .doc(requestId)
+            .collection(FirestorePaths.quotes)
+            .where('providerId', isEqualTo: currentUid)
+            .get();
+        for (final doc in qSnap.docs) {
+          batch.update(doc.reference, {
+            'status': 'cancelled_by_provider',
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
+        batch.update(
+          FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .doc(resolvedBookingId),
+          {
+            'status': JobStatus.cancelled,
+            'cancellationReason': reason,
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'cancelledBy': currentUid,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      await batch.commit();
+
+      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
+        try {
+          await NotificationService.instance.sendNotification(
+            event: 'provider_cancelled',
+            docId: resolvedBookingId,
+          );
+        } catch (e) {
+          debugPrint('[JobRequestRepo] notify provider_cancelled error: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> renewJobPost({
+    required String requestId,
+    required String scheduleMode,
+    DateTime? scheduledDate,
+    DateTime? scheduledStartAt,
+    DateTime? scheduledEndAt,
+    String? scheduledSlot,
+    int? flexibleWindowDays,
+    DateTime? expiresAt,
+  }) async {
+    final docRef = _col.doc(requestId);
+    final data = <String, dynamic>{
+      'status': JobRequestStatus.open,
+      'scheduleMode': scheduleMode,
+      'bookingType':
+          scheduleMode == 'today' ? 'asap' : 'scheduled',
+      'renewedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'mediaWarningSentAt': FieldValue.delete(),
+    };
+
+    if (scheduledDate != null) {
+      data['scheduledDate'] = Timestamp.fromDate(scheduledDate);
+    }
+    if (scheduledStartAt != null) {
+      data['scheduledStartAt'] = Timestamp.fromDate(scheduledStartAt);
+    } else {
+      data['scheduledStartAt'] = FieldValue.delete();
+    }
+    if (scheduledEndAt != null) {
+      data['scheduledEndAt'] = Timestamp.fromDate(scheduledEndAt);
+    } else {
+      data['scheduledEndAt'] = FieldValue.delete();
+    }
+    if (scheduledSlot != null && scheduledSlot.isNotEmpty) {
+      data['scheduledSlot'] = scheduledSlot;
+    } else {
+      data['scheduledSlot'] = FieldValue.delete();
+    }
+    if (flexibleWindowDays != null) {
+      data['flexibleWindowDays'] = flexibleWindowDays;
+    } else {
+      data['flexibleWindowDays'] = FieldValue.delete();
+    }
+    if (expiresAt != null) {
+      data['expiresAt'] = Timestamp.fromDate(expiresAt);
+    }
+
+    await docRef.update(data);
+
+    try {
+      await NotificationService.instance.sendNotification(
+        event: 'job_posted',
+        docId: requestId,
+      );
+    } catch (e) {
+      debugPrint('[JobRequestRepo] renew alert error: $e');
+    }
+  }
+
+  Future<void> deleteJobPost(String requestId, {String? previousStatus}) async {
+    await _col.doc(requestId).update({
+      'status': 'deleted',
+      if (previousStatus != null && previousStatus.isNotEmpty)
+        'previousStatus': previousStatus,
+      'deletedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
-
-    if (quoteId != null && quoteId.isNotEmpty) {
-      batch.update(
-        _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId),
-        {'status': 'cancelled'},
-      );
-    } else {
-      final quotesSnap = await _col
-          .doc(requestId)
-          .collection(FirestorePaths.quotes)
-          .where('status', isEqualTo: 'accepted')
-          .get();
-      for (final doc in quotesSnap.docs) {
-        batch.update(doc.reference, {'status': 'cancelled'});
-      }
-    }
-
-    if (bookingId != null && bookingId.isNotEmpty) {
-      batch.update(
-        FirebaseFirestore.instance
-            .collection(FirestorePaths.bookings)
-            .doc(bookingId),
-        {
-          'status': JobStatus.cancelled,
-          'cancellationReason': reason,
-          'cancelledAt': FieldValue.serverTimestamp(),
-          'cancelledBy': effectiveCancelledBy ?? 'provider',
-        },
-      );
-    } else {
-      final bSnap = await FirebaseFirestore.instance
-          .collection(FirestorePaths.bookings)
-          .where('jobRequestId', isEqualTo: requestId)
-          .get();
-      for (final doc in bSnap.docs) {
-        batch.update(doc.reference, {
-          'status': JobStatus.cancelled,
-          'cancellationReason': reason,
-          'cancelledAt': FieldValue.serverTimestamp(),
-          'cancelledBy': effectiveCancelledBy ?? 'provider',
-        });
-      }
-    }
-
-    await batch.commit();
   }
 
-  Future<void> repostJobRequest(String requestId) async {
-    final batch = FirebaseFirestore.instance.batch();
-    batch.update(_col.doc(requestId), {
-      'status': JobRequestStatus.open,
-      'selectedProviderId': FieldValue.delete(),
-      'acceptedQuoteId': FieldValue.delete(),
-      'agreedPrice': FieldValue.delete(),
-      'cancellationReason': FieldValue.delete(),
-      'repostedAt': FieldValue.serverTimestamp(),
-      'createdAt': FieldValue.serverTimestamp(),
+  Future<void> undoDeleteJobPost(
+      String requestId, String previousStatus) async {
+    await _col.doc(requestId).update({
+      'status': previousStatus,
+      'deletedAt': FieldValue.delete(),
+      'previousStatus': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
-
-    final quotesSnap =
-        await _col.doc(requestId).collection(FirestorePaths.quotes).get();
-    for (final doc in quotesSnap.docs) {
-      batch.update(doc.reference, {'status': 'pending'});
-    }
-
-    await batch.commit();
   }
 
-  Future<void> deleteJobRequest(String requestId) async {
-    final quotesSnap =
-        await _col.doc(requestId).collection(FirestorePaths.quotes).get();
-    final batch = FirebaseFirestore.instance.batch();
-    for (final doc in quotesSnap.docs) {
-      batch.delete(doc.reference);
+  Future<void> hideJobPostFromCustomer(String requestId) async {
+    await _col.doc(requestId).update({
+      'hiddenByCustomer': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<Map<String, dynamic>?> getJobPrivateContact(String requestId) async {
+    final doc = await _col.doc(requestId).collection('private').doc('contact').get();
+    if (doc.exists) {
+      return doc.data();
     }
-    batch.delete(_col.doc(requestId));
+    return null;
+  }
+
+  Future<void> updateJobPost({
+    required String requestId,
+    required String title,
+    required String description,
+    required String scheduleMode,
+    DateTime? scheduledDate,
+    DateTime? scheduledStartAt,
+    DateTime? scheduledEndAt,
+    String? scheduledSlot,
+    int? flexibleWindowDays,
+    List<JobMediaItem>? photos,
+    JobVideoItem? video,
+    bool updateLocation = false,
+    double? latitude,
+    double? longitude,
+    String? district,
+    String? address,
+    String? landmark,
+    String? note,
+    String? houseNo,
+    String? street,
+    String? city,
+    String? directions,
+    double? accuracyMeters,
+    bool hasQuotes = false,
+  }) async {
+    final batch = FirebaseFirestore.instance.batch();
+    final jobRef = _col.doc(requestId);
+
+    final Map<String, dynamic> jobUpdates = {
+      'title': title,
+      'description': description,
+      'scheduleMode': scheduleMode,
+      if (scheduledDate != null)
+        'scheduledDate': Timestamp.fromDate(scheduledDate),
+      if (scheduledStartAt != null)
+        'scheduledStartAt': Timestamp.fromDate(scheduledStartAt),
+      if (scheduledEndAt != null)
+        'scheduledEndAt': Timestamp.fromDate(scheduledEndAt),
+      if (scheduledSlot != null && scheduledSlot.isNotEmpty)
+        'scheduledSlot': scheduledSlot,
+      if (flexibleWindowDays != null)
+        'flexibleWindowDays': flexibleWindowDays,
+      'photos': (photos ?? []).map((p) => p.toMap()).toList(),
+      if (video != null) 'video': video.toMap() else 'video': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (updateLocation && latitude != null && longitude != null) {
+      final roundedLat = double.parse(latitude.toStringAsFixed(2));
+      final roundedLng = double.parse(longitude.toStringAsFixed(2));
+      jobUpdates['latitude'] = roundedLat;
+      jobUpdates['longitude'] = roundedLng;
+      if (district != null) jobUpdates['district'] = district;
+
+      final contactRef = jobRef.collection('private').doc('contact');
+      final effectiveNote = (note != null && note.isNotEmpty) ? note : landmark;
+      batch.set(
+        contactRef,
+        {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (address != null) 'address': address,
+          if (effectiveNote != null) 'note': effectiveNote,
+          if (effectiveNote != null) 'landmark': effectiveNote,
+          if (houseNo != null) 'houseNo': houseNo,
+          if (street != null) 'street': street,
+          if (city != null) 'city': city,
+          if (directions != null) 'directions': directions,
+          if (accuracyMeters != null) 'accuracyMeters': accuracyMeters,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    }
+
+    if (hasQuotes) {
+      jobUpdates['jobUpdatedAt'] = FieldValue.serverTimestamp();
+    }
+
+    batch.update(jobRef, jobUpdates);
     await batch.commit();
+
+    if (hasQuotes) {
+      try {
+        await NotificationService.instance.sendNotification(
+          event: 'job_updated',
+          docId: requestId,
+        );
+      } catch (e) {
+        debugPrint('[JobRepo] notify job_updated error: $e');
+      }
+    }
   }
 
   Future<void> cancelJobRequest({

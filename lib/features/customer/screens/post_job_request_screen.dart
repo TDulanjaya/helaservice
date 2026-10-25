@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import '../../../theme/app_theme.dart';
 import '../../../models/job_request.dart';
 import '../../../models/job_location.dart';
@@ -22,6 +24,8 @@ import '../../../services/storage_service.dart';
 import '../../../services/video_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/connectivity_service.dart';
+import '../../../services/api_client.dart';
+import '../../../constants/app_config.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/permission_utils.dart';
@@ -41,7 +45,17 @@ class MediaUploadException implements Exception {
 }
 
 class PostJobRequestScreen extends StatefulWidget {
-  const PostJobRequestScreen({super.key});
+  final JobRequest? editJob;
+  final JobRequest? prefillJob;
+
+  const PostJobRequestScreen({
+    super.key,
+    this.editJob,
+    this.prefillJob,
+  });
+
+  bool get isEditMode => editJob != null;
+  bool get isPrefillMode => prefillJob != null;
 
   @override
   State<PostJobRequestScreen> createState() => _PostJobRequestScreenState();
@@ -75,6 +89,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   TimeOfDay _fromTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _toTime = const TimeOfDay(hour: 12, minute: 0);
   int _flexibleDays = 7;
+  bool _loadingInitialData = false;
+  final Set<String> _originalMediaKeys = {};
+
+  bool get _isLocationLocked =>
+      widget.isEditMode && (widget.editJob?.hasQuotes ?? false);
 
   @override
   void initState() {
@@ -89,6 +108,150 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       if (!ScheduleHelpers.isSlotAvailableToday(
           ScheduleHelpers.slotAnytime, now)) {
         _scheduledSlot = ScheduleHelpers.slotEvening;
+      }
+    }
+
+    final initialJob = widget.editJob ?? widget.prefillJob;
+    if (initialJob != null) {
+      _titleController.text = initialJob.title;
+      _descriptionController.text = initialJob.description;
+      _selectedCategory = initialJob.category;
+      if (widget.isEditMode) {
+        _scheduleMode = initialJob.scheduleMode;
+        _scheduledSlot =
+            initialJob.scheduledSlot ?? ScheduleHelpers.slotAnytime;
+        if (initialJob.scheduledDate != null) {
+          _scheduledDate = initialJob.scheduledDate!;
+        }
+        if (initialJob.scheduledStartAt != null) {
+          _fromTime = TimeOfDay.fromDateTime(initialJob.scheduledStartAt!);
+        }
+        if (initialJob.scheduledEndAt != null) {
+          _toTime = TimeOfDay.fromDateTime(initialJob.scheduledEndAt!);
+        }
+        if (initialJob.flexibleWindowDays != null) {
+          _flexibleDays = initialJob.flexibleWindowDays!;
+        }
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadInitialJobDetails(initialJob);
+      });
+    }
+  }
+
+  Future<void> _loadInitialJobDetails(JobRequest job) async {
+    if (!mounted) return;
+    setState(() => _loadingInitialData = true);
+
+    try {
+      // load contact location
+      final contact =
+          await JobRequestRepository().getJobPrivateContact(job.id);
+      if (contact != null && mounted) {
+        final lat =
+            (contact['latitude'] as num?)?.toDouble() ?? job.latitude ?? 0.0;
+        final lng =
+            (contact['longitude'] as num?)?.toDouble() ?? job.longitude ?? 0.0;
+        final address = contact['address'] as String? ?? job.address;
+        final note = contact['note'] as String? ??
+            contact['landmark'] as String? ??
+            job.note;
+        final houseNo = contact['houseNo'] as String?;
+        final street = contact['street'] as String?;
+        final city = contact['city'] as String?;
+        final directions = contact['directions'] as String?;
+        final accuracy = (contact['accuracyMeters'] as num?)?.toDouble();
+
+        setState(() {
+          _selectedLocation = JobLocation(
+            latitude: lat,
+            longitude: lng,
+            address: address,
+            label: job.district,
+            note: note,
+            houseNo: houseNo,
+            street: street,
+            city: city,
+            directions: directions,
+            accuracyMeters: accuracy,
+          );
+        });
+        _updateCoverage();
+      } else if (job.latitude != null && job.longitude != null && mounted) {
+        setState(() {
+          _selectedLocation = JobLocation(
+            latitude: job.latitude!,
+            longitude: job.longitude!,
+            address: job.address,
+            label: job.district,
+            note: job.note,
+          );
+        });
+        _updateCoverage();
+      }
+
+      // load photos
+      if (widget.isPrefillMode && job.isPhotosRemoved) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.oldPhotosUnavailable)),
+          );
+        }
+      } else if (job.photos.isNotEmpty) {
+        for (final p in job.photos) {
+          if (!mounted) return;
+          if (p.key.isNotEmpty) {
+            _originalMediaKeys.add(p.key);
+            try {
+              final mediaUri = Uri.parse(
+                  '${AppConfig.otpApiUrl}/media?key=${Uri.encodeComponent(p.key)}&mode=json');
+              final res = await ApiClient.instance.get(uri: mediaUri);
+              if (res.statusCode == 200) {
+                final data = jsonDecode(res.body);
+                final presignedUrl = data['url'] as String?;
+                if (presignedUrl != null) {
+                  final imgRes = await http
+                      .get(Uri.parse(presignedUrl))
+                      .timeout(const Duration(seconds: 15));
+                  if (imgRes.statusCode == 200 && mounted) {
+                    final rawBytes = imgRes.bodyBytes;
+                    final attachment = PickedAttachment(
+                      file: XFile.fromData(rawBytes,
+                          name: p.key.split('/').last),
+                      bytes: rawBytes,
+                    );
+                    setState(() {
+                      _photos.add(attachment);
+                      if (widget.isEditMode) {
+                        _uploadedPhotos[attachment] = p;
+                      }
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('[PostJobRequest] download photo error: $e');
+            }
+          }
+        }
+      }
+
+      // check video
+      if (widget.isPrefillMode) {
+        if (job.video != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.videoNotCopiedNote)),
+          );
+        }
+      } else if (widget.isEditMode && job.video != null) {
+        _uploadedVideoItem = job.video;
+        _originalMediaKeys.add(job.video!.key);
+      }
+    } catch (e) {
+      debugPrint('[PostJobRequest] initial details load error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _loadingInitialData = false);
       }
     }
   }
@@ -426,6 +589,12 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   }
 
   Future<void> _pickLocation() async {
+    if (_isLocationLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.locationLockedHasQuotes)),
+      );
+      return;
+    }
     final result = await JobLocationPicker.pickLocation(
       context,
       initialLocation: _selectedLocation,
@@ -860,6 +1029,68 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         expiresAt: schedRes.expiresAt,
       );
 
+      if (widget.isEditMode) {
+        final currentPhotos = photosList;
+        final currentVideo = videoItem;
+
+        await JobRequestRepository().updateJobPost(
+          requestId: widget.editJob!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          scheduleMode: schedRes.scheduleMode,
+          scheduledDate: schedRes.scheduledDate,
+          scheduledStartAt: schedRes.scheduledStartAt,
+          scheduledEndAt: schedRes.scheduledEndAt,
+          scheduledSlot: schedRes.scheduledSlot,
+          flexibleWindowDays: schedRes.flexibleWindowDays,
+          photos: currentPhotos,
+          video: currentVideo,
+          updateLocation: !_isLocationLocked && _selectedLocation != null,
+          latitude: _selectedLocation?.latitude,
+          longitude: _selectedLocation?.longitude,
+          district: _selectedLocation?.label,
+          address: _selectedLocation?.address,
+          landmark: _selectedLocation?.effectiveNote,
+          note: _selectedLocation?.effectiveNote,
+          houseNo: _selectedLocation?.houseNo,
+          street: _selectedLocation?.street,
+          city: _selectedLocation?.city,
+          directions: _selectedLocation?.directions,
+          accuracyMeters: _selectedLocation?.accuracyMeters,
+          hasQuotes: widget.editJob!.hasQuotes,
+        );
+
+        // delete removed media
+        final remainingKeys = <String>{
+          ...currentPhotos.map((p) => p.key),
+          if (currentVideo != null) currentVideo.key,
+        };
+        for (final oldKey in _originalMediaKeys) {
+          if (!remainingKeys.contains(oldKey)) {
+            unawaited(ApiClient.instance.delete(
+              uri: Uri.parse(
+                  '${AppConfig.otpApiUrl}/media?key=${Uri.encodeComponent(oldKey)}&jobId=${widget.editJob!.id}'),
+            ).catchError((e) {
+              debugPrint('[PostJobRequest] delete media error: $e');
+              return http.Response('', 500);
+            }));
+          }
+        }
+
+        unawaited(VideoService.instance.cleanCache());
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.editJobSuccess),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+          Navigator.of(context).pop(true);
+        }
+        return;
+      }
+
       final requestId = await JobRequestRepository().createJobRequest(request);
 
       // notify without blocking
@@ -969,7 +1200,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           ),
         ),
         title: Text(
-          context.l10n.postJobGetQuotes,
+          widget.isEditMode
+              ? context.l10n.editJobPost
+              : (widget.isPrefillMode
+                  ? context.l10n.postAgain
+                  : context.l10n.postJobGetQuotes),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
@@ -984,6 +1219,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
+              if (_loadingInitialData) ...[
+                const LinearProgressIndicator(
+                  minHeight: 3,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 12),
+              ],
               AppCard(
                 color: context.themeAmberTint,
                 borderColor: AppColors.primary.withValues(alpha: 0.3),
@@ -1043,9 +1285,44 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              StreamBuilder<List<CategoryRow>>(
-                stream: CategoryRepository().streamLiveCategories(),
-                builder: (context, snapshot) {
+              if (widget.isEditMode) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: context.themeSurfaceLow,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock_outline_rounded,
+                          size: 18, color: context.themeTextSecondary),
+                      const SizedBox(width: 10),
+                      Text(
+                        _selectedCategory ?? '',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeInk,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.categoryCannotBeEdited,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ] else
+                StreamBuilder<List<CategoryRow>>(
+                  stream: CategoryRepository().streamLiveCategories(),
+                  builder: (context, snapshot) {
                   final dbCategories = snapshot.data ?? [];
                   if (dbCategories.isEmpty &&
                       snapshot.connectionState != ConnectionState.waiting) {
@@ -1894,22 +2171,37 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        _selectedLocation != null
-                            ? context.l10n.change
-                            : context.l10n.setPin,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.5,
+                      if (_isLocationLocked)
+                        Icon(Icons.lock_rounded,
+                            color: context.themeTextSecondary, size: 20)
+                      else ...[
+                        Text(
+                          _selectedLocation != null
+                              ? context.l10n.change
+                              : context.l10n.setPin,
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                          ),
                         ),
-                      ),
-                      const Icon(Icons.chevron_right,
-                          color: AppColors.primary, size: 18),
+                        const Icon(Icons.chevron_right,
+                            color: AppColors.primary, size: 18),
+                      ],
                     ],
                   ),
                 ),
               ),
+              if (_isLocationLocked) ...[
+                const SizedBox(height: 6),
+                Text(
+                  context.l10n.locationLockedHasQuotes,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ],
 
               if (_uploadProgressText != null ||
                   _uploadFailed ||
@@ -2091,7 +2383,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               SizedBox(
                 height: 54,
                 child: PrimaryButton(
-                  label: context.l10n.postJobGetQuotes,
+                  label: widget.isEditMode
+                      ? context.l10n.saveChanges
+                      : context.l10n.postJobGetQuotes,
                   loading: _submitting,
                   onPressed: (_selectedLocation == null || _submitting)
                       ? null

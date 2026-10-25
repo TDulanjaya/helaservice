@@ -151,6 +151,9 @@ backups/
 # Scratch workspace
 scratch/
 
+# Local scripts
+scripts/
+
 # Android signing keys
 *.jks
 *.keystore

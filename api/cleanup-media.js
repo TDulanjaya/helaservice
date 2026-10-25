@@ -54,28 +54,107 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'B2 storage credentials not configured' });
   }
 
-  try {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const sevenDaysTimestamp = admin.firestore.Timestamp.fromDate(sevenDaysAgo);
+    // read retention settings from app_config/cleanup with defaults
+    const configDoc = await db.collection('app_config').doc('cleanup').get();
+    const config = configDoc.exists ? configDoc.data() || {} : {};
+    const mediaRetentionDays = typeof config.mediaRetentionDays === 'number' ? config.mediaRetentionDays : 30;
+    const deletedPostGraceDays = typeof config.deletedPostGraceDays === 'number' ? config.deletedPostGraceDays : 1;
+    const mediaWarningDays = typeof config.mediaWarningDays === 'number' ? config.mediaWarningDays : 3;
 
+    const retentionCutoff = new Date(Date.now() - mediaRetentionDays * 24 * 60 * 60 * 1000);
+    const retentionTimestamp = admin.firestore.Timestamp.fromDate(retentionCutoff);
+
+    // 1. Send advance media warning before deletion
+    const warningMs = (mediaRetentionDays - mediaWarningDays) * 24 * 60 * 60 * 1000;
+    const warningCutoff = new Date(Date.now() - warningMs);
+    const warningTimestamp = admin.firestore.Timestamp.fromDate(warningCutoff);
+
+    const warningSnap = await db
+      .collection('jobRequests')
+      .where('status', '==', 'expired')
+      .where('expiresAt', '<=', warningTimestamp)
+      .get();
+
+    let warningsSentCount = 0;
+    for (const wDoc of warningSnap.docs) {
+      const wData = wDoc.data() || {};
+      if (wData.mediaDeletedAt || wData.mediaWarningSentAt) continue;
+
+      // skip if linked to a booking
+      const bSnap = await db.collection('bookings').where('jobRequestId', '==', wDoc.id).limit(1).get();
+      if (!bSnap.empty) continue;
+
+      const custUid = wData.customerId;
+      if (custUid) {
+        try {
+          const uSnap = await db.collection('users').doc(custUid).get();
+          const uData = uSnap.exists ? uSnap.data() || {} : {};
+          const lang = uData.language || 'en';
+
+          const title = lang === 'si' ? 'ඡායාරූප ඉවත් කිරීමේ දැනුම්දීම' : (lang === 'ta' ? 'புகைப்படங்கள் நீக்கல் அறிவிப்பு' : 'Media Removal Notice');
+          const body = lang === 'si'
+            ? `ඔබගේ කල් ඉකුත් වූ වැඩයේ ඡායාරූප දින ${mediaWarningDays} කින් ඉවත් කරනු ලැබේ. ඒවා තබා ගැනීමට අලුත් කරන්න හෝ නැවත දමන්න.`
+            : (lang === 'ta'
+              ? `உங்கள் காலாவதியான வேலையின் புகைப்படங்கள் ${mediaWarningDays} நாட்களில் நீக்கப்படும். அவற்றை வைத்திருக்க புதுப்பிக்கவும் அல்லது மீண்டும் பதிவிடவும்.`
+              : `Your expired post's photos will be removed in ${mediaWarningDays} days. Renew or post again to keep them.`);
+
+          const notifRef = db.collection('users').doc(custUid).collection('notifications').doc();
+          await notifRef.set({
+            id: notifRef.id,
+            recipientUid: custUid,
+            eventType: 'media_cleanup_warning',
+            title,
+            body,
+            isRead: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            jobRequestId: wDoc.id,
+          });
+
+          const tokensSnap = await db.collection('users').doc(custUid).collection('fcmTokens').get();
+          const tokens = [];
+          tokensSnap.forEach((t) => {
+            const td = t.data();
+            if (td && td.token) tokens.push(td.token);
+          });
+          if (tokens.length > 0 && admin.messaging) {
+            await admin.messaging().sendEachForMulticast({
+              notification: { title, body },
+              data: { eventType: 'media_cleanup_warning', jobRequestId: wDoc.id },
+              tokens,
+            }).catch(() => {});
+          }
+
+          await wDoc.ref.update({
+            mediaWarningSentAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          warningsSentCount++;
+        } catch (warnErr) {
+          console.error('[cleanup-media] Error sending warning:', warnErr.message);
+        }
+      }
+    }
+
+    // 2. Query expired or cancelled posts older than mediaRetentionDays
     const cancelledSnap = await db
       .collection('jobRequests')
       .where('status', '==', 'cancelled')
-      .where('cancelledAt', '<=', sevenDaysTimestamp)
+      .where('cancelledAt', '<=', retentionTimestamp)
       .get();
 
     const expiredSnap = await db
       .collection('jobRequests')
       .where('status', '==', 'expired')
-      .where('expiresAt', '<=', sevenDaysTimestamp)
+      .where('expiresAt', '<=', retentionTimestamp)
       .get();
 
     const jobDocsMap = new Map();
     cancelledSnap.forEach((doc) => {
-      if (!doc.data().mediaDeletedAt) jobDocsMap.set(doc.id, doc);
+      const data = doc.data() || {};
+      if (!data.mediaDeletedAt && data.status === 'cancelled') jobDocsMap.set(doc.id, doc);
     });
     expiredSnap.forEach((doc) => {
-      if (!doc.data().mediaDeletedAt) jobDocsMap.set(doc.id, doc);
+      const data = doc.data() || {};
+      if (!data.mediaDeletedAt && data.status === 'expired') jobDocsMap.set(doc.id, doc);
     });
 
     let processedJobsCount = 0;
@@ -83,6 +162,18 @@ module.exports = async function handler(req, res) {
 
     for (const [jobId, jobDoc] of jobDocsMap.entries()) {
       const data = jobDoc.data() || {};
+
+      // verify post status is still expired or cancelled (never clean renewed posts)
+      if (data.status !== 'expired' && data.status !== 'cancelled') continue;
+
+      // verify never linked to a booking
+      const bookingsSnap = await db
+        .collection('bookings')
+        .where('jobRequestId', '==', jobId)
+        .limit(1)
+        .get();
+      if (!bookingsSnap.empty) continue;
+
       const keysToDelete = [];
 
       // get photo keys
@@ -117,45 +208,16 @@ module.exports = async function handler(req, res) {
         continue;
       }
 
-      // skip photos kept in bookings
-      const bookingsSnap = await db
-        .collection('bookings')
-        .where('jobRequestId', '==', jobId)
-        .get();
-
-      const bookingReferencedKeys = new Set();
-      bookingsSnap.forEach((bDoc) => {
-        const bData = bDoc.data() || {};
-        if (Array.isArray(bData.beforePhotos)) {
-          bData.beforePhotos.forEach((k) => bookingReferencedKeys.add(k));
-        }
-        if (Array.isArray(bData.afterPhotos)) {
-          bData.afterPhotos.forEach((k) => bookingReferencedKeys.add(k));
-        }
-      });
-
-      for (const bDoc of bookingsSnap.docs) {
-        const extrasSnap = await bDoc.ref.collection('extras').get();
-        extrasSnap.forEach((eDoc) => {
-          const eData = eDoc.data() || {};
-          if (Array.isArray(eData.photos)) {
-            eData.photos.forEach((k) => bookingReferencedKeys.add(k));
-          }
-        });
-      }
-
-      const finalKeysToDelete = keysToDelete.filter((k) => !bookingReferencedKeys.has(k));
-
-      if (finalKeysToDelete.length > 0) {
+      if (keysToDelete.length > 0) {
         const deleteCmd = new DeleteObjectsCommand({
           Bucket: bucketName,
           Delete: {
-            Objects: finalKeysToDelete.map((key) => ({ Key: key })),
+            Objects: keysToDelete.map((key) => ({ Key: key })),
             Quiet: true,
           },
         });
         await s3.send(deleteCmd);
-        deletedFilesCount += finalKeysToDelete.length;
+        deletedFilesCount += keysToDelete.length;
       }
 
       await jobDoc.ref.update({
@@ -165,6 +227,70 @@ module.exports = async function handler(req, res) {
     }
 
     console.log(`[cleanup-media] Completed: ${processedJobsCount} jobs processed, ${deletedFilesCount} files deleted.`);
+
+    // 3. Purge soft-deleted posts older than deletedPostGraceDays
+    let permanentlyDeletedJobsCount = 0;
+    try {
+      const graceCutoff = new Date(Date.now() - deletedPostGraceDays * 24 * 60 * 60 * 1000);
+      const graceTimestamp = admin.firestore.Timestamp.fromDate(graceCutoff);
+
+      const deletedSnap = await db
+        .collection('jobRequests')
+        .where('status', '==', 'deleted')
+        .where('deletedAt', '<=', graceTimestamp)
+        .get();
+
+      for (const dDoc of deletedSnap.docs) {
+        const dData = dDoc.data() || {};
+        const delKeys = [];
+
+        if (Array.isArray(dData.photos)) {
+          for (const item of dData.photos) {
+            if (item && typeof item.key === 'string' && item.key.trim().length > 0) {
+              delKeys.push(item.key.trim());
+            }
+          }
+        }
+        if (dData.video && typeof dData.video.key === 'string' && dData.video.key.trim().length > 0) {
+          delKeys.push(dData.video.key.trim());
+        }
+        if (Array.isArray(dData.photoUrls)) {
+          for (const url of dData.photoUrls) {
+            if (typeof url === 'string') {
+              const match = url.match(/uploads\/[^?&]+/);
+              if (match) delKeys.push(match[0]);
+            }
+          }
+        }
+
+        if (delKeys.length > 0) {
+          try {
+            const deleteCmd = new DeleteObjectsCommand({
+              Bucket: bucketName,
+              Delete: {
+                Objects: delKeys.map((key) => ({ Key: key })),
+                Quiet: true,
+              },
+            });
+            await s3.send(deleteCmd);
+            deletedFilesCount += delKeys.length;
+          } catch (s3Err) {
+            console.error(`[cleanup-media] s3 delete error for deleted job ${dDoc.id}:`, s3Err.message);
+          }
+        }
+
+        const privateSnap = await dDoc.ref.collection('private').get();
+        const quotesSnap = await dDoc.ref.collection('quotes').get();
+        const delBatch = db.batch();
+        privateSnap.forEach((pDoc) => delBatch.delete(pDoc.ref));
+        quotesSnap.forEach((qDoc) => delBatch.delete(qDoc.ref));
+        delBatch.delete(dDoc.ref);
+        await delBatch.commit();
+        permanentlyDeletedJobsCount++;
+      }
+    } catch (delErr) {
+      console.error('[cleanup-media] error removing deleted jobs:', delErr.message);
+    }
 
     // --- Cleanup unverified accounts (Auth users > 7 days old) ---
     const isDryRun = process.env.CLEANUP_UNVERIFIED_DRY_RUN !== 'false';
@@ -248,7 +374,9 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
+      warningsSent: warningsSentCount,
       processedJobs: processedJobsCount,
+      permanentlyDeletedJobs: permanentlyDeletedJobsCount,
       deletedFiles: deletedFilesCount,
       unverifiedCleanup: {
         dryRun: isDryRun,

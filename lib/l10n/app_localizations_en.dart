@@ -7068,4 +7068,109 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waitingForConnection => 'Waiting for connection...';
+
+  @override
+  String get postAgain => 'Post Again';
+
+  @override
+  String get postAgainSuccess => 'Job posted again successfully';
+
+  @override
+  String get oldPhotosUnavailable =>
+      'Old photos are no longer available, please add new ones';
+
+  @override
+  String get videoNotCopiedNote => 'Video is not copied and can be added again';
+
+  @override
+  String get somePhotosFailedDownload => 'Some photos could not be loaded';
+
+  @override
+  String get photosRemoved => 'Photos removed';
+
+  @override
+  String get locationLockedHasQuotes =>
+      'Location cannot be changed because quotes have been received';
+
+  @override
+  String get categoryCannotBeEdited =>
+      'Category cannot be changed. If you need a different trade, please post again.';
+
+  @override
+  String get editJobPost => 'Edit Job Post';
+
+  @override
+  String get editJobSuccess => 'Job post updated successfully';
+
+  @override
+  String get jobUpdatedBadge => 'Job updated, review your bid';
+
+  @override
+  String get deleteJobPost => 'Delete Job Post';
+
+  @override
+  String get deleteJobPostConfirm =>
+      'Are you sure you want to delete this job post? It will be permanently removed.';
+
+  @override
+  String get deleteJobPostSuccess => 'Job post deleted';
+
+  @override
+  String get removeFromHistory => 'Remove from History';
+
+  @override
+  String get removeFromHistoryConfirm =>
+      'Remove this job post from your history?';
+
+  @override
+  String get removeFromHistorySuccess => 'Job post removed from history';
+
+  @override
+  String get jobExpiredTitle => 'Job Post Expired';
+
+  @override
+  String get jobExpiredBody => 'Your job post expired. Post again?';
+
+  @override
+  String get historyTab => 'History';
+
+  @override
+  String quoteCountBids(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count quotes',
+      one: '1 quote',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get renewPost => 'Renew';
+
+  @override
+  String get renewPostTitle => 'Renew Job Post';
+
+  @override
+  String get renewPostPrompt => 'Choose a new schedule for this job post.';
+
+  @override
+  String get renewPostSuccess => 'Job post renewed successfully';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get undoDeletePostSuccess => 'Job post restored';
+
+  @override
+  String get providerCancellationsCount => 'Cancellations';
+
+  @override
+  String get providerCancelledPrompt =>
+      'Provider cancelled. Choose another provider from your bids or post again.';
+
+  @override
+  String get providerCancelledExpiredPrompt =>
+      'Provider cancelled. Renew or post again.';
 }

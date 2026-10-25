@@ -7221,7 +7221,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get showNearbyArtisans => 'அருகிலுள்ள கைவினைஞர்களைக் காட்டு';
 
   @override
-  String get chooseAnotherArea => 'Choose another area';
+  String get chooseAnotherArea => 'மற்றொரு பகுதியைத் தேர்வுசெய்க';
 
   @override
   String get locationOptions => 'இருப்பிட விருப்பங்கள்';
@@ -7239,4 +7239,109 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get waitingForConnection => 'இணைப்பிற்காக காத்திருக்கிறது...';
+
+  @override
+  String get postAgain => 'மீண்டும் பதிவு செய்க';
+
+  @override
+  String get postAgainSuccess =>
+      'வேலை வெற்றிகரமாக மீண்டும் பதிவு செய்யப்பட்டது';
+
+  @override
+  String get oldPhotosUnavailable =>
+      'பழைய புகைப்படங்கள் இனி கிடைக்காது, புதியவற்றைச் சேர்க்கவும்';
+
+  @override
+  String get videoNotCopiedNote =>
+      'வீடியோ நகலெடுக்கப்படவில்லை, மீண்டும் சேர்க்கலாம்';
+
+  @override
+  String get somePhotosFailedDownload => 'சில புகைப்படங்களை ஏற்ற முடியவில்லை';
+
+  @override
+  String get photosRemoved => 'புகைப்படங்கள் அகற்றப்பட்டன';
+
+  @override
+  String get locationLockedHasQuotes =>
+      'மதிப்பீடுகள் பெறப்பட்டுள்ளதால் இருப்பிடத்தை மாற்ற முடியாது';
+
+  @override
+  String get categoryCannotBeEdited =>
+      'வகையை மாற்ற முடியாது. புதிய பதிவை இடவும்.';
+
+  @override
+  String get editJobPost => 'வேலை பதிவைத் திருத்து';
+
+  @override
+  String get editJobSuccess => 'வேலை பதிவு வெற்றிகரமாக புதுப்பிக்கப்பட்டது';
+
+  @override
+  String get jobUpdatedBadge =>
+      'வேலை புதுப்பிக்கப்பட்டுள்ளது, உங்கள் மதிப்பீட்டை மதிப்பாய்வு செய்யவும்';
+
+  @override
+  String get deleteJobPost => 'வேலை பதிவை நீக்கு';
+
+  @override
+  String get deleteJobPostConfirm =>
+      'இந்த வேலை பதிவை நிச்சயமாக நீக்க விரும்புகிறீர்களா? இதை மீட்டெடுக்க முடியாது.';
+
+  @override
+  String get deleteJobPostSuccess => 'வேலை பதிவு நீக்கப்பட்டது';
+
+  @override
+  String get removeFromHistory => 'வரலாற்றிலிருந்து அகற்று';
+
+  @override
+  String get removeFromHistoryConfirm =>
+      'இந்த வேலை பதிவை உங்கள் வரலாற்றிலிருந்து அகற்றவா?';
+
+  @override
+  String get removeFromHistorySuccess =>
+      'வேலை பதிவு வரலாற்றிலிருந்து அகற்றப்பட்டது';
+
+  @override
+  String get jobExpiredTitle => 'வேலை பதிவு காலாவதியானது';
+
+  @override
+  String get jobExpiredBody =>
+      'உங்கள் வேலை பதிவு காலாவதியானது. மீண்டும் பதிவு செய்யவா?';
+
+  @override
+  String get historyTab => 'வரலாறு';
+
+  @override
+  String quoteCountBids(int count) {
+    return 'மதிப்பீடுகள் $count';
+  }
+
+  @override
+  String get renewPost => 'புதுப்பி';
+
+  @override
+  String get renewPostTitle => 'வேலை பதிவைப் புதுப்பிக்கவும்';
+
+  @override
+  String get renewPostPrompt =>
+      'இந்த வேலைக்கு புதிய நேரத்தைத் தேர்ந்தெடுக்கவும்.';
+
+  @override
+  String get renewPostSuccess => 'வேலை வெற்றிகரமாகப் புதுப்பிக்கப்பட்டது';
+
+  @override
+  String get undo => 'செயல்தவிர்';
+
+  @override
+  String get undoDeletePostSuccess => 'வேலை பதிவு மீட்டமைக்கப்பட்டது';
+
+  @override
+  String get providerCancellationsCount => 'ரத்துசெய்தல்கள்';
+
+  @override
+  String get providerCancelledPrompt =>
+      'வழங்குநர் ரத்து செய்தார். உங்கள் ஏலங்களிலிருந்து மற்றொரு வழங்குநரைத் தேர்ந்தெடுக்கவும் அல்லது மீண்டும் பதிவிடவும்.';
+
+  @override
+  String get providerCancelledExpiredPrompt =>
+      'வழங்குநர் ரத்து செய்தார். புதுப்பிக்கவும் அல்லது மீண்டும் பதிவிடவும்.';
 }

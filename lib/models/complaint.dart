@@ -22,6 +22,7 @@ class Complaint {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? lastMessageAt;
+  final DateTime? adminLastReadAt;
 
   // Legacy backwards compatibility fields
   final String customerId;
@@ -54,6 +55,7 @@ class Complaint {
     this.createdAt,
     this.updatedAt,
     this.lastMessageAt,
+    this.adminLastReadAt,
     this.customerId = '',
     this.customerName = '',
     this.customerPhone = '',
@@ -90,6 +92,11 @@ class Complaint {
   bool get isResolved => status == 'resolved';
   bool get isClosed => status == 'closed';
 
+  // true if user sent a newer reply
+  bool get hasNewUserReply =>
+      lastMessageAt != null &&
+      (adminLastReadAt == null || lastMessageAt!.isAfter(adminLastReadAt!));
+
   Map<String, dynamic> toMap() => {
         'type': type,
         'reporterUid': effectiveReporterUid,
@@ -121,6 +128,8 @@ class Complaint {
         'lastMessageAt': lastMessageAt != null
             ? Timestamp.fromDate(lastMessageAt!)
             : FieldValue.serverTimestamp(),
+        if (adminLastReadAt != null)
+          'adminLastReadAt': Timestamp.fromDate(adminLastReadAt!),
       };
 
   factory Complaint.fromMap(String id, Map<String, dynamic> map) {
@@ -166,6 +175,7 @@ class Complaint {
       createdAt: parseDate(map['createdAt']),
       updatedAt: parseDate(map['updatedAt']),
       lastMessageAt: parseDate(map['lastMessageAt']),
+      adminLastReadAt: parseDate(map['adminLastReadAt']),
       customerId: map['customerId']?.toString() ?? '',
       customerName: map['customerName']?.toString() ?? '',
       customerPhone: map['customerPhone']?.toString() ?? '',

@@ -45,6 +45,81 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   bool? _localEmergencyAvailable;
   double? _localRadiusKm;
   bool _updatingLocation = false;
+  Stream<Technician?>? _techStream;
+  String _subscribedUid = '';
+
+  // cache technician stream
+  void _initTechStream(String uid) {
+    if (_subscribedUid != uid) {
+      _subscribedUid = uid;
+      _techStream = uid.isNotEmpty
+          ? TechnicianRepository().streamById(uid)
+          : const Stream.empty();
+    }
+  }
+
+  // format relative time
+  String _formatRelativeTime(BuildContext context, DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return context.l10n.timeJustNow;
+    if (diff.inMinutes < 60) return context.l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return context.l10n.timeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return context.l10n.timeDaysAgo(diff.inDays);
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  // format base location text
+  String _formatBaseLocationSubtitle(
+    BuildContext context,
+    UserProfile? user,
+    Technician? tech,
+  ) {
+    final hasLat = tech?.baseLat != null || user?.latitude != null;
+    final hasLng = tech?.baseLng != null || user?.longitude != null;
+    final hasAddress = (tech?.baseAddress?.isNotEmpty == true) ||
+        (user?.address?.isNotEmpty == true);
+
+    if (!hasLat && !hasLng && !hasAddress) {
+      return context.l10n.notSetYet;
+    }
+
+    final rawAddress = (tech?.baseAddress?.isNotEmpty == true)
+        ? tech!.baseAddress!
+        : (user?.address ?? '');
+    final area =
+        (tech?.baseArea?.isNotEmpty == true ? tech!.baseArea! : null) ??
+            extractBaseArea(address: rawAddress);
+    final district = (user?.district?.isNotEmpty == true)
+        ? LocalizedData.getDistrict(context, user!.district!)
+        : '';
+
+    String areaDisplay = '';
+    if (area != null && area.isNotEmpty) {
+      if (district.isNotEmpty && area.toLowerCase() != district.toLowerCase()) {
+        areaDisplay = '$area, $district';
+      } else {
+        areaDisplay = area;
+      }
+    } else if (district.isNotEmpty) {
+      areaDisplay = district;
+    } else if (rawAddress.isNotEmpty) {
+      areaDisplay = rawAddress;
+    } else if (hasLat && hasLng) {
+      final lat = tech?.baseLat ?? user!.latitude!;
+      final lng = tech?.baseLng ?? user!.longitude!;
+      areaDisplay = '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+    }
+
+    final updatedDt = tech?.baseLocationUpdatedAt ?? tech?.currentLocationAt;
+    if (updatedDt != null) {
+      final timeStr = _formatRelativeTime(context, updatedDt);
+      return areaDisplay.isNotEmpty
+          ? '$areaDisplay · ${context.l10n.updatedTimeAgo(timeStr)}'
+          : context.l10n.updatedTimeAgo(timeStr);
+    }
+
+    return areaDisplay.isNotEmpty ? areaDisplay : context.l10n.notSetYet;
+  }
 
   Future<void> _refreshGpsLocation(BuildContext context) async {
     setState(() => _updatingLocation = true);
@@ -300,6 +375,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
     final user = roleProvider.currentUser;
+    _initTechStream(user?.id ?? '');
 
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
@@ -657,122 +733,128 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            StreamBuilder<Technician?>(
+              stream: _techStream,
+              builder: (context, techSnap) {
+                final tech = techSnap.data;
+                final subtitle =
+                    _formatBaseLocationSubtitle(context, user, tech);
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: context.themeSurface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: context.themeBorder),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(9),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.my_location_rounded,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.my_location_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.l10n.baseLocationTitle,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  subtitle,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: context.themeTextSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.baseLocationTitle,
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
+                      const SizedBox(height: 14),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: ElevatedButton.icon(
+                              onPressed: _updatingLocation
+                                  ? null
+                                  : () => _refreshGpsLocation(context),
+                              icon: _updatingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.gps_fixed_rounded,
+                                      size: 18),
+                              label: Text(
+                                context.l10n.useCurrentLocation,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              user?.address?.isNotEmpty == true
-                                  ? user!.address!
-                                  : (user?.latitude != null
-                                      ? 'GPS: ${user!.latitude!.toStringAsFixed(4)}, ${user.longitude!.toStringAsFixed(4)}'
-                                      : context.l10n.noGpsSet),
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: context.themeTextSecondary,
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _pickBaseLocation(context),
+                              icon: const Icon(Icons.map_outlined, size: 18),
+                              label: Text(
+                                context.l10n.pickOnMap,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side:
+                                    const BorderSide(color: AppColors.primary),
+                                foregroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 42,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _pickBaseLocation(context),
-                            icon: const Icon(Icons.map_outlined, size: 16),
-                            label: Text(
-                              context.l10n.setBaseLocationBtn,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.primary),
-                              foregroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: 42,
-                        child: OutlinedButton.icon(
-                          onPressed: _updatingLocation
-                              ? null
-                              : () => _refreshGpsLocation(context),
-                          icon: _updatingLocation
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.gps_fixed_rounded, size: 16),
-                          label: Text(
-                            context.l10n.autoDetectGps,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: context.themeBorder,
-                            ),
-                            foregroundColor: context.themeTextPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 18),
             Text(
@@ -785,7 +867,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
             ),
             const SizedBox(height: 8),
             StreamBuilder<Technician?>(
-              stream: TechnicianRepository().streamById(user?.id ?? ''),
+              stream: _techStream,
               builder: (context, techSnap) {
                 if (techSnap.connectionState == ConnectionState.waiting &&
                     !techSnap.hasData) {
@@ -1534,8 +1616,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 TextButton(
                   onPressed: () =>

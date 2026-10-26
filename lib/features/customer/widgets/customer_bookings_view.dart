@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
 import '../../../constants/job_status.dart';
 import '../../../shared/widgets/status_pill.dart';
+import 'job_repost_sheet.dart';
 import '../../../models/technician.dart';
 import '../../../models/booking.dart';
 import '../../../models/job_request.dart';
@@ -14,6 +17,7 @@ import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../services/session_guard.dart';
+import '../../../services/error_reporter.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
@@ -34,7 +38,6 @@ import '../../admin/widgets/booking_timeline_sheet.dart';
 import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
-import '../../../shared/widgets/job_schedule_picker.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
 
@@ -478,24 +481,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
           PriceProposalBanner(booking: b),
           ExtrasCustomerBanner(booking: b),
           if (b.jobRequestId != null && b.jobRequestId!.isNotEmpty)
-            FutureBuilder<JobRequest?>(
-              future: JobRequestRepository().getById(b.jobRequestId!),
-              builder: (ctx, snap) {
-                final jr = snap.data;
-                if (jr == null ||
-                    (jr.photoUrls.isEmpty &&
-                        (jr.videoUrl == null || jr.videoUrl!.isEmpty))) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: JobMediaGallery(
-                    photoUrls: jr.photoUrls,
-                    videoUrl: jr.videoUrl,
-                  ),
-                );
-              },
-            ),
+            _BookingMediaGallery(jobRequestId: b.jobRequestId!),
           if (b.status == JobStatus.inProgress ||
               b.beforePhotos.isNotEmpty ||
               b.afterPhotos.isNotEmpty) ...[
@@ -717,83 +703,97 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
             ),
           ],
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    minimumSize: const Size.fromHeight(38),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 16),
-                  label: Text(
-                    context.l10n.yesTheyAreHere,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 12.5),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await BookingRepository().confirmCustomerArrival(
-                        bookingId: booking.id,
-                        jobRequestId: booking.jobRequestId,
-                      );
-                    } catch (e) {
-                      if (kDebugMode) {
-                        debugPrint(
-                            '[CustomerBookings] confirm arrival error: $e');
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(context.l10n.somethingWentWrong),
-                              backgroundColor: AppColors.error),
-                        );
-                      }
-                    }
-                  },
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final yesBtn = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  minimumSize: const Size.fromHeight(38),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    minimumSize: const Size.fromHeight(38),
-                  ),
-                  icon: const Icon(Icons.cancel_outlined, size: 16),
-                  label: Text(
-                    context.l10n.noNotHere,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 12.5),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await BookingRepository().denyCustomerArrival(
-                        bookingId: booking.id,
-                        currentDeniedCount: booking.arrivalDeniedCount,
-                      );
-                    } catch (e) {
-                      if (kDebugMode) {
-                        debugPrint('[CustomerBookings] deny arrival error: $e');
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(context.l10n.somethingWentWrong),
-                              backgroundColor: AppColors.error),
-                        );
-                      }
-                    }
-                  },
+                icon: const Icon(Icons.check_circle_outline, size: 16),
+                label: Text(
+                  context.l10n.yesTheyAreHere,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5),
                 ),
-              ),
-            ],
+                onPressed: () async {
+                  try {
+                    await BookingRepository().confirmCustomerArrival(
+                      bookingId: booking.id,
+                      jobRequestId: booking.jobRequestId,
+                    );
+                  } catch (e) {
+                    if (kDebugMode) {
+                      debugPrint(
+                          '[CustomerBookings] confirm arrival error: $e');
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                },
+              );
+
+              final noBtn = OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  minimumSize: const Size.fromHeight(38),
+                ),
+                icon: const Icon(Icons.cancel_outlined, size: 16),
+                label: Text(
+                  context.l10n.noNotHere,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
+                onPressed: () async {
+                  try {
+                    await BookingRepository().denyCustomerArrival(
+                      bookingId: booking.id,
+                      currentDeniedCount: booking.arrivalDeniedCount,
+                    );
+                  } catch (e) {
+                    if (kDebugMode) {
+                      debugPrint('[CustomerBookings] deny arrival error: $e');
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                },
+              );
+
+              // stack buttons when narrow
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  children: [
+                    SizedBox(width: double.infinity, child: yesBtn),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: noBtn),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: yesBtn),
+                  const SizedBox(width: 8),
+                  Expanded(child: noBtn),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1085,20 +1085,20 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   16, 8, 16, AppBottomNav.contentBottomPadding),
               children: [
                 Text(
-                  context.l10n.pastCompletedServices,
+                  context.l10n.historyTab,
                   style: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 12),
                 ...items.map((item) {
                   if (item.isBooking) {
-                    return _HistoryBookingCard(
+                    return HistoryBookingCard(
                       booking: item.booking!,
                       onTap: () =>
                           _showJobHistoryDetailModal(context, item.booking!),
                     );
                   } else {
-                    return _HistoryJobRequestCard(request: item.jobRequest!);
+                    return HistoryJobRequestCard(request: item.jobRequest!);
                   }
                 }),
               ],
@@ -1229,11 +1229,12 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
   }
 }
 
-class _HistoryBookingCard extends StatelessWidget {
+class HistoryBookingCard extends StatelessWidget {
   final Booking booking;
   final VoidCallback onTap;
 
-  const _HistoryBookingCard({
+  const HistoryBookingCard({
+    super.key,
     required this.booking,
     required this.onTap,
   });
@@ -1252,17 +1253,18 @@ class _HistoryBookingCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  booking.relativeTime.isNotEmpty
-                      ? booking.relativeTime
-                      : (booking.time.isNotEmpty
-                          ? booking.time
-                          : context.l10n.pastService),
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: context.themeTextSecondary,
+                Expanded(
+                  child: Text(
+                    _formatBookingDate(context, booking),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: context.themeTextSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 StatusPill.fromStatus(booking.status),
               ],
             ),
@@ -1351,17 +1353,15 @@ class _HistoryBookingCard extends StatelessWidget {
                       );
                     }
                     if (context.mounted && prefillJob != null) {
-                      Navigator.push(
+                      JobRepostSheet.show(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PostJobRequestScreen(prefillJob: prefillJob),
-                        ),
+                        request: prefillJob,
+                        booking: booking,
                       );
                     }
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: Text(context.l10n.postAgain),
+                  label: Text(context.l10n.repost),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -1377,6 +1377,22 @@ class _HistoryBookingCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatBookingDate(BuildContext context, Booking booking) {
+    final date = booking.completedAt ?? booking.createdAt;
+    if (date != null) {
+      final locale = Localizations.localeOf(context).languageCode;
+      final formatted = DateFormat('d MMM yyyy', locale).format(date);
+      if (booking.status == JobStatus.cancelled) {
+        return context.l10n.cancelledOn(formatted);
+      } else if (booking.status == JobStatus.completed) {
+        return context.l10n.completedOn(formatted);
+      }
+    }
+    return booking.relativeTime.isNotEmpty
+        ? booking.relativeTime
+        : (booking.time.isNotEmpty ? booking.time : context.l10n.pastService);
   }
 }
 
@@ -1963,58 +1979,72 @@ class _CustomerJobRequestCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    PostJobRequestScreen(editJob: request),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.edit_outlined, size: 16),
-                          label: Text(context.l10n.editJobPost),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final editBtn = OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  PostJobRequestScreen(editJob: request),
                             ),
+                          );
+                        },
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: Text(context.l10n.editJobPost),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => request.canDelete
-                              ? _deleteJobPost(context)
-                              : _cancelJob(context),
-                          icon: Icon(
-                            request.canDelete
-                                ? Icons.delete_outline
-                                : Icons.cancel_outlined,
-                            size: 16,
-                            color: AppColors.error,
-                          ),
-                          label: Text(
-                            request.canDelete
-                                ? context.l10n.deleteJobPost
-                                : context.l10n.cancelJobTitle,
-                            style: const TextStyle(color: AppColors.error),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.error),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                      );
+
+                      final deleteBtn = OutlinedButton.icon(
+                        onPressed: () => request.canDelete
+                            ? _deleteJobPost(context)
+                            : _cancelJob(context),
+                        icon: Icon(
+                          request.canDelete
+                              ? Icons.delete_outline
+                              : Icons.cancel_outlined,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                        label: Text(
+                          request.canDelete
+                              ? context.l10n.deleteJobPost
+                              : context.l10n.cancelJobTitle,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.error),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                      ),
-                    ],
+                      );
+
+                      // stack buttons when narrow
+                      if (constraints.maxWidth < 360) {
+                        return Column(
+                          children: [
+                            SizedBox(width: double.infinity, child: editBtn),
+                            const SizedBox(height: 8),
+                            SizedBox(width: double.infinity, child: deleteBtn),
+                          ],
+                        );
+                      }
+                      return Row(
+                        children: [
+                          Expanded(child: editBtn),
+                          const SizedBox(width: 8),
+                          Expanded(child: deleteBtn),
+                        ],
+                      );
+                    },
                   ),
                 ],
               );
@@ -2075,6 +2105,38 @@ class _CustomerJobRequestCard extends StatelessWidget {
                         .undoDeleteJobPost(request.id, prevStatus);
                   } catch (e) {
                     debugPrint('[CustomerBookingsView] Undo delete error: $e');
+                    unawaited(
+                      ErrorReporter.report(
+                        screen: 'customer_bookings',
+                        action: 'undo',
+                        error: e,
+                      ),
+                    );
+                    if (context.mounted) {
+                      final debugDetails = ErrorReporter.formatDebugDetails(e);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(context.l10n.somethingWentWrong),
+                              if (kDebugMode && debugDetails.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  debugDetails,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
                   }
                 },
               ),
@@ -2083,10 +2145,34 @@ class _CustomerJobRequestCard extends StatelessWidget {
         }
       } catch (e) {
         debugPrint('[CustomerBookingsView] Delete job error: $e');
+        unawaited(
+          ErrorReporter.report(
+            screen: 'customer_bookings',
+            action: 'delete',
+            error: e,
+          ),
+        );
         if (context.mounted) {
+          final debugDetails = ErrorReporter.formatDebugDetails(e);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.somethingWentWrong),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.somethingWentWrong),
+                  if (kDebugMode && debugDetails.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      debugDetails,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               backgroundColor: AppColors.error,
             ),
           );
@@ -2218,15 +2304,14 @@ class _HistoryItem {
   bool get isBooking => booking != null;
 }
 
-class _HistoryJobRequestCard extends StatelessWidget {
+class HistoryJobRequestCard extends StatelessWidget {
   final JobRequest request;
 
-  const _HistoryJobRequestCard({required this.request});
+  const HistoryJobRequestCard({super.key, required this.request});
 
   @override
   Widget build(BuildContext context) {
-    final date = request.cancelledAt ?? request.expiresAt ?? request.createdAt;
-    final dateStr = date != null ? '${date.day}/${date.month}/${date.year}' : '';
+    final dateLabel = _formatStatusDate(context, request);
 
     return AppCard(
       margin: const EdgeInsets.only(bottom: 12),
@@ -2269,17 +2354,23 @@ class _HistoryJobRequestCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (dateStr.isNotEmpty) ...[
+              if (dateLabel.isNotEmpty) ...[
                 const SizedBox(width: 8),
-                Text(
-                  dateStr,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: context.themeTextSecondary,
+                Expanded(
+                  child: Text(
+                    dateLabel,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: context.themeTextSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+              ] else ...[
+                const Spacer(),
               ],
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 context.l10n.quoteCountBids(request.quoteCount),
                 style: TextStyle(
@@ -2341,38 +2432,15 @@ class _HistoryJobRequestCard extends StatelessWidget {
           ] else ...[
             Row(
               children: [
-                if (request.status == 'expired' && !request.isPhotosRemoved) ...[
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _handleRenew(context),
-                      icon: const Icon(Icons.update_rounded, size: 16),
-                      label: Text(context.l10n.renewPost),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PostJobRequestScreen(prefillJob: request),
-                        ),
-                      );
-                    },
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        JobRepostSheet.show(context, request: request),
                     icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: Text(context.l10n.postAgain),
-                    style: OutlinedButton.styleFrom(
+                    label: Text(context.l10n.repost),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -2381,18 +2449,19 @@ class _HistoryJobRequestCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _handleRemove(context),
-                  icon: const Icon(Icons.delete_outline,
-                      size: 16, color: AppColors.error),
-                  label: Text(
-                    context.l10n.removeFromHistory,
-                    style: const TextStyle(color: AppColors.error),
+                IconButton.outlined(
+                  tooltip: context.l10n.removeFromHistory,
+                  icon: Semantics(
+                    label: context.l10n.removeFromHistory,
+                    child: const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: AppColors.error,
+                    ),
                   ),
-                  style: OutlinedButton.styleFrom(
+                  onPressed: () => _handleRemove(context),
+                  style: IconButton.styleFrom(
                     side: const BorderSide(color: AppColors.error),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -2406,82 +2475,22 @@ class _HistoryJobRequestCard extends StatelessWidget {
     );
   }
 
-  Future<void> _handleRenew(BuildContext context) async {
-    final result = await showModalBottomSheet<JobScheduleResult>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => JobSchedulePicker(
-        initialDate: DateTime.now().add(const Duration(days: 1)),
-        initialMode: request.scheduleMode,
-        initialSlot: request.scheduledSlot,
-        title: context.l10n.renewPostTitle,
-      ),
-    );
-
-    if (result == null || !context.mounted) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.themeSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.l10n.renewPostTitle,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(
-          context.l10n.renewPostPrompt,
-          style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(context.l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(context.l10n.renewPost),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        await JobRequestRepository().renewJobPost(
-          requestId: request.id,
-          scheduleMode: result.scheduleMode,
-          scheduledDate: result.scheduledDate,
-          scheduledStartAt: result.scheduledStartAt,
-          scheduledEndAt: result.scheduledEndAt,
-          scheduledSlot: result.scheduledSlot,
-          flexibleWindowDays: result.flexibleWindowDays,
-          expiresAt: result.expiresAt,
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.renewPostSuccess),
-              backgroundColor: AppColors.primary,
-            ),
-          );
-        }
-      } catch (e) {
-        debugPrint('[HistoryJobRequestCard] Renew error: $e');
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.somethingWentWrong),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
+  String _formatStatusDate(BuildContext context, JobRequest request) {
+    final date = request.cancelledAt ??
+        request.expiresAt ??
+        request.completedAt ??
+        request.createdAt;
+    if (date == null) return '';
+    final locale = Localizations.localeOf(context).languageCode;
+    final formatted = DateFormat('d MMM yyyy', locale).format(date);
+    if (request.status == JobRequestStatus.expired) {
+      return context.l10n.expiredOn(formatted);
+    } else if (request.status == JobRequestStatus.cancelled) {
+      return context.l10n.cancelledOn(formatted);
+    } else if (request.status == JobRequestStatus.completed) {
+      return context.l10n.completedOn(formatted);
+    } else {
+      return context.l10n.postedOn(formatted);
     }
   }
 
@@ -2501,10 +2510,34 @@ class _HistoryJobRequestCard extends StatelessWidget {
       }
     } catch (e) {
       debugPrint('[HistoryJobRequestCard] Undo error: $e');
+      unawaited(
+        ErrorReporter.report(
+          screen: 'history',
+          action: 'undo',
+          error: e,
+        ),
+      );
       if (context.mounted) {
+        final debugDetails = ErrorReporter.formatDebugDetails(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.somethingWentWrong),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.somethingWentWrong),
+                if (kDebugMode && debugDetails.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    debugDetails,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ],
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -2575,6 +2608,38 @@ class _HistoryJobRequestCard extends StatelessWidget {
                           .undoDeleteJobPost(request.id, prevStatus);
                     } catch (e) {
                       debugPrint('[HistoryJobRequestCard] Undo error: $e');
+                      unawaited(
+                        ErrorReporter.report(
+                          screen: 'history',
+                          action: 'undo',
+                          error: e,
+                        ),
+                      );
+                      if (context.mounted) {
+                        final debugDetails = ErrorReporter.formatDebugDetails(e);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(context.l10n.somethingWentWrong),
+                                if (kDebugMode && debugDetails.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    debugDetails,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
                     }
                   },
                 ),
@@ -2594,15 +2659,76 @@ class _HistoryJobRequestCard extends StatelessWidget {
         }
       } catch (e) {
         debugPrint('[HistoryJobRequestCard] remove error: $e');
+        unawaited(
+          ErrorReporter.report(
+            screen: 'history',
+            action: isPermanentDelete ? 'delete' : 'remove',
+            error: e,
+          ),
+        );
         if (context.mounted) {
+          final debugDetails = ErrorReporter.formatDebugDetails(e);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.l10n.somethingWentWrong),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.somethingWentWrong),
+                  if (kDebugMode && debugDetails.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      debugDetails,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               backgroundColor: AppColors.error,
             ),
           );
         }
       }
     }
+  }
+}
+
+// load media gallery once
+class _BookingMediaGallery extends StatefulWidget {
+  final String jobRequestId;
+
+  const _BookingMediaGallery({required this.jobRequestId});
+
+  @override
+  State<_BookingMediaGallery> createState() => _BookingMediaGalleryState();
+}
+
+class _BookingMediaGalleryState extends State<_BookingMediaGallery> {
+  late final Future<JobRequest?> _future =
+      JobRequestRepository().getById(widget.jobRequestId);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<JobRequest?>(
+      future: _future,
+      builder: (ctx, snap) {
+        final jr = snap.data;
+        if (jr == null ||
+            (jr.photoUrls.isEmpty &&
+                (jr.videoUrl == null || jr.videoUrl!.isEmpty))) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: JobMediaGallery(
+            photoUrls: jr.photoUrls,
+            videoUrl: jr.videoUrl,
+          ),
+        );
+      },
+    );
   }
 }

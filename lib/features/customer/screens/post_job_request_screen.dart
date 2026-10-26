@@ -25,6 +25,7 @@ import '../../../services/video_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/connectivity_service.dart';
 import '../../../services/api_client.dart';
+import '../../../services/error_reporter.dart';
 import '../../../constants/app_config.dart';
 import '../../../constants/firestore_paths.dart';
 import '../../../utils/location_utils.dart';
@@ -80,6 +81,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   double _uploadProgressFraction = 0.0;
   bool _uploadFailed = false;
   bool _saveFailed = false;
+  String? _debugErrorDetails;
   bool _submitting = false;
   int _submitGeneration = 0;
   bool _isUploadingMedia = false;
@@ -90,7 +92,13 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
   TimeOfDay _toTime = const TimeOfDay(hour: 12, minute: 0);
   int _flexibleDays = 7;
   bool _loadingInitialData = false;
+  bool _hasSkippedOldPhotos = false;
+  bool _hasVideoNotCopied = false;
   final Set<String> _originalMediaKeys = {};
+
+  // cache category stream
+  late final Stream<List<CategoryRow>> _categoriesStream =
+      CategoryRepository().streamLiveCategories();
 
   bool get _isLocationLocked =>
       widget.isEditMode && (widget.editJob?.hasQuotes ?? false);
@@ -116,7 +124,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       _titleController.text = initialJob.title;
       _descriptionController.text = initialJob.description;
       _selectedCategory = initialJob.category;
-      if (widget.isEditMode) {
+      if (widget.isEditMode ||
+          (widget.isPrefillMode && initialJob.scheduledDate != null)) {
         _scheduleMode = initialJob.scheduleMode;
         _scheduledSlot =
             initialJob.scheduledSlot ?? ScheduleHelpers.slotAnytime;
@@ -193,14 +202,16 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       // load photos
       if (widget.isPrefillMode && job.isPhotosRemoved) {
         if (mounted) {
+          setState(() => _hasSkippedOldPhotos = true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.l10n.oldPhotosUnavailable)),
           );
         }
       } else if (job.photos.isNotEmpty) {
+        int skippedCount = 0;
         for (final p in job.photos) {
           if (!mounted) return;
-          if (p.key.isNotEmpty) {
+          if (p.key.isNotEmpty && p.url.contains('/api/media?key=')) {
             _originalMediaKeys.add(p.key);
             try {
               final mediaUri = Uri.parse(
@@ -226,19 +237,31 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                         _uploadedPhotos[attachment] = p;
                       }
                     });
+                    continue;
                   }
                 }
               }
+              skippedCount++;
             } catch (e) {
               debugPrint('[PostJobRequest] download photo error: $e');
+              skippedCount++;
             }
+          } else {
+            skippedCount++;
           }
+        }
+        if (skippedCount > 0 && mounted) {
+          setState(() => _hasSkippedOldPhotos = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.oldPhotosUnavailable)),
+          );
         }
       }
 
       // check video
       if (widget.isPrefillMode) {
         if (job.video != null && mounted) {
+          setState(() => _hasVideoNotCopied = true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.l10n.videoNotCopiedNote)),
           );
@@ -1120,6 +1143,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     } on MediaUploadException catch (e) {
       if (_submitGeneration != currentGen) return;
       debugPrint('[PostJobRequest] media upload failed: $e');
+      unawaited(ErrorReporter.report(
+        screen: 'post_job_request_screen',
+        action: 'upload_media',
+        error: e,
+      ));
       if (mounted) {
         String friendlyMsg;
         switch (e.statusCode) {
@@ -1143,15 +1171,58 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             friendlyMsg = context.l10n.mediaUploadFailedRetry;
             break;
         }
+        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         setState(() {
           _uploadFailed = true;
           _saveFailed = false;
           _isUploadingMedia = false;
           _uploadProgressText = friendlyMsg;
+          _debugErrorDetails = debugDetails;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(friendlyMsg),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(friendlyMsg),
+                if (debugDetails != null)
+                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } on FirebaseException catch (e) {
+      if (_submitGeneration != currentGen) return;
+      debugPrint('[PostJobRequest] create job FirebaseException: [${e.code}] ${e.message}');
+      unawaited(ErrorReporter.report(
+        screen: 'post_job_request_screen',
+        action: 'submit_job_request',
+        error: e,
+      ));
+      if (mounted) {
+        final friendlyMsg = jobPostErrorMessage(context, e);
+        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+        setState(() {
+          _uploadFailed = false;
+          _saveFailed = true;
+          _isUploadingMedia = false;
+          _uploadProgressText = friendlyMsg;
+          _debugErrorDetails = debugDetails;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(friendlyMsg),
+                if (debugDetails != null)
+                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1159,17 +1230,32 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
     } catch (e) {
       if (_submitGeneration != currentGen) return;
       debugPrint('[PostJobRequest] create job error: $e');
+      unawaited(ErrorReporter.report(
+        screen: 'post_job_request_screen',
+        action: 'submit_job_request',
+        error: e,
+      ));
       if (mounted) {
         final friendlyMsg = jobPostErrorMessage(context, e);
+        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         setState(() {
           _uploadFailed = false;
           _saveFailed = true;
           _isUploadingMedia = false;
           _uploadProgressText = friendlyMsg;
+          _debugErrorDetails = debugDetails;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(friendlyMsg),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(friendlyMsg),
+                if (debugDetails != null)
+                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1321,7 +1407,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 ),
               ] else
                 StreamBuilder<List<CategoryRow>>(
-                  stream: CategoryRepository().streamLiveCategories(),
+                  stream: _categoriesStream,
                   builder: (context, snapshot) {
                   final dbCategories = snapshot.data ?? [];
                   if (dbCategories.isEmpty &&
@@ -1432,6 +1518,37 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               ),
               const SizedBox(height: 18),
 
+              if (_hasSkippedOldPhotos) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline,
+                          color: AppColors.warning, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.oldPhotosUnavailable,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // photos
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1534,6 +1651,37 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                           fontSize: 11.5, color: context.themeTextSecondary)),
                 ],
               ),
+              if (_hasVideoNotCopied) ...[
+                const SizedBox(height: 8),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.info.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline,
+                          color: AppColors.info, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.videoNotCopiedNote,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.info,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 8),
               if (_processingVideo)
                 Container(
@@ -2239,16 +2387,32 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                             const SizedBox(width: 8),
                           ],
                           Expanded(
-                            child: Text(
-                              _uploadProgressText ??
-                                  context.l10n.uploadFailedAttempts,
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: (_uploadFailed || _saveFailed)
-                                    ? AppColors.error
-                                    : AppColors.primary,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _uploadProgressText ??
+                                      context.l10n.uploadFailedAttempts,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: (_uploadFailed || _saveFailed)
+                                        ? AppColors.error
+                                        : AppColors.primary,
+                                  ),
+                                ),
+                                if (kDebugMode && _debugErrorDetails != null && (_uploadFailed || _saveFailed)) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _debugErrorDetails!,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],

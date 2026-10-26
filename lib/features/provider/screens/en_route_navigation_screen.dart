@@ -1026,46 +1026,65 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                   TextStyle(fontSize: 12.5, color: context.themeTextSecondary),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                if (booking.customerPhone.isNotEmpty)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _callCustomer(context, booking),
-                      icon: const Icon(Icons.call, size: 16),
-                      label: Text(context.l10n.callCustomer),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                if (canReclaim) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _handleClaimArrival(booking),
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: Text(context.l10n.claimAgainArrival),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.l10n.maxClaimsReached,
-                      style:
-                          const TextStyle(fontSize: 11, color: AppColors.error),
-                    ),
-                  ),
-                ],
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final hasPhone = booking.customerPhone.isNotEmpty;
+                final callBtn = hasPhone
+                    ? OutlinedButton.icon(
+                        onPressed: () => _callCustomer(context, booking),
+                        icon: const Icon(Icons.call, size: 16),
+                        label: Text(context.l10n.callCustomer),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      )
+                    : null;
+
+                final reclaimWidget = canReclaim
+                    ? ElevatedButton.icon(
+                        onPressed: () => _handleClaimArrival(booking),
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: Text(context.l10n.claimAgainArrival),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      )
+                    : Text(
+                        context.l10n.maxClaimsReached,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.error),
+                      );
+
+                if (!hasPhone) {
+                  return SizedBox(
+                    width: double.infinity,
+                    child: reclaimWidget,
+                  );
+                }
+
+                // stack buttons when narrow
+                if (constraints.maxWidth < 360) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(width: double.infinity, child: callBtn),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: reclaimWidget),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: callBtn!),
+                    const SizedBox(width: 8),
+                    Expanded(child: reclaimWidget),
+                  ],
+                );
+              },
             ),
           ],
         ),

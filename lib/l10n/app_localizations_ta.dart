@@ -7312,11 +7312,53 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String quoteCountBids(int count) {
-    return 'மதிப்பீடுகள் $count';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count மதிப்பீடுகள்',
+      one: '1 மதிப்பீடு',
+      zero: '0 மதிப்பீடுகள்',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get renewPost => 'புதுப்பி';
+  String get repost => 'மீண்டும் பதிவிடுக';
+
+  @override
+  String get repostNow => 'இப்போது மீண்டும் பதிவிடுக';
+
+  @override
+  String get editDetailsFirst => 'முதலில் விவரங்களைத் திருத்துக';
+
+  @override
+  String get repostJobTitle => 'வேலையை மீண்டும் பதிவிடுக';
+
+  @override
+  String get statusExpired => 'காலாவதியானது';
+
+  @override
+  String get statusDeleted => 'நீக்கப்பட்டது';
+
+  @override
+  String expiredOn(String date) {
+    return '$date அன்று காலாவதியானது';
+  }
+
+  @override
+  String cancelledOn(String date) {
+    return '$date அன்று ரத்து செய்யப்பட்டது';
+  }
+
+  @override
+  String completedOn(String date) {
+    return '$date அன்று முடிந்தது';
+  }
+
+  @override
+  String postedOn(String date) {
+    return '$date அன்று பதிவு செய்யப்பட்டது';
+  }
 
   @override
   String get renewPostTitle => 'வேலை பதிவைப் புதுப்பிக்கவும்';
@@ -7344,4 +7386,27 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get providerCancelledExpiredPrompt =>
       'வழங்குநர் ரத்து செய்தார். புதுப்பிக்கவும் அல்லது மீண்டும் பதிவிடவும்.';
+
+  @override
+  String get useCurrentLocation => 'தற்போதைய இருப்பிடத்தைப் பயன்படுத்துக';
+
+  @override
+  String get pickOnMap => 'வரைபடத்தில் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get notSetYet => 'இன்னும் அமைக்கப்படவில்லை';
+
+  @override
+  String updatedTimeAgo(String time) {
+    return '$time புதுப்பிக்கப்பட்டது';
+  }
+
+  @override
+  String get helaServiceSupport => 'HelaService ஆதரவு';
+
+  @override
+  String get needHelpContactSupport => 'உதவி தேவையா? ஆதரவைத் தொடர்பு கொள்ளவும்';
+
+  @override
+  String get newReply => 'புதிய பதில்';
 }

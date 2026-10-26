@@ -85,6 +85,7 @@ class TechnicianRepository {
         'baseAddress': address.trim(),
       if (baseArea != null && baseArea.trim().isNotEmpty)
         'baseArea': baseArea.trim(),
+      'baseLocationUpdatedAt': FieldValue.serverTimestamp(),
     }).catchError((_) {});
   }
 

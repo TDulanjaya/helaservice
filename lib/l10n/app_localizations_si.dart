@@ -7146,11 +7146,53 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String quoteCountBids(int count) {
-    return 'මිල ගණන් $count';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'මිල ගණන් $count',
+      one: 'මිල ගණන් 1',
+      zero: 'මිල ගණන් 0',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get renewPost => 'අලුත් කරන්න';
+  String get repost => 'නැවත පළ කරන්න';
+
+  @override
+  String get repostNow => 'දැන් නැවත පළ කරන්න';
+
+  @override
+  String get editDetailsFirst => 'පළමුව විස්තර සංස්කරණය කරන්න';
+
+  @override
+  String get repostJobTitle => 'වැඩය නැවත පළ කරන්න';
+
+  @override
+  String get statusExpired => 'කල් ඉකුත් වූ';
+
+  @override
+  String get statusDeleted => 'මකා දැමූ';
+
+  @override
+  String expiredOn(String date) {
+    return '$date දින කල් ඉකුත් විය';
+  }
+
+  @override
+  String cancelledOn(String date) {
+    return '$date දින අවලංගු විය';
+  }
+
+  @override
+  String completedOn(String date) {
+    return '$date දින සම්පූර්ණ විය';
+  }
+
+  @override
+  String postedOn(String date) {
+    return '$date දින පළ කරන ලදී';
+  }
 
   @override
   String get renewPostTitle => 'වැඩ පළකිරීම අලුත් කරන්න';
@@ -7177,4 +7219,27 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get providerCancelledExpiredPrompt =>
       'සේවා සපයන්නා අවලංගු කළා. අලුත් කරන්න හෝ නැවත දමන්න.';
+
+  @override
+  String get useCurrentLocation => 'වත්මන් ස්ථානය භාවිත කරන්න';
+
+  @override
+  String get pickOnMap => 'සිතියමෙන් තෝරන්න';
+
+  @override
+  String get notSetYet => 'තවම සකසා නැත';
+
+  @override
+  String updatedTimeAgo(String time) {
+    return '$time යාවත්කාලීන විය';
+  }
+
+  @override
+  String get helaServiceSupport => 'HelaService සහාය';
+
+  @override
+  String get needHelpContactSupport => 'උදව් අවශ්‍යද? සහාය අමතන්න';
+
+  @override
+  String get newReply => 'නව පිළිතුරක්';
 }

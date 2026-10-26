@@ -372,12 +372,46 @@ module.exports = async function handler(req, res) {
       console.error('[cleanup-unverified] Error checking unverified accounts:', unverifiedErr.message);
     }
 
+    // clean up old client errors (>30 days)
+    let deletedClientErrorsCount = 0;
+    try {
+      const errorCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const errorTimestamp = admin.firestore.Timestamp.fromDate(errorCutoff);
+
+      let hasMore = true;
+      while (hasMore) {
+        const errorSnap = await db
+          .collection('clientErrors')
+          .where('createdAt', '<=', errorTimestamp)
+          .limit(500)
+          .get();
+
+        if (errorSnap.empty) {
+          hasMore = false;
+          break;
+        }
+
+        const batch = db.batch();
+        errorSnap.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+
+        deletedClientErrorsCount += errorSnap.size;
+        if (errorSnap.size < 500) {
+          hasMore = false;
+        }
+      }
+      console.log(`[cleanup-client-errors] Deleted ${deletedClientErrorsCount} clientErrors docs.`);
+    } catch (errErr) {
+      console.error('[cleanup-client-errors] Error purging clientErrors:', errErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       warningsSent: warningsSentCount,
       processedJobs: processedJobsCount,
       permanentlyDeletedJobs: permanentlyDeletedJobsCount,
       deletedFiles: deletedFilesCount,
+      deletedClientErrors: deletedClientErrorsCount,
       unverifiedCleanup: {
         dryRun: isDryRun,
         candidatesCount: unverifiedCandidatesCount,

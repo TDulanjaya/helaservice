@@ -12903,14 +12903,68 @@ abstract class AppLocalizations {
   /// No description provided for @quoteCountBids.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 quote} other{{count} quotes}}'**
+  /// **'{count, plural, =0{0 bids} =1{1 bid} other{{count} bids}}'**
   String quoteCountBids(int count);
 
-  /// No description provided for @renewPost.
+  /// No description provided for @repost.
   ///
   /// In en, this message translates to:
-  /// **'Renew'**
-  String get renewPost;
+  /// **'Repost'**
+  String get repost;
+
+  /// No description provided for @repostNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost now'**
+  String get repostNow;
+
+  /// No description provided for @editDetailsFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details first'**
+  String get editDetailsFirst;
+
+  /// No description provided for @repostJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost Job'**
+  String get repostJobTitle;
+
+  /// No description provided for @statusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get statusExpired;
+
+  /// No description provided for @statusDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get statusDeleted;
+
+  /// No description provided for @expiredOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired on {date}'**
+  String expiredOn(String date);
+
+  /// No description provided for @cancelledOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled on {date}'**
+  String cancelledOn(String date);
+
+  /// No description provided for @completedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed on {date}'**
+  String completedOn(String date);
+
+  /// No description provided for @postedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted on {date}'**
+  String postedOn(String date);
 
   /// No description provided for @renewPostTitle.
   ///
@@ -12959,6 +13013,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Provider cancelled. Renew or post again.'**
   String get providerCancelledExpiredPrompt;
+
+  /// No description provided for @useCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current location'**
+  String get useCurrentLocation;
+
+  /// No description provided for @pickOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick on map'**
+  String get pickOnMap;
+
+  /// No description provided for @notSetYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set yet'**
+  String get notSetYet;
+
+  /// No description provided for @updatedTimeAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'updated {time}'**
+  String updatedTimeAgo(String time);
+
+  /// No description provided for @helaServiceSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'HelaService Support'**
+  String get helaServiceSupport;
+
+  /// No description provided for @needHelpContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help? Contact support'**
+  String get needHelpContactSupport;
+
+  /// No description provided for @newReply.
+  ///
+  /// In en, this message translates to:
+  /// **'New reply'**
+  String get newReply;
 }
 
 class _AppLocalizationsDelegate

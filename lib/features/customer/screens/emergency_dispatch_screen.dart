@@ -54,9 +54,14 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
 
   String _selectedCategory = '';
   late AnimationController _pulseController;
-  Timer? _countdownTimer;
-  int _remainingSeconds = 120;
   bool _isCreatingBooking = false;
+
+  // cache streams to avoid flicker
+  late final Stream<List<CategoryRow>> _categoriesStream;
+  late final Stream<List<Technician>> _techStream;
+  Stream<List<SavedAddress>>? _savedAddressesStream;
+  String? _savedAddressUid;
+  Key _countdownKey = UniqueKey();
 
   double? _userLat;
   double? _userLng;
@@ -75,35 +80,41 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory ?? '';
+    _categoriesStream = _categoryRepo.streamLiveCategories();
+    _techStream = _techRepo.streamApprovedTechnicians();
+    _initSavedAddressesStream(FirebaseAuth.instance.currentUser?.uid);
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _startCountdown();
     _resolveUserLocation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initSavedAddressesStream(FirebaseAuth.instance.currentUser?.uid);
+  }
+
+  void _initSavedAddressesStream(String? uid) {
+    if (uid == null || uid.isEmpty) {
+      _savedAddressesStream = null;
+      _savedAddressUid = null;
+      return;
+    }
+    if (_savedAddressUid == uid) return;
+    _savedAddressUid = uid;
+    _savedAddressesStream = SavedAddressRepository().streamSavedAddresses(uid);
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
-    _countdownTimer?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _startCountdown() {
-    _remainingSeconds = 120;
-    _countdownTimer?.cancel();
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      if (_remainingSeconds > 0) {
-        setState(() => _remainingSeconds--);
-      } else {
-        timer.cancel();
-      }
-    });
   }
 
   Future<void> _rateLimit() async {
@@ -369,14 +380,6 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     });
   }
 
-  // format seconds to mm ss
-  String _formatTimer(int seconds) {
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    final mm = m.toString().padLeft(2, '0');
-    final ss = s.toString().padLeft(2, '0');
-    return '$mm:$ss';
-  }
 
   // calculate real distance in kilometers between customer pin and provider location
   double? _getDistanceKm(Technician tech) {
@@ -760,7 +763,9 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
             icon: const Icon(Icons.refresh_rounded),
             tooltip: context.l10n.refreshGps,
             onPressed: () {
-              _startCountdown();
+              setState(() {
+                _countdownKey = UniqueKey();
+              });
               _resolveUserLocation();
             },
           ),
@@ -829,25 +834,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.error,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      _formatTimer(_remainingSeconds),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                        fontFeatures: [],
-                      ),
-                    ),
-                  ),
+                  _EmergencyCountdownBadge(key: _countdownKey),
                 ],
               ),
             ),
@@ -1096,13 +1083,10 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                         ),
                       ),
                     ],
-                    if (FirebaseAuth.instance.currentUser?.uid != null &&
-                        FirebaseAuth.instance.currentUser!.uid.isNotEmpty) ...[
+                    if (_savedAddressesStream != null) ...[
                       const SizedBox(height: 10),
                       StreamBuilder<List<SavedAddress>>(
-                        stream: SavedAddressRepository().streamSavedAddresses(
-                          FirebaseAuth.instance.currentUser!.uid,
-                        ),
+                        stream: _savedAddressesStream,
                         builder: (context, snapshot) {
                           final addresses = snapshot.data ?? [];
                           if (addresses.isEmpty) return const SizedBox.shrink();
@@ -1212,7 +1196,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
 
             // trade category filter pills
             StreamBuilder<List<CategoryRow>>(
-              stream: _categoryRepo.streamLiveCategories(),
+              stream: _categoriesStream,
               builder: (context, catSnap) {
                 final categories = catSnap.data ?? [];
                 return SizedBox(
@@ -1276,9 +1260,10 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
             // emergency technicians stream list
             Expanded(
               child: StreamBuilder<List<Technician>>(
-                stream: _techRepo.streamApprovedTechnicians(),
+                stream: _techStream,
                 builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
+                  if (snap.connectionState == ConnectionState.waiting &&
+                      !snap.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
@@ -1646,6 +1631,70 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// timer badge that updates every second
+class _EmergencyCountdownBadge extends StatefulWidget {
+  const _EmergencyCountdownBadge({super.key});
+
+  @override
+  State<_EmergencyCountdownBadge> createState() =>
+      _EmergencyCountdownBadgeState();
+}
+
+class _EmergencyCountdownBadgeState extends State<_EmergencyCountdownBadge> {
+  Timer? _timer;
+  int _remaining = 120;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_remaining > 0) {
+        setState(() => _remaining--);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatTimer(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    final mm = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+    return '$mm:$ss';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.error,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        _formatTimer(_remaining),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+          fontFeatures: [],
         ),
       ),
     );

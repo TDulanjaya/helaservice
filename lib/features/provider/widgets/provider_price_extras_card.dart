@@ -181,63 +181,79 @@ class ProviderPriceExtrasCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () async {
-                    try {
-                      await BookingRepository().confirmPriceSame(
-                        b.id,
-                        b.agreedPrice ?? b.agreedPriceLkr.toDouble(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final samePriceBtn = OutlinedButton(
+                onPressed: () async {
+                  try {
+                    await BookingRepository().confirmPriceSame(
+                      b.id,
+                      b.agreedPrice ?? b.agreedPriceLkr.toDouble(),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context.l10n.priceConfirmedMatches),
+                          backgroundColor: AppColors.primary,
+                        ),
                       );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(context.l10n.priceConfirmedMatches),
-                            backgroundColor: AppColors.primary,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      debugPrint('confirmPriceSame error: $e');
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(context.l10n.somethingWentWrong),
-                              backgroundColor: AppColors.error),
-                        );
-                      }
                     }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  child: Text(context.l10n.priceMatchesQuote,
-                      style: const TextStyle(
-                          fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  } catch (e) {
+                    debugPrint('confirmPriceSame error: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _openProposePriceDialog(context, b),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  child: Text(context.l10n.proposeNewPrice,
-                      style: const TextStyle(
-                          fontSize: 11.5, fontWeight: FontWeight.w700)),
+                child: Text(context.l10n.priceMatchesQuote,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700)),
+              );
+
+              final proposeBtn = ElevatedButton(
+                onPressed: () => _openProposePriceDialog(context, b),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                 ),
-              ),
-            ],
+                child: Text(context.l10n.proposeNewPrice,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700)),
+              );
+
+              // stack buttons when narrow
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  children: [
+                    SizedBox(width: double.infinity, child: samePriceBtn),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: proposeBtn),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: samePriceBtn),
+                  const SizedBox(width: 8),
+                  Expanded(child: proposeBtn),
+                ],
+              );
+            },
           ),
         ],
       ),

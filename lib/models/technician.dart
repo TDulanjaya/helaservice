@@ -100,6 +100,7 @@ class Technician {
   final double? currentLat;
   final double? currentLng;
   final DateTime? currentLocationAt;
+  final DateTime? baseLocationUpdatedAt;
 
   List<String> get resolvedPricingModes =>
       ProviderPricingHelper.resolvePricingModes(
@@ -157,6 +158,7 @@ class Technician {
     this.currentLat,
     this.currentLng,
     this.currentLocationAt,
+    this.baseLocationUpdatedAt,
     required this.about,
     required this.languages,
     required this.serviceArea,
@@ -191,6 +193,7 @@ class Technician {
     double? currentLat,
     double? currentLng,
     DateTime? currentLocationAt,
+    DateTime? baseLocationUpdatedAt,
   }) =>
       Technician(
         id: id,
@@ -219,6 +222,7 @@ class Technician {
         currentLat: currentLat,
         currentLng: currentLng,
         currentLocationAt: currentLocationAt,
+        baseLocationUpdatedAt: baseLocationUpdatedAt,
         about: '',
         languages: '',
         serviceArea: serviceArea,
@@ -263,6 +267,7 @@ class Technician {
     double? currentLat,
     double? currentLng,
     DateTime? currentLocationAt,
+    DateTime? baseLocationUpdatedAt,
     String? about,
     String? languages,
     String? serviceArea,
@@ -310,6 +315,8 @@ class Technician {
       currentLat: currentLat ?? this.currentLat,
       currentLng: currentLng ?? this.currentLng,
       currentLocationAt: currentLocationAt ?? this.currentLocationAt,
+      baseLocationUpdatedAt:
+          baseLocationUpdatedAt ?? this.baseLocationUpdatedAt,
       about: about ?? this.about,
       languages: languages ?? this.languages,
       serviceArea: serviceArea ?? this.serviceArea,
@@ -456,6 +463,10 @@ class Technician {
     final parsedCurrentLocationAt = (map['currentLocationAt'] is Timestamp)
         ? (map['currentLocationAt'] as Timestamp).toDate()
         : null;
+    final parsedBaseLocationUpdatedAt =
+        (map['baseLocationUpdatedAt'] is Timestamp)
+            ? (map['baseLocationUpdatedAt'] as Timestamp).toDate()
+            : null;
 
     return Technician(
       id: id,
@@ -490,6 +501,7 @@ class Technician {
       currentLat: parsedCurrentLat,
       currentLng: parsedCurrentLng,
       currentLocationAt: parsedCurrentLocationAt,
+      baseLocationUpdatedAt: parsedBaseLocationUpdatedAt,
       about: map['about'] ?? '',
       languages: map['languages'] ?? '',
       serviceArea: map['serviceArea'] ?? '',

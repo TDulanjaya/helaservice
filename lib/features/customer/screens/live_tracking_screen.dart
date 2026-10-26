@@ -1001,82 +1001,96 @@ class LiveTrackingScreen extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    minimumSize: const Size.fromHeight(42),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(
-                    context.l10n.yesTheyAreHere,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await BookingRepository().confirmCustomerArrival(
-                        bookingId: booking.id,
-                        jobRequestId: booking.jobRequestId,
-                      );
-                    } catch (e) {
-                      if (kDebugMode) {
-                        debugPrint('[LiveTracking] confirm arrival error: $e');
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(context.l10n.somethingWentWrong),
-                              backgroundColor: AppColors.error),
-                        );
-                      }
-                    }
-                  },
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final yesBtn = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size.fromHeight(42),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    minimumSize: const Size.fromHeight(42),
-                  ),
-                  icon: const Icon(Icons.cancel_outlined, size: 18),
-                  label: Text(
-                    context.l10n.noNotHere,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await BookingRepository().denyCustomerArrival(
-                        bookingId: booking.id,
-                        currentDeniedCount: booking.arrivalDeniedCount,
-                      );
-                    } catch (e) {
-                      if (kDebugMode) {
-                        debugPrint('[LiveTracking] deny arrival error: $e');
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(context.l10n.somethingWentWrong),
-                              backgroundColor: AppColors.error),
-                        );
-                      }
-                    }
-                  },
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: Text(
+                  context.l10n.yesTheyAreHere,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13),
                 ),
-              ),
-            ],
+                onPressed: () async {
+                  try {
+                    await BookingRepository().confirmCustomerArrival(
+                      bookingId: booking.id,
+                      jobRequestId: booking.jobRequestId,
+                    );
+                  } catch (e) {
+                    if (kDebugMode) {
+                      debugPrint('[LiveTracking] confirm arrival error: $e');
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                },
+              );
+
+              final noBtn = OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size.fromHeight(42),
+                ),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: Text(
+                  context.l10n.noNotHere,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+                onPressed: () async {
+                  try {
+                    await BookingRepository().denyCustomerArrival(
+                      bookingId: booking.id,
+                      currentDeniedCount: booking.arrivalDeniedCount,
+                    );
+                  } catch (e) {
+                    if (kDebugMode) {
+                      debugPrint('[LiveTracking] deny arrival error: $e');
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(context.l10n.somethingWentWrong),
+                            backgroundColor: AppColors.error),
+                      );
+                    }
+                  }
+                },
+              );
+
+              // stack buttons when narrow
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  children: [
+                    SizedBox(width: double.infinity, child: yesBtn),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: noBtn),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: yesBtn),
+                  const SizedBox(width: 10),
+                  Expanded(child: noBtn),
+                ],
+              );
+            },
           ),
         ],
       ),

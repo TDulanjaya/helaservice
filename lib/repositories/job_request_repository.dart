@@ -10,6 +10,7 @@ import '../models/quote.dart';
 import '../services/notification_service.dart';
 import '../services/session_guard.dart';
 import '../utils/exact_location_helper.dart';
+import '../utils/schedule_helpers.dart';
 import 'booking_repository.dart';
 
 class JobRequestRepository {
@@ -715,16 +716,24 @@ class JobRequestRepository {
     String? scheduledSlot,
     int? flexibleWindowDays,
     DateTime? expiresAt,
+    List<JobMediaItem>? sanitizedPhotos,
+    bool dropVideo = false,
   }) async {
     final docRef = _col.doc(requestId);
+
+    final now = DateTime.now();
+    final resolvedExpiresAt = (expiresAt != null && expiresAt.isAfter(now))
+        ? expiresAt
+        : ScheduleHelpers.endOfDay(scheduledDate ?? now);
+
     final data = <String, dynamic>{
       'status': JobRequestStatus.open,
       'scheduleMode': scheduleMode,
-      'bookingType':
-          scheduleMode == 'today' ? 'asap' : 'scheduled',
+      'bookingType': scheduleMode == 'today' ? 'asap' : 'scheduled',
       'renewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'mediaWarningSentAt': FieldValue.delete(),
+      'expiresAt': Timestamp.fromDate(resolvedExpiresAt),
     };
 
     if (scheduledDate != null) {
@@ -750,20 +759,34 @@ class JobRequestRepository {
     } else {
       data['flexibleWindowDays'] = FieldValue.delete();
     }
-    if (expiresAt != null) {
-      data['expiresAt'] = Timestamp.fromDate(expiresAt);
+    if (sanitizedPhotos != null) {
+      data['photos'] = sanitizedPhotos.map((p) => p.toMap()).toList();
+      data['photoUrls'] = sanitizedPhotos.map((p) => p.url).toList();
+    }
+    if (dropVideo) {
+      data['video'] = FieldValue.delete();
+    }
+
+    if (kDebugMode) {
+      debugPrint('[JobRequestRepo] renewJobPost update map keys and value types:');
+      data.forEach((key, value) {
+        debugPrint('  $key: ${value.runtimeType}');
+      });
     }
 
     await docRef.update(data);
 
-    try {
-      await NotificationService.instance.sendNotification(
-        event: 'job_posted',
-        docId: requestId,
-      );
-    } catch (e) {
-      debugPrint('[JobRequestRepo] renew alert error: $e');
-    }
+    unawaited(
+      NotificationService.instance
+          .sendNotification(
+            event: 'job_posted',
+            docId: requestId,
+          )
+          .catchError((e) {
+        debugPrint('[JobRequestRepo] renew alert error: $e');
+        return false;
+      }),
+    );
   }
 
   Future<void> deleteJobPost(String requestId, {String? previousStatus}) async {
@@ -794,7 +817,8 @@ class JobRequestRepository {
   }
 
   Future<Map<String, dynamic>?> getJobPrivateContact(String requestId) async {
-    final doc = await _col.doc(requestId).collection('private').doc('contact').get();
+    final doc =
+        await _col.doc(requestId).collection('private').doc('contact').get();
     if (doc.exists) {
       return doc.data();
     }
@@ -842,10 +866,12 @@ class JobRequestRepository {
         'scheduledEndAt': Timestamp.fromDate(scheduledEndAt),
       if (scheduledSlot != null && scheduledSlot.isNotEmpty)
         'scheduledSlot': scheduledSlot,
-      if (flexibleWindowDays != null)
-        'flexibleWindowDays': flexibleWindowDays,
+      if (flexibleWindowDays != null) 'flexibleWindowDays': flexibleWindowDays,
       'photos': (photos ?? []).map((p) => p.toMap()).toList(),
-      if (video != null) 'video': video.toMap() else 'video': FieldValue.delete(),
+      if (video != null)
+        'video': video.toMap()
+      else
+        'video': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
 

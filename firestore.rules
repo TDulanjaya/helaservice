@@ -1591,6 +1591,25 @@ service cloud.firestore {
     match /upload_rate_limits/{id} {
       allow read, write: if false;
     }
+
+    // client errors
+    match /clientErrors/{errorId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() &&
+        request.resource.data.keys().hasOnly([
+          'screen', 'action', 'errorType', 'code', 'message', 'appVersion', 'platform', 'uid', 'createdAt'
+        ]) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.screen is string && request.resource.data.screen.size() <= 100 &&
+        request.resource.data.action is string && request.resource.data.action.size() <= 100 &&
+        request.resource.data.errorType is string && request.resource.data.errorType.size() <= 100 &&
+        request.resource.data.code is string && request.resource.data.code.size() <= 100 &&
+        request.resource.data.message is string && request.resource.data.message.size() <= 300 &&
+        request.resource.data.appVersion is string && request.resource.data.appVersion.size() <= 50 &&
+        request.resource.data.platform is string && request.resource.data.platform.size() <= 50 &&
+        request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
   }
 }
 

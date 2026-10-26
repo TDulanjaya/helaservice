@@ -16,4 +16,5 @@ class FirestorePaths {
   static const String reviews = 'reviews';
   static const String liveLocations = 'liveLocations';
   static const String complaints = 'complaints';
+  static const String clientErrors = 'clientErrors';
 }

@@ -399,52 +399,62 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
               ),
             )
           else
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: ElevatedButton.icon(
-                    onPressed: _handleConfirmPayment,
-                    icon: const Icon(Icons.check, size: 16),
-                    label: Text(
-                      context.l10n.yesPaid,
-                      style: const TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 9),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+            LayoutBuilder(
+            builder: (context, constraints) {
+              final confirmBtn = ElevatedButton.icon(
+                onPressed: _handleConfirmPayment,
+                icon: const Icon(Icons.check, size: 16),
+                label: Text(
+                  context.l10n.yesPaid,
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: OutlinedButton(
-                    onPressed: _handleDisputePayment,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
-                      padding: const EdgeInsets.symmetric(vertical: 9),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      context.l10n.reportPaymentProblem,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              );
+
+              final disputeBtn = OutlinedButton(
+                onPressed: _handleDisputePayment,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-              ],
-            ),
+                child: Text(
+                  context.l10n.reportPaymentProblem,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              );
+
+              // stack buttons when narrow
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  children: [
+                    SizedBox(width: double.infinity, child: confirmBtn),
+                    const SizedBox(height: 8),
+                    SizedBox(width: double.infinity, child: disputeBtn),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(flex: 3, child: confirmBtn),
+                  const SizedBox(width: 8),
+                  Expanded(flex: 3, child: disputeBtn),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

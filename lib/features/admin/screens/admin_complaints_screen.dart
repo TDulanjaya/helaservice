@@ -427,6 +427,8 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
   }
 
   void _showTicketThreadSheet(BuildContext context, Complaint complaint) {
+    // mark read by admin
+    _complaintRepo.markAdminRead(complaint.id);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -446,7 +448,12 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
     required String targetRole,
     String? targetPhone,
     String? jobRequestId,
+    String? complaintId,
   }) {
+    if (complaintId != null && complaintId.isNotEmpty) {
+      // mark read by admin
+      _complaintRepo.markAdminRead(complaintId);
+    }
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DirectChatScreen(
@@ -961,7 +968,9 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
         break;
     }
 
-    final isPending = complaint.status == 'pending';
+    final isPending =
+        complaint.status == 'pending' || complaint.status == 'open';
+    final hasNewReply = !complaint.isClosed && complaint.hasNewUserReply;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -981,37 +990,69 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  complaint.reason,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: context.themeTextPrimary,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _showTicketThreadSheet(context, complaint),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    complaint.reason,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: context.themeTextPrimary,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+                const SizedBox(width: 8),
+                if (hasNewReply) ...[
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.primary, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.mark_chat_unread_rounded,
+                            size: 11, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          context.l10n.newReply,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -1306,18 +1347,21 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
                       icon: const Icon(Icons.chat_bubble_outline_rounded,
                           size: 16),
                       label: Text(
-                        context.l10n.message,
+                        context.l10n.openChat,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       onPressed: () => _openAdminChat(
-                        targetUserId: complaint.customerId,
-                        targetUserName: complaint.customerName,
-                        targetRole: 'customer',
+                        targetUserId: complaint.effectiveReporterUid.isNotEmpty
+                            ? complaint.effectiveReporterUid
+                            : complaint.customerId,
+                        targetUserName: complaint.effectiveReporterName,
+                        targetRole: complaint.reporterRole,
                         targetPhone: complaint.customerPhone,
                         jobRequestId: complaint.bookingId,
+                        complaintId: complaint.id,
                       ),
                     ),
                   ),
@@ -1464,33 +1508,76 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
               ],
             ),
           ] else ...[
-            SizedBox(
-              height: 40,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.themeTextPrimary,
-                  side: BorderSide(color: context.themeBorder),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                if (complaint.effectiveReporterUid.isNotEmpty ||
+                    complaint.customerId.isNotEmpty) ...[
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.themeTextPrimary,
+                          side: BorderSide(color: context.themeBorder),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 14),
+                        label: Text(
+                          context.l10n.openChat,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        onPressed: () => _openAdminChat(
+                          targetUserId: complaint.effectiveReporterUid.isNotEmpty
+                              ? complaint.effectiveReporterUid
+                              : complaint.customerId,
+                          targetUserName: complaint.effectiveReporterName,
+                          targetRole: complaint.reporterRole,
+                          targetPhone: complaint.customerPhone,
+                          jobRequestId: complaint.bookingId,
+                          complaintId: complaint.id,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.themeTextPrimary,
+                        side: BorderSide(color: context.themeBorder),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.refresh, size: 14),
+                      label: Text(context.l10n.disputesReopenCase,
+                          style: const TextStyle(fontSize: 12)),
+                      onPressed: () async {
+                        await _complaintRepo.updateComplaintStatus(
+                          complaint.id,
+                          'pending',
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text(context.l10n.disputesCaseReopenedSnack)),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 ),
-                icon: const Icon(Icons.refresh, size: 14),
-                label: Text(context.l10n.disputesReopenCase,
-                    style: const TextStyle(fontSize: 12)),
-                onPressed: () async {
-                  await _complaintRepo.updateComplaintStatus(
-                    complaint.id,
-                    'pending',
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content:
-                              Text(context.l10n.disputesCaseReopenedSnack)),
-                    );
-                  }
-                },
-              ),
+              ],
             ),
           ],
         ],
@@ -1522,6 +1609,13 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
   bool _sending = false;
 
   @override
+  void initState() {
+    super.initState();
+    // mark read by admin
+    widget.complaintRepo.markAdminRead(widget.complaint.id);
+  }
+
+  @override
   void dispose() {
     _replyController.dispose();
     super.dispose();
@@ -1541,6 +1635,7 @@ class _AdminTicketThreadSheetState extends State<_AdminTicketThreadSheet> {
         createdAt: DateTime.now(),
       );
       await widget.complaintRepo.addMessage(widget.complaint.id, msg);
+      await widget.complaintRepo.markAdminRead(widget.complaint.id);
       await AdminLogService.instance.logAction(
         action: 'ticket_reply',
         targetType: 'complaint',

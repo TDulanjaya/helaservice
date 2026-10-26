@@ -74,101 +74,111 @@ class _PriceProposalBannerState extends State<PriceProposalBanner> {
               ),
             )
           else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      setState(() => _responding = true);
-                      try {
-                        final total =
-                            (b.proposedPrice?['totalLkr'] as num?)?.toInt() ??
-                                0;
-                        await BookingRepository()
-                            .customerRespondToProposedPrice(
-                          b.id,
-                          approve: false,
-                          totalLkr: total,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final rejectBtn = OutlinedButton(
+                  onPressed: () async {
+                    setState(() => _responding = true);
+                    try {
+                      final total =
+                          (b.proposedPrice?['totalLkr'] as num?)?.toInt() ?? 0;
+                      await BookingRepository().customerRespondToProposedPrice(
+                        b.id,
+                        approve: false,
+                        totalLkr: total,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text(context.l10n.priceProposalRejected)),
                         );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text(context.l10n.priceProposalRejected)),
-                          );
-                        }
-                      } catch (e) {
-                        debugPrint('priceProposal reject error: $e');
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(context.l10n.somethingWentWrong),
-                                backgroundColor: AppColors.error),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _responding = false);
                       }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(context.l10n.reject,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13)),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      setState(() => _responding = true);
-                      try {
-                        final total =
-                            (b.proposedPrice?['totalLkr'] as num?)?.toInt() ??
-                                0;
-                        await BookingRepository()
-                            .customerRespondToProposedPrice(
-                          b.id,
-                          approve: true,
-                          totalLkr: total,
+                    } catch (e) {
+                      debugPrint('priceProposal reject error: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error),
                         );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(context.l10n.priceProposalApproved),
-                              backgroundColor: AppColors.primary,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        debugPrint('priceProposal approve error: $e');
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(context.l10n.somethingWentWrong),
-                                backgroundColor: AppColors.error),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _responding = false);
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(context.l10n.approve,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13)),
+                    } finally {
+                      if (mounted) setState(() => _responding = false);
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                ),
-              ],
+                  child: Text(context.l10n.reject,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 13)),
+                );
+
+                final approveBtn = ElevatedButton(
+                  onPressed: () async {
+                    setState(() => _responding = true);
+                    try {
+                      final total =
+                          (b.proposedPrice?['totalLkr'] as num?)?.toInt() ?? 0;
+                      await BookingRepository().customerRespondToProposedPrice(
+                        b.id,
+                        approve: true,
+                        totalLkr: total,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(context.l10n.priceProposalApproved),
+                            backgroundColor: AppColors.primary,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      debugPrint('priceProposal approve error: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error),
+                        );
+                      }
+                    } finally {
+                      if (mounted) setState(() => _responding = false);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: Text(context.l10n.approve,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 13)),
+                );
+
+                // stack buttons when narrow
+                if (constraints.maxWidth < 280) {
+                  return Column(
+                    children: [
+                      SizedBox(width: double.infinity, child: approveBtn),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: rejectBtn),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: rejectBtn),
+                    const SizedBox(width: 10),
+                    Expanded(child: approveBtn),
+                  ],
+                );
+              },
             ),
         ],
       ),
@@ -296,88 +306,102 @@ class _PendingExtraCardState extends State<_PendingExtraCard> {
               ),
             )
           else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      setState(() => _responding = true);
-                      try {
-                        await BookingRepository().customerRespondToExtra(
-                          bookingId: b.id,
-                          extraId: extra.id,
-                          extraAmountLkr: extra.amountLkr,
-                          approve: false,
-                          currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
-                          currentApprovedTotalLkr:
-                              b.approvedTotalLkr ?? b.agreedPriceLkr,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final rejectBtn = OutlinedButton(
+                  onPressed: () async {
+                    setState(() => _responding = true);
+                    try {
+                      await BookingRepository().customerRespondToExtra(
+                        bookingId: b.id,
+                        extraId: extra.id,
+                        extraAmountLkr: extra.amountLkr,
+                        approve: false,
+                        currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
+                        currentApprovedTotalLkr:
+                            b.approvedTotalLkr ?? b.agreedPriceLkr,
+                      );
+                    } catch (e) {
+                      debugPrint('extra reject error: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error),
                         );
-                      } catch (e) {
-                        debugPrint('extra reject error: $e');
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(context.l10n.somethingWentWrong),
-                                backgroundColor: AppColors.error),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _responding = false);
                       }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: Text(context.l10n.reject,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
+                    } finally {
+                      if (mounted) setState(() => _responding = false);
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      setState(() => _responding = true);
-                      try {
-                        await BookingRepository().customerRespondToExtra(
-                          bookingId: b.id,
-                          extraId: extra.id,
-                          extraAmountLkr: extra.amountLkr,
-                          approve: true,
-                          currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
-                          currentApprovedTotalLkr:
-                              b.approvedTotalLkr ?? b.agreedPriceLkr,
+                  child: Text(context.l10n.reject,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold)),
+                );
+
+                final approveBtn = ElevatedButton(
+                  onPressed: () async {
+                    setState(() => _responding = true);
+                    try {
+                      await BookingRepository().customerRespondToExtra(
+                        bookingId: b.id,
+                        extraId: extra.id,
+                        extraAmountLkr: extra.amountLkr,
+                        approve: true,
+                        currentApprovedExtrasLkr: b.approvedExtrasLkr ?? 0,
+                        currentApprovedTotalLkr:
+                            b.approvedTotalLkr ?? b.agreedPriceLkr,
+                      );
+                    } catch (e) {
+                      debugPrint('extra approve error: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(context.l10n.somethingWentWrong),
+                              backgroundColor: AppColors.error),
                         );
-                      } catch (e) {
-                        debugPrint('extra approve error: $e');
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(context.l10n.somethingWentWrong),
-                                backgroundColor: AppColors.error),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _responding = false);
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: Text(context.l10n.approve,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold)),
+                    } finally {
+                      if (mounted) setState(() => _responding = false);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                ),
-              ],
+                  child: Text(context.l10n.approve,
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold)),
+                );
+
+                // stack buttons when narrow
+                if (constraints.maxWidth < 280) {
+                  return Column(
+                    children: [
+                      SizedBox(width: double.infinity, child: approveBtn),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: rejectBtn),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: rejectBtn),
+                    const SizedBox(width: 10),
+                    Expanded(child: approveBtn),
+                  ],
+                );
+              },
             ),
         ],
       ),

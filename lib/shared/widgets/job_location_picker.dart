@@ -96,9 +96,17 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
 
   final List<String> _labelOptions = ['home', 'work', 'other'];
 
+  // cache address stream
+  Stream<List<SavedAddress>>? _savedAddressesStream;
+
   @override
   void initState() {
     super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      _savedAddressesStream =
+          SavedAddressRepository().streamSavedAddresses(uid);
+    }
     _loadRecentPlaces();
     if (widget.initialLocation != null) {
       _userChoseLocation = true;
@@ -758,57 +766,70 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                 children: [
                   // top choice buttons when location not chosen yet
                   if (!_userChoseLocation) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed:
-                                _isGpsLoading ? null : () => _useCurrentGps(),
-                            icon: _isGpsLoading
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.my_location_rounded,
-                                    size: 16),
-                            label: Text(
-                              context.l10n.useCurrentLocationAction,
-                              style: const TextStyle(
-                                  fontSize: 12.5, fontWeight: FontWeight.w700),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final gpsBtn = ElevatedButton.icon(
+                          onPressed:
+                              _isGpsLoading ? null : () => _useCurrentGps(),
+                          icon: _isGpsLoading
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.my_location_rounded, size: 16),
+                          label: Text(
+                            context.l10n.useCurrentLocationAction,
+                            style: const TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w700),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _searchFocusNode.requestFocus(),
-                            icon: const Icon(Icons.search_rounded, size: 16),
-                            label: Text(
-                              context.l10n.searchPlaceAction,
-                              style: const TextStyle(
-                                  fontSize: 12.5, fontWeight: FontWeight.w700),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                        );
+
+                        final searchBtn = OutlinedButton.icon(
+                          onPressed: () => _searchFocusNode.requestFocus(),
+                          icon: const Icon(Icons.search_rounded, size: 16),
+                          label: Text(
+                            context.l10n.searchPlaceAction,
+                            style: const TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w700),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+
+                        // stack buttons when narrow
+                        if (constraints.maxWidth < 360) {
+                          return Column(
+                            children: [
+                              SizedBox(width: double.infinity, child: gpsBtn),
+                              const SizedBox(height: 8),
+                              SizedBox(width: double.infinity, child: searchBtn),
+                            ],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: gpsBtn),
+                            const SizedBox(width: 8),
+                            Expanded(child: searchBtn),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -1005,9 +1026,7 @@ class _JobLocationPickerState extends State<JobLocationPicker> {
                   if (uid.isNotEmpty || _recentPlaces.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     StreamBuilder<List<SavedAddress>>(
-                      stream: uid.isNotEmpty
-                          ? SavedAddressRepository().streamSavedAddresses(uid)
-                          : Stream.value([]),
+                      stream: _savedAddressesStream ?? const Stream.empty(),
                       builder: (context, snapshot) {
                         final savedList = snapshot.data ?? [];
 

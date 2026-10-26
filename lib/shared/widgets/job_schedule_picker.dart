@@ -38,6 +38,12 @@ class JobSchedulePicker extends StatefulWidget {
   final TimeOfDay? initialToTime;
   final int? initialFlexibleDays;
   final String? title;
+  final Widget? note;
+  final Widget Function(
+    BuildContext context,
+    JobScheduleResult? Function() getSchedule,
+    String? Function() getScheduleError,
+  )? actionsBuilder;
 
   const JobSchedulePicker({
     super.key,
@@ -48,6 +54,8 @@ class JobSchedulePicker extends StatefulWidget {
     this.initialToTime,
     this.initialFlexibleDays,
     this.title,
+    this.note,
+    this.actionsBuilder,
   });
 
   static Future<JobScheduleResult?> pickSchedule(
@@ -120,6 +128,18 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
 
     if (widget.initialFromTime != null) _fromTime = widget.initialFromTime!;
     if (widget.initialToTime != null) _toTime = widget.initialToTime!;
+
+    final initialRes = ScheduleHelpers.computeScheduleWindow(
+      mode: _mode,
+      slot: _slot,
+      date: _selectedDate,
+      fromTime: _fromTime,
+      toTime: _toTime,
+      flexibleDays: _flexibleDays,
+    );
+    if (!initialRes.isValid) {
+      _errorMessage = initialRes.errorMessage;
+    }
   }
 
   Future<void> _pickDate(BuildContext context) async {
@@ -177,8 +197,8 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
     return res.isValid;
   }
 
-  void _submit() {
-    if (!_validate()) return;
+  JobScheduleResult? _computeResult() {
+    if (!_validate()) return null;
 
     final res = ScheduleHelpers.computeScheduleWindow(
       mode: _mode,
@@ -189,21 +209,37 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
       flexibleDays: _flexibleDays,
     );
 
-    if (!res.isValid) return;
+    if (!res.isValid) return null;
 
-    Navigator.pop(
-      context,
-      JobScheduleResult(
-        scheduleMode: _mode,
-        scheduledSlot: res.scheduledSlot,
-        scheduledDate: res.scheduledDate,
-        scheduledStartAt: res.scheduledStartAt,
-        scheduledEndAt: res.scheduledEndAt,
-        expiresAt: res.expiresAt,
-        flexibleWindowDays: res.flexibleWindowDays,
-        legacySlot: res.scheduledSlot ?? 'anytime',
-      ),
+    return JobScheduleResult(
+      scheduleMode: _mode,
+      scheduledSlot: res.scheduledSlot,
+      scheduledDate: res.scheduledDate,
+      scheduledStartAt: res.scheduledStartAt,
+      scheduledEndAt: res.scheduledEndAt,
+      expiresAt: res.expiresAt,
+      flexibleWindowDays: res.flexibleWindowDays,
+      legacySlot: res.scheduledSlot ?? 'anytime',
     );
+  }
+
+  String? _getScheduleError() {
+    final res = ScheduleHelpers.computeScheduleWindow(
+      mode: _mode,
+      slot: _slot,
+      date: _selectedDate,
+      fromTime: _fromTime,
+      toTime: _toTime,
+      flexibleDays: _flexibleDays,
+    );
+    return res.isValid ? null : res.errorMessage;
+  }
+
+  void _submit() {
+    final result = _computeResult();
+    if (result != null) {
+      Navigator.pop(context, result);
+    }
   }
 
   @override
@@ -261,6 +297,10 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
                   ),
                 ],
               ),
+              if (widget.note != null) ...[
+                const SizedBox(height: 12),
+                widget.note!,
+              ],
               const SizedBox(height: 16),
 
               // mode selection chips
@@ -501,38 +541,42 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
               ],
 
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(context.l10n.cancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        context.l10n.save,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+              if (widget.actionsBuilder != null) ...[
+                widget.actionsBuilder!(context, _computeResult, _getScheduleError),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(context.l10n.cancel),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          context.l10n.save,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

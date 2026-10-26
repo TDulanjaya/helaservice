@@ -124,10 +124,24 @@ class ComplaintRepository {
     await batch.commit();
 
     if (message.isAdmin) {
+      // mark read so admin reply doesn't show badge
+      await markAdminRead(ticketId);
       unawaited(NotificationService.instance.sendNotification(
         event: 'support_admin_reply',
         docId: ticketId,
       ));
+    }
+  }
+
+  // set admin read time
+  Future<void> markAdminRead(String complaintId) async {
+    if (complaintId.isEmpty) return;
+    try {
+      await _col.doc(complaintId).update({
+        'adminLastReadAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      // ignore error
     }
   }
 

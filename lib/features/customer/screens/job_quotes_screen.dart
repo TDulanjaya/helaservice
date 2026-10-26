@@ -476,10 +476,9 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final editBtn = OutlinedButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -497,9 +496,9 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
+                );
+
+                final deleteBtn = OutlinedButton.icon(
                   onPressed: () => request.canDelete
                       ? _deleteJob(context, request)
                       : _cancelJob(context, request),
@@ -524,8 +523,26 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                   ),
-                ),
-              ],
+                );
+
+                // stack buttons when narrow
+                if (constraints.maxWidth < 360) {
+                  return Column(
+                    children: [
+                      SizedBox(width: double.infinity, child: editBtn),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: deleteBtn),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: editBtn),
+                    const SizedBox(width: 8),
+                    Expanded(child: deleteBtn),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -1797,9 +1814,9 @@ class _QuoteCardState extends State<_QuoteCard> {
           ],
           if (request.status == 'open') ...[
             const SizedBox(height: 14),
-            Row(
-              children: [
-                OutlinedButton.icon(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final callBtn = OutlinedButton.icon(
                   onPressed: _callProvider,
                   icon: const Icon(Icons.call_rounded, size: 16),
                   label: Text(context.l10n.callTech),
@@ -1809,9 +1826,9 @@ class _QuoteCardState extends State<_QuoteCard> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
+                );
+
+                final chatBtn = OutlinedButton.icon(
                   onPressed: _chatProvider,
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
                   label: Text(context.l10n.chat),
@@ -1821,30 +1838,54 @@ class _QuoteCardState extends State<_QuoteCard> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: quote.isExpired
-                      ? OutlinedButton(
-                          onPressed: null,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            context.l10n.expiredPill,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
-                        )
-                      : PrimaryButton(
-                          label: context.l10n.acceptHire,
-                          leadingIcon: Icons.handshake_outlined,
-                          onPressed: widget.onAccept,
+                );
+
+                final actionBtn = quote.isExpired
+                    ? OutlinedButton(
+                        onPressed: null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
-                ),
-              ],
+                        child: Text(
+                          context.l10n.expiredPill,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                      )
+                    : PrimaryButton(
+                        label: context.l10n.acceptHire,
+                        leadingIcon: Icons.handshake_outlined,
+                        onPressed: widget.onAccept,
+                      );
+
+                // stack buttons when narrow
+                if (constraints.maxWidth < 420) {
+                  return Column(
+                    children: [
+                      SizedBox(width: double.infinity, child: actionBtn),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: callBtn),
+                          const SizedBox(width: 8),
+                          Expanded(child: chatBtn),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    callBtn,
+                    const SizedBox(width: 8),
+                    chatBtn,
+                    const SizedBox(width: 8),
+                    Expanded(child: actionBtn),
+                  ],
+                );
+              },
             ),
           ] else if (isAccepted) ...[
             const SizedBox(height: 14),

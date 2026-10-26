@@ -77,9 +77,15 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
       _onlyServesMyArea ||
       _sortBy != _initialSortBy;
 
+  // cache streams for feeds
+  late final Stream<List<CategoryRow>> _categoriesStream;
+  late final Stream<List<Technician>> _techStream;
+
   @override
   void initState() {
     super.initState();
+    _categoriesStream = _categoryRepo.streamLiveCategories();
+    _techStream = _techRepo.streamApprovedTechnicians();
     _navIndex = widget.initialIndex > 2 ? 2 : widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -1668,7 +1674,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ),
             const SizedBox(height: 22),
             StreamBuilder<List<CategoryRow>>(
-              stream: _categoryRepo.streamLiveCategories(),
+              stream: _categoriesStream,
               builder: (context, snapshot) {
                 final categories = snapshot.data ?? [];
                 return Column(
@@ -1805,12 +1811,13 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
             ),
             const SizedBox(height: 12),
             StreamBuilder<List<Technician>>(
-              stream: _techRepo.streamApprovedTechnicians(),
+              stream: _techStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   SessionGuard.handlePermissionDenied(snapshot.error);
                 }
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
                   return const Center(
                       child: Padding(
                     padding: EdgeInsets.all(24),

@@ -7,16 +7,14 @@ import '../../../models/admin_user.dart';
 import '../../../theme/app_theme.dart';
 import '../../../state/role_provider.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
-import '../../../shared/screens/conversations_inbox_screen.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/admin_l10n_helpers.dart';
 import '../../../shared/widgets/user_avatar.dart';
 
 class AdminTopBar extends StatelessWidget {
-  final VoidCallback? onSearchTap;
   final VoidCallback? onProfileTap;
 
-  const AdminTopBar({super.key, this.onSearchTap, this.onProfileTap});
+  const AdminTopBar({super.key, this.onProfileTap});
 
   @override
   Widget build(BuildContext context) {
@@ -92,33 +90,10 @@ class AdminTopBar extends StatelessWidget {
                 border: Border.all(color: context.themeBorder),
               ),
               child: IconButton(
-                icon: Icon(Icons.search,
+                icon: Icon(Icons.notifications_none,
                     size: 18, color: context.themeTextPrimary),
-                onPressed: onSearchTap ?? () {},
-                tooltip: context.l10n.topBarSearch,
-                padding: EdgeInsets.zero,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: context.themeSurface,
-                shape: BoxShape.circle,
-                border: Border.all(color: context.themeBorder),
-              ),
-              child: IconButton(
-                icon: Icon(Icons.chat_bubble_outline,
-                    size: 18, color: context.themeTextPrimary),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ConversationsInboxScreen(),
-                    ),
-                  );
-                },
-                tooltip: context.l10n.messages,
+                onPressed: () => _showNotificationPanel(context),
+                tooltip: context.l10n.operationsAlertsBroadcasts,
                 padding: EdgeInsets.zero,
               ),
             ),
@@ -147,69 +122,33 @@ class AdminTopBar extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 260,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: context.themeSurfaceLow,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: context.themeBorder),
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(999),
             ),
-            child: Row(children: [
-              Icon(Icons.search, size: 16, color: context.themeTextSecondary),
-              const SizedBox(width: 8),
-              Expanded(
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.circle, size: 8, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Flexible(
                 child: Text(
-                  context.l10n.searchTechniciansNicJobs,
+                  context.l10n.islandNetworkStatus,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: 12, color: context.themeTextSecondary),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ]),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.circle, size: 8, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    context.l10n.islandNetworkStatus,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ]),
-            ),
           ),
           const Spacer(),
           IconButton(
             onPressed: () => _showNotificationPanel(context),
             icon: Icon(Icons.notifications_none,
                 color: context.themeTextSecondary),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ConversationsInboxScreen(),
-                ),
-              );
-            },
-            icon: Icon(Icons.chat_bubble_outline,
-                color: context.themeTextSecondary),
-            tooltip: context.l10n.topBarSupportMessages,
+            tooltip: context.l10n.operationsAlertsBroadcasts,
           ),
           const SizedBox(width: 6),
           GestureDetector(

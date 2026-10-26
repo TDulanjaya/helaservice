@@ -12,6 +12,8 @@ enum StatusPillType {
   completed,
   cancelled,
   declined,
+  expired,
+  deleted,
   offline,
   you,
   custom,
@@ -81,6 +83,18 @@ class StatusPill extends StatelessWidget {
         customBackground = null,
         customForeground = null;
 
+  const StatusPill.expired({super.key, this.label})
+      : type = StatusPillType.expired,
+        showDot = false,
+        customBackground = null,
+        customForeground = null;
+
+  const StatusPill.deleted({super.key, this.label})
+      : type = StatusPillType.deleted,
+        showDot = false,
+        customBackground = null,
+        customForeground = null;
+
   const StatusPill.offline({super.key, this.label})
       : type = StatusPillType.offline,
         showDot = true,
@@ -111,6 +125,10 @@ class StatusPill extends StatelessWidget {
         return StatusPill.cancelled(label: customLabel);
       case JobStatus.declined:
         return StatusPill.declined(label: customLabel);
+      case JobStatus.expired:
+        return StatusPill.expired(label: customLabel);
+      case 'deleted':
+        return StatusPill.deleted(label: customLabel);
       default:
         return StatusPill.pending(label: customLabel ?? status);
     }
@@ -162,6 +180,16 @@ class StatusPill extends StatelessWidget {
         bg = context.themeDangerTint;
         fg = context.themeDanger;
         text = label ?? context.l10n.statusDeclined;
+        break;
+      case StatusPillType.expired:
+        bg = context.themeAmberTint;
+        fg = context.themeAmberText;
+        text = label ?? context.l10n.statusExpired;
+        break;
+      case StatusPillType.deleted:
+        bg = context.themeSoft;
+        fg = context.themeMuted;
+        text = label ?? context.l10n.statusDeleted;
         break;
       case StatusPillType.offline:
         bg = context.themeSoft;

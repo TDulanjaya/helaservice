@@ -7139,14 +7139,50 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count quotes',
-      one: '1 quote',
+      other: '$count bids',
+      one: '1 bid',
+      zero: '0 bids',
     );
     return '$_temp0';
   }
 
   @override
-  String get renewPost => 'Renew';
+  String get repost => 'Repost';
+
+  @override
+  String get repostNow => 'Repost now';
+
+  @override
+  String get editDetailsFirst => 'Edit details first';
+
+  @override
+  String get repostJobTitle => 'Repost Job';
+
+  @override
+  String get statusExpired => 'Expired';
+
+  @override
+  String get statusDeleted => 'Deleted';
+
+  @override
+  String expiredOn(String date) {
+    return 'Expired on $date';
+  }
+
+  @override
+  String cancelledOn(String date) {
+    return 'Cancelled on $date';
+  }
+
+  @override
+  String completedOn(String date) {
+    return 'Completed on $date';
+  }
+
+  @override
+  String postedOn(String date) {
+    return 'Posted on $date';
+  }
 
   @override
   String get renewPostTitle => 'Renew Job Post';
@@ -7173,4 +7209,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get providerCancelledExpiredPrompt =>
       'Provider cancelled. Renew or post again.';
+
+  @override
+  String get useCurrentLocation => 'Use current location';
+
+  @override
+  String get pickOnMap => 'Pick on map';
+
+  @override
+  String get notSetYet => 'Not set yet';
+
+  @override
+  String updatedTimeAgo(String time) {
+    return 'updated $time';
+  }
+
+  @override
+  String get helaServiceSupport => 'HelaService Support';
+
+  @override
+  String get needHelpContactSupport => 'Need help? Contact support';
+
+  @override
+  String get newReply => 'New reply';
 }

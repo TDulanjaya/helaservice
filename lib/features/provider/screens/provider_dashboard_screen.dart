@@ -1414,39 +1414,13 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               padding: const EdgeInsets.fromLTRB(
                   16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      context.l10n.navMyQuotes,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ConversationsInboxScreen(),
-                          ),
-                        );
-                      },
-                      style: IconButton.styleFrom(
-                        backgroundColor: context.themeSurfaceLow,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: context.themeBorder),
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 18,
-                        color: context.themeTextPrimary,
-                      ),
-                    ),
-                  ],
+                Text(
+                  context.l10n.navMyQuotes,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (quotes.isNotEmpty) ...[

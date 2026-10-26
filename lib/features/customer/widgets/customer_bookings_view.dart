@@ -1030,7 +1030,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                     ((r.status == 'expired' || r.status == 'cancelled') ||
                         (r.status == 'deleted' &&
                             r.deletedAt != null &&
-                            DateTime.now().difference(r.deletedAt!).inDays < 1)))
+                            DateTime.now().difference(r.deletedAt!).inDays <
+                                1)))
                 .toList();
 
             final List<_HistoryItem> items = [
@@ -2495,10 +2496,20 @@ class HistoryJobRequestCard extends StatelessWidget {
   }
 
   Future<void> _handleUndo(BuildContext context) async {
+    final now = DateTime.now();
+    final fallbackStatus =
+        (request.expiresAt != null && request.expiresAt!.isAfter(now))
+            ? 'open'
+            : 'expired';
+    final targetStatus =
+        (request.previousStatus != null && request.previousStatus!.isNotEmpty)
+            ? request.previousStatus!
+            : fallbackStatus;
+
     try {
       await JobRequestRepository().undoDeleteJobPost(
         request.id,
-        request.previousStatus ?? 'expired',
+        targetStatus,
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2616,7 +2627,8 @@ class HistoryJobRequestCard extends StatelessWidget {
                         ),
                       );
                       if (context.mounted) {
-                        final debugDetails = ErrorReporter.formatDebugDetails(e);
+                        final debugDetails =
+                            ErrorReporter.formatDebugDetails(e);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Column(

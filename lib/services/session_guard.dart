@@ -47,9 +47,9 @@ class SessionGuard {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || isAuthFlowActive) return false;
 
-    final isPermissionDenied = (error is FirebaseException &&
-            error.code == 'permission-denied') ||
-        error.toString().contains('permission-denied');
+    final isPermissionDenied =
+        (error is FirebaseException && error.code == 'permission-denied') ||
+            error.toString().contains('permission-denied');
     if (!isPermissionDenied) return false;
     return instance.checkSessionValid();
   }

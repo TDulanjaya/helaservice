@@ -154,8 +154,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     try {
       // load contact location
-      final contact =
-          await JobRequestRepository().getJobPrivateContact(job.id);
+      final contact = await JobRequestRepository().getJobPrivateContact(job.id);
       if (contact != null && mounted) {
         final lat =
             (contact['latitude'] as num?)?.toDouble() ?? job.latitude ?? 0.0;
@@ -227,8 +226,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   if (imgRes.statusCode == 200 && mounted) {
                     final rawBytes = imgRes.bodyBytes;
                     final attachment = PickedAttachment(
-                      file: XFile.fromData(rawBytes,
-                          name: p.key.split('/').last),
+                      file:
+                          XFile.fromData(rawBytes, name: p.key.split('/').last),
                       bytes: rawBytes,
                     );
                     setState(() {
@@ -799,8 +798,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                   setState(() {
                     _uploadProgressFraction = total > 0 ? (sent / total) : 0.0;
                     final sentMb = (sent / (1024 * 1024)).toStringAsFixed(1);
-                    final totalMb =
-                        (total / (1024 * 1024)).toStringAsFixed(1);
+                    final totalMb = (total / (1024 * 1024)).toStringAsFixed(1);
                     _uploadProgressText = context.l10n.uploadPhotoBytesProgress(
                         i + 1, _photos.length, sentMb, totalMb);
                   });
@@ -822,8 +820,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             }
 
             if (attempt == 2) {
-              final code =
-                  e is MediaUploadHttpException ? e.statusCode : null;
+              final code = e is MediaUploadHttpException ? e.statusCode : null;
               throw MediaUploadException('Photo ${i + 1} upload failed: $e',
                   statusCode: code);
             }
@@ -862,8 +859,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 await _processedVideo!.thumbnailFile.readAsBytes();
             if (_submitGeneration != currentGen) return;
 
-            final thumbStripped =
-                await StorageService.instance.stripExifAndCompressImage(thumbBytes);
+            final thumbStripped = await StorageService.instance
+                .stripExifAndCompressImage(thumbBytes);
             if (_submitGeneration != currentGen) return;
 
             const retryDelays = [
@@ -905,8 +902,7 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 if (attempt == 2) {
                   final code =
                       e is MediaUploadHttpException ? e.statusCode : null;
-                  throw MediaUploadException(
-                      'Video thumb upload failed: $e',
+                  throw MediaUploadException('Video thumb upload failed: $e',
                       statusCode: code);
                 }
 
@@ -1090,10 +1086,12 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         };
         for (final oldKey in _originalMediaKeys) {
           if (!remainingKeys.contains(oldKey)) {
-            unawaited(ApiClient.instance.delete(
+            unawaited(ApiClient.instance
+                .delete(
               uri: Uri.parse(
                   '${AppConfig.otpApiUrl}/media?key=${Uri.encodeComponent(oldKey)}&jobId=${widget.editJob!.id}'),
-            ).catchError((e) {
+            )
+                .catchError((e) {
               debugPrint('[PostJobRequest] delete media error: $e');
               return http.Response('', 500);
             }));
@@ -1119,9 +1117,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       // notify without blocking
       unawaited(NotificationService.instance
           .sendNotification(
-            event: 'job_posted',
-            docId: requestId,
-          )
+        event: 'job_posted',
+        docId: requestId,
+      )
           .catchError((e) {
         debugPrint('[PostJobRequest] notify job_posted error: $e');
         return false;
@@ -1171,7 +1169,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             friendlyMsg = context.l10n.mediaUploadFailedRetry;
             break;
         }
-        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+        final debugDetails =
+            kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         setState(() {
           _uploadFailed = true;
           _saveFailed = false;
@@ -1187,7 +1186,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               children: [
                 Text(friendlyMsg),
                 if (debugDetails != null)
-                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(debugDetails,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
             backgroundColor: AppColors.error,
@@ -1196,7 +1196,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       }
     } on FirebaseException catch (e) {
       if (_submitGeneration != currentGen) return;
-      debugPrint('[PostJobRequest] create job FirebaseException: [${e.code}] ${e.message}');
+      debugPrint(
+          '[PostJobRequest] create job FirebaseException: [${e.code}] ${e.message}');
       unawaited(ErrorReporter.report(
         screen: 'post_job_request_screen',
         action: 'submit_job_request',
@@ -1204,7 +1205,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       ));
       if (mounted) {
         final friendlyMsg = jobPostErrorMessage(context, e);
-        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+        final debugDetails =
+            kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         setState(() {
           _uploadFailed = false;
           _saveFailed = true;
@@ -1220,7 +1222,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               children: [
                 Text(friendlyMsg),
                 if (debugDetails != null)
-                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(debugDetails,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
             backgroundColor: AppColors.error,
@@ -1237,7 +1240,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       ));
       if (mounted) {
         final friendlyMsg = jobPostErrorMessage(context, e);
-        final debugDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+        final debugDetails =
+            kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         setState(() {
           _uploadFailed = false;
           _saveFailed = true;
@@ -1253,7 +1257,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               children: [
                 Text(friendlyMsg),
                 if (debugDetails != null)
-                  Text(debugDetails, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(debugDetails,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
             backgroundColor: AppColors.error,
@@ -1374,8 +1379,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               if (widget.isEditMode) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                   decoration: BoxDecoration(
                     color: context.themeSurfaceLow,
                     borderRadius: BorderRadius.circular(14),
@@ -1409,74 +1414,74 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 StreamBuilder<List<CategoryRow>>(
                   stream: _categoriesStream,
                   builder: (context, snapshot) {
-                  final dbCategories = snapshot.data ?? [];
-                  if (dbCategories.isEmpty &&
-                      snapshot.connectionState != ConnectionState.waiting) {
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: context.themeSurfaceLow,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: context.themeBorder),
-                      ),
-                      child: Text(
-                        context.l10n.noServicesAvailableYet,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.themeTextSecondary,
+                    final dbCategories = snapshot.data ?? [];
+                    if (dbCategories.isEmpty &&
+                        snapshot.connectionState != ConnectionState.waiting) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: context.themeSurfaceLow,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: context.themeBorder),
                         ),
-                      ),
-                    );
-                  }
+                        child: Text(
+                          context.l10n.noServicesAvailableYet,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      );
+                    }
 
-                  return DropdownButtonFormField<String>(
-                    initialValue:
-                        dbCategories.any((c) => c.id == _selectedCategory)
-                            ? _selectedCategory
-                            : null,
-                    decoration: InputDecoration(
-                      hintText: context.l10n.selectTradeCategory,
-                      hintStyle: TextStyle(
-                          fontSize: 13, color: context.themeTextSecondary),
-                      filled: true,
-                      fillColor: context.themeSurfaceLow,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: context.themeBorder),
+                    return DropdownButtonFormField<String>(
+                      initialValue:
+                          dbCategories.any((c) => c.id == _selectedCategory)
+                              ? _selectedCategory
+                              : null,
+                      decoration: InputDecoration(
+                        hintText: context.l10n.selectTradeCategory,
+                        hintStyle: TextStyle(
+                            fontSize: 13, color: context.themeTextSecondary),
+                        filled: true,
+                        fillColor: context.themeSurfaceLow,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: context.themeBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: context.themeBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                              color: AppColors.primary, width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: context.themeBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                            color: AppColors.primary, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                    ),
-                    items: dbCategories
-                        .map((c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(
-                                c.name,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      setState(() => _selectedCategory = v);
-                      _updateCoverage();
-                    },
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? context.l10n.selectCategoryError
-                        : null,
-                  );
-                },
-              ),
+                      items: dbCategories
+                          .map((c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(
+                                  c.name,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        setState(() => _selectedCategory = v);
+                        _updateCoverage();
+                      },
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? context.l10n.selectCategoryError
+                          : null,
+                    );
+                  },
+                ),
               const SizedBox(height: 16),
 
               // job title
@@ -1521,7 +1526,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
               if (_hasSkippedOldPhotos) ...[
                 Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -1655,7 +1661,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                 const SizedBox(height: 8),
                 Container(
                   margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.info.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -2401,7 +2408,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                                         : AppColors.primary,
                                   ),
                                 ),
-                                if (kDebugMode && _debugErrorDetails != null && (_uploadFailed || _saveFailed)) ...[
+                                if (kDebugMode &&
+                                    _debugErrorDetails != null &&
+                                    (_uploadFailed || _saveFailed)) ...[
                                   const SizedBox(height: 4),
                                   Text(
                                     _debugErrorDetails!,

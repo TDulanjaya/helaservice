@@ -313,9 +313,29 @@ service cloud.firestore {
     }
 
     function getDeletedPostGraceDays() {
-      return exists(/databases/$(database)/documents/app_config/cleanup)
+      return exists(/databases/$(database)/documents/app_config/cleanup) &&
+             get(/databases/$(database)/documents/app_config/cleanup).data.get('deletedPostGraceDays', 1) is int &&
+             get(/databases/$(database)/documents/app_config/cleanup).data.get('deletedPostGraceDays', 1) > 0
         ? get(/databases/$(database)/documents/app_config/cleanup).data.get('deletedPostGraceDays', 1)
         : 1;
+    }
+
+    // app configuration (version check fallback & cleanup)
+    match /appConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Anyone signed in can view profile photos. Only the owner can edit their own.
+    match /profileImages/{uid} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() &&
+        request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['data', 'contentType', 'updatedAt']) &&
+        request.resource.data.data is bytes &&
+        request.resource.data.data.size() < 160000 &&
+        request.resource.data.contentType in ['image/jpeg', 'image/png', 'image/webp'];
+      allow delete: if isAuthenticated() && (request.auth.uid == uid || isSuperAdmin());
     }
 
     // app configuration
@@ -565,35 +585,54 @@ service cloud.firestore {
           !('directions' in request.resource.data) &&
           !('accuracyMeters' in request.resource.data) &&
           !('note' in request.resource.data) &&
-          validJobPhotos(request.resource.data, resource.data.customerId) &&
-          validJobVideo(request.resource.data, resource.data.customerId) &&
+          (!changed().hasAny(['photos']) || validJobPhotos(request.resource.data, resource.data.customerId)) &&
+          (!changed().hasAny(['video']) || validJobVideo(request.resource.data, resource.data.customerId)) &&
           (
             !changed().hasAny(['scheduleMode', 'scheduledDate', 'scheduledStartAt', 'scheduledEndAt']) ||
             validSchedule(request.resource.data)
           ) &&
           (
-            (resource.data.status == 'open' && request.resource.data.status in ['open', 'cancelled', 'assigned']) ||
-            (resource.data.status == 'open' && request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
-            (resource.data.status == 'pending_provider' && request.resource.data.status == 'cancelled') ||
-            (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
-            (resource.data.status in ['expired', 'cancelled'] && request.resource.data.status == resource.data.status) ||
-            (resource.data.status in ['expired', 'cancelled'] && request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
-            (
-              // Renew: expired -> open
-              resource.data.status == 'expired' && request.resource.data.status == 'open' &&
-              !('mediaDeletedAt' in resource.data) &&
-              validSchedule(request.resource.data) &&
-              request.resource.data.expiresAt is timestamp &&
-              request.resource.data.expiresAt > request.time &&
-              !changed().hasAny(['latitude', 'longitude'])
-            ) ||
-            (
-              // Undo soft delete within grace period
-              resource.data.status == 'deleted' &&
-              request.resource.data.status == resource.data.get('previousStatus', 'open') &&
-              resource.data.get('quoteCount', 0) == 0 &&
-              request.time <= resource.data.deletedAt + duration.value(getDeletedPostGraceDays(), 'd')
-            )
+            resource.data.status == 'open'
+              ? (
+                  request.resource.data.status in ['open', 'cancelled', 'assigned'] ||
+                  (request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0)
+                )
+              : (
+                  resource.data.status == 'expired'
+                    ? (
+                        request.resource.data.status == 'expired' ||
+                        (request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
+                        (
+                          // Renew: expired -> open
+                          request.resource.data.status == 'open' &&
+                          !('mediaDeletedAt' in resource.data) &&
+                          request.resource.data.expiresAt is timestamp &&
+                          request.resource.data.expiresAt > request.time &&
+                          !changed().hasAny(['latitude', 'longitude'])
+                        )
+                      )
+                    : (
+                        resource.data.status == 'deleted'
+                          ? (
+                              // Undo soft delete within grace period
+                              (
+                                'previousStatus' in resource.data
+                                  ? request.resource.data.status == resource.data.previousStatus
+                                  : request.resource.data.status == (resource.data.expiresAt > request.time ? 'open' : 'expired')
+                              ) &&
+                              resource.data.get('quoteCount', 0) == 0 &&
+                              request.time <= resource.data.deletedAt + duration.value(getDeletedPostGraceDays(), 'd')
+                            )
+                          : (
+                              (resource.data.status == 'pending_provider' && request.resource.data.status == 'cancelled') ||
+                              (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
+                              (resource.data.status == 'cancelled' && (
+                                request.resource.data.status == 'cancelled' ||
+                                (request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0)
+                              ))
+                            )
+                      )
+                )
           )
         ) ||
         (

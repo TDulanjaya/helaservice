@@ -66,7 +66,8 @@ class JobRepostSheet extends StatelessWidget {
       initialMode: initialMode,
       initialSlot: request.scheduledSlot,
       note: _buildNote(context),
-      actionsBuilder: (ctx, getSchedule, getScheduleError) => _RepostSheetActions(
+      actionsBuilder: (ctx, getSchedule, getScheduleError) =>
+          _RepostSheetActions(
         request: request,
         booking: booking,
         getSchedule: getSchedule,
@@ -388,7 +389,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
 
     try {
       final customerId = widget.request.customerId;
-      final prefix = 'https://helaservice.vercel.app/api/media?key=uploads/$customerId/';
+      final prefix =
+          'https://helaservice.vercel.app/api/media?key=uploads/$customerId/';
       final keyPrefix = 'uploads/$customerId/';
 
       final validPhotos = widget.request.photos.where((p) {
@@ -409,7 +411,9 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         scheduledSlot: sched.scheduledSlot,
         flexibleWindowDays: sched.flexibleWindowDays,
         expiresAt: sched.expiresAt,
-        sanitizedPhotos: (hadOldPhotos || widget.request.photos.isNotEmpty) ? validPhotos : null,
+        sanitizedPhotos: (hadOldPhotos || widget.request.photos.isNotEmpty)
+            ? validPhotos
+            : null,
         dropVideo: hasInvalidVideo,
       );
 
@@ -425,7 +429,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         );
       }
     } on FirebaseException catch (e) {
-      debugPrint('[RepostSheet] renew FirebaseException: [${e.code}] ${e.message}');
+      debugPrint(
+          '[RepostSheet] renew FirebaseException: [${e.code}] ${e.message}');
       unawaited(ErrorReporter.report(
         screen: 'job_repost_sheet',
         action: 'renew_job_post',
@@ -439,7 +444,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
           _errorMessage = e.code == 'permission-denied'
               ? context.l10n.loginOtpRequired
               : (e.message ?? context.l10n.somethingWentWrong);
-          _debugErrorDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+          _debugErrorDetails =
+              kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         });
       }
     } catch (e) {
@@ -453,7 +459,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         setState(() {
           _isSubmitting = false;
           _errorMessage = context.l10n.somethingWentWrong;
-          _debugErrorDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+          _debugErrorDetails =
+              kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         });
       }
     }
@@ -672,9 +679,9 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
       // send job_posted notification
       unawaited(NotificationService.instance
           .sendNotification(
-            event: 'job_posted',
-            docId: newRequestId,
-          )
+        event: 'job_posted',
+        docId: newRequestId,
+      )
           .catchError((e) {
         debugPrint('[RepostSheet] notify job_posted error: $e');
         return false;
@@ -700,7 +707,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         );
       }
     } on MediaUploadException catch (e) {
-      debugPrint('[RepostSheet] media upload failed: status=${e.statusCode} message=${e.message}');
+      debugPrint(
+          '[RepostSheet] media upload failed: status=${e.statusCode} message=${e.message}');
       unawaited(ErrorReporter.report(
         screen: 'job_repost_sheet',
         action: 'create_new_post_upload',
@@ -732,11 +740,13 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         setState(() {
           _isSubmitting = false;
           _errorMessage = friendlyMsg;
-          _debugErrorDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+          _debugErrorDetails =
+              kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         });
       }
     } on FirebaseException catch (e) {
-      debugPrint('[RepostSheet] post again FirebaseException: [${e.code}] ${e.message}');
+      debugPrint(
+          '[RepostSheet] post again FirebaseException: [${e.code}] ${e.message}');
       unawaited(ErrorReporter.report(
         screen: 'job_repost_sheet',
         action: 'create_new_post',
@@ -750,7 +760,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
           _errorMessage = e.code == 'permission-denied'
               ? context.l10n.loginOtpRequired
               : (e.message ?? context.l10n.somethingWentWrong);
-          _debugErrorDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+          _debugErrorDetails =
+              kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         });
       }
     } catch (e) {
@@ -765,7 +776,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         setState(() {
           _isSubmitting = false;
           _errorMessage = friendlyMsg;
-          _debugErrorDetails = kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
+          _debugErrorDetails =
+              kDebugMode ? ErrorReporter.formatDebugDetails(e) : null;
         });
       }
     }

@@ -933,7 +933,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
     if (confirmed == true && context.mounted) {
       try {
         if (isPermanent) {
-          await JobRequestRepository().deleteJobPost(request.id);
+          await JobRequestRepository()
+              .deleteJobPost(request.id, previousStatus: request.status);
         } else {
           await JobRequestRepository().hideJobPostFromCustomer(request.id);
         }

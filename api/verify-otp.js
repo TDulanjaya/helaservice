@@ -172,8 +172,12 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      // valid for twelve hours
+      const nowSec = Math.floor(Date.now() / 1000);
+      const admin2faUntil = nowSec + 12 * 3600;
+
       // allow admin session
-      const newClaims = { ...currentClaims, loginOtpTimes };
+      const newClaims = { ...currentClaims, admin2faUntil, loginOtpTimes };
       await admin.auth().setCustomUserClaims(callerUid, newClaims);
 
       // write audit log
@@ -188,6 +192,7 @@ module.exports = async function handler(req, res) {
         adminEmail: userEmail,
         role,
         ip: clientIp,
+        expiresAt: admin2faUntil,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -195,6 +200,7 @@ module.exports = async function handler(req, res) {
         success: true,
         message: 'Admin 2FA verified successfully.',
         purpose,
+        admin2faUntil,
       });
     }
 

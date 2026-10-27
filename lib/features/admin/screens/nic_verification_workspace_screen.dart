@@ -2978,7 +2978,7 @@ class _ZoomableDocDialogState extends State<_ZoomableDocDialog> {
   }
 }
 
-class _NicDocImagePreview extends StatelessWidget {
+class _NicDocImagePreview extends StatefulWidget {
   final String providerId;
   final String docType;
   final String label;
@@ -2994,50 +2994,88 @@ class _NicDocImagePreview extends StatelessWidget {
     this.directUrl,
   });
 
+  @override
+  State<_NicDocImagePreview> createState() => _NicDocImagePreviewState();
+}
+
+class _NicDocImagePreviewState extends State<_NicDocImagePreview> {
+  late Future<String?> _imageFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageFuture = _resolveImageUrl();
+  }
+
+  @override
+  void didUpdateWidget(covariant _NicDocImagePreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.providerId != widget.providerId ||
+        oldWidget.directUrl != widget.directUrl ||
+        oldWidget.docType != widget.docType) {
+      _imageFuture = _resolveImageUrl();
+    }
+  }
+
   // fetch secure presigned url or direct image
   Future<String?> _resolveImageUrl() async {
-    if (directUrl != null && directUrl!.isNotEmpty) {
-      if (directUrl!.startsWith('http') || directUrl!.startsWith('data:')) {
-        return directUrl;
+    final direct = widget.directUrl;
+    if (direct != null && direct.isNotEmpty) {
+      if (direct.startsWith('http') || direct.startsWith('data:')) {
+        return direct;
       }
     }
 
-    if (docType == 'photo') {
+    if (widget.docType == 'photo') {
       try {
         final doc = await FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
-            .doc(providerId)
+            .doc(widget.providerId)
             .get();
         final photo = doc.data()?['photoUrl'] as String?;
         if (photo != null && photo.isNotEmpty) return photo;
 
         final uDoc = await FirebaseFirestore.instance
             .collection(FirestorePaths.users)
-            .doc(providerId)
+            .doc(widget.providerId)
             .get();
-        return uDoc.data()?['photoUrl'] as String?;
-      } catch (_) {}
+        final userPhoto = uDoc.data()?['photoUrl'] as String?;
+        if (userPhoto != null && userPhoto.isNotEmpty) return userPhoto;
+      } catch (e) {
+        debugPrint('[NicDocImagePreview] Error fetching photo: $e');
+        if (kDebugMode) rethrow;
+      }
+      return null;
     }
 
-    // request 5 minute presigned url from backend
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final token = await user.getIdToken();
-        final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
-        final uri = Uri.parse('$cleanBase/nic-url');
+    // request 5 minute presigned url from backend for KYC/NIC
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      const msg = 'User not logged in';
+      if (kDebugMode) throw Exception(msg);
+      return null;
+    }
 
-        final response = await http
+    await AppConfig.ensureApiSecretKey();
+
+    String? token = await user.getIdToken();
+    final cleanBase = AppConfig.otpApiUrl.replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.parse('$cleanBase/nic-url');
+
+    http.Response? response;
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        response = await http
             .post(
               uri,
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer $token',
+                if (token != null) 'Authorization': 'Bearer $token',
                 'x-helaservice-key': AppConfig.apiSecretKey,
               },
               body: jsonEncode({
-                'providerId': providerId,
-                'side': docType,
+                'providerId': widget.providerId,
+                'side': widget.docType,
               }),
             )
             .timeout(const Duration(seconds: 10));
@@ -3048,19 +3086,58 @@ class _NicDocImagePreview extends StatelessWidget {
           if (presignedUrl != null && presignedUrl.isNotEmpty) {
             return presignedUrl;
           }
+        } else if (response.statusCode == 403 && attempt == 0) {
+          // If 403, claims might have been updated; force refresh token and retry once
+          token = await user.getIdToken(true);
+          continue;
         }
+        break;
+      } catch (e) {
+        if (attempt == 0) {
+          await Future.delayed(const Duration(milliseconds: 300));
+          continue;
+        }
+        debugPrint('[NicDocImagePreview] Network error resolving NIC url: $e');
+        if (kDebugMode) rethrow;
+        break;
       }
-    } catch (_) {}
+    }
+
+    if (response != null && response.statusCode != 200) {
+      String errorMessage = 'HTTP ${response.statusCode}';
+      try {
+        final errJson = jsonDecode(response.body);
+        if (errJson is Map &&
+            (errJson['message'] != null || errJson['error'] != null)) {
+          errorMessage = (errJson['message'] ?? errJson['error']).toString();
+        }
+      } catch (_) {}
+      debugPrint(
+          '[NicDocImagePreview] Backend returned ${response.statusCode}: $errorMessage');
+      if (kDebugMode) {
+        throw Exception(errorMessage);
+      }
+    }
 
     // fallback to technicians doc
     try {
       final techDoc = await FirebaseFirestore.instance
           .collection(FirestorePaths.technicians)
-          .doc(providerId)
+          .doc(widget.providerId)
           .get();
       final data = techDoc.data();
-      if (docType == 'front') return data?['nicFrontUrl'] as String?;
-      if (docType == 'back') return data?['nicBackUrl'] as String?;
+      if (widget.docType == 'front') {
+        final val = data?['nicFrontUrl'] as String?;
+        if (val != null && (val.startsWith('http') || val.startsWith('data:'))) {
+          return val;
+        }
+      }
+      if (widget.docType == 'back') {
+        final val = data?['nicBackUrl'] as String?;
+        if (val != null && (val.startsWith('http') || val.startsWith('data:'))) {
+          return val;
+        }
+      }
     } catch (_) {}
 
     return null;
@@ -3068,12 +3145,13 @@ class _NicDocImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (providerId.isEmpty && (directUrl == null || directUrl!.isEmpty)) {
+    if (widget.providerId.isEmpty &&
+        (widget.directUrl == null || widget.directUrl!.isEmpty)) {
       return _buildFallback(context, context.l10n.nicDeskNoId);
     }
 
     return FutureBuilder<String?>(
-      future: _resolveImageUrl(),
+      future: _imageFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Expanded(
@@ -3095,6 +3173,13 @@ class _NicDocImagePreview extends StatelessWidget {
           );
         }
 
+        if (snapshot.hasError) {
+          final errStr =
+              snapshot.error.toString().replaceAll('Exception: ', '');
+          final displayMsg = kDebugMode ? errStr : context.l10n.nicDeskNoImage;
+          return _buildFallback(context, displayMsg, isError: true);
+        }
+
         final resolvedUrl = snapshot.data;
         if (resolvedUrl == null || resolvedUrl.isEmpty) {
           return _buildFallback(context, context.l10n.nicDeskNoImage);
@@ -3108,7 +3193,7 @@ class _NicDocImagePreview extends StatelessWidget {
   Widget _buildImageCard(BuildContext context, String url) {
     return Expanded(
       child: InkWell(
-        onTap: () => _showZoomDialog(context, url, label),
+        onTap: () => _showZoomDialog(context, url, widget.label),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(8),
@@ -3128,20 +3213,22 @@ class _NicDocImagePreview extends StatelessWidget {
                       ? Image.memory(
                           base64Decode(url.split(',').last),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(fallbackIcon,
+                          errorBuilder: (_, __, ___) => Icon(
+                              widget.fallbackIcon,
                               color: context.themeTextSecondary),
                         )
                       : AppNetworkImage(
                           url: url,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(fallbackIcon,
+                          errorBuilder: (_, __, ___) => Icon(
+                              widget.fallbackIcon,
                               color: context.themeTextSecondary),
                         ),
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                label,
+                widget.label,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style:
@@ -3163,38 +3250,56 @@ class _NicDocImagePreview extends StatelessWidget {
     );
   }
 
-  Widget _buildFallback(BuildContext context, String tag) {
+  Widget _buildFallback(BuildContext context, String tag,
+      {bool isError = false}) {
     return Expanded(
       child: Container(
+        height: 110,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: context.themeSurfaceLow,
           borderRadius: BorderRadius.circular(12),
+          border: isError && kDebugMode
+              ? Border.all(color: AppColors.error.withValues(alpha: 0.5))
+              : null,
         ),
         child: Column(
           children: [
             Container(
-              height: 72,
+              height: 52,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: context.themeSoft,
+                color: isError && kDebugMode
+                    ? AppColors.error.withValues(alpha: 0.1)
+                    : context.themeSoft,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(fallbackIcon, color: context.themeTextSecondary),
+              child: Icon(
+                isError && kDebugMode
+                    ? Icons.error_outline
+                    : widget.fallbackIcon,
+                color: isError && kDebugMode
+                    ? AppColors.error
+                    : context.themeTextSecondary,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
-              label,
+              widget.label,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
             ),
             Text(
               tag,
+              textAlign: TextAlign.center,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 9.5,
-                color: context.themeTextSecondary,
+                fontSize: 9.0,
+                color: isError && kDebugMode
+                    ? AppColors.error
+                    : context.themeTextSecondary,
                 fontWeight: FontWeight.w700,
               ),
             ),

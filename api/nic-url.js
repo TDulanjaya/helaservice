@@ -53,9 +53,14 @@ module.exports = async function handler(req, res) {
   }
   const callerUid = decodedToken.uid;
 
-  // Enforce active admin 2FA claim
+  // Enforce active admin 2FA claim or active login OTP session
   const nowSec = Math.floor(Date.now() / 1000);
-  if (!decodedToken.admin2faUntil || typeof decodedToken.admin2faUntil !== 'number' || decodedToken.admin2faUntil <= nowSec) {
+  const hasAdmin2fa = typeof decodedToken.admin2faUntil === 'number' && decodedToken.admin2faUntil > nowSec;
+  const authTime = decodedToken.auth_time;
+  const loginOtpTimes = Array.isArray(decodedToken.loginOtpTimes) ? decodedToken.loginOtpTimes : [];
+  const hasLoginOtp = typeof authTime === 'number' && loginOtpTimes.includes(authTime);
+
+  if (!hasAdmin2fa && !hasLoginOtp) {
     return res.status(403).json({ error: 'admin_2fa_required', message: 'Admin 2FA verification required or expired.' });
   }
 

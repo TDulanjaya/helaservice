@@ -1119,7 +1119,7 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
         title: Text(context.l10n.acceptQuoteHire,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         content: Text(
-          '${quote.providerName} — LKR ${quote.quotedPrice.toStringAsFixed(0)}\n${context.l10n.etaLabel}: ${context.l10n.durationMins(quote.etaMinutes)}',
+          '${quote.providerName}: LKR ${quote.quotedPrice.toStringAsFixed(0)}\n${context.l10n.etaLabel}: ${context.l10n.durationMins(quote.etaMinutes)}',
           style: TextStyle(color: context.themeTextSecondary),
         ),
         actions: [

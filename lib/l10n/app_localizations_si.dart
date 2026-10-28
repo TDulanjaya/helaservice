@@ -697,7 +697,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get leaveReviewOptional => 'සමාලෝචනයක් ලියන්න (අවශ්‍ය නම්)';
 
   @override
-  String get tipProvider => 'සේවා සපයන්නාට අමතර මුදලක් — 100% ක්ම සපයන්නාට';
+  String get tipProvider => 'සේවා සපයන්නාට අමතර මුදලක්: 100% ක්ම සපයන්නාට';
 
   @override
   String get done => 'නිමයි';
@@ -808,7 +808,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get activeDispatchSub =>
-      'ක්‍රියාකාරී සේවා — අවට පාරිභෝගිකයින්ගෙන් වැඩ ඉල්ලීම් ලැබේ';
+      'ක්‍රියාකාරී සේවා: අවට පාරිභෝගිකයින්ගෙන් වැඩ ඉල්ලීම් ලැබේ';
 
   @override
   String get openJobRequests => 'විවෘත වැඩ ඉල්ලීම්';
@@ -1035,7 +1035,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get verifiedArtisanNetworkSriLanka =>
-      'තහවුරු කළ සේවා සපයන්නන් — ශ්‍රී ලංකාව';
+      'තහවුරු කළ සේවා සපයන්නන්: ශ්‍රී ලංකාව';
 
   @override
   String get fastTrackVerificationChecklist => 'ක්ෂණික තහවුරු කිරීමේ ලැයිස්තුව';
@@ -1334,10 +1334,10 @@ class AppLocalizationsSi extends AppLocalizations {
   String get manualNicReview => 'හැඳුනුම්පත අතින් පරීක්ෂාව';
 
   @override
-  String get ocrAuditConcordant => 'OCR විගණනය — ක්ෂේත්‍ර 4ම නිවැරදියි';
+  String get ocrAuditConcordant => 'OCR විගණනය: ක්ෂේත්‍ර 4ම නිවැරදියි';
 
   @override
-  String get ocrAuditFlagged => 'OCR විගණනය — නොගැලපීමක් සලකුණු කර ඇත';
+  String get ocrAuditFlagged => 'OCR විගණනය: නොගැලපීමක් සලකුණු කර ඇත';
 
   @override
   String get notProvided => 'සපයා නැත';
@@ -1444,7 +1444,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get arrivalRecordedReady =>
-      'පැමිණීම සටහන් විය — සේවය ආරම්භ කිරීමට සූදානම්';
+      'පැමිණීම සටහන් විය. සේවය ආරම්භ කිරීමට සූදානම්';
 
   @override
   String get customerWillBeNotified =>
@@ -1690,8 +1690,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get activeArtisanFleetLive => 'සජීවී ලැයිස්තුව';
 
   @override
-  String get districtCapacityRealtime =>
-      'දිස්ත්‍රික් ධාරිතාව — තත්කාලීන පැටවීම';
+  String get districtCapacityRealtime => 'දිස්ත්‍රික් ධාරිතාව: තත්කාලීන පැටවීම';
 
   @override
   String get noActiveArtisansFleet => 'සක්‍රිය සේවා සපයන්නන් නැත';
@@ -2640,7 +2639,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get cdmPublishedCategoriesInfo =>
-      'ප්‍රකාශිත කාණ්ඩ දිවයින පුරා ලබාගත හැක. මිල ස්ථාවර නැත — ළඟ සිටින තහවුරු කළ සේවා සපයන්නන් දුර සහ වැඩය අනුව මිල ගණන් එවයි.';
+      'ප්‍රකාශිත කාණ්ඩ දිවයින පුරා ලබාගත හැක. මිල ස්ථාවර නැත: ළඟ සිටින තහවුරු කළ සේවා සපයන්නන් දුර සහ වැඩය අනුව මිල ගණන් එවයි.';
 
   @override
   String get cdmCategoryTitleHint => 'උදා: සූර්ය PV නඩත්තුව';
@@ -6059,14 +6058,14 @@ class AppLocalizationsSi extends AppLocalizations {
   String get continueAsCustomer => 'පාරිභෝගිකයෙකු ලෙස ඉදිරියට යන්න';
 
   @override
-  String get otpNoSession => 'තවමත් කේතයක් යවා නැත — නැවත යවන්න තට්ටු කරන්න';
+  String get otpNoSession => 'තවමත් කේතයක් යවා නැත. නැවත යවන්න තට්ටු කරන්න';
 
   @override
-  String get otpExpiredResend => 'කේතය කල් ඉකුත් විය — නැවත යවන්න තට්ටු කරන්න';
+  String get otpExpiredResend => 'කේතය කල් ඉකුත් විය. නැවත යවන්න තට්ටු කරන්න';
 
   @override
   String get otpMaxAttemptsResend =>
-      'වැරදි උත්සාහයන් වැඩියි — නැවත යවන්න තට්ටු කරන්න';
+      'වැරදි උත්සාහයන් වැඩියි. නැවත යවන්න තට්ටු කරන්න';
 
   @override
   String otpIncorrectTriesLeft(int count) {
@@ -6110,7 +6109,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get couldNotGetLocationFallback =>
-      'ඔබගේ ස්ථානය ලබා ගැනීමට නොහැකි විය — ස්ථානයක් තෝරන්න හෝ සිතියම සොයන්න';
+      'ඔබගේ ස්ථානය ලබා ගැනීමට නොහැකි විය. ස්ථානයක් තෝරන්න හෝ සිතියම සොයන්න';
 
   @override
   String get tryGpsAgain => 'නැවත GPS උත්සාහ කරන්න';
@@ -6144,7 +6143,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get mediaUploadFailedRetry =>
-      'ඡායාරූපය/වීඩියෝව උඩුගත කිරීමට නොහැකි විය — නැවත උත්සාහ කරන්න';
+      'ඡායාරූපය/වීඩියෝව උඩුගත කිරීමට නොහැකි විය. නැවත උත්සාහ කරන්න';
 
   @override
   String get jobPostPermissionDenied =>
@@ -6431,7 +6430,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get atLeastOneBasePricingModeRequired =>
-      'පැයකට, දිනකට හෝ වැඩයකට මිල — අවම වශයෙන් එකක් තෝරන්න.';
+      'පැයකට, දිනකට හෝ වැඩයකට මිල: අවම වශයෙන් එකක් තෝරන්න.';
 
   @override
   String get travelIncluded => 'ගමන් ගාස්තු ඇතුළත් කර ඇත';
@@ -6516,7 +6515,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String nicWarningUnder18(int age) {
-    return 'වයස අවුරුදු 18ට අඩුය ($age වසර) — අනුමත කළ නොහැක';
+    return 'වයස අවුරුදු 18ට අඩුය ($age වසර): අනුමත කළ නොහැක';
   }
 
   @override

@@ -721,7 +721,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get tipProvider =>
-      'வழங்குநருக்கு வெகுமதி — 100% வழங்குநருக்கே செல்கிறது';
+      'வழங்குநருக்கு வெகுமதி: 100% வழங்குநருக்கே செல்கிறது';
 
   @override
   String get done => 'முடிந்தது';
@@ -833,7 +833,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get activeDispatchSub =>
-      'செயலில் உள்ள சேவை — அருகிலுள்ள வாடிக்கையாளர்களிடமிருந்து வேலைக் கோரிக்கைகளைப் பெறுகிறது';
+      'செயலில் உள்ள சேவை: அருகிலுள்ள வாடிக்கையாளர்களிடமிருந்து வேலைக் கோரிக்கைகளைப் பெறுகிறது';
 
   @override
   String get openJobRequests => 'திறந்த வேலைக் கோரிக்கைகள்';
@@ -1064,7 +1064,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get verifiedArtisanNetworkSriLanka =>
-      'சரிபார்க்கப்பட்ட தொழில்நுட்ப வல்லுநர் நெட்வொர்க் — இலங்கை';
+      'சரிபார்க்கப்பட்ட தொழில்நுட்ப வல்லுநர் நெட்வொர்க்: இலங்கை';
 
   @override
   String get fastTrackVerificationChecklist =>
@@ -1371,10 +1371,10 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get ocrAuditConcordant =>
-      'OCR தணிக்கை — அனைத்து 4 புலங்களும் பொருந்துகின்றன';
+      'OCR தணிக்கை: அனைத்து 4 புலங்களும் பொருந்துகின்றன';
 
   @override
-  String get ocrAuditFlagged => 'OCR தணிக்கை — முரண்பாடு கொடியிடப்பட்டது';
+  String get ocrAuditFlagged => 'OCR தணிக்கை: முரண்பாடு கொடியிடப்பட்டது';
 
   @override
   String get notProvided => 'வழங்கப்படவில்லை';
@@ -1481,7 +1481,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get arrivalRecordedReady =>
-      'வருகை பதிவு செய்யப்பட்டது — சேவையைத் தொடங்க தயார்';
+      'வருகை பதிவு செய்யப்பட்டது. சேவையைத் தொடங்க தயார்';
 
   @override
   String get customerWillBeNotified =>
@@ -1731,7 +1731,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get activeArtisanFleetLive => 'நேரடி பட்டியல்';
 
   @override
-  String get districtCapacityRealtime => 'மாவட்ட திறன் — நிகழ்நேர சுமை';
+  String get districtCapacityRealtime => 'மாவட்ட திறன்: நிகழ்நேர சுமை';
 
   @override
   String get noActiveArtisansFleet => 'செயலில் உள்ள கைவினைஞர்கள் இல்லை';
@@ -2708,7 +2708,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get cdmPublishedCategoriesInfo =>
-      'வெளியிடப்பட்ட வகைகள் நாடு முழுவதும் கிடைக்கும். விலை மாறக்கூடியது — அருகிலுள்ள சரிபார்க்கப்பட்ட தொழில்நுட்பவியலாளர்கள் தூரம் மற்றும் வேலை விவரங்களின் அடிப்படையில் தனிப்பயன் விலைகளை வழங்குவார்கள்.';
+      'வெளியிடப்பட்ட வகைகள் நாடு முழுவதும் கிடைக்கும். விலை மாறக்கூடியது: அருகிலுள்ள சரிபார்க்கப்பட்ட தொழில்நுட்பவியலாளர்கள் தூரம் மற்றும் வேலை விவரங்களின் அடிப்படையில் தனிப்பயன் விலைகளை வழங்குவார்கள்.';
 
   @override
   String get cdmCategoryTitleHint => 'எ.கா. சோலார் PV பராமரிப்பு';
@@ -6187,15 +6187,15 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get otpNoSession =>
-      'இன்னும் குறியீடு அனுப்பப்படவில்லை — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+      'இன்னும் குறியீடு அனுப்பப்படவில்லை. மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
 
   @override
   String get otpExpiredResend =>
-      'குறியீடு காலாவதியானது — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+      'குறியீடு காலாவதியானது. மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
 
   @override
   String get otpMaxAttemptsResend =>
-      'தவறான முயற்சிகள் அதிகம் — மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
+      'தவறான முயற்சிகள் அதிகம். மீண்டும் அனுப்பு என்பதைத் தட்டவும்';
 
   @override
   String otpIncorrectTriesLeft(int count) {
@@ -6241,7 +6241,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get couldNotGetLocationFallback =>
-      'உங்கள் இருப்பிடத்தைப் பெற முடியவில்லை — ஒரு இடத்தைத் தேர்ந்தெடுக்கவும் அல்லது வரைபடத்தில் தேடவும்';
+      'உங்கள் இருப்பிடத்தைப் பெற முடியவில்லை. ஒரு இடத்தைத் தேர்ந்தெடுக்கவும் அல்லது வரைபடத்தில் தேடவும்';
 
   @override
   String get tryGpsAgain => 'மீண்டும் GPS முயற்சிக்கவும்';
@@ -6275,7 +6275,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get mediaUploadFailedRetry =>
-      'புகைப்படம்/வீடியோவை பதிவேற்ற முடியவில்லை — மீண்டும் முயற்சிக்கவும்';
+      'புகைப்படம்/வீடியோவை பதிவேற்ற முடியவில்லை. மீண்டும் முயற்சிக்கவும்';
 
   @override
   String get jobPostPermissionDenied =>
@@ -6663,7 +6663,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String nicWarningUnder18(int age) {
-    return '18 வயதுக்கு குறைவானவர் ($age ஆண்டுகள்) — அங்கீகரிக்க முடியாது';
+    return '18 வயதுக்கு குறைவானவர் ($age ஆண்டுகள்): அங்கீகரிக்க முடியாது';
   }
 
   @override

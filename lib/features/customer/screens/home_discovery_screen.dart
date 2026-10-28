@@ -1794,7 +1794,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                 Expanded(
                   child: Text(
                     _selectedCategoryName.isNotEmpty
-                        ? '${context.l10n.topArtisans} — $_selectedCategoryName'
+                        ? '${context.l10n.topArtisans}: $_selectedCategoryName'
                         : (_homeLocation != null
                             ? context.l10n
                                 .providersNearArea(_homeLocation!.shortArea)

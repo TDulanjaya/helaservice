@@ -1423,7 +1423,7 @@ abstract class AppLocalizations {
   /// No description provided for @tipProvider.
   ///
   /// In en, this message translates to:
-  /// **'Tip Provider — 100% goes to provider'**
+  /// **'Tip Provider: 100% goes to provider'**
   String get tipProvider;
 
   /// No description provided for @done.
@@ -1639,7 +1639,7 @@ abstract class AppLocalizations {
   /// No description provided for @activeDispatchSub.
   ///
   /// In en, this message translates to:
-  /// **'Active Dispatch — Receiving job requests from nearby customers'**
+  /// **'Active Dispatch: Receiving job requests from nearby customers'**
   String get activeDispatchSub;
 
   /// No description provided for @openJobRequests.
@@ -2071,7 +2071,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifiedArtisanNetworkSriLanka.
   ///
   /// In en, this message translates to:
-  /// **'Verified Artisan Network — Sri Lanka'**
+  /// **'Verified Artisan Network: Sri Lanka'**
   String get verifiedArtisanNetworkSriLanka;
 
   /// No description provided for @fastTrackVerificationChecklist.
@@ -2641,13 +2641,13 @@ abstract class AppLocalizations {
   /// No description provided for @ocrAuditConcordant.
   ///
   /// In en, this message translates to:
-  /// **'OCR Audit — All 4 Fields Concordant'**
+  /// **'OCR Audit: All 4 Fields Concordant'**
   String get ocrAuditConcordant;
 
   /// No description provided for @ocrAuditFlagged.
   ///
   /// In en, this message translates to:
-  /// **'OCR Audit — Discrepancy Flagged'**
+  /// **'OCR Audit: Discrepancy Flagged'**
   String get ocrAuditFlagged;
 
   /// No description provided for @notProvided.
@@ -2839,7 +2839,7 @@ abstract class AppLocalizations {
   /// No description provided for @arrivalRecordedReady.
   ///
   /// In en, this message translates to:
-  /// **'Arrival recorded — ready to commence service'**
+  /// **'Arrival recorded. Ready to commence service'**
   String get arrivalRecordedReady;
 
   /// No description provided for @customerWillBeNotified.
@@ -3313,7 +3313,7 @@ abstract class AppLocalizations {
   /// No description provided for @districtCapacityRealtime.
   ///
   /// In en, this message translates to:
-  /// **'District Capacity — Real-time Load'**
+  /// **'District Capacity: Real-time Load'**
   String get districtCapacityRealtime;
 
   /// No description provided for @noActiveArtisansFleet.
@@ -4981,7 +4981,7 @@ abstract class AppLocalizations {
   /// No description provided for @cdmPublishedCategoriesInfo.
   ///
   /// In en, this message translates to:
-  /// **'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.'**
+  /// **'Published categories are available island-wide. Pricing is dynamic: nearby verified technicians quote custom bids based on distance and job details.'**
   String get cdmPublishedCategoriesInfo;
 
   /// No description provided for @cdmCategoryTitleHint.
@@ -11006,19 +11006,19 @@ abstract class AppLocalizations {
   /// No description provided for @otpNoSession.
   ///
   /// In en, this message translates to:
-  /// **'No code sent yet — tap Resend'**
+  /// **'No code sent yet. Tap Resend'**
   String get otpNoSession;
 
   /// No description provided for @otpExpiredResend.
   ///
   /// In en, this message translates to:
-  /// **'Code expired — tap Resend'**
+  /// **'Code expired. Tap Resend'**
   String get otpExpiredResend;
 
   /// No description provided for @otpMaxAttemptsResend.
   ///
   /// In en, this message translates to:
-  /// **'Too many wrong tries — tap Resend'**
+  /// **'Too many wrong tries. Tap Resend'**
   String get otpMaxAttemptsResend;
 
   /// No description provided for @otpIncorrectTriesLeft.
@@ -11090,7 +11090,7 @@ abstract class AppLocalizations {
   /// No description provided for @couldNotGetLocationFallback.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t get your location — choose a place or search the map'**
+  /// **'Couldn\'t get your location. Choose a place or search the map'**
   String get couldNotGetLocationFallback;
 
   /// No description provided for @tryGpsAgain.
@@ -11150,7 +11150,7 @@ abstract class AppLocalizations {
   /// No description provided for @mediaUploadFailedRetry.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t upload the photo/video — Retry'**
+  /// **'Couldn\'t upload the photo or video. Retry'**
   String get mediaUploadFailedRetry;
 
   /// No description provided for @jobPostPermissionDenied.
@@ -11817,7 +11817,7 @@ abstract class AppLocalizations {
   /// No description provided for @nicWarningUnder18.
   ///
   /// In en, this message translates to:
-  /// **'Under 18 ({age} yrs) — Cannot be approved'**
+  /// **'Under 18 ({age} yrs): Cannot be approved'**
   String nicWarningUnder18(int age);
 
   /// No description provided for @nicDuplicateCheckNotAvailable.

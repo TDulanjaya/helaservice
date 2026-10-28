@@ -200,7 +200,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                             0.0, (sum, b) => sum + (b.rating ?? 0)) /
                         ratedBookings.length)
                     .toStringAsFixed(1)
-                : '—';
+                : '-';
 
             final now = DateTime.now();
             final startOfToday = DateTime(now.year, now.month, now.day);
@@ -556,7 +556,7 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                             color: context.themeTextPrimary,
                           ),
                         ),
-                        if (avgRating != '—') ...[
+                        if (avgRating != '-') ...[
                           const SizedBox(width: 4),
                           const Icon(
                             Icons.star_rounded,

@@ -696,7 +696,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveReviewOptional => 'Leave a detailed review (optional)';
 
   @override
-  String get tipProvider => 'Tip Provider — 100% goes to provider';
+  String get tipProvider => 'Tip Provider: 100% goes to provider';
 
   @override
   String get done => 'Done';
@@ -807,7 +807,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activeDispatchSub =>
-      'Active Dispatch — Receiving job requests from nearby customers';
+      'Active Dispatch: Receiving job requests from nearby customers';
 
   @override
   String get openJobRequests => 'Open Job Requests';
@@ -1034,7 +1034,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifiedArtisanNetworkSriLanka =>
-      'Verified Artisan Network — Sri Lanka';
+      'Verified Artisan Network: Sri Lanka';
 
   @override
   String get fastTrackVerificationChecklist =>
@@ -1337,10 +1337,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualNicReview => 'Manual NIC Review';
 
   @override
-  String get ocrAuditConcordant => 'OCR Audit — All 4 Fields Concordant';
+  String get ocrAuditConcordant => 'OCR Audit: All 4 Fields Concordant';
 
   @override
-  String get ocrAuditFlagged => 'OCR Audit — Discrepancy Flagged';
+  String get ocrAuditFlagged => 'OCR Audit: Discrepancy Flagged';
 
   @override
   String get notProvided => 'Not provided';
@@ -1446,7 +1446,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get arrivalRecordedReady =>
-      'Arrival recorded — ready to commence service';
+      'Arrival recorded. Ready to commence service';
 
   @override
   String get customerWillBeNotified =>
@@ -1693,7 +1693,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activeArtisanFleetLive => 'Live Top Roster';
 
   @override
-  String get districtCapacityRealtime => 'District Capacity — Real-time Load';
+  String get districtCapacityRealtime => 'District Capacity: Real-time Load';
 
   @override
   String get noActiveArtisansFleet => 'No active artisans found in fleet';
@@ -2646,7 +2646,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cdmPublishedCategoriesInfo =>
-      'Published categories are available island-wide. Pricing is dynamic — nearby verified technicians quote custom bids based on distance and job details.';
+      'Published categories are available island-wide. Pricing is dynamic: nearby verified technicians quote custom bids based on distance and job details.';
 
   @override
   String get cdmCategoryTitleHint => 'e.g. Solar PV Maintenance';
@@ -6061,13 +6061,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueAsCustomer => 'Continue as Customer';
 
   @override
-  String get otpNoSession => 'No code sent yet — tap Resend';
+  String get otpNoSession => 'No code sent yet. Tap Resend';
 
   @override
-  String get otpExpiredResend => 'Code expired — tap Resend';
+  String get otpExpiredResend => 'Code expired. Tap Resend';
 
   @override
-  String get otpMaxAttemptsResend => 'Too many wrong tries — tap Resend';
+  String get otpMaxAttemptsResend => 'Too many wrong tries. Tap Resend';
 
   @override
   String otpIncorrectTriesLeft(int count) {
@@ -6110,7 +6110,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotGetLocationFallback =>
-      'Couldn\'t get your location — choose a place or search the map';
+      'Couldn\'t get your location. Choose a place or search the map';
 
   @override
   String get tryGpsAgain => 'Try GPS again';
@@ -6144,7 +6144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaUploadFailedRetry =>
-      'Couldn\'t upload the photo/video — Retry';
+      'Couldn\'t upload the photo or video. Retry';
 
   @override
   String get jobPostPermissionDenied =>
@@ -6517,7 +6517,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nicWarningUnder18(int age) {
-    return 'Under 18 ($age yrs) — Cannot be approved';
+    return 'Under 18 ($age yrs): Cannot be approved';
   }
 
   @override

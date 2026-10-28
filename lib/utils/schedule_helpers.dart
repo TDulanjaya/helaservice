@@ -549,7 +549,7 @@ class ScheduleHelpers {
           scheduledEndAt != null) {
         final startFmt = DateFormat.jm(lang).format(scheduledStartAt);
         final endFmt = DateFormat.jm(lang).format(scheduledEndAt);
-        return '$startFmt – $endFmt';
+        return '$startFmt - $endFmt';
       }
       if (lang == 'si') {
         return 'ඕනෑම වේලාවක';

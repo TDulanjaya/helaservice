@@ -1,7 +1,7 @@
 name: hela_service
 description: HelaService — on-demand home services app (Sri Lanka). Frontend only.
 publish_to: "none"
-version: 0.1.0+2007
+version: 0.1.0+2008
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

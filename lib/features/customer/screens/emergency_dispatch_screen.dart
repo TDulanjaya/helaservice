@@ -1518,7 +1518,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      rateLkr > 0 ? 'LKR $rateLkr' : '—',
+                                      rateLkr > 0 ? 'LKR $rateLkr' : '-',
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,

@@ -1099,273 +1099,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   children: bookings
                       .map((b) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: InkWell(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        EnRouteNavigationScreen(booking: b)),
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: context.themeSurface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border:
-                                      Border.all(color: context.themeBorder),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    RescheduleProposalBanner(
-                                      booking: b,
-                                      currentUid: FirebaseAuth
-                                              .instance.currentUser?.uid ??
-                                          '',
-                                      actorRole: 'provider',
-                                    ),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.14),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            b.scheduledDate != null
-                                                ? b.formattedScheduledSummary(
-                                                    context)
-                                                : b.time,
-                                            style: const TextStyle(
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                b.location.isNotEmpty
-                                                    ? b.location
-                                                    : b.title,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14.5,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '${b.distance}${b.relativeTime.isNotEmpty ? " · ${b.relativeTime}" : ""}',
-                                                style: TextStyle(
-                                                  fontSize: 11.5,
-                                                  color: context
-                                                      .themeTextSecondary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          onPressed: () {
-                                            if (b.customerPhone.isNotEmpty) {
-                                              CallService.instance.startCall(
-                                                context: context,
-                                                calleePhone: b.customerPhone,
-                                                calleeName: b
-                                                        .customerName.isNotEmpty
-                                                    ? b.customerName
-                                                    : context.l10n.roleCustomer,
-                                                bookingId: b.id,
-                                                calleeUid: b.customerId,
-                                                calleeRole: 'customer',
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(context.l10n
-                                                      .customerPhoneNotAvailable),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          style: IconButton.styleFrom(
-                                            backgroundColor:
-                                                context.themeSurfaceLow,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              side: BorderSide(
-                                                  color: context.themeBorder),
-                                            ),
-                                            padding: const EdgeInsets.all(8),
-                                          ),
-                                          icon: const Icon(Icons.call_rounded,
-                                              size: 16,
-                                              color: AppColors.primary),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        IconButton(
-                                          onPressed: () {
-                                            if (b.customerLatitude != null &&
-                                                b.customerLongitude != null) {
-                                              MapLauncher.openDirections(
-                                                latitude: b.customerLatitude!,
-                                                longitude: b.customerLongitude!,
-                                                destinationTitle:
-                                                    b.customerName.isNotEmpty
-                                                        ? b.customerName
-                                                        : context.l10n
-                                                            .customerLocation,
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(context.l10n
-                                                      .customerLocationNotAvailableCall),
-                                                  backgroundColor:
-                                                      AppColors.warning,
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          style: IconButton.styleFrom(
-                                            backgroundColor:
-                                                context.themeSurfaceLow,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              side: BorderSide(
-                                                  color: context.themeBorder),
-                                            ),
-                                            padding: const EdgeInsets.all(8),
-                                          ),
-                                          icon: const Icon(
-                                              Icons.near_me_rounded,
-                                              size: 16,
-                                              color: AppColors.primary),
-                                        ),
-                                        if (b.status == JobStatus.pending ||
-                                            b.status ==
-                                                JobStatus.confirmed) ...[
-                                          const SizedBox(width: 6),
-                                          IconButton(
-                                            tooltip:
-                                                context.l10n.rescheduleBooking,
-                                            onPressed: () =>
-                                                RescheduleSheet.show(
-                                              context: context,
-                                              booking: b,
-                                              currentUid: FirebaseAuth.instance
-                                                      .currentUser?.uid ??
-                                                  '',
-                                              actorRole: 'provider',
-                                            ),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor:
-                                                  context.themeSurfaceLow,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                side: BorderSide(
-                                                    color: context.themeBorder),
-                                              ),
-                                              padding: const EdgeInsets.all(8),
-                                            ),
-                                            icon: const Icon(
-                                                Icons.calendar_month_outlined,
-                                                size: 16,
-                                                color: AppColors.primary),
-                                          ),
-                                        ],
-                                        const SizedBox(width: 6),
-                                        IconButton(
-                                          tooltip:
-                                              context.l10n.reportProblemTitle,
-                                          onPressed: () =>
-                                              ReportProblemDialog.show(
-                                            context,
-                                            bookingId: b.id,
-                                            otherPartyId: b.customerId,
-                                            otherPartyRole: 'customer',
-                                            otherPartyName: b.customerName,
-                                          ),
-                                          style: IconButton.styleFrom(
-                                            backgroundColor:
-                                                context.themeSurfaceLow,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              side: BorderSide(
-                                                  color: context.themeBorder),
-                                            ),
-                                            padding: const EdgeInsets.all(8),
-                                          ),
-                                          icon: const Icon(Icons.flag_outlined,
-                                              size: 16, color: AppColors.error),
-                                        ),
-                                      ],
-                                    ),
-                                    if (b.status == JobStatus.pending) ...[
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: PrimaryButton(
-                                              label: context
-                                                  .l10n.acceptDirectBooking,
-                                              leadingIcon: Icons
-                                                  .check_circle_outline_rounded,
-                                              onPressed: () async {
-                                                await BookingRepository()
-                                                    .acceptBookingByProvider(
-                                                  bookingId: b.id,
-                                                  jobRequestId: b.jobRequestId,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            tooltip: context.l10n.decline,
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: AppColors.error
-                                                  .withValues(alpha: 0.12),
-                                              foregroundColor: AppColors.error,
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12)),
-                                              padding: const EdgeInsets.all(12),
-                                            ),
-                                            icon: const Icon(
-                                                Icons.close_rounded,
-                                                size: 20),
-                                            onPressed: () async {
-                                              await BookingRepository()
-                                                  .declineBookingByProvider(
-                                                bookingId: b.id,
-                                                jobRequestId: b.jobRequestId,
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
+                            child: ActiveBookingCard(booking: b),
                           ))
                       .toList(),
                 );
@@ -1714,6 +1448,293 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 }
 
+class ActiveBookingCard extends StatelessWidget {
+  final Booking booking;
+  final String? currentUid;
+  final VoidCallback? onTap;
+
+  const ActiveBookingCard({
+    super.key,
+    required this.booking,
+    this.currentUid,
+    this.onTap,
+  });
+
+  String _safeCurrentUid() {
+    if (currentUid != null) return currentUid!;
+    try {
+      return FirebaseAuth.instance.currentUser?.uid ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final b = booking;
+    return InkWell(
+      onTap: onTap ??
+          () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => EnRouteNavigationScreen(booking: b)),
+              ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: context.themeSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.themeBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RescheduleProposalBanner(
+              booking: b,
+              currentUid: _safeCurrentUid(),
+              actorRole: 'provider',
+            ),
+            Row(
+              children: [
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      b.scheduledDate != null
+                          ? b.formattedScheduledSummary(context)
+                          : b.time,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        b.location.isNotEmpty ? b.location : b.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${b.distance}${b.relativeTime.isNotEmpty ? " · ${b.relativeTime}" : ""}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (b.customerPhone.isNotEmpty) {
+                      CallService.instance.startCall(
+                        context: context,
+                        calleePhone: b.customerPhone,
+                        calleeName: b.customerName.isNotEmpty
+                            ? b.customerName
+                            : context.l10n.roleCustomer,
+                        bookingId: b.id,
+                        calleeUid: b.customerId,
+                        calleeRole: 'customer',
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text(context.l10n.customerPhoneNotAvailable),
+                        ),
+                      );
+                    }
+                  },
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.themeSurfaceLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: context.themeBorder),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.call_rounded,
+                      size: 16, color: AppColors.primary),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  onPressed: () {
+                    if (b.customerLatitude != null &&
+                        b.customerLongitude != null) {
+                      MapLauncher.openDirections(
+                        latitude: b.customerLatitude!,
+                        longitude: b.customerLongitude!,
+                        destinationTitle: b.customerName.isNotEmpty
+                            ? b.customerName
+                            : context.l10n.customerLocation,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(context
+                              .l10n.customerLocationNotAvailableCall),
+                          backgroundColor: AppColors.warning,
+                        ),
+                      );
+                    }
+                  },
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.themeSurfaceLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: context.themeBorder),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.near_me_rounded,
+                      size: 16, color: AppColors.primary),
+                ),
+                if (b.status == JobStatus.pending ||
+                    b.status == JobStatus.confirmed) ...[
+                  const SizedBox(width: 6),
+                  IconButton(
+                    tooltip: context.l10n.rescheduleBooking,
+                    onPressed: () => RescheduleSheet.show(
+                      context: context,
+                      booking: b,
+                      currentUid: _safeCurrentUid(),
+                      actorRole: 'provider',
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: context.themeSurfaceLow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: context.themeBorder),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    icon: const Icon(Icons.calendar_month_outlined,
+                        size: 16, color: AppColors.primary),
+                  ),
+                ],
+                const SizedBox(width: 6),
+                IconButton(
+                  tooltip: context.l10n.reportProblemTitle,
+                  onPressed: () => ReportProblemDialog.show(
+                    context,
+                    bookingId: b.id,
+                    otherPartyId: b.customerId,
+                    otherPartyRole: 'customer',
+                    otherPartyName: b.customerName,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.themeSurfaceLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: context.themeBorder),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  icon: const Icon(Icons.flag_outlined,
+                      size: 16, color: AppColors.error),
+                ),
+              ],
+            ),
+            if (b.status == JobStatus.pending) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: PrimaryButton(
+                      label: context.l10n.acceptDirectBooking,
+                      leadingIcon: Icons.check_circle_outline_rounded,
+                      onPressed: () async {
+                        await BookingRepository().acceptBookingByProvider(
+                          bookingId: b.id,
+                          jobRequestId: b.jobRequestId,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: context.l10n.decline,
+                    style: IconButton.styleFrom(
+                      backgroundColor:
+                          AppColors.error.withValues(alpha: 0.12),
+                      foregroundColor: AppColors.error,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.all(12),
+                    ),
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    onPressed: () async {
+                      await BookingRepository().declineBookingByProvider(
+                        bookingId: b.id,
+                        jobRequestId: b.jobRequestId,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ] else if (b.status == JobStatus.confirmed) ...[
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: context.l10n.startTrip,
+                leadingIcon: Icons.navigation_rounded,
+                onPressed: () async {
+                  await BookingRepository().startNavigation(b.id);
+                  if (context.mounted) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EnRouteNavigationScreen(booking: b),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ] else if (b.status == JobStatus.enRoute) ...[
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: context.l10n.viewLiveMap,
+                leadingIcon: Icons.map_rounded,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => EnRouteNavigationScreen(booking: b),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -1813,7 +1834,10 @@ class _JobRequestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
                 padding:
@@ -1845,7 +1869,6 @@ class _JobRequestCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
@@ -1906,7 +1929,6 @@ class _JobRequestCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Spacer(),
               if (distanceText != null && proximityLabel != null)
                 Container(
                   padding:

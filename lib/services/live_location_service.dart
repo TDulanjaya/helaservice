@@ -17,6 +17,7 @@ class LiveLocationService {
   String? _activeBookingId;
   final _positionController = StreamController<Position>.broadcast();
   Position? _lastKnownPosition;
+  Timer? _heartbeatTimer;
 
   bool get isTracking => _isTracking;
   String? get activeBookingId => _activeBookingId;
@@ -76,31 +77,61 @@ class LiveLocationService {
         );
       }
 
+      // write initial fix immediately so customer map does not wait for movement
+      Position? initialPos = await Geolocator.getLastKnownPosition();
+      if (initialPos == null) {
+        try {
+          initialPos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 5),
+            ),
+          );
+        } catch (_) {}
+      }
+      if (initialPos != null) {
+        _lastKnownPosition = initialPos;
+        _positionController.add(initialPos);
+        await _writeLocation(
+          userId: userId,
+          bookingId: bookingId,
+          pos: initialPos,
+          allowedViewers: allowedViewers,
+        );
+      }
+
+      // heartbeat to update location periodically even when stationary
+      _heartbeatTimer?.cancel();
+      _heartbeatTimer = Timer.periodic(const Duration(seconds: 45), (_) async {
+        if (!_isTracking || _trackingUserId == null) return;
+        final pos = _lastKnownPosition;
+        if (pos != null) {
+          await _writeLocation(
+            userId: _trackingUserId!,
+            bookingId: _activeBookingId ?? bookingId,
+            pos: pos,
+            allowedViewers: allowedViewers,
+          );
+        }
+      });
+
       _positionSub = Geolocator.getPositionStream(
         locationSettings: locationSettings,
       ).listen(
         (pos) {
           _lastKnownPosition = pos;
           _positionController.add(pos);
-          FirebaseFirestore.instance
-              .collection(FirestorePaths.liveLocations)
-              .doc(userId)
-              .set({
-            'latitude': pos.latitude,
-            'longitude': pos.longitude,
-            'heading': pos.heading,
-            'speed': pos.speed,
-            'updatedAt': FieldValue.serverTimestamp(),
-            'userId': userId,
-            'bookingId': bookingId,
-            if (allowedViewers != null && allowedViewers.isNotEmpty)
-              'allowedViewers': allowedViewers,
-          }, SetOptions(merge: true));
+          _writeLocation(
+            userId: userId,
+            bookingId: bookingId,
+            pos: pos,
+            allowedViewers: allowedViewers,
+          );
         },
         onError: (_) {},
       );
 
-      // listen to booking status; auto-stop when no longer en route
+      // listen to booking status and auto stop when no longer on the way
       _bookingStatusSub?.cancel();
       _bookingStatusSub = FirebaseFirestore.instance
           .collection(FirestorePaths.bookings)
@@ -151,6 +182,9 @@ class LiveLocationService {
       return;
     }
 
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+
     _bookingStatusSub?.cancel();
     _bookingStatusSub = null;
 
@@ -174,7 +208,7 @@ class LiveLocationService {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)
         .doc(userId)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       final data = snap.data()!;
@@ -189,7 +223,42 @@ class LiveLocationService {
     return FirebaseFirestore.instance
         .collection(FirestorePaths.liveLocations)
         .doc(userId)
-        .snapshots()
-        .map((snap) => snap.exists ? snap.data() : null);
+        .snapshots(includeMetadataChanges: true)
+        .map((snap) {
+      if (!snap.exists || snap.data() == null) return null;
+      final data = Map<String, dynamic>.from(snap.data()!);
+      if (data['updatedAt'] == null || snap.metadata.hasPendingWrites) {
+        data['updatedAt'] ??= Timestamp.now();
+      }
+      return data;
+    });
+  }
+
+  Future<void> _writeLocation({
+    required String userId,
+    required String bookingId,
+    required Position pos,
+    List<String>? allowedViewers,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.liveLocations)
+          .doc(userId)
+          .set({
+        'latitude': pos.latitude,
+        'longitude': pos.longitude,
+        'heading': pos.heading,
+        'speed': pos.speed,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'userId': userId,
+        'bookingId': bookingId,
+        if (allowedViewers != null && allowedViewers.isNotEmpty)
+          'allowedViewers': allowedViewers,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[LiveLocationService] Error writing location: ');
+      }
+    }
   }
 }

@@ -247,6 +247,7 @@ class AppMapView extends StatefulWidget {
   final CameraFit? initialCameraFit;
   final List<AppMapMarker> markers;
   final List<LatLng>? routePoints;
+  final bool isRouteDashed;
   final bool interactive;
   final MapController? controller;
   final VoidCallback? onMapReady;
@@ -262,6 +263,7 @@ class AppMapView extends StatefulWidget {
     this.initialCameraFit,
     this.markers = const [],
     this.routePoints,
+    this.isRouteDashed = false,
     this.interactive = true,
     this.controller,
     this.onMapReady,
@@ -425,6 +427,11 @@ class _AppMapViewState extends State<AppMapView> {
                           color: AppColors.primary,
                           borderStrokeWidth: 2.0,
                           borderColor: Colors.white,
+                          pattern: widget.isRouteDashed
+                              ? StrokePattern.dashed(
+                                  segments: const [10.0, 8.0],
+                                )
+                              : const StrokePattern.solid(),
                         ),
                       ],
                     ),

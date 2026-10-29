@@ -720,6 +720,7 @@ service cloud.firestore {
       match /quotes/{quoteId} {
         allow read: if isAuthenticated() && (
           isAdmin() ||
+          quoteId == request.auth.uid ||
           resource.data.providerId == request.auth.uid ||
           get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid
         );
@@ -1379,7 +1380,8 @@ service cloud.firestore {
     match /liveLocations/{techId} {
       allow read: if isAuthenticated() && (
         techId == request.auth.uid ||
-        (resource.data.allowedViewers != null && request.auth.uid in resource.data.allowedViewers) ||
+        resource == null ||
+        ('allowedViewers' in resource.data && resource.data.allowedViewers is list && request.auth.uid in resource.data.allowedViewers) ||
         isAdmin()
       );
       allow create, update: if isOwner(techId);

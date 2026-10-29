@@ -7409,4 +7409,19 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get newReply => 'புதிய பதில்';
+
+  @override
+  String get startTrip => 'பயணத்தைத் தொடங்கு';
+
+  @override
+  String get viewLiveMap => 'நேரலை வரைபடத்தைப் பார்';
+
+  @override
+  String lastSeenMinsAgo(String minutes) {
+    return '$minutes நிமிடங்களுக்கு முன்பு கடைசியாகப் பார்க்கப்பட்டது';
+  }
+
+  @override
+  String get timePassedChooseLater =>
+      'இந்த நேரம் கடந்துவிட்டது, தயவுசெய்து பிந்தைய நேரத்தை அல்லது மற்றொரு நாளைத் தேர்ந்தெடுக்கவும்';
 }

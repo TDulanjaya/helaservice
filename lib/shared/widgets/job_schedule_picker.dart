@@ -142,6 +142,13 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // sync initial schedule error once context is ready
+    _errorMessage = _getScheduleError();
+  }
+
   Future<void> _pickDate(BuildContext context) async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -181,20 +188,11 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
   }
 
   bool _validate() {
-    final res = ScheduleHelpers.computeScheduleWindow(
-      mode: _mode,
-      slot: _slot,
-      date: _selectedDate,
-      fromTime: _fromTime,
-      toTime: _toTime,
-      flexibleDays: _flexibleDays,
-    );
-
+    final err = _getScheduleError();
     setState(() {
-      _errorMessage = res.isValid ? null : res.errorMessage;
+      _errorMessage = err;
     });
-
-    return res.isValid;
+    return err == null;
   }
 
   JobScheduleResult? _computeResult() {
@@ -211,12 +209,29 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
 
     if (!res.isValid) return null;
 
+    DateTime? startAt = res.scheduledStartAt;
+    DateTime? endAt = res.scheduledEndAt;
+
+    final isToday = _mode == ScheduleHelpers.modeToday ||
+        (_mode == ScheduleHelpers.modeDate &&
+            ScheduleHelpers.isToday(_selectedDate));
+    if (isToday && startAt != null && endAt != null) {
+      // clamp window to now when scheduled for today
+      final clamped = ScheduleHelpers.clampWindowToNow(
+        startAt: startAt,
+        endAt: endAt,
+      );
+      if (clamped.hasPassed) return null;
+      startAt = clamped.startAt;
+      endAt = clamped.endAt;
+    }
+
     return JobScheduleResult(
       scheduleMode: _mode,
       scheduledSlot: res.scheduledSlot,
       scheduledDate: res.scheduledDate,
-      scheduledStartAt: res.scheduledStartAt,
-      scheduledEndAt: res.scheduledEndAt,
+      scheduledStartAt: startAt,
+      scheduledEndAt: endAt,
       expiresAt: res.expiresAt,
       flexibleWindowDays: res.flexibleWindowDays,
       legacySlot: res.scheduledSlot ?? 'anytime',
@@ -232,7 +247,24 @@ class _JobSchedulePickerState extends State<JobSchedulePicker> {
       toTime: _toTime,
       flexibleDays: _flexibleDays,
     );
-    return res.isValid ? null : res.errorMessage;
+    if (!res.isValid) return res.errorMessage;
+
+    final isToday = _mode == ScheduleHelpers.modeToday ||
+        (_mode == ScheduleHelpers.modeDate &&
+            ScheduleHelpers.isToday(_selectedDate));
+    if (isToday &&
+        res.scheduledStartAt != null &&
+        res.scheduledEndAt != null) {
+      // check if clamped schedule window has already passed
+      final clamped = ScheduleHelpers.clampWindowToNow(
+        startAt: res.scheduledStartAt!,
+        endAt: res.scheduledEndAt!,
+      );
+      if (clamped.hasPassed) {
+        return context.l10n.timePassedChooseLater;
+      }
+    }
+    return null;
   }
 
   void _submit() {

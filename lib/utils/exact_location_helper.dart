@@ -84,24 +84,28 @@ class ExactLocationHelper {
     required DateTime? lastFetchedAt,
     required DateTime now,
     bool isEstimated = false,
+    double minDistanceMeters = 100.0,
+    int minIntervalSeconds = 60,
   }) {
     if (currentPos == null) return false;
     if (lastRoutePos == null || lastFetchedAt == null) return true;
 
     final elapsed = now.difference(lastFetchedAt);
-    // rate limit to at most once every 2 minutes
-    if (elapsed < const Duration(minutes: 2)) return false;
 
-    // retry sooner if previous route was just an estimate
-    if (isEstimated) return true;
+    // retry osrm route at most once every thirty seconds when estimated
+    if (isEstimated) {
+      return elapsed.inSeconds >= 30;
+    }
 
-    // refresh if moved at least 300m
+    if (elapsed.inSeconds < minIntervalSeconds) return false;
+
     final distKm = LocationUtils.calculateDistanceKm(
       currentPos.latitude,
       currentPos.longitude,
       lastRoutePos.latitude,
       lastRoutePos.longitude,
     );
-    return distKm * 1000.0 >= 300.0;
+    return (distKm * 1000.0) >= minDistanceMeters ||
+        elapsed.inSeconds >= minIntervalSeconds;
   }
 }

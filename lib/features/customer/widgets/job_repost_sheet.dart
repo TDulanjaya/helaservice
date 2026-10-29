@@ -352,7 +352,7 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
     final sched = widget.getSchedule();
     if (sched == null) {
       final scheduleErr = widget.getScheduleError() ??
-          'Schedule is invalid. Please select another date or time.';
+          context.l10n.timePassedChooseLater;
       setState(() {
         _errorMessage = scheduleErr;
         _debugErrorDetails = kDebugMode
@@ -360,6 +360,24 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
             : null;
       });
       return;
+    }
+
+    final isToday = sched.scheduledDate != null &&
+        ScheduleHelpers.isToday(sched.scheduledDate!);
+    if (isToday &&
+        sched.scheduledStartAt != null &&
+        sched.scheduledEndAt != null) {
+      // check if clamped schedule window has passed
+      final clamped = ScheduleHelpers.clampWindowToNow(
+        startAt: sched.scheduledStartAt!,
+        endAt: sched.scheduledEndAt!,
+      );
+      if (clamped.hasPassed) {
+        setState(() {
+          _errorMessage = context.l10n.timePassedChooseLater;
+        });
+        return;
+      }
     }
 
     // renew expired post
@@ -411,9 +429,7 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         scheduledSlot: sched.scheduledSlot,
         flexibleWindowDays: sched.flexibleWindowDays,
         expiresAt: sched.expiresAt,
-        sanitizedPhotos: (hadOldPhotos || widget.request.photos.isNotEmpty)
-            ? validPhotos
-            : null,
+        sanitizedPhotos: hadOldPhotos ? validPhotos : null,
         dropVideo: hasInvalidVideo,
       );
 

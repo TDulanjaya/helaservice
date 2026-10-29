@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as pv;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../constants/firestore_paths.dart';
 import '../../../state/role_provider.dart';
@@ -27,13 +29,135 @@ class ProviderApprovalGate extends StatefulWidget {
 }
 
 class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
-  bool _hasEverBeenUnapproved = false;
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _techStream;
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _queueStream;
+  String? _subscribedUid;
   bool _hasShownCelebration = false;
+  bool _isCheckingCelebration = false;
+  Timer? _safetyTimer;
+  bool _timedOut = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _setupStreams(uid);
+  }
+
+  @override
+  void dispose() {
+    _safetyTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startSafetyTimer() {
+    _safetyTimer?.cancel();
+    _timedOut = false;
+    // safety timeout to prevent frozen screen
+    _safetyTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && !_timedOut) {
+        setState(() {
+          _timedOut = true;
+        });
+      }
+    });
+  }
+
+  void _setupStreams(String uid) {
+    _subscribedUid = uid;
+    _hasShownCelebration = false;
+    _isCheckingCelebration = false;
+    _startSafetyTimer();
+
+    if (uid.isEmpty) {
+      _techStream = null;
+      _queueStream = null;
+      return;
+    }
+
+    // memoize firestore streams outside build
+    _techStream = FirebaseFirestore.instance
+        .collection(FirestorePaths.technicians)
+        .doc(uid)
+        .snapshots();
+    _queueStream = FirebaseFirestore.instance
+        .collection(FirestorePaths.verificationQueue)
+        .doc(uid)
+        .snapshots();
+
+    _loadCelebratedState(uid);
+  }
+
+  Future<void> _loadCelebratedState(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('approval_celebrated_$uid') == true) {
+        if (mounted && _subscribedUid == uid) {
+          _hasShownCelebration = true;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _handleApprovalCelebration(
+    BuildContext context, {
+    required String uid,
+    required Map<String, dynamic>? queueData,
+    required Map<String, dynamic>? techData,
+  }) async {
+    if (_hasShownCelebration || _isCheckingCelebration) return;
+    _isCheckingCelebration = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'approval_celebrated_$uid';
+      final bool alreadyCelebrated = prefs.getBool(key) ?? false;
+      if (alreadyCelebrated) {
+        _hasShownCelebration = true;
+        return;
+      }
+
+      // check approval timestamp from queue or technician document
+      final rawTimestamp = queueData?['reviewedAt'] ??
+          techData?['approvedAt'] ??
+          techData?['reviewedAt'];
+
+      DateTime? approvedDate;
+      if (rawTimestamp is Timestamp) {
+        approvedDate = rawTimestamp.toDate();
+      } else if (rawTimestamp is String) {
+        approvedDate = DateTime.tryParse(rawTimestamp);
+      } else if (rawTimestamp is int) {
+        approvedDate = DateTime.fromMillisecondsSinceEpoch(rawTimestamp);
+      }
+
+      if (approvedDate != null) {
+        final age = DateTime.now().difference(approvedDate);
+        if (age > const Duration(days: 7)) {
+          // old approval so persist key without showing modal
+          await prefs.setBool(key, true);
+          _hasShownCelebration = true;
+          return;
+        }
+      }
+
+      // save celebrated flag before showing modal
+      await prefs.setBool(key, true);
+      _hasShownCelebration = true;
+
+      if (context.mounted) {
+        _showCelebrationModal(context);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[ProviderApprovalGate] celebration error: $e');
+      }
+    } finally {
+      _isCheckingCelebration = false;
+    }
+  }
 
   void _showCelebrationModal(BuildContext context) {
-    if (_hasShownCelebration) return;
-    _hasShownCelebration = true;
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -103,20 +227,37 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     if (uid.isEmpty) return widget.child;
 
+    if (uid != _subscribedUid) {
+      _setupStreams(uid);
+    }
+
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection(FirestorePaths.technicians)
-          .doc(uid)
-          .snapshots(),
+      stream: _techStream,
       builder: (context, techSnap) {
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection(FirestorePaths.verificationQueue)
-              .doc(uid)
-              .snapshots(),
+          stream: _queueStream,
           builder: (context, queueSnap) {
-            final techData = techSnap.data?.data();
-            final queueData = queueSnap.data?.data();
+            if (techSnap.hasError && kDebugMode) {
+              debugPrint(
+                  '[ProviderApprovalGate] tech stream error: ${techSnap.error}');
+            }
+            if (queueSnap.hasError && kDebugMode) {
+              debugPrint(
+                  '[ProviderApprovalGate] queue stream error: ${queueSnap.error}');
+            }
+
+            // treat stream error as ready with null data
+            final bool isTechReady = techSnap.hasError ||
+                (techSnap.connectionState == ConnectionState.active &&
+                    techSnap.hasData);
+            final bool isQueueReady = queueSnap.hasError ||
+                (queueSnap.connectionState == ConnectionState.active &&
+                    queueSnap.hasData);
+
+            final techData =
+                techSnap.hasError ? null : techSnap.data?.data();
+            final queueData =
+                queueSnap.hasError ? null : queueSnap.data?.data();
 
             final bool techApproved = techData?['nicVerified'] == true ||
                 techData?['isVerified'] == true;
@@ -125,21 +266,41 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
 
             final bool isApproved = techApproved || queueApproved;
 
-            if (!isApproved) {
-              _hasEverBeenUnapproved = true;
-            } else if (_hasEverBeenUnapproved && !_hasShownCelebration) {
+            // if tech is approved do not wait for queue stream
+            final bool isReady = (isTechReady && techApproved) ||
+                (isTechReady && isQueueReady);
+
+            if (isReady && _safetyTimer != null && _safetyTimer!.isActive) {
+              _safetyTimer?.cancel();
+            }
+
+            final bool isLoading = !isReady && !_timedOut;
+            final bool shouldAbsorb = !_timedOut && (isLoading || !isApproved);
+
+            if (!isLoading && isApproved && !_hasShownCelebration) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _showCelebrationModal(context);
+                if (mounted && _subscribedUid == uid) {
+                  _handleApprovalCelebration(
+                    context,
+                    uid: uid,
+                    queueData: queueData,
+                    techData: techData,
+                  );
+                }
               });
             }
+
+            final bool hasAnyData =
+                (techSnap.hasData && techSnap.data?.exists == true) ||
+                (queueSnap.hasData && queueSnap.data?.exists == true);
 
             return Stack(
               children: [
                 AbsorbPointer(
-                  absorbing: !isApproved,
+                  absorbing: shouldAbsorb,
                   child: widget.child,
                 ),
-                if (!isApproved)
+                if (!isLoading && !isApproved && hasAnyData)
                   _buildLockOverlay(
                     context,
                     uid: uid,

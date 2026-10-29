@@ -9,6 +9,7 @@ import 'app_map_view.dart';
 class FullScreenMapPage extends StatefulWidget {
   final ValueNotifier<List<AppMapMarker>> markersNotifier;
   final ValueNotifier<List<LatLng>?>? routePointsNotifier;
+  final ValueNotifier<bool>? isRouteDashedNotifier;
   final LatLng? initialCenter;
   final double initialZoom;
   final CameraFit? initialCameraFit;
@@ -18,6 +19,7 @@ class FullScreenMapPage extends StatefulWidget {
     super.key,
     required this.markersNotifier,
     this.routePointsNotifier,
+    this.isRouteDashedNotifier,
     this.initialCenter,
     this.initialZoom = 13.0,
     this.initialCameraFit,
@@ -31,6 +33,7 @@ class FullScreenMapPage extends StatefulWidget {
 class _FullScreenMapPageState extends State<FullScreenMapPage> {
   late List<AppMapMarker> _markers;
   List<LatLng>? _routePoints;
+  bool _isRouteDashed = false;
   bool _isListening = false;
 
   @override
@@ -38,10 +41,12 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
     super.initState();
     _markers = widget.markersNotifier.value;
     _routePoints = widget.routePointsNotifier?.value;
+    _isRouteDashed = widget.isRouteDashedNotifier?.value ?? false;
 
     try {
       widget.markersNotifier.addListener(_onMarkersChanged);
       widget.routePointsNotifier?.addListener(_onRouteChanged);
+      widget.isRouteDashedNotifier?.addListener(_onRouteDashedChanged);
       _isListening = true;
     } catch (_) {
       // keep last data on error
@@ -62,6 +67,13 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
     });
   }
 
+  void _onRouteDashedChanged() {
+    if (!mounted) return;
+    setState(() {
+      _isRouteDashed = widget.isRouteDashedNotifier?.value ?? false;
+    });
+  }
+
   @override
   void dispose() {
     if (_isListening) {
@@ -70,6 +82,9 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
       } catch (_) {}
       try {
         widget.routePointsNotifier?.removeListener(_onRouteChanged);
+      } catch (_) {}
+      try {
+        widget.isRouteDashedNotifier?.removeListener(_onRouteDashedChanged);
       } catch (_) {}
       _isListening = false;
     }
@@ -90,6 +105,7 @@ class _FullScreenMapPageState extends State<FullScreenMapPage> {
                 initialCameraFit: widget.initialCameraFit,
                 markers: _markers,
                 routePoints: _routePoints,
+                isRouteDashed: _isRouteDashed,
                 interactive: true,
               ),
             ),

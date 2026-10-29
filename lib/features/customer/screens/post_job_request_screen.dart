@@ -726,6 +726,30 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
       return;
     }
 
+    DateTime? finalStartAt = schedRes.scheduledStartAt;
+    DateTime? finalEndAt = schedRes.scheduledEndAt;
+    final isToday = _scheduleMode == ScheduleHelpers.modeToday ||
+        (_scheduleMode == ScheduleHelpers.modeDate &&
+            ScheduleHelpers.isToday(_scheduledDate));
+    if (isToday && finalStartAt != null && finalEndAt != null) {
+      // clamp window to now when scheduled for today
+      final clamped = ScheduleHelpers.clampWindowToNow(
+        startAt: finalStartAt,
+        endAt: finalEndAt,
+      );
+      if (clamped.hasPassed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.timePassedChooseLater),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+      finalStartAt = clamped.startAt;
+      finalEndAt = clamped.endAt;
+    }
+
     final defaultCustomerRole = context.l10n.roleCustomer;
 
     _submitGeneration++;
@@ -1041,8 +1065,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
             _scheduleMode == ScheduleHelpers.modeToday ? 'asap' : 'scheduled',
         scheduleMode: schedRes.scheduleMode,
         scheduledDate: schedRes.scheduledDate,
-        scheduledStartAt: schedRes.scheduledStartAt,
-        scheduledEndAt: schedRes.scheduledEndAt,
+        scheduledStartAt: finalStartAt,
+        scheduledEndAt: finalEndAt,
         scheduledSlot: schedRes.scheduledSlot,
         flexibleWindowDays: schedRes.flexibleWindowDays,
         expiresAt: schedRes.expiresAt,
@@ -1058,8 +1082,8 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
           description: _descriptionController.text.trim(),
           scheduleMode: schedRes.scheduleMode,
           scheduledDate: schedRes.scheduledDate,
-          scheduledStartAt: schedRes.scheduledStartAt,
-          scheduledEndAt: schedRes.scheduledEndAt,
+          scheduledStartAt: finalStartAt,
+          scheduledEndAt: finalEndAt,
           scheduledSlot: schedRes.scheduledSlot,
           flexibleWindowDays: schedRes.flexibleWindowDays,
           photos: currentPhotos,

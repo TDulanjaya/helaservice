@@ -7232,4 +7232,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newReply => 'New reply';
+
+  @override
+  String get startTrip => 'Start Trip';
+
+  @override
+  String get viewLiveMap => 'View Live Map';
+
+  @override
+  String lastSeenMinsAgo(String minutes) {
+    return 'Last seen $minutes min ago';
+  }
+
+  @override
+  String get timePassedChooseLater =>
+      'This time has passed, choose a later time or another day';
 }

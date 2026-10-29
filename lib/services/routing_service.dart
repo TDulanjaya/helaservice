@@ -41,20 +41,12 @@ class RouteInfo {
     final roadKm = straightKm * 1.30;
     final durationMins = ((roadKm / 25.0) * 60).round().clamp(1, 180);
 
-    // curve line slightly
-    final midLat = (start.latitude + end.latitude) / 2;
-    final midLng = (start.longitude + end.longitude) / 2;
-    final curvePoint = LatLng(
-      midLat + (end.longitude - start.longitude) * 0.15,
-      midLng - (end.latitude - start.latitude) * 0.15,
-    );
-
     final distStr = roadKm < 1.0
         ? '${(roadKm * 1000).round()} m'
         : '${roadKm.toStringAsFixed(1)} km';
 
     return RouteInfo(
-      points: [start, curvePoint, end],
+      points: [start, end],
       distanceKm: roadKm,
       durationMinutes: durationMins,
       formattedDistance: '$distStr (Estimated)',
@@ -70,6 +62,7 @@ class RoutingService {
   factory RoutingService() => _instance;
 
   final Map<String, RouteInfo> _cache = {};
+  DateTime? _lastOsrmAttempt;
 
   Future<RouteInfo> getDrivingRoute({
     required LatLng origin,
@@ -85,6 +78,14 @@ class RoutingService {
         return cached;
       }
     }
+
+    final now = DateTime.now();
+    if (_lastOsrmAttempt != null &&
+        now.difference(_lastOsrmAttempt!).inSeconds < 30 &&
+        _cache.containsKey(cacheKey)) {
+      return _cache[cacheKey]!;
+    }
+    _lastOsrmAttempt = now;
 
     try {
       final url = Uri.parse(
@@ -134,6 +135,7 @@ class RoutingService {
                 ? '${distanceMeters.round()} m'
                 : '${distanceKm.toStringAsFixed(1)} km',
             formattedDuration: '$durationMins mins',
+            isEstimated: false,
           );
 
           _cache[cacheKey] = result;
@@ -141,10 +143,12 @@ class RoutingService {
         }
       }
     } catch (e) {
-      debugPrint('RoutingService road calculation notice (using fallback): $e');
+      if (kDebugMode) {
+        debugPrint('RoutingService road calculation notice (using fallback): $e');
+      }
     }
 
-    // fallback straight-line route if osrm is offline or rate-limited
+    // fallback straight line route if osrm is offline or rate limited
     final fallback = RouteInfo.fallback(origin, destination);
     _cache[cacheKey] = fallback;
     return fallback;

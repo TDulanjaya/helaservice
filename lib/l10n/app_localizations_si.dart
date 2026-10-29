@@ -7241,4 +7241,19 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get newReply => 'නව පිළිතුරක්';
+
+  @override
+  String get startTrip => 'ගමන අරඹන්න';
+
+  @override
+  String get viewLiveMap => 'සජීවී සිතියම බලන්න';
+
+  @override
+  String lastSeenMinsAgo(String minutes) {
+    return 'අවසන් වරට දුටුවේ මිනිත්තු $minutes කට පෙර';
+  }
+
+  @override
+  String get timePassedChooseLater =>
+      'මෙම වේලාව ඉක්මවා ඇත, කරුණාකර පසු වේලාවක් හෝ වෙනත් දිනයක් තෝරන්න';
 }

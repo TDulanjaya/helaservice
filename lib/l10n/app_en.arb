@@ -1981,7 +1981,7 @@
   "cancelReasonProviderUnavailable": "Provider is unavailable",
   "cancelReasonScheduleConflict": "Schedule conflict",
   "cancelReasonPriceDispute": "Price or rate disagreement",
-  "cancelReasonOther": "Other reason",
+  "cancelReasonOther": "Other",
   "confirmCancellation": "Confirm Cancellation",
   "bookingCancelledSuccess": "Booking cancelled successfully",
   "repostJob": "Repost Job",
@@ -3479,7 +3479,6 @@
   "cancelReasonFoundSomeone": "Found someone else",
   "cancelReasonNoLongerNeeded": "No longer needed",
   "cancelReasonTooExpensive": "Too expensive",
-  "cancelReasonOther": "Other",
   "withdrawBid": "Withdraw bid",
   "withdrawBidConfirmPrompt": "Are you sure you want to withdraw your bid?",
   "bidWithdrawnSuccess": "Bid withdrawn",
@@ -3619,5 +3618,16 @@
   },
   "helaServiceSupport": "HelaService Support",
   "needHelpContactSupport": "Need help? Contact support",
-  "newReply": "New reply"
+  "newReply": "New reply",
+  "startTrip": "Start Trip",
+  "viewLiveMap": "View Live Map",
+  "lastSeenMinsAgo": "Last seen {minutes} min ago",
+  "@lastSeenMinsAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "timePassedChooseLater": "This time has passed, choose a later time or another day"
 }

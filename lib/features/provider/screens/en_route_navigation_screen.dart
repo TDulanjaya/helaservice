@@ -132,21 +132,17 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
       freshStatus ??= widget.booking?.status;
 
-      // 2. Only start tracking when the fresh status is confirmed or en_route (or pending)
-      // Do not start for in_progress, completed, cancelled, etc.
-      if (freshStatus == JobStatus.pending ||
-          freshStatus == JobStatus.confirmed ||
-          freshStatus == JobStatus.enRoute) {
-        // If pending or confirmed, AWAIT BookingRepository().startNavigation(bookingId) first
-        if (freshStatus == JobStatus.pending ||
-            freshStatus == JobStatus.confirmed) {
-          try {
-            await BookingRepository().startNavigation(bookingId);
-          } catch (e) {
-            debugPrint('[EnRouteNavigation] Error starting navigation: $e');
-          }
+      // only start tracking when booking is confirmed or on the way
+      if (freshStatus == JobStatus.confirmed) {
+        try {
+          await BookingRepository().startNavigation(bookingId);
+          freshStatus = JobStatus.enRoute;
+        } catch (e) {
+          debugPrint('[EnRouteNavigation] Error starting navigation: $e');
         }
+      }
 
+      if (freshStatus == JobStatus.enRoute) {
         // Then call startTrackingForBooking
         if (mounted) {
           final notifTitle = context.l10n.locationSharingNotificationTitle;
@@ -231,31 +227,48 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
       return;
     }
 
+    final isEstimated = _currentRoute?.isEstimated ?? false;
     final shouldRefresh = ExactLocationHelper.shouldRefreshRoute(
       currentPos: _currentGpsPosition,
       lastRoutePos: _lastRouteOrigin,
       lastFetchedAt: _lastRouteFetchedAt,
       now: DateTime.now(),
-      isEstimated: _currentRoute?.isEstimated ?? false,
+      isEstimated: isEstimated,
     );
 
     if (!shouldRefresh) return;
 
     _isFetchingRoute = true;
     final origin = _currentGpsPosition!;
-    final route = await RoutingService().getDrivingRoute(
-      origin: origin,
-      destination: customerPoint,
-      forceRefresh: _currentRoute?.isEstimated ?? false,
-    );
+    try {
+      final route = await RoutingService().getDrivingRoute(
+        origin: origin,
+        destination: customerPoint,
+      );
 
-    if (!mounted) return;
-    setState(() {
-      _currentRoute = route;
-      _lastRouteOrigin = origin;
-      _lastRouteFetchedAt = DateTime.now();
-      _isFetchingRoute = false;
-    });
+      if (!mounted) return;
+      if (kDebugMode) {
+        debugPrint(
+            '[EnRouteNavigation] Route fetched: ${route.points.length} points, isEstimated: ${route.isEstimated}, distance: ${route.formattedDistance}, duration: ${route.formattedDuration}');
+      }
+      setState(() {
+        _currentRoute = route;
+        _lastRouteOrigin = origin;
+        _lastRouteFetchedAt = DateTime.now();
+        _isFetchingRoute = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      if (kDebugMode) {
+        debugPrint('[EnRouteNavigation] Error fetching driving route: $e');
+      }
+      setState(() {
+        _isFetchingRoute = false;
+        _currentRoute ??= RouteInfo.fallback(origin, customerPoint);
+        _lastRouteOrigin = origin;
+        _lastRouteFetchedAt = DateTime.now();
+      });
+    }
   }
 
   @override
@@ -1851,6 +1864,7 @@ class _ProviderEnRouteMapCard extends StatefulWidget {
 class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
   late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
   late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
+  late final ValueNotifier<bool> _isRouteEstimatedNotifier;
   ModalRoute? _fullScreenRoute;
 
   @override
@@ -1861,6 +1875,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
         widget.hasCustomerLocation && widget.techPoint != null
             ? widget.route.points
             : null);
+    _isRouteEstimatedNotifier = ValueNotifier<bool>(widget.route.isEstimated);
   }
 
   @override
@@ -1872,13 +1887,15 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
         oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _markersNotifier.value = _buildMarkers();
     }
-    if (oldWidget.route.points != widget.route.points ||
+    if (oldWidget.route != widget.route ||
+        oldWidget.route.points != widget.route.points ||
         oldWidget.techPoint != widget.techPoint ||
         oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _routePointsNotifier.value =
           widget.hasCustomerLocation && widget.techPoint != null
               ? widget.route.points
               : null;
+      _isRouteEstimatedNotifier.value = widget.route.isEstimated;
     }
   }
 
@@ -1908,6 +1925,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
         initialZoom: 14.0,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
+        isRouteDashedNotifier: _isRouteEstimatedNotifier,
       ),
     );
     _fullScreenRoute = route;
@@ -1924,6 +1942,7 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
     }
     _markersNotifier.dispose();
     _routePointsNotifier.dispose();
+    _isRouteEstimatedNotifier.dispose();
     super.dispose();
   }
 
@@ -1947,15 +1966,26 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
             child: ValueListenableBuilder<List<AppMapMarker>>(
               valueListenable: _markersNotifier,
               builder: (context, markers, _) {
-                return AppMapView(
-                  initialCenter: initialCenter,
-                  initialZoom: 14.0,
-                  interactive: true,
-                  routePoints: (widget.hasCustomerLocation && techPoint != null)
-                      ? route.points
-                      : null,
-                  markers: markers,
-                  onExpand: _openFullScreen,
+                return ValueListenableBuilder<List<LatLng>?>(
+                  valueListenable: _routePointsNotifier,
+                  builder: (context, routePoints, _) {
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _isRouteEstimatedNotifier,
+                      builder: (context, isEstimated, _) {
+                        return AppMapView(
+                          initialCenter: initialCenter,
+                          initialZoom: 14.0,
+                          interactive: true,
+                          routePoints: (widget.hasCustomerLocation && techPoint != null)
+                              ? routePoints
+                              : null,
+                          isRouteDashed: isEstimated,
+                          markers: markers,
+                          onExpand: _openFullScreen,
+                        );
+                      },
+                    );
+                  },
                 );
               },
             ),

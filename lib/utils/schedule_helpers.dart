@@ -277,6 +277,26 @@ class ScheduleHelpers {
     }
   }
 
+  // clamp start and end window to now when date is today
+  static ({DateTime startAt, DateTime endAt, bool hasPassed}) clampWindowToNow({
+    required DateTime startAt,
+    required DateTime endAt,
+    DateTime? nowOverride,
+  }) {
+    final now = nowOverride ?? DateTime.now();
+    // if end has passed or slot already ended
+    if (!endAt.isAfter(now)) {
+      return (startAt: startAt, endAt: endAt, hasPassed: true);
+    }
+    // if start is in the past clamp to now
+    final clampedStart = startAt.isBefore(now) ? now : startAt;
+    // ensure end is after start
+    final clampedEnd = !endAt.isAfter(clampedStart)
+        ? clampedStart.add(const Duration(hours: 1))
+        : endAt;
+    return (startAt: clampedStart, endAt: clampedEnd, hasPassed: false);
+  }
+
   // compute schedule window and expiry
   static ScheduleWindowResult computeScheduleWindow({
     required String mode,

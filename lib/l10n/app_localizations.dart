@@ -13055,6 +13055,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New reply'**
   String get newReply;
+
+  /// No description provided for @startTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Trip'**
+  String get startTrip;
+
+  /// No description provided for @viewLiveMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View Live Map'**
+  String get viewLiveMap;
+
+  /// No description provided for @lastSeenMinsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {minutes} min ago'**
+  String lastSeenMinsAgo(String minutes);
+
+  /// No description provided for @timePassedChooseLater.
+  ///
+  /// In en, this message translates to:
+  /// **'This time has passed, choose a later time or another day'**
+  String get timePassedChooseLater;
 }
 
 class _AppLocalizationsDelegate

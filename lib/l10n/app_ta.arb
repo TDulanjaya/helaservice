@@ -1155,7 +1155,7 @@
   "cancelReasonProviderUnavailable": "தொழில்நுட்ப வல்லுநர் கிடைக்கவில்லை",
   "cancelReasonScheduleConflict": "நேர முரண்பாடு",
   "cancelReasonPriceDispute": "விலை அல்லது கட்டண கருத்து வேறுபாடு",
-  "cancelReasonOther": "வேறு காரணம்",
+  "cancelReasonOther": "மற்றவை",
   "confirmCancellation": "ரத்து செய்வதை உறுதிப்படுத்து",
   "bookingCancelledSuccess": "பதிவு வெற்றிகரமாக ரத்து செய்யப்பட்டது",
   "repostJob": "பணியை மீண்டும் இடுகையிடவும்",
@@ -2089,7 +2089,6 @@
   "cancelReasonFoundSomeone": "வேறு ஒருவரை கண்டுபிடித்தேன்",
   "cancelReasonNoLongerNeeded": "இனி தேவையில்லை",
   "cancelReasonTooExpensive": "அதிக விலை",
-  "cancelReasonOther": "மற்றவை",
   "withdrawBid": "மதிப்பீட்டைத் திரும்பப் பெறவும்",
   "withdrawBidConfirmPrompt": "உங்கள் மதிப்பீட்டை திரும்பப் பெற விரும்புகிறீர்களா?",
   "bidWithdrawnSuccess": "மதிப்பீடு திரும்பப் பெறப்பட்டது",
@@ -2173,5 +2172,16 @@
   "updatedTimeAgo": "{time} புதுப்பிக்கப்பட்டது",
   "helaServiceSupport": "HelaService ஆதரவு",
   "needHelpContactSupport": "உதவி தேவையா? ஆதரவைத் தொடர்பு கொள்ளவும்",
-  "newReply": "புதிய பதில்"
+  "newReply": "புதிய பதில்",
+  "startTrip": "பயணத்தைத் தொடங்கு",
+  "viewLiveMap": "நேரலை வரைபடத்தைப் பார்",
+  "lastSeenMinsAgo": "{minutes} நிமிடங்களுக்கு முன்பு கடைசியாகப் பார்க்கப்பட்டது",
+  "@lastSeenMinsAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "timePassedChooseLater": "இந்த நேரம் கடந்துவிட்டது, தயவுசெய்து பிந்தைய நேரத்தை அல்லது மற்றொரு நாளைத் தேர்ந்தெடுக்கவும்"
 }

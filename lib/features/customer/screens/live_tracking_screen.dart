@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import '../../../shared/widgets/icon_square_button.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/app_localizations_helpers.dart';
-import '../../../utils/location_utils.dart';
+import '../../../utils/exact_location_helper.dart';
 import '../../../shared/widgets/app_map_view.dart';
 import '../../../shared/widgets/full_screen_map_page.dart';
 import '../../../services/routing_service.dart';
@@ -226,243 +227,10 @@ class LiveTrackingScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(
                   16, 16, 16, AppBottomNav.contentBottomPadding),
               children: [
-                StreamBuilder<Map<String, dynamic>?>(
-                    stream: LiveLocationService.instance
-                        .streamUserLocationData(tech.id),
-                    builder: (context, locSnapshot) {
-                      final rawLocData = locSnapshot.data;
-                      final rawLat =
-                          (rawLocData?['latitude'] as num?)?.toDouble();
-                      final rawLng =
-                          (rawLocData?['longitude'] as num?)?.toDouble();
-                      final liveTechPoint = (rawLat != null && rawLng != null)
-                          ? LatLng(rawLat, rawLng)
-                          : null;
-                      final updatedAt = (rawLocData?['updatedAt'] is Timestamp)
-                          ? (rawLocData!['updatedAt'] as Timestamp).toDate()
-                          : null;
-                      final isLive = liveTechPoint != null;
-
-                      final hasCustomerLocation =
-                          currentBooking?.customerLatitude != null &&
-                              currentBooking?.customerLongitude != null;
-
-                      final techBaseCoords = tech.serviceArea.isNotEmpty
-                          ? LocationUtils.getDistrictCoordinates(
-                              tech.serviceArea)
-                          : const (lat: 6.9271, lng: 79.8612);
-                      final techBaseLatLng =
-                          LatLng(techBaseCoords.lat, techBaseCoords.lng);
-
-                      final LatLng customerPoint = hasCustomerLocation
-                          ? LatLng(currentBooking!.customerLatitude!,
-                              currentBooking.customerLongitude!)
-                          : (liveTechPoint ?? techBaseLatLng);
-
-                      final effLoc = tech.effectiveLocation;
-                      final LatLng fallbackTechPoint =
-                          (effLoc.latitude != null && effLoc.longitude != null)
-                              ? LatLng(effLoc.latitude!, effLoc.longitude!)
-                              : techBaseLatLng;
-                      final LatLng techPoint =
-                          liveTechPoint ?? fallbackTechPoint;
-
-                      final midPoint = hasCustomerLocation
-                          ? LatLng(
-                              (customerPoint.latitude + techPoint.latitude) / 2,
-                              (customerPoint.longitude + techPoint.longitude) /
-                                  2,
-                            )
-                          : techPoint;
-
-                      return FutureBuilder<RouteInfo>(
-                        future: hasCustomerLocation
-                            ? RoutingService().getDrivingRoute(
-                                origin: techPoint,
-                                destination: customerPoint,
-                              )
-                            : Future.value(RouteInfo.empty()),
-                        builder: (context, snapshot) {
-                          final route = snapshot.data ??
-                              RouteInfo.fallback(techPoint, customerPoint);
-
-                          return Column(
-                            children: [
-                              if (!hasCustomerLocation)
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  margin: const EdgeInsets.only(bottom: 14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.warning
-                                        .withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: AppColors.warning
-                                          .withValues(alpha: 0.4),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.location_off_rounded,
-                                              color: AppColors.warning,
-                                              size: 20),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              context.l10n
-                                                  .customerLocationNotAvailableTitle,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                                color: context.themeTextPrimary,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        context.l10n
-                                            .customerLocationNotAvailableDesc,
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: context.themeTextSecondary),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                        children: [
-                                          if (tech.phone.isNotEmpty)
-                                            Expanded(
-                                              child: ElevatedButton.icon(
-                                                onPressed: () => CallService
-                                                    .instance
-                                                    .startCall(
-                                                  context: context,
-                                                  calleePhone: tech.phone,
-                                                  calleeName: tech.name,
-                                                  bookingId: currentBooking?.id,
-                                                  calleeUid: tech.id,
-                                                  calleeRole: 'provider',
-                                                ),
-                                                icon: const Icon(Icons.call,
-                                                    size: 15),
-                                                label:
-                                                    Text(context.l10n.callTech),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      AppColors.primary,
-                                                  foregroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 8),
-                                                ),
-                                              ),
-                                            ),
-                                          if (tech.phone.isNotEmpty)
-                                            const SizedBox(width: 8),
-                                          Expanded(
-                                            child: OutlinedButton.icon(
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        DirectChatScreen(
-                                                      otherPartyId: tech.id,
-                                                      otherPartyName: tech.name,
-                                                      otherPartyRole:
-                                                          tech.title,
-                                                      otherPartyPhone:
-                                                          tech.phone,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                              icon: const Icon(
-                                                  Icons.chat_bubble_outline,
-                                                  size: 15),
-                                              label: Text(context.l10n.chat),
-                                              style: OutlinedButton.styleFrom(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              _CustomerLiveTrackingMapCard(
-                                techPoint: techPoint,
-                                customerPoint: customerPoint,
-                                midPoint: midPoint,
-                                techName: tech.name,
-                                routePoints:
-                                    hasCustomerLocation ? route.points : null,
-                                isLive: isLive,
-                                hasCustomerLocation: hasCustomerLocation,
-                                updatedAt: updatedAt,
-                              ),
-                              const SizedBox(height: 16),
-                              AppCard(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(children: [
-                                      const Icon(Icons.timer,
-                                          color: AppColors.primary, size: 22),
-                                      const SizedBox(width: 10),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(context.l10n.estimatedArrival,
-                                              style: TextStyle(
-                                                  fontSize: 11.5,
-                                                  color: context
-                                                      .themeTextSecondary)),
-                                          Text(
-                                              '${context.l10n.arrivingIn} ${context.l10n.durationMins(route.durationMinutes)}',
-                                              style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w800)),
-                                        ],
-                                      ),
-                                    ]),
-                                    Row(children: [
-                                      Icon(Icons.navigation,
-                                          size: 16,
-                                          color: context.themeTextSecondary),
-                                      const SizedBox(width: 4),
-                                      Text(route.formattedDistance,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w700)),
-                                    ]),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    }),
+                _CustomerTrackingSection(
+                  tech: tech,
+                  booking: currentBooking,
+                ),
                 if (currentBooking?.delayReason != null &&
                     currentBooking!.delayReason!.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -1162,13 +930,383 @@ class LiveTrackingScreen extends StatelessWidget {
   }
 }
 
+class _CustomerTrackingSection extends StatefulWidget {
+  final Technician tech;
+  final Booking? booking;
+
+  const _CustomerTrackingSection({
+    required this.tech,
+    required this.booking,
+  });
+
+  @override
+  State<_CustomerTrackingSection> createState() =>
+      _CustomerTrackingSectionState();
+}
+
+class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
+  StreamSubscription<Map<String, dynamic>?>? _locationSub;
+  Timer? _staleTimer;
+
+  Map<String, dynamic>? _rawLocData;
+  RouteInfo? _currentRoute;
+  LatLng? _lastRouteOrigin;
+  LatLng? _lastRouteDestination;
+  DateTime? _lastRouteFetchedAt;
+  bool _isFetchingRoute = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeToLocation();
+    _staleTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        setState(() {});
+        _evaluateAndFetchRoute();
+      }
+    });
+  }
+
+  void _subscribeToLocation() {
+    _locationSub?.cancel();
+    _locationSub = LiveLocationService.instance
+        .streamUserLocationData(widget.tech.id)
+        .listen((data) {
+      if (!mounted) return;
+      setState(() {
+        _rawLocData = data;
+      });
+      _evaluateAndFetchRoute();
+    }, onError: (err) {
+      debugPrint('[LiveTracking] Location stream error: $err');
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CustomerTrackingSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tech.id != widget.tech.id) {
+      _subscribeToLocation();
+    } else if (oldWidget.booking?.customerLatitude !=
+            widget.booking?.customerLatitude ||
+        oldWidget.booking?.customerLongitude !=
+            widget.booking?.customerLongitude) {
+      _evaluateAndFetchRoute();
+    }
+  }
+
+  @override
+  void dispose() {
+    _locationSub?.cancel();
+    _staleTimer?.cancel();
+    super.dispose();
+  }
+
+  void _evaluateAndFetchRoute() {
+    final rawLat = (_rawLocData?['latitude'] as num?)?.toDouble();
+    final rawLng = (_rawLocData?['longitude'] as num?)?.toDouble();
+    final hasValidCoords = rawLat != null &&
+        rawLng != null &&
+        ExactLocationHelper.validate(_rawLocData);
+    final LatLng? techPoint = hasValidCoords ? LatLng(rawLat, rawLng) : null;
+
+    final updatedAt = (_rawLocData?['updatedAt'] is Timestamp)
+        ? (_rawLocData!['updatedAt'] as Timestamp).toDate()
+        : (_rawLocData != null && hasValidCoords ? DateTime.now() : null);
+    final minutesOld = updatedAt != null
+        ? DateTime.now().difference(updatedAt).inMinutes
+        : null;
+    final isStale = updatedAt == null || (minutesOld != null && minutesOld >= 2);
+    final isLive = _rawLocData != null && !isStale && techPoint != null;
+
+    final LatLng? servicePoint = ExactLocationHelper.resolveCustomerPoint(
+      latitude: widget.booking?.customerLatitude,
+      longitude: widget.booking?.customerLongitude,
+    );
+
+    if (!isLive || servicePoint == null) {
+      if (_currentRoute != null) {
+        setState(() {
+          _currentRoute = null;
+          _lastRouteOrigin = null;
+          _lastRouteDestination = null;
+          _lastRouteFetchedAt = null;
+        });
+      }
+      return;
+    }
+
+    // immediate straight fallback so line shows quickly without waiting for osrm
+    if (_currentRoute == null) {
+      _currentRoute = RouteInfo.fallback(techPoint, servicePoint);
+      _lastRouteOrigin = techPoint;
+      _lastRouteDestination = servicePoint;
+    }
+
+    final destChanged = _lastRouteDestination == null ||
+        _lastRouteDestination!.latitude != servicePoint.latitude ||
+        _lastRouteDestination!.longitude != servicePoint.longitude;
+
+    final now = DateTime.now();
+    final needsFetch = destChanged ||
+        ExactLocationHelper.shouldRefreshRoute(
+          currentPos: techPoint,
+          lastRoutePos: _lastRouteOrigin,
+          lastFetchedAt: _lastRouteFetchedAt,
+          now: now,
+          isEstimated: _currentRoute?.isEstimated ?? false,
+        );
+
+    if (!needsFetch || _isFetchingRoute) return;
+
+    _isFetchingRoute = true;
+    RoutingService()
+        .getDrivingRoute(
+      origin: techPoint,
+      destination: servicePoint,
+    )
+        .then((route) {
+      if (!mounted) return;
+      if (kDebugMode) {
+        debugPrint(
+            '[LiveTracking] Route fetched: ${route.points.length} points, isEstimated: ${route.isEstimated}, distance: ${route.formattedDistance}, duration: ${route.formattedDuration}');
+      }
+      setState(() {
+        _currentRoute = route;
+        _lastRouteOrigin = techPoint;
+        _lastRouteDestination = servicePoint;
+        _lastRouteFetchedAt = DateTime.now();
+        _isFetchingRoute = false;
+      });
+    }).catchError((e) {
+      if (!mounted) return;
+      if (kDebugMode) {
+        debugPrint('[LiveTracking] Error fetching driving route: $e');
+      }
+      setState(() {
+        _isFetchingRoute = false;
+        _currentRoute ??= RouteInfo.fallback(techPoint, servicePoint);
+        _lastRouteOrigin = techPoint;
+        _lastRouteDestination = servicePoint;
+        _lastRouteFetchedAt = DateTime.now();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final docExists = _rawLocData != null;
+    final rawLat = (_rawLocData?['latitude'] as num?)?.toDouble();
+    final rawLng = (_rawLocData?['longitude'] as num?)?.toDouble();
+    final hasValidCoords = rawLat != null &&
+        rawLng != null &&
+        ExactLocationHelper.validate(_rawLocData);
+    final LatLng? techPoint = hasValidCoords ? LatLng(rawLat, rawLng) : null;
+
+    final updatedAt = (_rawLocData?['updatedAt'] is Timestamp)
+        ? (_rawLocData!['updatedAt'] as Timestamp).toDate()
+        : (_rawLocData != null && hasValidCoords ? DateTime.now() : null);
+    final minutesOld = updatedAt != null
+        ? DateTime.now().difference(updatedAt).inMinutes
+        : null;
+    final isStale = updatedAt == null || (minutesOld != null && minutesOld >= 2);
+    final isLive = docExists && !isStale && techPoint != null;
+
+    final LatLng? servicePoint = ExactLocationHelper.resolveCustomerPoint(
+      latitude: widget.booking?.customerLatitude,
+      longitude: widget.booking?.customerLongitude,
+    );
+    final hasCustomerLocation = servicePoint != null;
+
+    final effectiveRoute = _currentRoute ??
+        (isLive && hasCustomerLocation
+            ? RouteInfo.fallback(techPoint, servicePoint)
+            : null);
+
+    if (kDebugMode) {
+      final techPointSource = !docExists
+          ? 'none (liveLocations doc does not exist)'
+          : isLive
+              ? 'live ($techPoint)'
+              : 'last_known ($techPoint, ${minutesOld ?? 0}m ago)';
+      debugPrint(
+          '[LiveTracking] techPoint source: $techPointSource | servicePoint: $servicePoint (from booking.customerLatitude/Longitude)');
+    }
+
+    final LatLng midPoint = (techPoint != null && servicePoint != null)
+        ? LatLng(
+            (servicePoint.latitude + techPoint.latitude) / 2,
+            (servicePoint.longitude + techPoint.longitude) / 2,
+          )
+        : (servicePoint ?? techPoint ?? const LatLng(6.9271, 79.8612));
+
+    return Column(
+      children: [
+        if (!hasCustomerLocation)
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.location_off_rounded,
+                        color: AppColors.warning, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.customerLocationNotAvailableTitle,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: context.themeTextPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.customerLocationNotAvailableDesc,
+                  style: TextStyle(
+                      fontSize: 12, color: context.themeTextSecondary),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (widget.tech.phone.isNotEmpty)
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => CallService.instance.startCall(
+                            context: context,
+                            calleePhone: widget.tech.phone,
+                            calleeName: widget.tech.name,
+                            bookingId: widget.booking?.id,
+                            calleeUid: widget.tech.id,
+                            calleeRole: 'provider',
+                          ),
+                          icon: const Icon(Icons.call, size: 15),
+                          label: Text(context.l10n.callTech),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                      ),
+                    if (widget.tech.phone.isNotEmpty)
+                      const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DirectChatScreen(
+                                otherPartyId: widget.tech.id,
+                                otherPartyName: widget.tech.name,
+                                otherPartyRole: widget.tech.title,
+                                otherPartyPhone: widget.tech.phone,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline, size: 15),
+                        label: Text(context.l10n.chat),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        _CustomerLiveTrackingMapCard(
+          techPoint: techPoint,
+          customerPoint: servicePoint,
+          midPoint: midPoint,
+          techName: widget.tech.name,
+          routePoints: (isLive && hasCustomerLocation)
+              ? effectiveRoute?.points
+              : null,
+          isRouteDashed: effectiveRoute?.isEstimated ?? false,
+          isLive: isLive,
+          docExists: docExists,
+          minutesOld: minutesOld,
+          hasCustomerLocation: hasCustomerLocation,
+          updatedAt: updatedAt,
+        ),
+        if (isLive && hasCustomerLocation && effectiveRoute != null) ...[
+          const SizedBox(height: 16),
+          AppCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(children: [
+                  const Icon(Icons.timer,
+                      color: AppColors.primary, size: 22),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(context.l10n.estimatedArrival,
+                          style: TextStyle(
+                              fontSize: 11.5,
+                              color: context.themeTextSecondary)),
+                      Text(
+                          '${context.l10n.arrivingIn} ${context.l10n.durationMins(effectiveRoute.durationMinutes)}',
+                          style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                ]),
+                Row(children: [
+                  Icon(Icons.navigation,
+                      size: 16,
+                      color: context.themeTextSecondary),
+                  const SizedBox(width: 4),
+                  Text(effectiveRoute.formattedDistance,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700)),
+                ]),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _CustomerLiveTrackingMapCard extends StatefulWidget {
-  final LatLng techPoint;
-  final LatLng customerPoint;
+  final LatLng? techPoint;
+  final LatLng? customerPoint;
   final LatLng midPoint;
   final String techName;
   final List<LatLng>? routePoints;
+  final bool isRouteDashed;
   final bool isLive;
+  final bool docExists;
+  final int? minutesOld;
   final bool hasCustomerLocation;
   final DateTime? updatedAt;
 
@@ -1178,7 +1316,10 @@ class _CustomerLiveTrackingMapCard extends StatefulWidget {
     required this.midPoint,
     required this.techName,
     required this.routePoints,
+    this.isRouteDashed = false,
     required this.isLive,
+    this.docExists = false,
+    this.minutesOld,
     this.hasCustomerLocation = true,
     this.updatedAt,
   });
@@ -1192,6 +1333,7 @@ class _CustomerLiveTrackingMapCardState
     extends State<_CustomerLiveTrackingMapCard> {
   late final ValueNotifier<List<AppMapMarker>> _markersNotifier;
   late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
+  late final ValueNotifier<bool> _isRouteDashedNotifier;
   ModalRoute? _fullScreenRoute;
   bool _initialized = false;
 
@@ -1200,7 +1342,10 @@ class _CustomerLiveTrackingMapCardState
     super.initState();
     _markersNotifier = ValueNotifier<List<AppMapMarker>>([]);
     _routePointsNotifier = ValueNotifier<List<LatLng>?>(
-        widget.hasCustomerLocation ? widget.routePoints : null);
+        (widget.isLive && widget.hasCustomerLocation)
+            ? widget.routePoints
+            : null);
+    _isRouteDashedNotifier = ValueNotifier<bool>(widget.isRouteDashed);
   }
 
   @override
@@ -1218,39 +1363,73 @@ class _CustomerLiveTrackingMapCardState
     if (oldWidget.techPoint != widget.techPoint ||
         oldWidget.customerPoint != widget.customerPoint ||
         oldWidget.techName != widget.techName ||
-        oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
+        oldWidget.hasCustomerLocation != widget.hasCustomerLocation ||
+        oldWidget.isLive != widget.isLive ||
+        oldWidget.docExists != widget.docExists ||
+        oldWidget.minutesOld != widget.minutesOld) {
       _markersNotifier.value = _buildMarkers();
     }
     if (oldWidget.routePoints != widget.routePoints ||
+        oldWidget.isLive != widget.isLive ||
         oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
       _routePointsNotifier.value =
-          widget.hasCustomerLocation ? widget.routePoints : null;
+          (widget.isLive && widget.hasCustomerLocation)
+              ? widget.routePoints
+              : null;
+    }
+    if (oldWidget.isRouteDashed != widget.isRouteDashed) {
+      _isRouteDashedNotifier.value = widget.isRouteDashed;
     }
   }
 
   List<AppMapMarker> _buildMarkers() {
-    return [
-      AppMapMarker.provider(
-        point: widget.techPoint,
-        label: widget.techName.isNotEmpty ? widget.techName : null,
-        enRoute: true,
-      ),
-      if (widget.hasCustomerLocation)
-        AppMapMarker.customer(
-          point: widget.customerPoint,
-          label: context.l10n.destination,
+    final markers = <AppMapMarker>[];
+
+    // provider marker only if live location exists and has coordinates
+    if (widget.docExists && widget.techPoint != null) {
+      final String label;
+      if (widget.isLive) {
+        label = widget.techName.isNotEmpty ? widget.techName : '';
+      } else {
+        final mins = (widget.minutesOld != null && widget.minutesOld! > 0)
+            ? widget.minutesOld.toString()
+            : '2';
+        final lastSeenText = context.l10n.lastSeenMinsAgo(mins);
+        label = widget.techName.isNotEmpty
+            ? '${widget.techName} ($lastSeenText)'
+            : lastSeenText;
+      }
+
+      markers.add(
+        AppMapMarker.provider(
+          point: widget.techPoint!,
+          label: label.isNotEmpty ? label : null,
+          enRoute: widget.isLive,
         ),
-    ];
+      );
+    }
+
+    // service location destination marker
+    if (widget.hasCustomerLocation && widget.customerPoint != null) {
+      markers.add(
+        AppMapMarker.customer(
+          point: widget.customerPoint!,
+          label: context.l10n.serviceLocation,
+        ),
+      );
+    }
+
+    return markers;
   }
 
   void _openFullScreen() {
     final route = MaterialPageRoute<void>(
       builder: (ctx) => FullScreenMapPage(
-        initialCenter:
-            widget.hasCustomerLocation ? widget.midPoint : widget.techPoint,
+        initialCenter: widget.midPoint,
         initialZoom: 14.2,
         markersNotifier: _markersNotifier,
         routePointsNotifier: _routePointsNotifier,
+        isRouteDashedNotifier: _isRouteDashedNotifier,
       ),
     );
     _fullScreenRoute = route;
@@ -1267,6 +1446,7 @@ class _CustomerLiveTrackingMapCardState
     }
     _markersNotifier.dispose();
     _routePointsNotifier.dispose();
+    _isRouteDashedNotifier.dispose();
     super.dispose();
   }
 
@@ -1288,15 +1468,19 @@ class _CustomerLiveTrackingMapCardState
                 return ValueListenableBuilder<List<LatLng>?>(
                   valueListenable: _routePointsNotifier,
                   builder: (context, routePoints, _) {
-                    return AppMapView(
-                      initialCenter: widget.hasCustomerLocation
-                          ? widget.midPoint
-                          : widget.techPoint,
-                      initialZoom: 14.2,
-                      interactive: true,
-                      routePoints: routePoints,
-                      markers: markers,
-                      onExpand: _openFullScreen,
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _isRouteDashedNotifier,
+                      builder: (context, isDashed, _) {
+                        return AppMapView(
+                          initialCenter: widget.midPoint,
+                          initialZoom: 14.2,
+                          interactive: true,
+                          routePoints: routePoints,
+                          isRouteDashed: isDashed,
+                          markers: markers,
+                          onExpand: _openFullScreen,
+                        );
+                      },
                     );
                   },
                 );
@@ -1307,11 +1491,6 @@ class _CustomerLiveTrackingMapCardState
               left: 12,
               child: Builder(
                 builder: (context) {
-                  final minutesOld = widget.updatedAt != null
-                      ? DateTime.now().difference(widget.updatedAt!).inMinutes
-                      : null;
-                  final isStale = minutesOld != null && minutesOld >= 2;
-
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1327,7 +1506,9 @@ class _CustomerLiveTrackingMapCardState
                             ? AppColors.primary
                             : context.themeTextSecondary,
                       ),
-                      if (isStale && widget.isLive) ...[
+                      if (!widget.isLive &&
+                          widget.docExists &&
+                          widget.minutesOld != null) ...[
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1337,8 +1518,10 @@ class _CustomerLiveTrackingMapCardState
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            context.l10n
-                                .locationLastUpdatedMinsAgo('$minutesOld'),
+                            context.l10n.lastSeenMinsAgo(
+                                widget.minutesOld! > 0
+                                    ? '${widget.minutesOld}'
+                                    : '1'),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10.5,

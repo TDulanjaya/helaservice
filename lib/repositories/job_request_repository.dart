@@ -171,6 +171,14 @@ class JobRequestRepository {
       final updateData = quote.toMap();
       updateData['status'] = 'pending';
       updateData['updatedAt'] = FieldValue.serverTimestamp();
+      if (quote.quoteType == 'inspect') {
+        updateData['priceUnit'] = FieldValue.delete();
+        updateData['unitRateLkr'] = FieldValue.delete();
+        updateData['quantity'] = FieldValue.delete();
+        updateData['materialsEstimateLkr'] = FieldValue.delete();
+      } else if (quote.materialsEstimateLkr == null) {
+        updateData['materialsEstimateLkr'] = FieldValue.delete();
+      }
       updateData.remove('createdAt');
       updateData.remove('providerId');
       updateData.remove('requestId');
@@ -726,6 +734,24 @@ class JobRequestRepository {
         ? expiresAt
         : ScheduleHelpers.endOfDay(scheduledDate ?? now);
 
+    DateTime? effectiveStartAt = scheduledStartAt;
+    DateTime? effectiveEndAt = scheduledEndAt;
+    final isToday = (scheduledDate != null &&
+            ScheduleHelpers.isToday(scheduledDate)) ||
+        (effectiveStartAt != null && ScheduleHelpers.isToday(effectiveStartAt));
+    if (isToday && effectiveStartAt != null && effectiveEndAt != null) {
+      // defensively clamp start to now if scheduled for today
+      final clamped = ScheduleHelpers.clampWindowToNow(
+        startAt: effectiveStartAt,
+        endAt: effectiveEndAt,
+        nowOverride: now,
+      );
+      if (!clamped.hasPassed) {
+        effectiveStartAt = clamped.startAt;
+        effectiveEndAt = clamped.endAt;
+      }
+    }
+
     final data = <String, dynamic>{
       'status': JobRequestStatus.open,
       'scheduleMode': scheduleMode,
@@ -739,13 +765,13 @@ class JobRequestRepository {
     if (scheduledDate != null) {
       data['scheduledDate'] = Timestamp.fromDate(scheduledDate);
     }
-    if (scheduledStartAt != null) {
-      data['scheduledStartAt'] = Timestamp.fromDate(scheduledStartAt);
+    if (effectiveStartAt != null) {
+      data['scheduledStartAt'] = Timestamp.fromDate(effectiveStartAt);
     } else {
       data['scheduledStartAt'] = FieldValue.delete();
     }
-    if (scheduledEndAt != null) {
-      data['scheduledEndAt'] = Timestamp.fromDate(scheduledEndAt);
+    if (effectiveEndAt != null) {
+      data['scheduledEndAt'] = Timestamp.fromDate(effectiveEndAt);
     } else {
       data['scheduledEndAt'] = FieldValue.delete();
     }

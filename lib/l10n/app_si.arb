@@ -1155,7 +1155,7 @@
   "cancelReasonProviderUnavailable": "සේවා සපයන්නාට පැමිණිය නොහැක",
   "cancelReasonScheduleConflict": "වේලාවන් ගැටලු සහගත වීම",
   "cancelReasonPriceDispute": "මිල හෝ ගාස්තු පිළිබඳ එකඟ නොවීම",
-  "cancelReasonOther": "වෙනත් හේතුවක්",
+  "cancelReasonOther": "වෙනත්",
   "confirmCancellation": "අවලංගු කිරීම තහවුරු කරන්න",
   "bookingCancelledSuccess": "වෙන්කිරීම සාර්ථකව අවලංගු කරන ලදී",
   "repostJob": "වැඩය නැවත පළ කරන්න",
@@ -2089,7 +2089,6 @@
   "cancelReasonFoundSomeone": "වෙනත් අයෙකු සොයාගත්තා",
   "cancelReasonNoLongerNeeded": "තවදුරටත් අවශ්‍ය නොවේ",
   "cancelReasonTooExpensive": "මිල වැඩියි",
-  "cancelReasonOther": "වෙනත්",
   "withdrawBid": "මිල ගණන් ඉල්ලා අස්කරගන්න",
   "withdrawBidConfirmPrompt": "ඔබගේ මිල ගණන් ඉල්ලා අස්කර ගැනීමට අවශ්‍ය බව තහවුරු කරන්නද?",
   "bidWithdrawnSuccess": "මිල ගණන් ඉල්ලා අස්කරගන්නා ලදී",
@@ -2173,5 +2172,16 @@
   "updatedTimeAgo": "{time} යාවත්කාලීන විය",
   "helaServiceSupport": "HelaService සහාය",
   "needHelpContactSupport": "උදව් අවශ්‍යද? සහාය අමතන්න",
-  "newReply": "නව පිළිතුරක්"
+  "newReply": "නව පිළිතුරක්",
+  "startTrip": "ගමන අරඹන්න",
+  "viewLiveMap": "සජීවී සිතියම බලන්න",
+  "lastSeenMinsAgo": "අවසන් වරට දුටුවේ මිනිත්තු {minutes} කට පෙර",
+  "@lastSeenMinsAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "timePassedChooseLater": "මෙම වේලාව ඉක්මවා ඇත, කරුණාකර පසු වේලාවක් හෝ වෙනත් දිනයක් තෝරන්න"
 }

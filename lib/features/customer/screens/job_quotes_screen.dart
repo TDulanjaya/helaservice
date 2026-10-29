@@ -17,6 +17,7 @@ import '../../../utils/app_localizations_helpers.dart';
 import 'live_tracking_screen.dart';
 import 'direct_chat_screen.dart';
 import 'post_job_request_screen.dart';
+import 'provider_detail_screen.dart';
 import '../../../services/chat_service.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -27,6 +28,9 @@ import '../../../shared/widgets/job_schedule_picker.dart';
 import '../../../services/call_service.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../../utils/schedule_helpers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../constants/job_status.dart';
+import '../../shared/widgets/booking_cancellation_sheet.dart';
 
 class JobQuotesScreen extends StatefulWidget {
   final String requestId;
@@ -46,6 +50,30 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
   final JobRequestRepository _repo = JobRequestRepository();
   late Stream<DocumentSnapshot<Map<String, dynamic>>> _jobStream;
   bool _hadPendingWrites = false;
+  // cache technician futures and records per provider
+  final Map<String, Future<Technician?>> _technicianFutures = {};
+  final Map<String, Technician?> _technicians = {};
+  String _sortOrder = 'default';
+
+  Future<Technician?> _getTechnicianFuture(String providerId) {
+    if (_technicianFutures.containsKey(providerId)) {
+      return _technicianFutures[providerId]!;
+    }
+    // load technician once and cache in state
+    final future = TechnicianRepository().getById(providerId).then((tech) {
+      _technicians[providerId] = tech;
+      if (mounted && _sortOrder == 'rating') {
+        // rebuild quotes list when sorting by rating
+        setState(() {});
+      }
+      return tech;
+    }).catchError((_) {
+      // handle error silently so quote card still shows
+      return null;
+    });
+    _technicianFutures[providerId] = future;
+    return future;
+  }
 
   String get requestId => widget.requestId;
   String get jobTitle => widget.jobTitle;
@@ -255,6 +283,30 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                       final hasWithdrawn =
                           allQuotes.any((q) => q.status == 'withdrawn');
 
+                      // prefetch technicians for active quotes
+                      for (final q in quotes) {
+                        _getTechnicianFuture(q.providerId);
+                      }
+
+                      // sort quotes by lowest price or highest rating
+                      if (_sortOrder == 'price') {
+                        quotes.sort((a, b) => a.quotedPrice.compareTo(b.quotedPrice));
+                      } else if (_sortOrder == 'rating') {
+                        quotes.sort((a, b) {
+                          final techA = _technicians[a.providerId];
+                          final techB = _technicians[b.providerId];
+                          // quotes without loaded technician go to the end
+                          if (techA == null && techB == null) return 0;
+                          if (techA == null) return 1;
+                          if (techB == null) return -1;
+                          final rA = techA.rating ?? 0.0;
+                          final rB = techB.rating ?? 0.0;
+                          final comp = rB.compareTo(rA);
+                          if (comp != 0) return comp;
+                          return techB.reviewCount.compareTo(techA.reviewCount);
+                        });
+                      }
+
                       if (request.status == 'assigned') {
                         return _buildAssignedView(context, request, quotes);
                       }
@@ -299,6 +351,64 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                                       ),
                                     ],
                                   ),
+                                  if (quotes.length > 1) ...[
+                                    // sort chips for quotes list
+                                    const SizedBox(height: 10),
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          ChoiceChip(
+                                            label: Text(context.l10n.sortDefault),
+                                            selected: _sortOrder == 'default',
+                                            onSelected: (sel) {
+                                              if (sel) setState(() => _sortOrder = 'default');
+                                            },
+                                            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                                            labelStyle: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: _sortOrder == 'default'
+                                                  ? AppColors.primary
+                                                  : context.themeTextSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: Text(context.l10n.sortLowestPrice),
+                                            selected: _sortOrder == 'price',
+                                            onSelected: (sel) {
+                                              if (sel) setState(() => _sortOrder = 'price');
+                                            },
+                                            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                                            labelStyle: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: _sortOrder == 'price'
+                                                  ? AppColors.primary
+                                                  : context.themeTextSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: Text(context.l10n.sortHighestRating),
+                                            selected: _sortOrder == 'rating',
+                                            onSelected: (sel) {
+                                              if (sel) setState(() => _sortOrder = 'rating');
+                                            },
+                                            selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                                            labelStyle: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: _sortOrder == 'rating'
+                                                  ? AppColors.primary
+                                                  : context.themeTextSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                   if (hasWithdrawn) ...[
                                     const SizedBox(height: 8),
                                     Container(
@@ -339,6 +449,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                           return _QuoteCard(
                             quote: quote,
                             request: request,
+                            techFuture: _getTechnicianFuture(quote.providerId),
+                            initialTechnician: _technicians[quote.providerId],
                             onAccept: () =>
                                 _acceptQuote(context, quote, request),
                           );
@@ -606,13 +718,17 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                     (acceptedQuote.isNotEmpty
                         ? acceptedQuote.first.providerId
                         : '');
-                final tech = await TechnicianRepository().getById(providerId);
+                final tech = _technicians[providerId] ??
+                    await _getTechnicianFuture(providerId);
 
                 Booking? booking;
                 try {
+                  final currentUid =
+                      FirebaseAuth.instance.currentUser?.uid ?? '';
                   final bSnap = await FirebaseFirestore.instance
                       .collection(FirestorePaths.bookings)
                       .where('jobRequestId', isEqualTo: request.id)
+                      .where('customerId', isEqualTo: currentUid)
                       .limit(1)
                       .get();
                   if (bSnap.docs.isNotEmpty) {
@@ -644,7 +760,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
                 final pName = acceptedQuote.isNotEmpty
                     ? acceptedQuote.first.providerName
                     : context.l10n.roleProvider;
-                final tech = await TechnicianRepository().getById(pId);
+                final tech =
+                    _technicians[pId] ?? await _getTechnicianFuture(pId);
                 final pPhone = tech?.phone;
                 if (!context.mounted) return;
                 Navigator.of(context).push(
@@ -793,6 +910,50 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
   }
 
   Future<void> _cancelJob(BuildContext context, JobRequest request) async {
+    // if booking exists or job is assigned, open booking cancellation sheet
+    if (request.status == JobRequestStatus.assigned ||
+        (request.bookingId != null && request.bookingId!.isNotEmpty)) {
+      Booking? booking;
+      try {
+        if (request.bookingId != null && request.bookingId!.isNotEmpty) {
+          final bDoc = await FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .doc(request.bookingId!)
+              .get();
+          if (bDoc.exists && bDoc.data() != null) {
+            booking = Booking.fromMap(bDoc.id, bDoc.data()!);
+          }
+        }
+        if (booking == null) {
+          final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+          final bSnap = await FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .where('jobRequestId', isEqualTo: request.id)
+              .where('customerId', isEqualTo: currentUid)
+              .limit(1)
+              .get();
+          if (bSnap.docs.isNotEmpty) {
+            booking =
+                Booking.fromMap(bSnap.docs.first.id, bSnap.docs.first.data());
+          }
+        }
+      } catch (e) {
+        debugPrint('[JobQuotesScreen] lookup booking error: $e');
+      }
+
+      if (!context.mounted) return;
+
+      if (booking != null) {
+        await BookingCancellationSheet.show(
+          context,
+          booking: booking,
+          isCustomer: true,
+        );
+        return;
+      }
+    }
+
+    // fallback for open unassigned job request
     final reasons = [
       context.l10n.cancelReasonCustomerRequest,
       context.l10n.cancelReasonScheduleConflict,
@@ -809,7 +970,7 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            context.l10n.cancelBookingOrQuote,
+            context.l10n.cancelJobTitle,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -817,7 +978,7 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.l10n.cancelBookingPrompt,
+                context.l10n.cancelJobConfirmPrompt,
                 style: TextStyle(fontSize: 13, color: ctx.themeTextSecondary),
               ),
               const SizedBox(height: 16),
@@ -864,10 +1025,11 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
 
     if (confirmed == true && context.mounted) {
       try {
-        await JobRequestRepository().cancelAssignedJob(
+        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        await JobRequestRepository().cancelJobRequest(
           requestId: request.id,
-          cancelledByRole: 'customer',
           reason: selectedReason,
+          cancelledBy: currentUid,
         );
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -878,7 +1040,7 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
           );
         }
       } catch (e) {
-        debugPrint('[JobQuotesScreen] Cancel booking failed: $e');
+        debugPrint('[JobQuotesScreen] Cancel job failed: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1157,7 +1319,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
 
       // open chat
       try {
-        final tech = await TechnicianRepository().getById(quote.providerId);
+        final tech = _technicians[quote.providerId] ??
+            await _getTechnicianFuture(quote.providerId);
         final chatRoomId = await ChatService.instance.getOrCreateChatRoom(
           userId1: request.customerId,
           userId2: quote.providerId,
@@ -1214,8 +1377,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
             OutlinedButton.icon(
               onPressed: () async {
                 Navigator.pop(dialogCtx);
-                final tech =
-                    await TechnicianRepository().getById(quote.providerId);
+                final tech = _technicians[quote.providerId] ??
+                    await _getTechnicianFuture(quote.providerId);
                 if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1235,8 +1398,8 @@ class _JobQuotesScreenState extends State<JobQuotesScreen> {
             ElevatedButton.icon(
               onPressed: () async {
                 Navigator.pop(dialogCtx);
-                final tech =
-                    await TechnicianRepository().getById(quote.providerId);
+                final tech = _technicians[quote.providerId] ??
+                    await _getTechnicianFuture(quote.providerId);
                 if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -1406,58 +1569,84 @@ class _JobSummaryCard extends StatelessWidget {
   }
 }
 
-class _QuoteCard extends StatefulWidget {
+class _QuoteCard extends StatelessWidget {
   final Quote quote;
   final JobRequest request;
+  final Future<Technician?> techFuture;
+  final Technician? initialTechnician;
   final VoidCallback onAccept;
 
   const _QuoteCard({
     required this.quote,
     required this.request,
+    required this.techFuture,
+    this.initialTechnician,
     required this.onAccept,
   });
 
-  @override
-  State<_QuoteCard> createState() => _QuoteCardState();
-}
-
-class _QuoteCardState extends State<_QuoteCard> {
-  String? _fallbackLocation;
-  Technician? _technician;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTechnician();
+  void _openProfile(BuildContext context, Technician technician) {
+    // open provider detail screen in quote mode
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProviderDetailScreen(
+          technician: technician,
+          fromQuote: true,
+        ),
+      ),
+    );
   }
 
-  void _loadTechnician() async {
-    final tech = await TechnicianRepository().getById(widget.quote.providerId);
-    if (mounted && tech != null) {
-      setState(() {
-        _technician = tech;
-        if (widget.quote.providerLocation.isEmpty &&
-            tech.serviceArea.isNotEmpty) {
-          _fallbackLocation = tech.serviceArea;
-        }
-      });
-    }
+  Widget _buildViewProfileButton(BuildContext context, Technician? technician) {
+    // view profile button helper
+    return OutlinedButton.icon(
+      onPressed:
+          technician != null ? () => _openProfile(context, technician) : null,
+      icon: const Icon(Icons.person_outline_rounded, size: 16),
+      label: Text(context.l10n.viewProfile),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
-  void _callProvider() async {
-    final phone = _technician?.phone ??
-        (await TechnicianRepository().getById(widget.quote.providerId))
-            ?.phone ??
-        '';
-    if (!mounted) return;
+  Widget _buildCallButton(BuildContext context, Technician? technician) {
+    // call provider button helper
+    return OutlinedButton.icon(
+      onPressed: () => _callProvider(context, technician),
+      icon: const Icon(Icons.call_rounded, size: 16),
+      label: Text(context.l10n.callTech),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildChatButton(BuildContext context, Technician? technician) {
+    // chat provider button helper
+    return OutlinedButton.icon(
+      onPressed: () => _chatProvider(context, technician),
+      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+      label: Text(context.l10n.chat),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _callProvider(BuildContext context, Technician? technician) async {
+    final phone = technician?.phone ?? (await techFuture)?.phone ?? '';
+    if (!context.mounted) return;
     if (phone.isNotEmpty) {
       CallService.instance.startCall(
         context: context,
         calleePhone: phone,
-        calleeName: widget.quote.providerName,
-        calleeUid: widget.quote.providerId,
-        calleeRole: widget.quote.providerTrade.isNotEmpty
-            ? widget.quote.providerTrade
+        calleeName: quote.providerName,
+        calleeUid: quote.providerId,
+        calleeRole: quote.providerTrade.isNotEmpty
+            ? quote.providerTrade
             : 'provider',
       );
     } else {
@@ -1467,20 +1656,19 @@ class _QuoteCardState extends State<_QuoteCard> {
     }
   }
 
-  void _chatProvider() async {
-    final phone = _technician?.phone ??
-        (await TechnicianRepository().getById(widget.quote.providerId))?.phone;
-    if (!mounted) return;
+  void _chatProvider(BuildContext context, Technician? technician) async {
+    final phone = technician?.phone ?? (await techFuture)?.phone;
+    if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DirectChatScreen(
-          otherPartyId: widget.quote.providerId,
-          otherPartyName: widget.quote.providerName,
-          otherPartyRole: widget.quote.providerTrade.isNotEmpty
-              ? widget.quote.providerTrade
+          otherPartyId: quote.providerId,
+          otherPartyName: quote.providerName,
+          otherPartyRole: quote.providerTrade.isNotEmpty
+              ? quote.providerTrade
               : 'provider',
           otherPartyPhone: phone,
-          jobRequestId: widget.request.id,
+          jobRequestId: request.id,
         ),
       ),
     );
@@ -1530,84 +1718,145 @@ class _QuoteCardState extends State<_QuoteCard> {
 
   @override
   Widget build(BuildContext context) {
-    final quote = widget.quote;
-    final request = widget.request;
-    final isAccepted =
-        request.status == 'assigned' && quote.status == 'accepted';
+    return FutureBuilder<Technician?>(
+      future: techFuture,
+      initialData: initialTechnician,
+      builder: (context, snapshot) {
+        final technician = snapshot.data;
+        final isAccepted =
+            request.status == 'assigned' && quote.status == 'accepted';
 
-    String? distanceLabel;
-    if (quote.travelKm > 0) {
-      distanceLabel = LocationUtils.formatDistanceL10n(context, quote.travelKm);
-    }
+        String? distanceLabel;
+        if (quote.travelKm > 0) {
+          distanceLabel = LocationUtils.formatDistanceL10n(context, quote.travelKm);
+        }
 
-    final locationName = quote.providerLocation.isNotEmpty
-        ? quote.providerLocation
-        : (_fallbackLocation ?? '');
+        final locationName = quote.providerLocation.isNotEmpty
+            ? quote.providerLocation
+            : (technician?.serviceArea ?? '');
 
-    String displayLocation = '';
-    if (locationName.isNotEmpty && distanceLabel != null) {
-      displayLocation = '$locationName · $distanceLabel';
-    } else if (locationName.isNotEmpty) {
-      displayLocation = locationName;
-    } else if (distanceLabel != null) {
-      displayLocation = distanceLabel;
-    }
+        String displayLocation = '';
+        if (locationName.isNotEmpty && distanceLabel != null) {
+          displayLocation = '$locationName · $distanceLabel';
+        } else if (locationName.isNotEmpty) {
+          displayLocation = locationName;
+        } else if (distanceLabel != null) {
+          displayLocation = distanceLabel;
+        }
 
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      borderColor: isAccepted ? AppColors.primary : null,
-      borderWidth: isAccepted ? 2.0 : 1.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        return AppCard(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          borderColor: isAccepted ? AppColors.primary : null,
+          borderWidth: isAccepted ? 2.0 : 1.0,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              UserAvatar(
-                uid: quote.providerId,
-                displayName: quote.providerName,
-                radius: 22,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            quote.providerName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (quote.providerNicVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(Icons.verified,
-                              size: 15, color: AppColors.primary),
-                        ],
-                      ],
+              Row(
+                children: [
+                  InkWell(
+                    onTap: technician != null
+                        ? () => _openProfile(context, technician)
+                        : null,
+                    borderRadius: BorderRadius.circular(22),
+                    child: UserAvatar(
+                      uid: quote.providerId,
+                      displayName: quote.providerName,
+                      radius: 22,
                     ),
-                    const SizedBox(height: 2),
-                    Row(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.star,
-                            size: 13, color: AppColors.secondaryContainer),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${quote.providerRating.toStringAsFixed(1)} (${quote.providerReviewCount})',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: context.themeTextSecondary,
+                        InkWell(
+                          onTap: technician != null
+                              ? () => _openProfile(context, technician)
+                              : null,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  quote.providerName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if ((technician?.nicVerified == true) ||
+                                  quote.providerNicVerified) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified,
+                                    size: 15, color: AppColors.primary),
+                              ],
+                            ],
                           ),
                         ),
-                        if (displayLocation.isNotEmpty) ...[
-                          const SizedBox(width: 8),
+                        if (technician != null) ...[
+                          // show stats row only when technician record is available
+                          const SizedBox(height: 2),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 6,
+                            runSpacing: 2,
+                            children: [
+                              if (technician.reviewCount == 0 ||
+                                  technician.rating == null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppColors.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    context.l10n.newProviderBadge,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star,
+                                        size: 12,
+                                        color: AppColors.secondaryContainer),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${technician.rating!.toStringAsFixed(1)} (${technician.reviewCount})',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: context.themeTextSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              Text(
+                                context.l10n.jobsDoneCount(technician.jobsCount),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.themeTextSecondary,
+                                ),
+                              ),
+                        ],
+                      ),
+                    ],
+                    if (displayLocation.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
                           Icon(
                             distanceLabel != null
                                 ? Icons.near_me
@@ -1620,7 +1869,7 @@ class _QuoteCardState extends State<_QuoteCard> {
                             child: Text(
                               displayLocation,
                               style: TextStyle(
-                                fontSize: 11.5,
+                                fontSize: 11,
                                 color: context.themeTextSecondary,
                               ),
                               maxLines: 1,
@@ -1628,8 +1877,8 @@ class _QuoteCardState extends State<_QuoteCard> {
                             ),
                           ),
                         ],
-                      ],
-                    ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     _buildQuoteTypeBadge(quote.quoteType),
                   ],
@@ -1817,29 +2066,10 @@ class _QuoteCardState extends State<_QuoteCard> {
             const SizedBox(height: 14),
             LayoutBuilder(
               builder: (context, constraints) {
-                final callBtn = OutlinedButton.icon(
-                  onPressed: _callProvider,
-                  icon: const Icon(Icons.call_rounded, size: 16),
-                  label: Text(context.l10n.callTech),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
-
-                final chatBtn = OutlinedButton.icon(
-                  onPressed: _chatProvider,
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                  label: Text(context.l10n.chat),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                );
+                final viewProfileBtn =
+                    _buildViewProfileButton(context, technician);
+                final callBtn = _buildCallButton(context, technician);
+                final chatBtn = _buildChatButton(context, technician);
 
                 final actionBtn = quote.isExpired
                     ? OutlinedButton(
@@ -1858,15 +2088,13 @@ class _QuoteCardState extends State<_QuoteCard> {
                     : PrimaryButton(
                         label: context.l10n.acceptHire,
                         leadingIcon: Icons.handshake_outlined,
-                        onPressed: widget.onAccept,
+                        onPressed: onAccept,
                       );
 
-                // stack buttons when narrow
-                if (constraints.maxWidth < 420) {
+                // stack action buttons on small screen
+                if (constraints.maxWidth < 460) {
                   return Column(
                     children: [
-                      SizedBox(width: double.infinity, child: actionBtn),
-                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(child: callBtn),
@@ -1874,6 +2102,10 @@ class _QuoteCardState extends State<_QuoteCard> {
                           Expanded(child: chatBtn),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: viewProfileBtn),
+                      const SizedBox(height: 8),
+                      SizedBox(width: double.infinity, child: actionBtn),
                     ],
                   );
                 }
@@ -1882,6 +2114,8 @@ class _QuoteCardState extends State<_QuoteCard> {
                     callBtn,
                     const SizedBox(width: 8),
                     chatBtn,
+                    const SizedBox(width: 8),
+                    viewProfileBtn,
                     const SizedBox(width: 8),
                     Expanded(child: actionBtn),
                   ],
@@ -1892,37 +2126,21 @@ class _QuoteCardState extends State<_QuoteCard> {
             const SizedBox(height: 14),
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _callProvider,
-                    icon: const Icon(Icons.call_rounded, size: 16),
-                    label: Text(context.l10n.callTech),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildCallButton(context, technician)),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _chatProvider,
-                    icon:
-                        const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                    label: Text(context.l10n.chat),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildChatButton(context, technician)),
               ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: _buildViewProfileButton(context, technician),
             ),
           ],
         ],
       ),
+    );
+      },
     );
   }
 }

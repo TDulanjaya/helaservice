@@ -126,6 +126,18 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     try {
       final pos = await LocationUtils.getCurrentPosition();
       if (pos != null && context.mounted) {
+        if (pos.latitude < 5.0 ||
+            pos.latitude > 10.0 ||
+            pos.longitude < 79.0 ||
+            pos.longitude > 82.0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationMustBeInSriLanka),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
         final roleProvider =
             pv.Provider.of<RoleProvider>(context, listen: false);
         final current = roleProvider.currentUser;
@@ -190,6 +202,18 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     );
 
     if (picked != null && context.mounted) {
+      if (picked.latitude < 5.0 ||
+          picked.latitude > 10.0 ||
+          picked.longitude < 79.0 ||
+          picked.longitude > 82.0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.locationMustBeInSriLanka),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
       final updated = (current ??
               UserProfile(
                 id: FirebaseAuth.instance.currentUser?.uid ?? '',
@@ -679,6 +703,34 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Divider(height: 1, color: context.themeBorder),
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.serviceCategoryLabel,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                      Text(
+                        categoryName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    context.l10n.changeTradeContactSupport,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

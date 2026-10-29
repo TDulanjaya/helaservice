@@ -91,6 +91,7 @@ class LocalizedData {
         return context.l10n.statusCompleted;
       case 'cancelled':
       case 'canceled':
+      case 'cancelled_by_provider':
         return context.l10n.statusCancelled;
       case 'accepted':
         return context.l10n.statusAccepted;

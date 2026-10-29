@@ -110,6 +110,34 @@ class CategoryService extends ChangeNotifier {
     return _categoriesById[trimmed] ?? _categoriesById[trimmed.toLowerCase()];
   }
 
+  // resolve category id from either an id or a display name
+  String resolveCategoryId(String? raw) {
+    if (raw == null) return '';
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return '';
+
+    // direct match with id or lowercase id
+    final byId =
+        _categoriesById[trimmed] ?? _categoriesById[trimmed.toLowerCase()];
+    if (byId != null) return byId.id;
+
+    // match against name or localized names
+    final lower = trimmed.toLowerCase();
+    for (final cat in _categoriesById.values) {
+      if (cat.name.trim().toLowerCase() == lower) {
+        return cat.id;
+      }
+      if (cat.names != null) {
+        for (final val in cat.names!.values) {
+          if (val.trim().toLowerCase() == lower) {
+            return cat.id;
+          }
+        }
+      }
+    }
+    return trimmed;
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

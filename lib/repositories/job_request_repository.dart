@@ -13,6 +13,22 @@ import '../utils/exact_location_helper.dart';
 import '../utils/schedule_helpers.dart';
 import 'booking_repository.dart';
 
+enum CannotQuoteReason {
+  declined,
+  cancelledByProvider,
+  alreadyAccepted,
+  generic,
+}
+
+class CannotQuoteException implements Exception {
+  final CannotQuoteReason reason;
+  final String? message;
+  const CannotQuoteException(this.reason, [this.message]);
+
+  @override
+  String toString() => 'CannotQuoteException: $reason ($message)';
+}
+
 class JobRequestRepository {
   final FirebaseFirestore? _customFirestore;
 
@@ -155,6 +171,17 @@ class JobRequestRepository {
     return JobRequest.fromMap(doc.id, doc.data()!);
   }
 
+  Future<Quote?> getQuoteForProvider(
+      String requestId, String providerId) async {
+    final doc = await _col
+        .doc(requestId)
+        .collection(FirestorePaths.quotes)
+        .doc(providerId)
+        .get();
+    if (!doc.exists || doc.data() == null) return null;
+    return Quote.fromMap(doc.id, doc.data()!);
+  }
+
   Future<void> submitQuote(String requestId, Quote quote) async {
     final quoteRef = _col
         .doc(requestId)
@@ -163,11 +190,23 @@ class JobRequestRepository {
     final existingSnap = await quoteRef.get();
     final batch = FirebaseFirestore.instance.batch();
 
-    final isRebid = existingSnap.exists &&
-        (existingSnap.data()?['status'] == 'job_closed' ||
-            existingSnap.data()?['status'] == 'withdrawn');
+    if (existingSnap.exists) {
+      final existingStatus = existingSnap.data()?['status'] as String?;
+      if (existingStatus == 'declined' || existingStatus == 'not_selected') {
+        throw const CannotQuoteException(CannotQuoteReason.declined);
+      }
+      if (existingStatus == 'cancelled_by_provider') {
+        throw const CannotQuoteException(CannotQuoteReason.cancelledByProvider);
+      }
+      if (existingStatus == 'accepted') {
+        throw const CannotQuoteException(CannotQuoteReason.alreadyAccepted);
+      }
+      if (existingStatus != 'job_closed' &&
+          existingStatus != 'withdrawn' &&
+          existingStatus != 'pending') {
+        throw const CannotQuoteException(CannotQuoteReason.generic);
+      }
 
-    if (isRebid) {
       final updateData = quote.toMap();
       updateData['status'] = 'pending';
       updateData['updatedAt'] = FieldValue.serverTimestamp();
@@ -568,6 +607,8 @@ class JobRequestRepository {
         .toList());
   }
 
+  @Deprecated(
+      'Use BookingCancellationSheet and BookingRepository.cancelBooking instead')
   Future<void> cancelAssignedJob({
     required String requestId,
     required String reason,
@@ -577,9 +618,14 @@ class JobRequestRepository {
     String? cancelledByRole,
   }) async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final effectiveCancelledBy = cancelledByRole ?? cancelledBy ?? currentUid;
+    final effectiveUid = (cancelledBy != null &&
+            cancelledBy.isNotEmpty &&
+            cancelledBy != 'customer' &&
+            cancelledBy != 'provider')
+        ? cancelledBy
+        : currentUid;
     final isCustomerCancelling = cancelledByRole == 'customer';
-    final batch = FirebaseFirestore.instance.batch();
+    final role = isCustomerCancelling ? 'customer' : 'provider';
 
     // locate booking id if not passed
     String? resolvedBookingId = bookingId;
@@ -590,6 +636,10 @@ class JobRequestRepository {
         final bSnap = await FirebaseFirestore.instance
             .collection(FirestorePaths.bookings)
             .where('jobRequestId', isEqualTo: requestId)
+            .where(
+              role == 'customer' ? 'customerId' : 'providerId',
+              isEqualTo: effectiveUid,
+            )
             .limit(1)
             .get();
         if (bSnap.docs.isNotEmpty) {
@@ -598,120 +648,15 @@ class JobRequestRepository {
       }
     }
 
-    if (isCustomerCancelling) {
-      // customer cancels accepted booking
-      batch.update(_col.doc(requestId), {
-        'status': JobRequestStatus.cancelled,
-        'cancellationReason': reason,
-        'cancelledBy': effectiveCancelledBy,
-        'cancelledAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
-        batch.update(
-          FirebaseFirestore.instance
-              .collection(FirestorePaths.bookings)
-              .doc(resolvedBookingId),
-          {
-            'status': JobStatus.cancelled,
-            'cancellationReason': reason,
-            'cancelledAt': FieldValue.serverTimestamp(),
-            'cancelledBy': effectiveCancelledBy,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-        );
-      }
-
-      await batch.commit();
-
-      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
-        try {
-          await NotificationService.instance.sendNotification(
-            event: 'booking_cancelled',
-            docId: resolvedBookingId,
-          );
-        } catch (e) {
-          debugPrint('[JobRequestRepo] notify customer cancel error: $e');
-        }
-      }
-    } else {
-      // provider cancels / unassigns
-      final reqDoc = await _col.doc(requestId).get();
-      final reqData = reqDoc.data() ?? {};
-      final expTs = reqData['expiresAt'];
-      DateTime? exp;
-      if (expTs is Timestamp) {
-        exp = expTs.toDate();
-      }
-      final isPast = exp != null && DateTime.now().isAfter(exp);
-      final newJobStatus =
-          isPast ? JobRequestStatus.expired : JobRequestStatus.open;
-
-      batch.update(_col.doc(requestId), {
-        'status': newJobStatus,
-        'selectedProviderId': FieldValue.delete(),
-        'acceptedQuoteId': FieldValue.delete(),
-        'bookingId': FieldValue.delete(),
-        'agreedPrice': FieldValue.delete(),
-        'cancellationReason': reason,
-        'cancelledBy': currentUid,
-        'cancelledAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // update provider's own quote to cancelled_by_provider
-      if (quoteId != null && quoteId.isNotEmpty) {
-        batch.update(
-          _col.doc(requestId).collection(FirestorePaths.quotes).doc(quoteId),
-          {
-            'status': 'cancelled_by_provider',
-            'cancelledAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-        );
-      } else {
-        final qSnap = await _col
-            .doc(requestId)
-            .collection(FirestorePaths.quotes)
-            .where('providerId', isEqualTo: currentUid)
-            .get();
-        for (final doc in qSnap.docs) {
-          batch.update(doc.reference, {
-            'status': 'cancelled_by_provider',
-            'cancelledAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      }
-
-      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
-        batch.update(
-          FirebaseFirestore.instance
-              .collection(FirestorePaths.bookings)
-              .doc(resolvedBookingId),
-          {
-            'status': JobStatus.cancelled,
-            'cancellationReason': reason,
-            'cancelledAt': FieldValue.serverTimestamp(),
-            'cancelledBy': currentUid,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-        );
-      }
-
-      await batch.commit();
-
-      if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
-        try {
-          await NotificationService.instance.sendNotification(
-            event: 'provider_cancelled',
-            docId: resolvedBookingId,
-          );
-        } catch (e) {
-          debugPrint('[JobRequestRepo] notify provider_cancelled error: $e');
-        }
-      }
+    if (resolvedBookingId != null && resolvedBookingId.isNotEmpty) {
+      await BookingRepository().cancelBooking(
+        bookingId: resolvedBookingId,
+        reason: reason,
+        cancelledBy: effectiveUid,
+        cancelledByRole: role,
+        jobRequestId: requestId,
+        chooseAnotherQuote: false,
+      );
     }
   }
 

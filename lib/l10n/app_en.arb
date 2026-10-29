@@ -3629,5 +3629,59 @@
       }
     }
   },
-  "timePassedChooseLater": "This time has passed, choose a later time or another day"
+  "timePassedChooseLater": "This time has passed, choose a later time or another day",
+  "viewProfile": "View profile",
+  "jobsDoneCount": "{count} jobs done",
+  "@jobsDoneCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acceptQuoteFromListNote": "Accept this quote from the quotes list",
+  "backToQuotes": "Back to quotes",
+  "sortDefault": "Default",
+  "sortLowestPrice": "Lowest price",
+  "sortHighestRating": "Highest rating",
+  "providerCancelReasonEmergency": "Schedule conflict or emergency",
+  "providerCancelReasonBreakdown": "Vehicle or transport breakdown",
+  "providerCancelReasonUnreachable": "Customer unreachable",
+  "providerCancelReasonScope": "Job requirements outside scope",
+  "providerEnRouteWarning": "The provider is already on the way.",
+  "providerSelfEnRouteWarning": "You are currently on the way. Cancelling will stop navigation and record a cancellation.",
+  "cancelJobActionTitle": "What would you like to do with this job post?",
+  "cancelJobOptionA": "Cancel the job",
+  "cancelJobOptionADesc": "The job request will be closed and cancelled completely.",
+  "cancelJobOptionB": "Choose another quote",
+  "cancelJobOptionBDesc": "Keep the job open to accept a quote from another provider.",
+  "keepBooking": "Keep booking",
+  "cannotQuoteAgain": "You can't quote on this job again",
+  "cannotQuoteCustomerChoseAnother": "The customer chose another provider",
+  "cannotQuoteYouCancelledBooking": "You cancelled this booking",
+  "cannotQuoteAlreadyAccepted": "You already have an accepted quote for this job",
+  "changeTradeContactSupport": "To change your trade, contact support",
+  "cannotQuoteCategoryMismatch": "This job is not in your service category",
+  "changeServiceCategory": "Change Service Category",
+  "confirmChangeCategory": "Change category from {from} to {to}? This will update their active trade and job matching immediately.",
+  "@confirmChangeCategory": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "tradeWillBeSetTo": "Trade will be set to: {trade}",
+  "@tradeWillBeSetTo": {
+    "placeholders": {
+      "trade": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryUpdated": "Service category updated successfully",
+  "locationMustBeInSriLanka": "Location must be in Sri Lanka"
 }

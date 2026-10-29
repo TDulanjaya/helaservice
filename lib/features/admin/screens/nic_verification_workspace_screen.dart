@@ -11,6 +11,7 @@ import '../../../constants/firestore_paths.dart';
 import '../../../models/admin_models.dart';
 import '../../../models/admin_user.dart';
 import '../../../services/admin_log_service.dart';
+import '../../../services/category_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
@@ -583,6 +584,98 @@ class _NicVerificationWorkspaceScreenState
   // full provider approval after 5 checklist points
   Future<void> _handleApprove(VerificationQueueItem item) async {
     if (_checklist.length < 5) return;
+
+    DocumentSnapshot<Map<String, dynamic>>? techDocSnap;
+    if (item.providerId.isNotEmpty) {
+      techDocSnap = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(item.providerId)
+          .get();
+    }
+    final currentCategory =
+        techDocSnap?.data()?['category'] as String? ?? '';
+    final verifiedTradeRaw = item.trade.trim();
+    final categoryId =
+        CategoryService.instance.resolveCategoryId(verifiedTradeRaw);
+    final categoryRow = CategoryService.instance.getCategory(categoryId);
+    final displayTitle = categoryRow?.name.isNotEmpty == true
+        ? categoryRow!.name
+        : CategoryService.instance.nameOf(categoryId);
+    final bool tradeDiffers = categoryId.isNotEmpty &&
+        currentCategory.isNotEmpty &&
+        categoryId != currentCategory;
+
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dlgCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          context.l10n.approveAndActivateArtisan,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${item.name} (${CategoryService.instance.nameOf(categoryId.isNotEmpty ? categoryId : currentCategory, context: context)})',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            if (tradeDiffers) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border:
+                      Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 16, color: Colors.amber),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.tradeWillBeSetTo(
+                            CategoryService.instance.nameOf(categoryId,
+                                context: context)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dlgCtx, false),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.ink,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(dlgCtx, true),
+            child: Text(context.l10n.approve),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     setState(() => _isProcessing = true);
     try {
       final currentUid = FirebaseAuth.instance.currentUser?.uid ?? 'admin';
@@ -605,27 +698,33 @@ class _NicVerificationWorkspaceScreenState
         final tDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.technicians)
             .doc(item.providerId);
-        batch.set(
-            tDoc,
-            {
-              'nicVerified': true,
-              'isVerified': true,
-              'status': 'active',
-              'photoStatus': 'approved',
-            },
-            SetOptions(merge: true));
+        final Map<String, dynamic> techUpdates = {
+          'nicVerified': true,
+          'isVerified': true,
+          'status': 'active',
+          'photoStatus': 'approved',
+        };
+        if (categoryId.isNotEmpty) {
+          techUpdates['category'] = categoryId;
+          techUpdates['serviceCategory'] = categoryId;
+          techUpdates['title'] =
+              displayTitle.isNotEmpty ? displayTitle : categoryId;
+        }
+        batch.set(tDoc, techUpdates, SetOptions(merge: true));
 
         final uDoc = FirebaseFirestore.instance
             .collection(FirestorePaths.users)
             .doc(item.providerId);
-        batch.set(
-            uDoc,
-            {
-              'role': 'provider',
-              'isVerified': true,
-              'photoStatus': 'approved',
-            },
-            SetOptions(merge: true));
+        final Map<String, dynamic> userUpdates = {
+          'role': 'provider',
+          'isVerified': true,
+          'photoStatus': 'approved',
+        };
+        if (categoryId.isNotEmpty) {
+          userUpdates['serviceCategory'] = categoryId;
+          userUpdates['category'] = categoryId;
+        }
+        batch.set(uDoc, userUpdates, SetOptions(merge: true));
 
         // notify provider of approval
         final notifCol = FirebaseFirestore.instance

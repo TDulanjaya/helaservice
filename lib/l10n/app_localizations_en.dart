@@ -7247,4 +7247,109 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get timePassedChooseLater =>
       'This time has passed, choose a later time or another day';
+
+  @override
+  String get viewProfile => 'View profile';
+
+  @override
+  String jobsDoneCount(int count) {
+    return '$count jobs done';
+  }
+
+  @override
+  String get acceptQuoteFromListNote =>
+      'Accept this quote from the quotes list';
+
+  @override
+  String get backToQuotes => 'Back to quotes';
+
+  @override
+  String get sortDefault => 'Default';
+
+  @override
+  String get sortLowestPrice => 'Lowest price';
+
+  @override
+  String get sortHighestRating => 'Highest rating';
+
+  @override
+  String get providerCancelReasonEmergency => 'Schedule conflict or emergency';
+
+  @override
+  String get providerCancelReasonBreakdown => 'Vehicle or transport breakdown';
+
+  @override
+  String get providerCancelReasonUnreachable => 'Customer unreachable';
+
+  @override
+  String get providerCancelReasonScope => 'Job requirements outside scope';
+
+  @override
+  String get providerEnRouteWarning => 'The provider is already on the way.';
+
+  @override
+  String get providerSelfEnRouteWarning =>
+      'You are currently on the way. Cancelling will stop navigation and record a cancellation.';
+
+  @override
+  String get cancelJobActionTitle =>
+      'What would you like to do with this job post?';
+
+  @override
+  String get cancelJobOptionA => 'Cancel the job';
+
+  @override
+  String get cancelJobOptionADesc =>
+      'The job request will be closed and cancelled completely.';
+
+  @override
+  String get cancelJobOptionB => 'Choose another quote';
+
+  @override
+  String get cancelJobOptionBDesc =>
+      'Keep the job open to accept a quote from another provider.';
+
+  @override
+  String get keepBooking => 'Keep booking';
+
+  @override
+  String get cannotQuoteAgain => 'You can\'t quote on this job again';
+
+  @override
+  String get cannotQuoteCustomerChoseAnother =>
+      'The customer chose another provider';
+
+  @override
+  String get cannotQuoteYouCancelledBooking => 'You cancelled this booking';
+
+  @override
+  String get cannotQuoteAlreadyAccepted =>
+      'You already have an accepted quote for this job';
+
+  @override
+  String get changeTradeContactSupport =>
+      'To change your trade, contact support';
+
+  @override
+  String get cannotQuoteCategoryMismatch =>
+      'This job is not in your service category';
+
+  @override
+  String get changeServiceCategory => 'Change Service Category';
+
+  @override
+  String confirmChangeCategory(String from, String to) {
+    return 'Change category from $from to $to? This will update their active trade and job matching immediately.';
+  }
+
+  @override
+  String tradeWillBeSetTo(String trade) {
+    return 'Trade will be set to: $trade';
+  }
+
+  @override
+  String get categoryUpdated => 'Service category updated successfully';
+
+  @override
+  String get locationMustBeInSriLanka => 'Location must be in Sri Lanka';
 }

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../constants/firestore_paths.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as pv;
 import '../../../theme/app_theme.dart';
@@ -40,6 +42,7 @@ import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
+import '../../shared/widgets/booking_cancellation_sheet.dart';
 
 class CustomerBookingsView extends StatefulWidget {
   final VoidCallback? onTrackPressed;
@@ -600,7 +603,7 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   ),
                 ),
               ],
-              if (JobStatus.canCancel(b.status)) ...[
+              if (JobStatus.canCancel(b.status) || b.status == JobStatus.inProgress) ...[
                 const SizedBox(width: 8),
                 IconSquareButton(
                   icon: Icons.close_rounded,
@@ -1119,114 +1122,13 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
     );
   }
 
+  // cancel booking via cancellation sheet
   Future<void> _cancelBooking(BuildContext context, Booking booking) async {
-    if (!JobStatus.canCancel(booking.status)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.cannotCancelInProgressBooking),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    final reasons = [
-      context.l10n.cancelReasonCustomerRequest,
-      context.l10n.cancelReasonScheduleConflict,
-      context.l10n.cancelReasonPriceDispute,
-      context.l10n.cancelReasonOther,
-    ];
-    String selectedReason = reasons.first;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: ctx.themeSurface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            context.l10n.cancelBookingOrQuote,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.cancelBookingPrompt,
-                style: TextStyle(fontSize: 13, color: ctx.themeTextSecondary),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: selectedReason,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.l10n.cancellationReasonPrompt,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                items: reasons
-                    .map((r) => DropdownMenuItem(
-                          value: r,
-                          child: Text(r, style: const TextStyle(fontSize: 13)),
-                        ))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) setDialogState(() => selectedReason = val);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(context.l10n.confirmCancellation),
-            ),
-          ],
-        ),
-      ),
+    await BookingCancellationSheet.show(
+      context,
+      booking: booking,
+      isCustomer: true,
     );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        await BookingRepository().cancelBooking(
-          bookingId: booking.id,
-          reason: selectedReason,
-          cancelledBy: 'customer',
-          jobRequestId: booking.jobRequestId,
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.bookingCancelledSuccess),
-              backgroundColor: AppColors.primary,
-            ),
-          );
-        }
-      } catch (e) {
-        debugPrint('[CustomerBookingsView] Error: $e');
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(context.l10n.somethingWentWrong),
-                backgroundColor: AppColors.error),
-          );
-        }
-      }
-    }
   }
 }
 
@@ -2183,6 +2085,49 @@ class _CustomerJobRequestCard extends StatelessWidget {
   }
 
   Future<void> _cancelJob(BuildContext context) async {
+    // if booking exists or job is assigned, open booking cancellation sheet
+    if (request.status == JobRequestStatus.assigned ||
+        (request.bookingId != null && request.bookingId!.isNotEmpty)) {
+      Booking? booking;
+      try {
+        if (request.bookingId != null && request.bookingId!.isNotEmpty) {
+          final bDoc = await FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .doc(request.bookingId!)
+              .get();
+          if (bDoc.exists && bDoc.data() != null) {
+            booking = Booking.fromMap(bDoc.id, bDoc.data()!);
+          }
+        }
+        if (booking == null) {
+          final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+          final bSnap = await FirebaseFirestore.instance
+              .collection(FirestorePaths.bookings)
+              .where('jobRequestId', isEqualTo: request.id)
+              .where('customerId', isEqualTo: currentUid)
+              .limit(1)
+              .get();
+          if (bSnap.docs.isNotEmpty) {
+            booking =
+                Booking.fromMap(bSnap.docs.first.id, bSnap.docs.first.data());
+          }
+        }
+      } catch (e) {
+        debugPrint('[CustomerBookingsView] lookup booking error: $e');
+      }
+
+      if (!context.mounted) return;
+
+      if (booking != null) {
+        await BookingCancellationSheet.show(
+          context,
+          booking: booking,
+          isCustomer: true,
+        );
+        return;
+      }
+    }
+
     String selectedReason = context.l10n.cancelReasonNoLongerNeeded;
     final reasons = [
       context.l10n.cancelReasonFoundSomeone,
@@ -2253,7 +2198,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        final uid = FirebaseAuth.instance.currentUser?.uid ?? 'customer';
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
         await JobRequestRepository().cancelJobRequest(
           requestId: request.id,
           reason: selectedReason,

@@ -522,6 +522,33 @@ class AuthService {
           userMap['visitFeeLkr'] = FieldValue.delete();
         }
       }
+
+      bool isApprovedTech = false;
+      DocumentSnapshot<Map<String, dynamic>>? techSnap;
+      if (profileWithId.role == AppRole.provider) {
+        if (profileWithId.latitude != null &&
+            profileWithId.longitude != null &&
+            (profileWithId.latitude! < 5.0 ||
+                profileWithId.latitude! > 10.0 ||
+                profileWithId.longitude! < 79.0 ||
+                profileWithId.longitude! > 82.0)) {
+          throw ArgumentError('Location must be in Sri Lanka');
+        }
+
+        final techDoc = FirebaseFirestore.instance
+            .collection(FirestorePaths.technicians)
+            .doc(uid);
+        techSnap = await techDoc.get();
+        isApprovedTech = techSnap.exists &&
+            (techSnap.data()?['nicVerified'] == true ||
+                techSnap.data()?['isVerified'] == true);
+      }
+
+      // after approval, trade cannot be changed by provider
+      if (isApprovedTech) {
+        userMap.remove('serviceCategory');
+        userMap.remove('category');
+      }
       batch.set(userDoc, userMap, SetOptions(merge: true));
 
       // save exact coords privately
@@ -554,16 +581,17 @@ class AuthService {
                 .toUpperCase()
             : 'SP';
 
-        final techSnap = await techDoc.get();
-        final bool isNewTech = !techSnap.exists;
+        final bool isNewTech = !(techSnap?.exists ?? false);
 
         final Map<String, dynamic> techData = {
           'name': profileWithId.displayName,
           'initials': initials,
           'avatarColor': 0xFFD6900F,
-          'title': profileWithId.serviceCategory ?? '',
-          'category': profileWithId.serviceCategory ?? '',
-          'serviceCategory': profileWithId.serviceCategory ?? '',
+          if (!isApprovedTech) ...{
+            'title': profileWithId.serviceCategory ?? '',
+            'category': profileWithId.serviceCategory ?? '',
+            'serviceCategory': profileWithId.serviceCategory ?? '',
+          },
           'online': true,
           'etaLabel': '',
           'responseTimeLabel': '',
@@ -574,7 +602,11 @@ class AuthService {
           if (profileWithId.pricingModes != null)
             'pricingModes': profileWithId.pricingModes,
           if (profileWithId.latitude != null &&
-              profileWithId.longitude != null) ...{
+              profileWithId.longitude != null &&
+              profileWithId.latitude! >= 5.0 &&
+              profileWithId.latitude! <= 10.0 &&
+              profileWithId.longitude! >= 79.0 &&
+              profileWithId.longitude! <= 82.0) ...{
             'latitude': roundToTwoDecimals(profileWithId.latitude!),
             'longitude': roundToTwoDecimals(profileWithId.longitude!),
             'baseLat': roundToTwoDecimals(profileWithId.latitude!),
@@ -680,7 +712,8 @@ class AuthService {
               {
                 'providerId': uid,
                 'providerName': profileWithId.displayName,
-                'serviceCategory': profileWithId.serviceCategory,
+                if (!isApprovedTech)
+                  'serviceCategory': profileWithId.serviceCategory,
                 'phone': profileWithId.phone,
                 'district': profileWithId.district,
                 'nic': profileWithId.nic,

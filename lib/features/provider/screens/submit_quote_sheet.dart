@@ -53,6 +53,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   bool _isEstimatedTravelKm = false;
   bool _addTravelCost = false;
   Technician? _technician;
+  Quote? _existingQuote;
 
   // flexible scheduling proposal
   DateTime? _proposedDate;
@@ -78,6 +79,22 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       }
     }
     _loadTechnicianRates();
+    _loadExistingQuote();
+  }
+
+  Future<void> _loadExistingQuote() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final q = await JobRequestRepository()
+            .getQuoteForProvider(widget.jobRequest.id, user.uid);
+        if (mounted && q != null) {
+          setState(() {
+            _existingQuote = q;
+          });
+        }
+      } catch (_) {}
+    }
   }
 
   void _prefillUnitRate(String unit, Technician tech) {
@@ -347,6 +364,17 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
       return;
     }
 
+    if (_technician != null &&
+        widget.jobRequest.category != _technician!.category) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.cannotQuoteCategoryMismatch),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _submitting = true);
 
     try {
@@ -358,7 +386,7 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
 
       final defaultProviderName = context.l10n.roleServiceProvider;
       String providerLocation = profile?.district?.trim() ?? '';
-      String providerTrade = profile?.serviceCategory ?? '';
+      String providerTrade = _technician?.category ?? '';
 
       try {
         final techDoc = await FirebaseFirestore.instance
@@ -461,6 +489,27 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
           ),
         );
       }
+    } on CannotQuoteException catch (e) {
+      if (kDebugMode) {
+        debugPrint('[SubmitQuoteSheet] cannot quote: $e');
+      }
+      if (mounted) {
+        final reasonText = switch (e.reason) {
+          CannotQuoteReason.declined =>
+            context.l10n.cannotQuoteCustomerChoseAnother,
+          CannotQuoteReason.cancelledByProvider =>
+            context.l10n.cannotQuoteYouCancelledBooking,
+          CannotQuoteReason.alreadyAccepted =>
+            context.l10n.cannotQuoteAlreadyAccepted,
+          _ => context.l10n.cannotQuoteAgain,
+        };
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${context.l10n.cannotQuoteAgain}. $reasonText.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[SubmitQuoteSheet] submit quote error: $e');
@@ -484,6 +533,10 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
   @override
   Widget build(BuildContext context) {
     final req = widget.jobRequest;
+    final isQuoteBlocked = _existingQuote != null &&
+        (_existingQuote!.status == 'declined' ||
+            _existingQuote!.status == 'not_selected' ||
+            _existingQuote!.status == 'cancelled_by_provider');
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -560,6 +613,52 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
               ),
 
               const SizedBox(height: 18),
+
+              if (isQuoteBlocked) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.block_rounded,
+                          color: AppColors.error, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.cannotQuoteAgain,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.error,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _existingQuote!.status == 'cancelled_by_provider'
+                                  ? context.l10n.cannotQuoteYouCancelledBooking
+                                  : context.l10n.cannotQuoteCustomerChoseAnother,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.themeTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
 
               // Job Summary Card
               AppCard(
@@ -1347,12 +1446,19 @@ class _SubmitQuoteSheetState extends State<SubmitQuoteSheet> {
 
               const SizedBox(height: 24),
 
-              PrimaryButton(
-                label: context.l10n.sendQuoteLkr('$_calculatedQuotedPrice'),
-                leadingIcon: Icons.send_rounded,
-                loading: _submitting,
-                onPressed: _submitting ? null : _submit,
-              ),
+              if (isQuoteBlocked)
+                PrimaryButton(
+                  label: context.l10n.cannotQuoteAgain,
+                  leadingIcon: Icons.block_rounded,
+                  onPressed: null,
+                )
+              else
+                PrimaryButton(
+                  label: context.l10n.sendQuoteLkr('$_calculatedQuotedPrice'),
+                  leadingIcon: Icons.send_rounded,
+                  loading: _submitting,
+                  onPressed: _submitting ? null : _submit,
+                ),
             ],
           ),
         );

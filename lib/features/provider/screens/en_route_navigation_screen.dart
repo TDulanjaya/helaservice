@@ -28,6 +28,7 @@ import '../../../models/job_request.dart';
 import '../../../repositories/job_request_repository.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/exact_location_helper.dart';
+import '../../shared/widgets/booking_cancellation_sheet.dart';
 
 class EnRouteNavigationScreen extends StatefulWidget {
   final Booking? booking;
@@ -1244,6 +1245,21 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
           ),
         ),
         actions: [
+          if (booking != null)
+            IconButton(
+              tooltip: context.l10n.cancelBookingOrQuote,
+              icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
+              onPressed: () async {
+                final cancelled = await BookingCancellationSheet.show(
+                  context,
+                  booking: booking,
+                  isCustomer: false,
+                );
+                if (cancelled == true && context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(

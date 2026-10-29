@@ -475,10 +475,18 @@ service cloud.firestore {
         (!changed().hasAny(['isVerified', 'nicVerified', 'status', 'certificationsStatus', 'certificateTitles', 'hasApprovedCertificates']) || hasPerm('verify_nic')) &&
         (hasPerm('manage_users') || hasPerm('verify_nic'))
       ) || (
+        // provider marks approval dialog seen
+        isOwner(techId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approvalSeenAt', 'updatedAt']) &&
+        (!('approvalSeenAt' in resource.data)
+          ? request.resource.data.approvalSeenAt == request.time
+          : request.resource.data.approvalSeenAt == resource.data.approvalSeenAt)
+      ) || (
         isOwner(techId) && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'isBanned', 'banned', 'bannedAt', 'banReason', 'nicVerified', 'isVerified', 'status', 'rating', 'reviewCount', 'jobsCount', 'cancellationCount', 'providerCancellationProcessed', 'certificateTitles', 'hasApprovedCertificates'
           ]) &&
+          (!('approvalSeenAt' in resource.data) || request.resource.data.get('approvalSeenAt', null) == resource.data.approvalSeenAt) &&
           (
             !('category' in resource.data) ||
             resource.data.category == '' ||
@@ -625,7 +633,22 @@ service cloud.firestore {
                             )
                           : (
                               (resource.data.status == 'pending_provider' && request.resource.data.status == 'cancelled') ||
-                              (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled']) ||
+                              (
+                                resource.data.status == 'assigned' && (
+                                  request.resource.data.status in ['in_progress', 'cancelled'] ||
+                                  (
+                                    // customer picks another quote
+                                    request.resource.data.status == (resource.data.expiresAt > request.time ? 'open' : 'expired') &&
+                                    !('selectedProviderId' in request.resource.data) &&
+                                    !('acceptedQuoteId' in request.resource.data) &&
+                                    !('bookingId' in request.resource.data) &&
+                                    !('agreedPrice' in request.resource.data) &&
+                                    resource.data.bookingId is string &&
+                                    getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.status == 'cancelled' &&
+                                    getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.cancelledBy == request.auth.uid
+                                  )
+                                )
+                              ) ||
                               (resource.data.status == 'cancelled' && (
                                 request.resource.data.status == 'cancelled' ||
                                 (request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0)
@@ -852,9 +875,11 @@ service cloud.firestore {
             resource.data.status in ['pending','confirmed','en_route'] &&
             request.resource.data.status == 'cancelled' &&
             !('noShow' in request.resource.data) &&
-            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy']) &&
+            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy','cancelledByRole','updatedAt']) &&
             request.resource.data.cancellationReason is string &&
-            request.resource.data.cancellationReason.size() > 0
+            request.resource.data.cancellationReason.size() > 0 &&
+            request.resource.data.cancelledBy == request.auth.uid &&
+            request.resource.data.cancelledByRole == 'customer'
           ) ||
           (
             // customer cancels for provider no-show
@@ -1015,7 +1040,7 @@ service cloud.firestore {
             // decline booking
             resource.data.status == 'pending' &&
             request.resource.data.status == 'declined' &&
-            changed().hasOnly(['status','declinedAt','declineReason','cancelledBy','cancelledAt','updatedAt'])
+            changed().hasOnly(['status','declinedAt','declineReason','cancelledBy','cancelledByRole','cancelledAt','updatedAt'])
           ) ||
           (
             // start travel
@@ -1048,9 +1073,11 @@ service cloud.firestore {
             resource.data.status in ['confirmed','en_route'] &&
             request.resource.data.status == 'cancelled' &&
             !('noShow' in request.resource.data) &&
-            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy','updatedAt']) &&
+            changed().hasOnly(['status','cancellationReason','cancelledAt','cancelledBy','cancelledByRole','updatedAt']) &&
             request.resource.data.cancellationReason is string &&
-            request.resource.data.cancellationReason.size() > 0
+            request.resource.data.cancellationReason.size() > 0 &&
+            request.resource.data.cancelledBy == request.auth.uid &&
+            request.resource.data.cancelledByRole == 'provider'
           ) ||
           (
             // complete booking with pin and cash payment

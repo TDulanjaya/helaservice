@@ -29,7 +29,12 @@ import '../../../utils/provider_pricing_helper.dart';
 
 class ProviderDetailScreen extends StatelessWidget {
   final Technician technician;
-  const ProviderDetailScreen({super.key, required this.technician});
+  final bool fromQuote;
+  const ProviderDetailScreen({
+    super.key,
+    required this.technician,
+    this.fromQuote = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -221,16 +226,16 @@ class ProviderDetailScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.secondaryContainer
                               .withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.star_rounded,
-                            color: AppColors.secondaryContainer, size: 24),
+                            color: AppColors.secondaryContainer, size: 20),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +244,7 @@ class ProviderDetailScreen extends StatelessWidget {
                                 technician.rating == null) ...[
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color:
                                       AppColors.primary.withValues(alpha: 0.15),
@@ -248,7 +253,7 @@ class ProviderDetailScreen extends StatelessWidget {
                                 child: Text(
                                   context.l10n.newProviderBadge,
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                     color: AppColors.primary,
                                   ),
@@ -260,16 +265,16 @@ class ProviderDetailScreen extends StatelessWidget {
                                   Text(
                                     technician.rating!.toStringAsFixed(1),
                                     style: const TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w900,
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 3),
                                   Flexible(
                                     child: Text(
                                       '(${technician.reviewCount})',
                                       style: TextStyle(
-                                        fontSize: 12.5,
+                                        fontSize: 11,
                                         color: context.themeTextSecondary,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -284,9 +289,11 @@ class ProviderDetailScreen extends StatelessWidget {
                             Text(
                               context.l10n.rating,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: context.themeTextSecondary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -296,23 +303,71 @@ class ProviderDetailScreen extends StatelessWidget {
                 ),
                 Container(
                   width: 1,
-                  height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 36,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
                   color: context.themeBorder,
                 ),
                 Expanded(
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.handshake_outlined,
+                            color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${technician.jobsCount}',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              context.l10n.jobsDone,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.themeTextSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 36,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  color: context.themeBorder,
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.location_on_rounded,
-                            color: AppColors.primary, size: 24),
+                            color: AppColors.primary, size: 20),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,14 +376,66 @@ class ProviderDetailScreen extends StatelessWidget {
                               LocalizedData.getDistrict(
                                   context, technician.serviceArea),
                               style: const TextStyle(
-                                fontSize: 14.5,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w800,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               context.l10n.district,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.themeTextSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!fromQuote) ...[
+            // hide direct contact card in quote preview mode
+            const SizedBox(height: 16),
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.contact_phone_rounded,
+                            color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.directContactFastQuotes,
+                              style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              technician.phone.isNotEmpty
+                                  ? technician.phone
+                                  : context.l10n.verifiedPhoneAvailable,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: context.themeTextSecondary,
@@ -339,126 +446,80 @@ class ProviderDetailScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.contact_phone_rounded,
-                          color: AppColors.primary, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.directContactFastQuotes,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            technician.phone.isNotEmpty
-                                ? technician.phone
-                                : context.l10n.verifiedPhoneAvailable,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.themeTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          String phone = technician.phone.trim();
-                          if (phone.isEmpty) {
-                            final t = await TechnicianRepository()
-                                .getById(technician.id);
-                            phone = t?.phone.trim() ?? '';
-                          }
-                          if (phone.isNotEmpty && context.mounted) {
-                            CallService.instance.startCall(
-                              context: context,
-                              calleePhone: phone,
-                              calleeName: technician.name,
-                              calleeUid: technician.id,
-                              calleeRole: technician.category.isNotEmpty
-                                  ? technician.category
-                                  : 'provider',
-                            );
-                          } else {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(context
-                                        .l10n.providerPhoneNotAvailable)),
-                              );
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            String phone = technician.phone.trim();
+                            if (phone.isEmpty) {
+                              final t = await TechnicianRepository()
+                                  .getById(technician.id);
+                              phone = t?.phone.trim() ?? '';
                             }
-                          }
-                        },
-                        icon: const Icon(Icons.call_rounded, size: 16),
-                        label: Text(context.l10n.callTech),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => DirectChatScreen(
-                                otherPartyId: technician.id,
-                                otherPartyName: technician.name,
-                                otherPartyRole: technician.title,
-                                otherPartyPhone: technician.phone,
-                              ),
+                            if (phone.isNotEmpty && context.mounted) {
+                              CallService.instance.startCall(
+                                context: context,
+                                calleePhone: phone,
+                                calleeName: technician.name,
+                                calleeUid: technician.id,
+                                calleeRole: technician.category.isNotEmpty
+                                    ? technician.category
+                                    : 'provider',
+                              );
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(context
+                                          .l10n.providerPhoneNotAvailable)),
+                                );
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.call_rounded, size: 16),
+                          label: Text(context.l10n.callTech),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.chat_bubble_outline_rounded,
-                            size: 16),
-                        label: Text(context.l10n.chat),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => DirectChatScreen(
+                                  otherPartyId: technician.id,
+                                  otherPartyName: technician.name,
+                                  otherPartyRole: technician.title,
+                                  otherPartyPhone: technician.phone,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.chat_bubble_outline_rounded,
+                              size: 16),
+                          label: Text(context.l10n.chat),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 16),
           _SectionCard(
             title: context.l10n.aboutTechnician,
@@ -994,7 +1055,64 @@ class ProviderDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
+          child: fromQuote
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // note for accepting quote from list
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              context.l10n.acceptQuoteFromListNote,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        label: Text(
+                          context.l10n.backToQuotes,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
             children: [
               IconSquareButton(
                 icon: Icons.phone_rounded,

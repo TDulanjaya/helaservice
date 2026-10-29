@@ -28,6 +28,7 @@ class SearchableSelectPicker<T> extends StatelessWidget {
   final bool isDarkField;
   final String? modalTitle;
   final String? searchHint;
+  final bool enabled;
 
   const SearchableSelectPicker({
     super.key,
@@ -40,6 +41,7 @@ class SearchableSelectPicker<T> extends StatelessWidget {
     this.isDarkField = false,
     this.modalTitle,
     this.searchHint,
+    this.enabled = true,
   });
 
   SearchableSelectItem<T>? get _selectedItem {
@@ -128,22 +130,28 @@ class SearchableSelectPicker<T> extends StatelessWidget {
           const SizedBox(height: 8),
         ],
         InkWell(
-          onTap: () => _openPicker(context),
+          onTap: enabled ? () => _openPicker(context) : null,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             decoration: BoxDecoration(
-              color: bg,
+              color: enabled ? bg : bg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: context.themeBorder,
+                color: enabled
+                    ? context.themeBorder
+                    : context.themeBorder.withValues(alpha: 0.5),
                 width: 1.5,
               ),
             ),
             child: Row(
               children: [
                 if (prefixIcon != null) ...[
-                  Icon(prefixIcon, size: 20, color: context.themeTextSecondary),
+                  Icon(prefixIcon,
+                      size: 20,
+                      color: enabled
+                          ? context.themeTextSecondary
+                          : context.themeTextSecondary.withValues(alpha: 0.5)),
                   const SizedBox(width: 12),
                 ],
                 Expanded(
@@ -153,7 +161,9 @@ class SearchableSelectPicker<T> extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w600,
-                            color: context.themeTextPrimary,
+                            color: enabled
+                                ? context.themeTextPrimary
+                                : context.themeTextSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         )
@@ -168,9 +178,12 @@ class SearchableSelectPicker<T> extends StatelessWidget {
                         ),
                 ),
                 Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: context.themeTextSecondary,
-                  size: 20,
+                  enabled
+                      ? Icons.keyboard_arrow_down_rounded
+                      : Icons.lock_outline_rounded,
+                  color: context.themeTextSecondary
+                      .withValues(alpha: enabled ? 1.0 : 0.6),
+                  size: enabled ? 20 : 18,
                 ),
               ],
             ),

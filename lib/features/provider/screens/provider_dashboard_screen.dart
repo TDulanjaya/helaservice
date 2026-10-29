@@ -37,6 +37,7 @@ import '../../../shared/widgets/notification_bell_icon.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../shared/widgets/job_media_gallery.dart';
 import '../../support/widgets/report_problem_dialog.dart';
+import '../../shared/widgets/booking_cancellation_sheet.dart';
 import '../../../models/technician.dart';
 import '../../../services/provider_tracking_service.dart';
 import '../../../services/live_location_service.dart';
@@ -1141,6 +1142,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     q.status == 'not_selected' ||
                     q.status == 'withdrawn' ||
                     q.status == 'job_closed' ||
+                    q.status == 'cancelled_by_provider' ||
                     q.status == 'declined')
                 .toList();
 
@@ -1659,6 +1661,29 @@ class ActiveBookingCard extends StatelessWidget {
                   icon: const Icon(Icons.flag_outlined,
                       size: 16, color: AppColors.error),
                 ),
+                if (b.status == JobStatus.confirmed ||
+                    b.status == JobStatus.enRoute ||
+                    b.status == JobStatus.inProgress) ...[
+                  const SizedBox(width: 6),
+                  IconButton(
+                    tooltip: context.l10n.cancelBookingOrQuote,
+                    onPressed: () => BookingCancellationSheet.show(
+                      context,
+                      booking: b,
+                      isCustomer: false,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: context.themeSurfaceLow,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: context.themeBorder),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    icon: const Icon(Icons.close_rounded,
+                        size: 16, color: AppColors.error),
+                  ),
+                ],
               ],
             ),
             if (b.status == JobStatus.pending) ...[
@@ -2258,6 +2283,53 @@ class _JobRequestCard extends StatelessWidget {
               label: context.l10n.sendPriceQuote,
               leadingIcon: Icons.send_rounded,
               onPressed: onSendQuote,
+            )
+          else if (myQuote!.status == 'declined' ||
+              myQuote!.status == 'not_selected' ||
+              myQuote!.status == 'cancelled_by_provider')
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: context.themeSurfaceLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.themeBorder),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.block_rounded,
+                    size: 18,
+                    color: context.themeTextSecondary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.cannotQuoteAgain,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: context.themeTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          myQuote!.status == 'cancelled_by_provider'
+                              ? context.l10n.cannotQuoteYouCancelledBooking
+                              : context.l10n.cannotQuoteCustomerChoseAnother,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.themeTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
@@ -2268,6 +2340,7 @@ class _JobRequestCard extends StatelessWidget {
     return switch (status) {
       'accepted' => const Color(0xFF22C55E),
       'declined' || 'not_selected' => const Color(0xFF64748B),
+      'cancelled_by_provider' => const Color(0xFFEF4444),
       'withdrawn' || 'job_closed' || 'cancelled' => const Color(0xFF94A3B8),
       _ => AppColors.primary,
     };
@@ -2277,6 +2350,7 @@ class _JobRequestCard extends StatelessWidget {
     return switch (status) {
       'accepted' => context.l10n.acceptedCaps,
       'declined' || 'not_selected' => context.l10n.declinedCaps,
+      'cancelled_by_provider' => context.l10n.statusCancelled.toUpperCase(),
       'withdrawn' => 'WITHDRAWN',
       'job_closed' || 'cancelled' => 'CLOSED',
       _ => context.l10n.pendingResponseCaps,
@@ -2330,102 +2404,54 @@ class _QuoteHistoryTile extends StatelessWidget {
   }
 
   Future<void> _cancelQuote(BuildContext context) async {
-    final reasons = [
-      context.l10n.cancelReasonProviderUnavailable,
-      context.l10n.cancelReasonScheduleConflict,
-      context.l10n.cancelReasonPriceDispute,
-      context.l10n.cancelReasonOther,
-    ];
-    String selectedReason = reasons.first;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: ctx.themeSurface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            context.l10n.cancelBookingOrQuote,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.cancellationReasonPrompt,
-                style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedReason,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: context.l10n.cancellationReasonPrompt,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                items: reasons
-                    .map((r) => DropdownMenuItem(
-                        value: r,
-                        child: Text(r, style: const TextStyle(fontSize: 13))))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setDialogState(() => selectedReason = val);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(context.l10n.cancel),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(context.l10n.confirmCancellation),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-        await JobRequestRepository().cancelAssignedJob(
-          requestId: quote.requestId,
-          reason: selectedReason,
-          quoteId: quote.id,
-          cancelledBy: currentUid,
-        );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.l10n.bookingCancelledSuccess),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      } catch (e) {
-        debugPrint('[ProviderDashboardScreen] Error: $e');
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.somethingWentWrong)),
-          );
+    Booking? booking;
+    try {
+      final reqDoc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc(quote.requestId)
+          .get();
+      final bId = reqDoc.data()?['bookingId'] as String?;
+      if (bId != null && bId.isNotEmpty) {
+        final bDoc = await FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .doc(bId)
+            .get();
+        if (bDoc.exists && bDoc.data() != null) {
+          booking = Booking.fromMap(bDoc.id, bDoc.data()!);
         }
       }
+      if (booking == null) {
+        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        final bSnap = await FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .where('jobRequestId', isEqualTo: quote.requestId)
+            .where('providerId', isEqualTo: currentUid)
+            .limit(1)
+            .get();
+        if (bSnap.docs.isNotEmpty) {
+          booking =
+              Booking.fromMap(bSnap.docs.first.id, bSnap.docs.first.data());
+        }
+      }
+    } catch (e) {
+      debugPrint('[ProviderDashboardScreen] cancel quote lookup error: $e');
+    }
+
+    if (!context.mounted) return;
+
+    if (booking != null) {
+      await BookingCancellationSheet.show(
+        context,
+        booking: booking,
+        isCustomer: false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.somethingWentWrong),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -2491,6 +2517,7 @@ class _QuoteHistoryTile extends StatelessWidget {
     final statusColor = switch (quote.status) {
       'accepted' => const Color(0xFF22C55E),
       'declined' || 'not_selected' => context.themeTextSecondary,
+      'cancelled_by_provider' => AppColors.error,
       'withdrawn' => AppColors.warning,
       'job_closed' => AppColors.error,
       _ => AppColors.primary,
@@ -2498,6 +2525,7 @@ class _QuoteHistoryTile extends StatelessWidget {
     final statusIcon = switch (quote.status) {
       'accepted' => Icons.check_circle_rounded,
       'declined' || 'not_selected' => Icons.cancel_outlined,
+      'cancelled_by_provider' => Icons.cancel_rounded,
       'withdrawn' => Icons.remove_circle_outline,
       'job_closed' => Icons.close_rounded,
       _ => Icons.hourglass_top_rounded,

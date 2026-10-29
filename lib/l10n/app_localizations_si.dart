@@ -7256,4 +7256,113 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get timePassedChooseLater =>
       'මෙම වේලාව ඉක්මවා ඇත, කරුණාකර පසු වේලාවක් හෝ වෙනත් දිනයක් තෝරන්න';
+
+  @override
+  String get viewProfile => 'පැතිකඩ බලන්න';
+
+  @override
+  String jobsDoneCount(int count) {
+    return 'කළ සේවා $count';
+  }
+
+  @override
+  String get acceptQuoteFromListNote =>
+      'මිල ගණන් ලැයිස්තුවෙන් මෙම මිල ගණන පිළිගන්න';
+
+  @override
+  String get backToQuotes => 'මිල ගණන් වෙත ආපසු';
+
+  @override
+  String get sortDefault => 'පෙරනිමි';
+
+  @override
+  String get sortLowestPrice => 'අඩුම මිල';
+
+  @override
+  String get sortHighestRating => 'ඉහළම ඇගයීම';
+
+  @override
+  String get providerCancelReasonEmergency =>
+      'කාලසටහන් ගැටලුවක් හෝ හදිසි අවස්ථාවක්';
+
+  @override
+  String get providerCancelReasonBreakdown => 'වාහනය හෝ ගමනාගමන බිඳවැටීමක්';
+
+  @override
+  String get providerCancelReasonUnreachable =>
+      'පාරිභෝගිකයා සම්බන්ධ කරගත නොහැක';
+
+  @override
+  String get providerCancelReasonScope => 'කාර්යය සේවා සීමාවෙන් පිටත වේ';
+
+  @override
+  String get providerEnRouteWarning => 'සේවා සපයන්නා දැනටමත් පැමිණෙමින් සිටී.';
+
+  @override
+  String get providerSelfEnRouteWarning =>
+      'ඔබ මේ වන විටත් ගමන් කරමින් සිටී. අවලංගු කිරීමෙන් ගමන් සටහන නැවතී අවලංගු කිරීමක් සටහන් වේ.';
+
+  @override
+  String get cancelJobActionTitle =>
+      'මෙම කාර්යය දැන්වීම සම්බන්ධයෙන් ඔබ කුමක් කිරීමට කැමතිද?';
+
+  @override
+  String get cancelJobOptionA => 'කාර්යය අවලංගු කරන්න';
+
+  @override
+  String get cancelJobOptionADesc =>
+      'කාර්යය ඉල්ලීම සම්පූර්ණයෙන්ම වසා අවලංගු කෙරේ.';
+
+  @override
+  String get cancelJobOptionB => 'වෙනත් මිල ගණනක් තෝරන්න';
+
+  @override
+  String get cancelJobOptionBDesc =>
+      'වෙනත් සේවා සපයන්නෙකුගේ මිල ගණනක් පිළිගැනීමට කාර්යය විවෘතව තබන්න.';
+
+  @override
+  String get keepBooking => 'වෙන්කිරීම තබාගන්න';
+
+  @override
+  String get cannotQuoteAgain =>
+      'ඔබට නැවත මෙම කාර්යයට මිල ගණනක් ඉදිරිපත් කළ නොහැක';
+
+  @override
+  String get cannotQuoteCustomerChoseAnother =>
+      'පාරිභෝගිකයා වෙනත් සේවා සපයන්නෙකු තෝරාගෙන ඇත';
+
+  @override
+  String get cannotQuoteYouCancelledBooking =>
+      'ඔබ මෙම වෙන්කරවා ගැනීම අවලංගු කළා';
+
+  @override
+  String get cannotQuoteAlreadyAccepted =>
+      'මෙම කාර්යය සඳහා ඔබේ මිල ගණන දැනටමත් පිළිගෙන ඇත';
+
+  @override
+  String get changeTradeContactSupport =>
+      'ඔබේ සේවා කාණ්ඩය වෙනස් කිරීමට, සහය අංශය අමතන්න';
+
+  @override
+  String get cannotQuoteCategoryMismatch =>
+      'මෙම කාර්යය ඔබේ සේවා කාණ්ඩයට අයත් නොවේ';
+
+  @override
+  String get changeServiceCategory => 'සේවා කාණ්ඩය වෙනස් කරන්න';
+
+  @override
+  String confirmChangeCategory(String from, String to) {
+    return 'ප්‍රවර්ගය $from සිට $to දක්වා වෙනස් කරන්නද? මෙය ඔවුන්ගේ සක්‍රිය සේවාව සහ රැකියා ගැලපීම වහාම යාවත්කාලීන කරනු ඇත.';
+  }
+
+  @override
+  String tradeWillBeSetTo(String trade) {
+    return 'සේවා කාණ්ඩය $trade ලෙස සකසනු ඇත';
+  }
+
+  @override
+  String get categoryUpdated => 'සේවා කාණ්ඩය සාර්ථකව යාවත්කාලීන කරන ලදී';
+
+  @override
+  String get locationMustBeInSriLanka => 'ස්ථානය ශ්‍රී ලංකාව තුළ තිබිය යුතුය';
 }

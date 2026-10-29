@@ -236,8 +236,11 @@ module.exports = async function handler(req, res) {
       if (b.status !== 'cancelled' && b.status !== 'declined') {
         return res.status(400).json({ error: 'Booking is not cancelled or declined' });
       }
-      if (b.cancelledBy !== callerUid && b.providerId !== callerUid) {
-        return res.status(403).json({ error: 'Caller is not the cancelling provider' });
+      if (b.cancelledByRole && b.cancelledByRole !== 'provider') {
+        return res.status(403).json({ error: 'Cancellation was not performed by provider' });
+      }
+      if (callerUid !== b.providerId) {
+        return res.status(403).json({ error: 'Caller is not the booking provider' });
       }
 
       // idempotency check

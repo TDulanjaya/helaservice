@@ -99,6 +99,22 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
     } catch (_) {}
   }
 
+  // write approvalSeenAt to technicians document
+  Future<void> _recordApprovalSeen(String uid) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(uid)
+          .update({
+        'approvalSeenAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[ProviderApprovalGate] record approvalSeenAt error: $e');
+      }
+    }
+  }
+
   Future<void> _handleApprovalCelebration(
     BuildContext context, {
     required String uid,
@@ -111,8 +127,21 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final key = 'approval_celebrated_$uid';
+
+      // check local cache first (prevents flash)
       final bool alreadyCelebrated = prefs.getBool(key) ?? false;
       if (alreadyCelebrated) {
+        _hasShownCelebration = true;
+        // ensure firestore has timestamp recorded
+        if (techData != null && techData['approvalSeenAt'] == null) {
+          _recordApprovalSeen(uid);
+        }
+        return;
+      }
+
+      // check firestore timestamp
+      if (techData != null && techData['approvalSeenAt'] != null) {
+        await prefs.setBool(key, true);
         _hasShownCelebration = true;
         return;
       }
@@ -134,19 +163,19 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
       if (approvedDate != null) {
         final age = DateTime.now().difference(approvedDate);
         if (age > const Duration(days: 7)) {
-          // old approval so persist key without showing modal
+          // old approval: write approvalSeenAt and local key without showing modal
           await prefs.setBool(key, true);
           _hasShownCelebration = true;
+          _recordApprovalSeen(uid);
           return;
         }
       }
 
-      // save celebrated flag before showing modal
-      await prefs.setBool(key, true);
+      // show celebration modal
       _hasShownCelebration = true;
 
       if (context.mounted) {
-        _showCelebrationModal(context);
+        _showCelebrationModal(context, uid: uid, prefsKey: key);
       }
     } catch (e) {
       if (kDebugMode) {
@@ -157,7 +186,11 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
     }
   }
 
-  void _showCelebrationModal(BuildContext context) {
+  void _showCelebrationModal(
+    BuildContext context, {
+    required String uid,
+    required String prefsKey,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -209,7 +242,16 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
             const SizedBox(height: 24),
             PrimaryButton(
               label: context.l10n.proGetStarted,
-              onPressed: () => Navigator.of(ctx).pop(),
+              onPressed: () {
+                // close dialog immediately
+                Navigator.of(ctx).pop();
+                // persist local key
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setBool(prefsKey, true);
+                }).catchError((_) {});
+                // record seen in firestore
+                _recordApprovalSeen(uid);
+              },
             ),
           ],
         ),
@@ -277,7 +319,15 @@ class _ProviderApprovalGateState extends State<ProviderApprovalGate> {
             final bool isLoading = !isReady && !_timedOut;
             final bool shouldAbsorb = !_timedOut && (isLoading || !isApproved);
 
-            if (!isLoading && isApproved && !_hasShownCelebration) {
+            final bool hasApprovalSeen = techData?['approvalSeenAt'] != null;
+            if (hasApprovalSeen && !_hasShownCelebration) {
+              _hasShownCelebration = true;
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.setBool('approval_celebrated_$uid', true);
+              }).catchError((_) {});
+            }
+
+            if (!isLoading && isApproved && !_hasShownCelebration && !hasApprovalSeen) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && _subscribedUid == uid) {
                   _handleApprovalCelebration(

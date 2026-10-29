@@ -850,12 +850,14 @@ class BookingRepository {
     await _col.doc(bookingId).update({'pinAttempts': 0});
   }
 
-  // cancel booking
+  // cancel booking for customer or provider
   Future<void> cancelBooking({
     required String bookingId,
     required String reason,
-    required String cancelledBy,
+    String? cancelledBy,
+    String? cancelledByRole,
     String? jobRequestId,
+    bool chooseAnotherQuote = false,
   }) async {
     final doc = await _col.doc(bookingId).get();
     if (!doc.exists) throw Exception('Booking not found');
@@ -867,14 +869,20 @@ class BookingRepository {
           'Cannot cancel booking in progress. Please contact support.');
     }
 
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? cancelledBy;
-    final isCustomer = bData['customerId'] == uid;
+    final uid = FirebaseAuth.instance.currentUser?.uid ??
+        cancelledBy ??
+        (bData['customerId'] as String? ?? '');
+    final isCustomer = cancelledByRole != null
+        ? (cancelledByRole == 'customer')
+        : (bData['customerId'] == uid);
+    final role = isCustomer ? 'customer' : 'provider';
     final batch = FirebaseFirestore.instance.batch();
 
     batch.update(_col.doc(bookingId), {
       'status': JobStatus.cancelled,
       'cancellationReason': reason,
-      'cancelledBy': cancelledBy,
+      'cancelledBy': uid,
+      'cancelledByRole': role,
       'cancelledAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -884,19 +892,68 @@ class BookingRepository {
       final reqRef = FirebaseFirestore.instance
           .collection(FirestorePaths.jobRequests)
           .doc(reqId);
+      final reqDoc = await reqRef.get();
+      final reqData = reqDoc.data() ?? {};
 
       if (isCustomer) {
-        batch.update(reqRef, {
-          'status': JobRequestStatus.cancelled,
-          'cancellationReason': reason,
-          'cancelledBy': cancelledBy,
-          'cancelledAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        if (chooseAnotherQuote) {
+          // reopen or expire job request when choosing another quote
+          final expTs = reqData['expiresAt'];
+          DateTime? exp;
+          if (expTs is Timestamp) {
+            exp = expTs.toDate();
+          }
+          final isPast = exp != null && DateTime.now().isAfter(exp);
+          final newJobStatus =
+              isPast ? JobRequestStatus.expired : JobRequestStatus.open;
+
+          batch.update(reqRef, {
+            'status': newJobStatus,
+            'selectedProviderId': FieldValue.delete(),
+            'acceptedQuoteId': FieldValue.delete(),
+            'bookingId': FieldValue.delete(),
+            'agreedPrice': FieldValue.delete(),
+            'cancellationReason': reason,
+            'cancelledBy': uid,
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+          final acceptedQuoteId = reqData['acceptedQuoteId'] as String? ??
+              bData['quoteId'] as String?;
+          if (acceptedQuoteId != null && acceptedQuoteId.isNotEmpty) {
+            final qRef =
+                reqRef.collection(FirestorePaths.quotes).doc(acceptedQuoteId);
+            batch.update(qRef, {
+              'status': 'declined',
+              'customerRespondedAt': FieldValue.serverTimestamp(),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          } else {
+            final qSnap = await reqRef
+                .collection(FirestorePaths.quotes)
+                .where('status', isEqualTo: 'accepted')
+                .get();
+            for (final q in qSnap.docs) {
+              batch.update(q.reference, {
+                'status': 'declined',
+                'customerRespondedAt': FieldValue.serverTimestamp(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            }
+          }
+        } else {
+          // customer cancels the whole job request
+          batch.update(reqRef, {
+            'status': JobRequestStatus.cancelled,
+            'cancellationReason': reason,
+            'cancelledBy': uid,
+            'cancelledAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       } else {
-        // provider cancelling
-        final reqDoc = await reqRef.get();
-        final reqData = reqDoc.data() ?? {};
+        // provider cancelling active booking
         final expTs = reqData['expiresAt'];
         DateTime? exp;
         if (expTs is Timestamp) {
@@ -913,14 +970,15 @@ class BookingRepository {
           'bookingId': FieldValue.delete(),
           'agreedPrice': FieldValue.delete(),
           'cancellationReason': reason,
-          'cancelledBy': cancelledBy,
+          'cancelledBy': uid,
           'cancelledAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
 
+        final provUid = bData['providerId'] as String? ?? uid;
         final qSnap = await reqRef
             .collection(FirestorePaths.quotes)
-            .where('providerId', isEqualTo: cancelledBy)
+            .where('providerId', isEqualTo: provUid)
             .get();
         for (final q in qSnap.docs) {
           batch.update(q.reference, {
@@ -932,18 +990,35 @@ class BookingRepository {
       }
     }
 
+    // add cancellation timeline entry
     addTimelineEventToBatch(
       batch: batch,
       bookingId: bookingId,
       action: 'cancelled',
       title: 'Booking Cancelled',
       description: reason,
-      actorUid: cancelledBy,
-      actorRole: isCustomer ? 'customer' : 'provider',
-      metadata: {'reason': reason, 'cancelledBy': cancelledBy},
+      actorUid: uid,
+      actorRole: role,
+      metadata: {
+        'reason': reason,
+        'cancelledBy': uid,
+        'cancelledByRole': role,
+        if (chooseAnotherQuote) 'chooseAnotherQuote': true,
+      },
     );
 
     await batch.commit();
+
+    // stop tracking and delete live location when provider cancels
+    if (!isCustomer) {
+      try {
+        final provUid = bData['providerId'] as String? ?? uid;
+        await FirebaseFirestore.instance
+            .collection(FirestorePaths.liveLocations)
+            .doc(provUid)
+            .delete();
+      } catch (_) {}
+    }
 
     try {
       if (isCustomer) {

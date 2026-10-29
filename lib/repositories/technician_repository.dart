@@ -61,6 +61,9 @@ class TechnicianRepository {
     required double longitude,
   }) async {
     if (id.isEmpty) return;
+    if (latitude < 5.0 || latitude > 10.0 || longitude < 79.0 || longitude > 82.0) {
+      return;
+    }
     await _col.doc(id).update({
       'currentLat': roundToTwoDecimals(latitude),
       'currentLng': roundToTwoDecimals(longitude),
@@ -76,6 +79,9 @@ class TechnicianRepository {
     String? baseArea,
   }) async {
     if (id.isEmpty) return;
+    if (latitude < 5.0 || latitude > 10.0 || longitude < 79.0 || longitude > 82.0) {
+      throw ArgumentError('Location must be in Sri Lanka');
+    }
     await _col.doc(id).update({
       'baseLat': roundToTwoDecimals(latitude),
       'baseLng': roundToTwoDecimals(longitude),
@@ -86,7 +92,7 @@ class TechnicianRepository {
       if (baseArea != null && baseArea.trim().isNotEmpty)
         'baseArea': baseArea.trim(),
       'baseLocationUpdatedAt': FieldValue.serverTimestamp(),
-    }).catchError((_) {});
+    });
   }
 
   Future<void> updateEmergencyStatus(String id, bool emergencyAvailable) async {

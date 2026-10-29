@@ -7424,4 +7424,113 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get timePassedChooseLater =>
       'இந்த நேரம் கடந்துவிட்டது, தயவுசெய்து பிந்தைய நேரத்தை அல்லது மற்றொரு நாளைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get viewProfile => 'சுயவிவரத்தைப் பார்க்கவும்';
+
+  @override
+  String jobsDoneCount(int count) {
+    return '$count பணிகள் செய்யப்பட்டன';
+  }
+
+  @override
+  String get acceptQuoteFromListNote =>
+      'விலைப்புள்ளி பட்டியலிலிருந்து இந்த விலைப்புள்ளியை ஏற்கவும்';
+
+  @override
+  String get backToQuotes => 'விலைப்புள்ளிகளுக்குத் திரும்பு';
+
+  @override
+  String get sortDefault => 'இயல்புநிலை';
+
+  @override
+  String get sortLowestPrice => 'குறைந்த விலை';
+
+  @override
+  String get sortHighestRating => 'அதிக மதிப்பீடு';
+
+  @override
+  String get providerCancelReasonEmergency => 'நேர முரண்பாடு அல்லது அவசரநிலை';
+
+  @override
+  String get providerCancelReasonBreakdown => 'வாகனம் அல்லது பயணப் பிரச்சினை';
+
+  @override
+  String get providerCancelReasonUnreachable =>
+      'வாடிக்கையாளரைத் தொடர்பு கொள்ள முடியவில்லை';
+
+  @override
+  String get providerCancelReasonScope => 'பணி சேவை எல்லைக்கு அப்பாற்பட்டது';
+
+  @override
+  String get providerEnRouteWarning =>
+      'சேவை வழங்குநர் ஏற்கனவே புறப்பட்டு விட்டார்.';
+
+  @override
+  String get providerSelfEnRouteWarning =>
+      'நீங்கள் ஏற்கனவே புறப்பட்டு விட்டீர்கள். இப்போது ரத்து செய்தால் வழிகாட்டுதல் நிறுத்தப்பட்டு ரத்து செய்யப்பட்டதாகப் பதிவாகும்.';
+
+  @override
+  String get cancelJobActionTitle =>
+      'இந்த வேலை பதிவை என்ன செய்ய விரும்புகிறீர்கள்?';
+
+  @override
+  String get cancelJobOptionA => 'வேலையை ரத்து செய்';
+
+  @override
+  String get cancelJobOptionADesc =>
+      'வேலை கோரிக்கை முழுமையாக மூடப்பட்டு ரத்து செய்யப்படும்.';
+
+  @override
+  String get cancelJobOptionB => 'மற்றொரு விலைப்புள்ளியைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get cancelJobOptionBDesc =>
+      'மற்றொரு சேவை வழங்குநரிடமிருந்து விலைப்புள்ளியை ஏற்க வேலையைத் திறந்து வைக்கவும்.';
+
+  @override
+  String get keepBooking => 'முன்பதிவைத் தக்கவைக்கவும்';
+
+  @override
+  String get cannotQuoteAgain =>
+      'இந்த பணிக்கு நீங்கள் மீண்டும் விலைப்புள்ளி அனுப்ப முடியாது';
+
+  @override
+  String get cannotQuoteCustomerChoseAnother =>
+      'வாடிக்கையாளர் வேறு சேவை வழங்குநரைத் தேர்ந்தெடுத்துள்ளார்';
+
+  @override
+  String get cannotQuoteYouCancelledBooking =>
+      'நீங்கள் இந்த முன்பதிவை ரத்து செய்தீர்கள்';
+
+  @override
+  String get cannotQuoteAlreadyAccepted =>
+      'இந்த பணிக்கு உங்கள் விலைப்புள்ளி ஏற்கனவே ஏற்றுக்கொள்ளப்பட்டுள்ளது';
+
+  @override
+  String get changeTradeContactSupport =>
+      'உங்கள் வர்த்தகத்தை மாற்ற, ஆதரவைத் தொடர்பு கொள்ளவும்';
+
+  @override
+  String get cannotQuoteCategoryMismatch =>
+      'இந்த பணி உங்கள் சேவை பிரிவில் இல்லை';
+
+  @override
+  String get changeServiceCategory => 'சேவை வகையை மாற்றவும்';
+
+  @override
+  String confirmChangeCategory(String from, String to) {
+    return 'பிரிவை $from இலிருந்து $to ஆக மாற்றவா? இது அவர்களின் செயலில் உள்ள வர்த்தகம் மற்றும் பணி பொருத்தத்தை உடனடியாக புதுப்பிக்கும்.';
+  }
+
+  @override
+  String tradeWillBeSetTo(String trade) {
+    return 'வர்த்தகம் $trade என அமைக்கப்படும்';
+  }
+
+  @override
+  String get categoryUpdated => 'சேவை வகை வெற்றிகரமாக புதுப்பிக்கப்பட்டது';
+
+  @override
+  String get locationMustBeInSriLanka => 'இடம் இலங்கைக்குள் இருக்க வேண்டும்';
 }

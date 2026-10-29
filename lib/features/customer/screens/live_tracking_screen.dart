@@ -31,6 +31,7 @@ import 'home_discovery_screen.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../widgets/customer_payment_card.dart';
 import '../widgets/price_extras_banner.dart';
+import '../../shared/widgets/booking_cancellation_sheet.dart';
 import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
@@ -570,63 +571,26 @@ class LiveTrackingScreen extends StatelessWidget {
                 const SizedBox(height: 14),
                 Row(children: [
                   if (currentBooking == null ||
-                      JobStatus.canCancel(currentBooking.status)) ...[
+                      JobStatus.canCancel(currentBooking.status) ||
+                      currentBooking.status == JobStatus.inProgress) ...[
                     Expanded(
-                        child: AppOutlineButton(
-                            label: context.l10n.cancelRequest,
-                            icon: Icons.cancel,
-                            color: AppColors.error,
-                            onPressed: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: context.themeSurface,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                  title: Text(context.l10n.cancelRequest,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w800)),
-                                  content: Text(
-                                      context.l10n.cancelBookingConfirm,
-                                      style: TextStyle(
-                                          color: context.themeTextSecondary)),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, false),
-                                        child: Text(context.l10n.cancel)),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.error,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12))),
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: Text(context.l10n.yesCancel),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirmed == true && context.mounted) {
-                                if (currentBooking != null &&
-                                    currentBooking.id.isNotEmpty) {
-                                  await BookingRepository().cancelBooking(
-                                    bookingId: currentBooking.id,
-                                    reason: 'CUSTOMER_CANCELLED_TRACKING',
-                                    cancelledBy: 'customer',
-                                    jobRequestId: currentBooking.jobRequestId,
-                                  );
-                                }
-                                if (!context.mounted) return;
-                                Navigator.of(context).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(context
-                                          .l10n.serviceRequestCancelled)),
-                                );
-                              }
-                            })),
+                      child: AppOutlineButton(
+                        label: context.l10n.cancelRequest,
+                        icon: Icons.cancel,
+                        color: AppColors.error,
+                        onPressed: () async {
+                          if (currentBooking == null) return;
+                          final cancelled = await BookingCancellationSheet.show(
+                            context,
+                            booking: currentBooking,
+                            isCustomer: true,
+                          );
+                          if (cancelled == true && context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    ),
                     const SizedBox(width: 10),
                   ],
                   Expanded(

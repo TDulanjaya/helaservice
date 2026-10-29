@@ -13079,6 +13079,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This time has passed, choose a later time or another day'**
   String get timePassedChooseLater;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
+
+  /// No description provided for @jobsDoneCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} jobs done'**
+  String jobsDoneCount(int count);
+
+  /// No description provided for @acceptQuoteFromListNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this quote from the quotes list'**
+  String get acceptQuoteFromListNote;
+
+  /// No description provided for @backToQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to quotes'**
+  String get backToQuotes;
+
+  /// No description provided for @sortDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get sortDefault;
+
+  /// No description provided for @sortLowestPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest price'**
+  String get sortLowestPrice;
+
+  /// No description provided for @sortHighestRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest rating'**
+  String get sortHighestRating;
+
+  /// No description provided for @providerCancelReasonEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule conflict or emergency'**
+  String get providerCancelReasonEmergency;
+
+  /// No description provided for @providerCancelReasonBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle or transport breakdown'**
+  String get providerCancelReasonBreakdown;
+
+  /// No description provided for @providerCancelReasonUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer unreachable'**
+  String get providerCancelReasonUnreachable;
+
+  /// No description provided for @providerCancelReasonScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Job requirements outside scope'**
+  String get providerCancelReasonScope;
+
+  /// No description provided for @providerEnRouteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider is already on the way.'**
+  String get providerEnRouteWarning;
+
+  /// No description provided for @providerSelfEnRouteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently on the way. Cancelling will stop navigation and record a cancellation.'**
+  String get providerSelfEnRouteWarning;
+
+  /// No description provided for @cancelJobActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to do with this job post?'**
+  String get cancelJobActionTitle;
+
+  /// No description provided for @cancelJobOptionA.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the job'**
+  String get cancelJobOptionA;
+
+  /// No description provided for @cancelJobOptionADesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The job request will be closed and cancelled completely.'**
+  String get cancelJobOptionADesc;
+
+  /// No description provided for @cancelJobOptionB.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another quote'**
+  String get cancelJobOptionB;
+
+  /// No description provided for @cancelJobOptionBDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the job open to accept a quote from another provider.'**
+  String get cancelJobOptionBDesc;
+
+  /// No description provided for @keepBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep booking'**
+  String get keepBooking;
+
+  /// No description provided for @cannotQuoteAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t quote on this job again'**
+  String get cannotQuoteAgain;
+
+  /// No description provided for @cannotQuoteCustomerChoseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer chose another provider'**
+  String get cannotQuoteCustomerChoseAnother;
+
+  /// No description provided for @cannotQuoteYouCancelledBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'You cancelled this booking'**
+  String get cannotQuoteYouCancelledBooking;
+
+  /// No description provided for @cannotQuoteAlreadyAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have an accepted quote for this job'**
+  String get cannotQuoteAlreadyAccepted;
+
+  /// No description provided for @changeTradeContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'To change your trade, contact support'**
+  String get changeTradeContactSupport;
+
+  /// No description provided for @cannotQuoteCategoryMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This job is not in your service category'**
+  String get cannotQuoteCategoryMismatch;
+
+  /// No description provided for @changeServiceCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Service Category'**
+  String get changeServiceCategory;
+
+  /// No description provided for @confirmChangeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Change category from {from} to {to}? This will update their active trade and job matching immediately.'**
+  String confirmChangeCategory(String from, String to);
+
+  /// No description provided for @tradeWillBeSetTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade will be set to: {trade}'**
+  String tradeWillBeSetTo(String trade);
+
+  /// No description provided for @categoryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Service category updated successfully'**
+  String get categoryUpdated;
+
+  /// No description provided for @locationMustBeInSriLanka.
+  ///
+  /// In en, this message translates to:
+  /// **'Location must be in Sri Lanka'**
+  String get locationMustBeInSriLanka;
 }
 
 class _AppLocalizationsDelegate

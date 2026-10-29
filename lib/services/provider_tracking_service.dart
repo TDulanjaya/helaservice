@@ -14,6 +14,7 @@ class ProviderTrackingService {
   Timer? _intervalTimer;
   String? _activeProviderId;
   Position? _lastRecordedPosition;
+  bool _hasLoggedOutOfBounds = false;
 
   bool get isTracking => _activeProviderId != null;
 
@@ -83,6 +84,7 @@ class ProviderTrackingService {
     _positionSub = null;
     _activeProviderId = null;
     _lastRecordedPosition = null;
+    _hasLoggedOutOfBounds = false;
   }
 
   Future<void> _recordLocation(String providerId) async {
@@ -96,10 +98,23 @@ class ProviderTrackingService {
 
   Future<void> _updatePosition(String providerId, Position pos) async {
     _lastRecordedPosition = pos;
+    final lat = pos.latitude;
+    final lng = pos.longitude;
+    if (lat < 5.0 || lat > 10.0 || lng < 79.0 || lng > 82.0) {
+      if (!_hasLoggedOutOfBounds) {
+        _hasLoggedOutOfBounds = true;
+        if (kDebugMode) {
+          debugPrint(
+              '[ProviderTrackingService] Position ($lat, $lng) is outside Sri Lanka bounds. Skipping Firestore update.');
+        }
+      }
+      return;
+    }
+
     await _techRepo.updateCurrentLocation(
       providerId,
-      latitude: pos.latitude,
-      longitude: pos.longitude,
+      latitude: lat,
+      longitude: lng,
     );
   }
 }

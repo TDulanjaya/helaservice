@@ -7,6 +7,8 @@ import '../../../models/admin_user.dart';
 import '../../../state/role_provider.dart';
 import '../../../repositories/user_repository.dart';
 import '../../../services/category_service.dart';
+import '../../../services/admin_log_service.dart';
+import '../../../constants/firestore_paths.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/searchable_select_picker.dart';
 import '../../../utils/location_utils.dart';
@@ -37,6 +39,274 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     _searchController.dispose();
     _reasonController.dispose();
     super.dispose();
+  }
+
+  void _showChangeCategoryDialog(UserProfile user) {
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    if (!roleProvider.hasAdminPermission(AdminPermission.manageUsers)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.noPermissionForAction),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final currentCategory = user.serviceCategory ?? '';
+    final liveCategories = CategoryService.instance.liveCategories;
+    String selectedCategory = liveCategories.any((c) => c.id == currentCategory)
+        ? currentCategory
+        : (liveCategories.isNotEmpty
+            ? liveCategories.first.id
+            : currentCategory);
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: context.themeSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(color: context.themeBorder, width: 1.5),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.swap_horiz_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      context.l10n.changeServiceCategory,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: context.themeTextPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: context.themeTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${context.l10n.serviceCategoryLabel}: ${CategoryService.instance.nameOf(currentCategory, context: context)}',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: context.themeTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: context.themeSoft,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: selectedCategory.isNotEmpty
+                            ? selectedCategory
+                            : null,
+                        items: liveCategories.map((c) {
+                          return DropdownMenuItem<String>(
+                            value: c.id,
+                            child: Row(
+                              children: [
+                                Icon(c.icon,
+                                    size: 18,
+                                    color: context.themeTextSecondary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  CategoryService.instance
+                                      .nameOf(c.id, context: context),
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    color: context.themeTextPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => selectedCategory = val);
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: Text(
+                    context.l10n.cancel,
+                    style: TextStyle(color: context.themeTextSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: selectedCategory.isEmpty ||
+                          selectedCategory == currentCategory
+                      ? null
+                      : () async {
+                          final fromName = CategoryService.instance
+                              .nameOf(currentCategory, context: context);
+                          final toName = CategoryService.instance
+                              .nameOf(selectedCategory, context: context);
+                          final messenger = ScaffoldMessenger.of(context);
+                          final categoryUpdatedMsg =
+                              context.l10n.categoryUpdated;
+
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (confirmCtx) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              title: Text(
+                                context.l10n.changeServiceCategory,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 17),
+                              ),
+                              content: Text(
+                                context.l10n
+                                    .confirmChangeCategory(fromName, toName),
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(confirmCtx, false),
+                                  child: Text(context.l10n.cancel),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.ink,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pop(confirmCtx, true),
+                                  child: Text(context.l10n.approve),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed != true) return;
+
+                          if (dialogCtx.mounted) {
+                            Navigator.of(dialogCtx).pop();
+                          }
+
+                          final batch = FirebaseFirestore.instance.batch();
+                          final techDoc = FirebaseFirestore.instance
+                              .collection(FirestorePaths.technicians)
+                              .doc(user.id);
+                          final userDoc = FirebaseFirestore.instance
+                              .collection(FirestorePaths.users)
+                              .doc(user.id);
+
+                          final categoryRow = CategoryService.instance
+                              .getCategory(selectedCategory);
+                          final displayTitle =
+                              categoryRow?.name.isNotEmpty == true
+                                  ? categoryRow!.name
+                                  : CategoryService.instance
+                                      .nameOf(selectedCategory);
+
+                          batch.set(
+                              techDoc,
+                              {
+                                'category': selectedCategory,
+                                'serviceCategory': selectedCategory,
+                                'title': displayTitle.isNotEmpty
+                                    ? displayTitle
+                                    : selectedCategory,
+                                'updatedAt': FieldValue.serverTimestamp(),
+                              },
+                              SetOptions(merge: true));
+
+                          batch.set(
+                              userDoc,
+                              {
+                                'serviceCategory': selectedCategory,
+                                'category': selectedCategory,
+                                'updatedAt': FieldValue.serverTimestamp(),
+                              },
+                              SetOptions(merge: true));
+
+                          try {
+                            await batch.commit();
+
+                            await AdminLogService.instance.logAction(
+                              action: 'change_provider_category',
+                              targetType: 'technician',
+                              targetId: user.id,
+                              details:
+                                  'Changed category from $currentCategory to $selectedCategory for ${user.displayName}',
+                            );
+
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(categoryUpdatedMsg),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          } catch (e) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Error updating category: $e'),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        },
+                  child: Text(context.l10n.save),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showSuspendDialog(UserProfile user, {bool isSuper = false}) {
@@ -2105,6 +2375,53 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                     ],
+                                    if (isProvider) ...[
+                                      () {
+                                        final roleProvider =
+                                            Provider.of<RoleProvider>(context,
+                                                listen: false);
+                                        final canManageUsers =
+                                            roleProvider.hasAdminPermission(
+                                                AdminPermission.manageUsers);
+                                        return OutlinedButton.icon(
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: canManageUsers
+                                                ? AppColors.primary
+                                                : context.themeTextSecondary,
+                                            side: BorderSide(
+                                              color: canManageUsers
+                                                  ? AppColors.primary
+                                                  : context.themeBorder,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            if (!canManageUsers) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(context.l10n
+                                                      .noPermissionForAction),
+                                                  backgroundColor:
+                                                      AppColors.error,
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            _showChangeCategoryDialog(user);
+                                          },
+                                          icon: const Icon(
+                                              Icons.swap_horiz_rounded,
+                                              size: 15),
+                                          label: Text(context
+                                              .l10n.changeServiceCategory),
+                                        );
+                                      }(),
+                                      const SizedBox(width: 8),
+                                    ],
                                     if (isSuper)
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -2270,13 +2587,13 @@ class _ProviderArrivalStatsWidget extends StatefulWidget {
 class _ProviderArrivalStatsWidgetState
     extends State<_ProviderArrivalStatsWidget> {
   late Future<
-          ({
-            int noShows,
-            int arrivalDenials,
-            int mockedGps,
-            int outsideZone,
-            int cancellations
-          })> _statsFuture;
+      ({
+        int noShows,
+        int arrivalDenials,
+        int mockedGps,
+        int outsideZone,
+        int cancellations
+      })> _statsFuture;
 
   @override
   void initState() {

@@ -218,6 +218,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     try {
       final pos = await LocationUtils.getCurrentPosition();
       if (pos != null) {
+        if (pos.latitude < 5.0 ||
+            pos.latitude > 10.0 ||
+            pos.longitude < 79.0 ||
+            pos.longitude > 82.0) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.locationMustBeInSriLanka),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          return;
+        }
         setState(() {
           _latitude = pos.latitude;
           _longitude = pos.longitude;
@@ -269,6 +283,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
 
     if (picked != null) {
+      if (picked.latitude < 5.0 ||
+          picked.latitude > 10.0 ||
+          picked.longitude < 79.0 ||
+          picked.longitude > 82.0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.locationMustBeInSriLanka),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
       setState(() {
         _latitude = picked.latitude;
         _longitude = picked.longitude;
@@ -574,6 +602,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
         return;
       }
+      if (_latitude! < 5.0 ||
+          _latitude! > 10.0 ||
+          _longitude! < 79.0 ||
+          _longitude! > 82.0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.locationMustBeInSriLanka),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
 
       if (!ProviderPricingHelper.hasBasePricingMode(_pricingModes)) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -759,6 +799,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
       } else {
         // provider needs base location
+        final bool isApproved = roleProvider.isApprovedProvider ||
+            (current?.isVerified == true) ||
+            (widget.initialProfile?.isVerified == true);
+        final String resolvedCategory = isApproved
+            ? (current?.serviceCategory ?? widget.initialProfile?.serviceCategory ?? _category)
+            : _category;
+
         updatedProfile = (current ??
                 UserProfile(
                   id: uid,
@@ -786,7 +833,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           nicBackKey: nicBackKey ?? current?.nicBackKey,
           certificationUrls: current?.certificationUrls ?? const [],
           certificationsStatus: current?.certificationsStatus,
-          serviceCategory: _category,
+          serviceCategory: resolvedCategory,
           pricingModes: _pricingModes,
           dailyRateLkr: _pricingModes.contains(ProviderPricingHelper.modeDay)
               ? int.tryParse(_dailyRateController.text.trim())
@@ -1443,23 +1490,43 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               });
                             }
 
-                            return SearchableSelectPicker<String>(
-                              label: context.l10n.serviceCategory,
-                              selectedValue:
-                                  effectiveVal.isNotEmpty ? effectiveVal : null,
-                              prefixIcon: Icons.handyman_outlined,
-                              isDarkField: context.isDark,
-                              modalTitle: context.l10n.selectServiceCategory,
-                              searchHint: context.l10n.searchCategoryHint,
-                              items: liveCats.map((c) {
-                                return SearchableSelectItem<String>(
-                                  value: c.id,
-                                  label: c.name,
-                                  icon: c.icon,
-                                );
-                              }).toList(),
-                              onSelected: (val) =>
-                                  setState(() => _category = val),
+                            final isApprovedProvider = roleProvider.isApprovedProvider ||
+                                (profile?.isVerified == true) ||
+                                (widget.initialProfile?.isVerified == true);
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SearchableSelectPicker<String>(
+                                  label: context.l10n.serviceCategory,
+                                  enabled: !isApprovedProvider,
+                                  selectedValue:
+                                      effectiveVal.isNotEmpty ? effectiveVal : null,
+                                  prefixIcon: Icons.handyman_outlined,
+                                  isDarkField: context.isDark,
+                                  modalTitle: context.l10n.selectServiceCategory,
+                                  searchHint: context.l10n.searchCategoryHint,
+                                  items: liveCats.map((c) {
+                                    return SearchableSelectItem<String>(
+                                      value: c.id,
+                                      label: c.name,
+                                      icon: c.icon,
+                                    );
+                                  }).toList(),
+                                  onSelected: (val) =>
+                                      setState(() => _category = val),
+                                ),
+                                if (isApprovedProvider) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    context.l10n.changeTradeContactSupport,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.themeTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             );
                           },
                         ),

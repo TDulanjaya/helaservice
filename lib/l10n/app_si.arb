@@ -2183,5 +2183,42 @@
       }
     }
   },
-  "timePassedChooseLater": "මෙම වේලාව ඉක්මවා ඇත, කරුණාකර පසු වේලාවක් හෝ වෙනත් දිනයක් තෝරන්න"
+  "timePassedChooseLater": "මෙම වේලාව ඉක්මවා ඇත, කරුණාකර පසු වේලාවක් හෝ වෙනත් දිනයක් තෝරන්න",
+  "viewProfile": "පැතිකඩ බලන්න",
+  "jobsDoneCount": "කළ සේවා {count}",
+  "@jobsDoneCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "acceptQuoteFromListNote": "මිල ගණන් ලැයිස්තුවෙන් මෙම මිල ගණන පිළිගන්න",
+  "backToQuotes": "මිල ගණන් වෙත ආපසු",
+  "sortDefault": "පෙරනිමි",
+  "sortLowestPrice": "අඩුම මිල",
+  "sortHighestRating": "ඉහළම ඇගයීම",
+  "providerCancelReasonEmergency": "කාලසටහන් ගැටලුවක් හෝ හදිසි අවස්ථාවක්",
+  "providerCancelReasonBreakdown": "වාහනය හෝ ගමනාගමන බිඳවැටීමක්",
+  "providerCancelReasonUnreachable": "පාරිභෝගිකයා සම්බන්ධ කරගත නොහැක",
+  "providerCancelReasonScope": "කාර්යය සේවා සීමාවෙන් පිටත වේ",
+  "providerEnRouteWarning": "සේවා සපයන්නා දැනටමත් පැමිණෙමින් සිටී.",
+  "providerSelfEnRouteWarning": "ඔබ මේ වන විටත් ගමන් කරමින් සිටී. අවලංගු කිරීමෙන් ගමන් සටහන නැවතී අවලංගු කිරීමක් සටහන් වේ.",
+  "cancelJobActionTitle": "මෙම කාර්යය දැන්වීම සම්බන්ධයෙන් ඔබ කුමක් කිරීමට කැමතිද?",
+  "cancelJobOptionA": "කාර්යය අවලංගු කරන්න",
+  "cancelJobOptionADesc": "කාර්යය ඉල්ලීම සම්පූර්ණයෙන්ම වසා අවලංගු කෙරේ.",
+  "cancelJobOptionB": "වෙනත් මිල ගණනක් තෝරන්න",
+  "cancelJobOptionBDesc": "වෙනත් සේවා සපයන්නෙකුගේ මිල ගණනක් පිළිගැනීමට කාර්යය විවෘතව තබන්න.",
+  "keepBooking": "වෙන්කිරීම තබාගන්න",
+  "cannotQuoteAgain": "ඔබට නැවත මෙම කාර්යයට මිල ගණනක් ඉදිරිපත් කළ නොහැක",
+  "cannotQuoteCustomerChoseAnother": "පාරිභෝගිකයා වෙනත් සේවා සපයන්නෙකු තෝරාගෙන ඇත",
+  "cannotQuoteYouCancelledBooking": "ඔබ මෙම වෙන්කරවා ගැනීම අවලංගු කළා",
+  "cannotQuoteAlreadyAccepted": "මෙම කාර්යය සඳහා ඔබේ මිල ගණන දැනටමත් පිළිගෙන ඇත",
+  "changeTradeContactSupport": "ඔබේ සේවා කාණ්ඩය වෙනස් කිරීමට, සහය අංශය අමතන්න",
+  "cannotQuoteCategoryMismatch": "මෙම කාර්යය ඔබේ සේවා කාණ්ඩයට අයත් නොවේ",
+  "changeServiceCategory": "සේවා කාණ්ඩය වෙනස් කරන්න",
+  "confirmChangeCategory": "ප්‍රවර්ගය {from} සිට {to} දක්වා වෙනස් කරන්නද? මෙය ඔවුන්ගේ සක්‍රිය සේවාව සහ රැකියා ගැලපීම වහාම යාවත්කාලීන කරනු ඇත.",
+  "tradeWillBeSetTo": "සේවා කාණ්ඩය {trade} ලෙස සකසනු ඇත",
+  "categoryUpdated": "සේවා කාණ්ඩය සාර්ථකව යාවත්කාලීන කරන ලදී",
+  "locationMustBeInSriLanka": "ස්ථානය ශ්‍රී ලංකාව තුළ තිබිය යුතුය"
 }

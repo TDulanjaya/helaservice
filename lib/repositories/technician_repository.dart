@@ -53,7 +53,7 @@ class TechnicianRepository {
       updates['currentLng'] = FieldValue.delete();
       updates['currentLocationAt'] = FieldValue.delete();
     }
-    await _col.doc(id).update(updates).catchError((_) {});
+    await _col.doc(id).update(updates);
   }
 
   Future<void> updateCurrentLocation(

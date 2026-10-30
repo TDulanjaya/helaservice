@@ -257,6 +257,7 @@
   "youAreOnline": "You are ONLINE",
   "youAreOffline": "You are OFFLINE",
   "activeDispatchSub": "Active Dispatch: Receiving job requests from nearby customers",
+  "offlineDispatchSub": "You are hidden from Urgent Help. You can still quote on posted jobs and finish your current bookings",
   "openJobRequests": "Open Job Requests",
   "fromCustomers": "From Customers",
   "noOpenRequests": "No open requests right now",

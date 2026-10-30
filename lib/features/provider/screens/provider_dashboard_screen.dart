@@ -16,7 +16,6 @@ import '../../../repositories/technician_repository.dart';
 import '../../../services/session_guard.dart';
 import '../../../state/role_provider.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
-import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../utils/l10n_extension.dart';
@@ -66,7 +65,7 @@ class ProviderDashboardScreen extends StatefulWidget {
 
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   static bool _hasCheckedEnRouteResume = false;
-  bool _online = true;
+  bool? _online;
   late int _navIndex;
   bool _sortByClosest = true;
   double? _selectedRadiusKm;
@@ -323,23 +322,80 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   Future<void> _initProviderTracking() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null && uid.isNotEmpty) {
-      final tech = await TechnicianRepository().getById(uid);
-      if (mounted && tech != null) {
-        setState(() {
-          _online = tech.online;
-          if (_selectedRadiusKm == null && tech.serviceRadiusKm > 0) {
-            _selectedRadiusKm = tech.serviceRadiusKm;
+      try {
+        final tech = await TechnicianRepository().getById(uid);
+        if (mounted) {
+          if (tech != null) {
+            setState(() {
+              _online = tech.online;
+              if (_selectedRadiusKm == null && tech.serviceRadiusKm > 0) {
+                _selectedRadiusKm = tech.serviceRadiusKm;
+              }
+            });
+            if (tech.online) {
+              ProviderTrackingService.instance.startOnlineTracking(uid);
+            }
+
+            // resume live tracking for active booking once per app start
+            if (!_hasCheckedEnRouteResume && tech.isApproved) {
+              _hasCheckedEnRouteResume = true;
+              _checkAndResumeEnRouteBooking(uid);
+            }
+          } else {
+            setState(() => _online = false);
           }
-        });
-        if (tech.online) {
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() => _online = false);
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() => _online = false);
+      }
+    }
+  }
+
+  Future<void> _toggleOnlineStatus(bool v) async {
+    final oldOnline = _online;
+    setState(() => _online = v);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return;
+
+    try {
+      if (!v) {
+        ProviderTrackingService.instance.stopOnlineTracking();
+      }
+      await TechnicianRepository()
+          .updateOnlineStatus(uid, v)
+          .timeout(const Duration(seconds: 10));
+      if (v) {
+        ProviderTrackingService.instance.startOnlineTracking(uid);
+      }
+    } on TimeoutException {
+      if (v) {
+        ProviderTrackingService.instance.startOnlineTracking(uid);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.savedOfflineSyncLater),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _online = oldOnline);
+        if (oldOnline == true) {
           ProviderTrackingService.instance.startOnlineTracking(uid);
         }
-
-        // resume live tracking for active booking once per app start
-        if (!_hasCheckedEnRouteResume && tech.isApproved) {
-          _hasCheckedEnRouteResume = true;
-          _checkAndResumeEnRouteBooking(uid);
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.couldNotSaveCheckConnection),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -488,22 +544,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   ),
                 ),
                 const NotificationBellIcon(size: 40),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () => showRoleSwitchSheet(context),
-                  style: IconButton.styleFrom(
-                    backgroundColor: context.themeSurfaceLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: context.themeBorder),
-                    ),
-                  ),
-                  icon: Icon(
-                    Icons.swap_horiz_rounded,
-                    size: 18,
-                    color: context.themeTextPrimary,
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -554,7 +594,24 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
               const SizedBox(height: 12),
             ],
-            if (_online)
+            if (_online == null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 32, horizontal: 18),
+                decoration: BoxDecoration(
+                  color: context.themeSurfaceLow,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.themeBorder),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_online == true)
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -609,28 +666,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         Transform.scale(
                           scale: 0.9,
                           child: Switch(
-                            value: _online,
+                            value: _online == true,
                             activeThumbColor: Colors.white,
                             activeTrackColor: const Color(0xFF22C55E),
-                            onChanged: (v) async {
-                              setState(() => _online = v);
-                              final uid =
-                                  FirebaseAuth.instance.currentUser?.uid;
-                              if (uid != null && uid.isNotEmpty) {
-                                if (!v) {
-                                  await LiveLocationService.instance
-                                      .stopTracking();
-                                  ProviderTrackingService.instance
-                                      .stopOnlineTracking();
-                                }
-                                await TechnicianRepository()
-                                    .updateOnlineStatus(uid, v);
-                                if (v) {
-                                  ProviderTrackingService.instance
-                                      .startOnlineTracking(uid);
-                                }
-                              }
-                            },
+                            onChanged: _toggleOnlineStatus,
                           ),
                         ),
                       ],
@@ -723,33 +762,15 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         Transform.scale(
                           scale: 0.9,
                           child: Switch(
-                            value: _online,
-                            onChanged: (v) async {
-                              setState(() => _online = v);
-                              final uid =
-                                  FirebaseAuth.instance.currentUser?.uid;
-                              if (uid != null && uid.isNotEmpty) {
-                                if (!v) {
-                                  await LiveLocationService.instance
-                                      .stopTracking();
-                                  ProviderTrackingService.instance
-                                      .stopOnlineTracking();
-                                }
-                                await TechnicianRepository()
-                                    .updateOnlineStatus(uid, v);
-                                if (v) {
-                                  ProviderTrackingService.instance
-                                      .startOnlineTracking(uid);
-                                }
-                              }
-                            },
+                            value: _online == true,
+                            onChanged: _toggleOnlineStatus,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      context.l10n.activeDispatchSub,
+                      context.l10n.offlineDispatchSub,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.themeTextSecondary,
@@ -875,6 +896,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 if (matchingCategory.isEmpty) {
                   _updateJobsStreamForCategory('');
                   return Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: context.themeSurface,
@@ -1210,6 +1232,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           const SizedBox(height: 12),
                           if (requests.isEmpty)
                             Container(
+                              width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: context.themeSurface,
@@ -1718,6 +1741,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
   Widget _buildNoBaseLocationCard(BuildContext context) {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.only(top: 12, bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(

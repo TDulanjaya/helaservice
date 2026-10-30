@@ -811,6 +811,10 @@ class AppLocalizationsSi extends AppLocalizations {
       'ක්‍රියාකාරී සේවා: අවට පාරිභෝගිකයින්ගෙන් වැඩ ඉල්ලීම් ලැබේ';
 
   @override
+  String get offlineDispatchSub =>
+      'ඔබ හදිසි සේවාවෙන් සඟවා ඇත. ඔබට තවමත් පළ කළ වැඩ සඳහා මිල ගණන් ඉදිරිපත් කිරීමට සහ ඔබගේ දැනට පවතින වෙන්කිරීම් අවසන් කිරීමට හැකිය.';
+
+  @override
   String get openJobRequests => 'විවෘත වැඩ ඉල්ලීම්';
 
   @override

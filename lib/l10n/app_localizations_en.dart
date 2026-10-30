@@ -810,6 +810,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Active Dispatch: Receiving job requests from nearby customers';
 
   @override
+  String get offlineDispatchSub =>
+      'You are hidden from Urgent Help. You can still quote on posted jobs and finish your current bookings';
+
+  @override
   String get openJobRequests => 'Open Job Requests';
 
   @override

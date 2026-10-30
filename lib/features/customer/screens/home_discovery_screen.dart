@@ -11,7 +11,6 @@ import '../../../repositories/category_repository.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../services/category_service.dart';
 import '../../../shared/widgets/app_bottom_nav.dart';
-import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../state/role_provider.dart';
 import '../../../services/session_guard.dart';
 import '../../../utils/l10n_extension.dart';
@@ -55,7 +54,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
 
   CustomerHomeLocation? _homeLocation;
   bool _isLocatingGps = false;
-  double? _selectedDistanceKm = _initialDistanceKm; // 5, 10, 20 (default), 50, null for Any
+  double? _selectedDistanceKm = _initialDistanceKm;
   bool _onlyServesMyArea = false;
   String _sortBy = _initialSortBy; // 'nearest' or 'rating'
 
@@ -729,9 +728,8 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
                         : context.themeSurface,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: hasLocation
-                          ? AppColors.primary
-                          : context.themeBorder,
+                      color:
+                          hasLocation ? AppColors.primary : context.themeBorder,
                       width: 1.2,
                     ),
                   ),
@@ -859,8 +857,7 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             ),
           ),
           const SizedBox(height: 8),
@@ -1325,10 +1322,6 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
   }
 
   Widget _buildExploreView(BuildContext context) {
-    final roleProvider = pv.Provider.of<RoleProvider>(context);
-    final canSwitchRole =
-        roleProvider.isAuthorizedAdmin || roleProvider.isApprovedProvider;
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -1391,17 +1384,6 @@ class _HomeDiscoveryScreenState extends State<HomeDiscoveryScreen> {
               );
             },
           ),
-          if (canSwitchRole) ...[
-            const SizedBox(width: 8),
-            IconSquareButton(
-              icon: Icons.swap_vert_rounded,
-              size: 40,
-              iconSize: 22,
-              radius: 12,
-              tooltip: context.l10n.switchRole,
-              onTap: () => showRoleSwitchSheet(context),
-            ),
-          ],
           const SizedBox(width: 16),
         ],
       ),

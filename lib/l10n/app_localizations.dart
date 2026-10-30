@@ -810,6 +810,9 @@ abstract class AppLocalizations {
   // active dispatch sub
   String get activeDispatchSub;
 
+  // offline dispatch sub
+  String get offlineDispatchSub;
+
   // open job requests
   String get openJobRequests;
 

@@ -7502,4 +7502,16 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get visitFeeEmergencyRangeError =>
       'පැමිණීමේ ගාස්තුව රු. 1 සහ 20,000 අතර විය යුතුය';
+
+  @override
+  String get skipForNow => 'දැනට මඟහරින්න';
+
+  @override
+  String get visitOnlyNoRatingNeeded => 'පැමිණීම පමණක්, ඇගයීමක් අවශ්‍ය නැත';
+
+  @override
+  String get alreadyRatedThisJob => 'ඔබ දැනටමත් මෙම සේවාව අගයා ඇත';
+
+  @override
+  String get categoryShort => 'ප්‍රවර්ගය';
 }

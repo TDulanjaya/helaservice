@@ -7497,4 +7497,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get visitFeeEmergencyRangeError =>
       'Visit fee must be between LKR 1 and 20,000';
+
+  @override
+  String get skipForNow => 'Skip for now';
+
+  @override
+  String get visitOnlyNoRatingNeeded => 'Visit only, no rating needed';
+
+  @override
+  String get alreadyRatedThisJob => 'You already rated this job';
+
+  @override
+  String get categoryShort => 'Category';
 }

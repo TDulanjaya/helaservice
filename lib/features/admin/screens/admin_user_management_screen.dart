@@ -2350,212 +2350,213 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                 const SizedBox(height: 12),
 
                                 // action bar
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (user.phone != null &&
-                                        user.phone!.trim().isNotEmpty) ...[
-                                      OutlinedButton.icon(
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor:
-                                              context.themeTextPrimary,
-                                          side: BorderSide(
-                                              color: context.themeBorder),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                        ),
-                                        onPressed: () =>
-                                            MapLauncher.openPhoneCall(
-                                                user.phone!),
-                                        icon: const Icon(Icons.phone_outlined,
-                                            size: 15),
-                                        label: Text(context.l10n.call),
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (isProvider) ...[
-                                      () {
-                                        final roleProvider =
-                                            Provider.of<RoleProvider>(context,
-                                                listen: false);
-                                        final canManageUsers =
-                                            roleProvider.hasAdminPermission(
-                                                AdminPermission.manageUsers);
-                                        return OutlinedButton.icon(
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Wrap(
+                                    alignment: WrapAlignment.end,
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      if (user.phone != null &&
+                                          user.phone!.trim().isNotEmpty)
+                                        OutlinedButton.icon(
                                           style: OutlinedButton.styleFrom(
-                                            foregroundColor: canManageUsers
-                                                ? AppColors.primary
-                                                : context.themeTextSecondary,
+                                            foregroundColor:
+                                                context.themeTextPrimary,
                                             side: BorderSide(
-                                              color: canManageUsers
-                                                  ? AppColors.primary
-                                                  : context.themeBorder,
-                                            ),
+                                                color: context.themeBorder),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                             ),
                                           ),
-                                          onPressed: () {
-                                            if (!canManageUsers) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(context.l10n
-                                                      .noPermissionForAction),
-                                                  backgroundColor:
-                                                      AppColors.error,
-                                                ),
-                                              );
-                                              return;
-                                            }
-                                            _showChangeCategoryDialog(user);
-                                          },
-                                          icon: const Icon(
-                                              Icons.swap_horiz_rounded,
+                                          onPressed: () =>
+                                              MapLauncher.openPhoneCall(
+                                                  user.phone!),
+                                          icon: const Icon(Icons.phone_outlined,
                                               size: 15),
-                                          label: Text(context
-                                              .l10n.changeServiceCategory),
-                                        );
-                                      }(),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (isSuper)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 7),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber
-                                              .withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: Colors.amber
-                                                .withValues(alpha: 0.35),
-                                          ),
+                                          label: Text(context.l10n.call),
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.shield_rounded,
-                                                size: 15,
-                                                color: Colors.amber.shade800),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${context.l10n.teamProtected} (${context.l10n.roleSuperAdminBadge})',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.amber.shade800,
+                                      if (isProvider)
+                                        () {
+                                          final roleProvider =
+                                              Provider.of<RoleProvider>(context,
+                                                  listen: false);
+                                          final canManageUsers =
+                                              roleProvider.hasAdminPermission(
+                                                  AdminPermission.manageUsers);
+                                          return OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: canManageUsers
+                                                  ? AppColors.primary
+                                                  : context.themeTextSecondary,
+                                              side: BorderSide(
+                                                color: canManageUsers
+                                                    ? AppColors.primary
+                                                    : context.themeBorder,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      )
-                                    else if (isBanned)
-                                      () {
-                                        final roleProvider =
-                                            Provider.of<RoleProvider>(context,
-                                                listen: false);
-                                        final canManageUsers =
-                                            roleProvider.hasAdminPermission(
-                                                AdminPermission.manageUsers);
-                                        return ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: canManageUsers
-                                                ? AppColors.success
-                                                : (context.isDark
-                                                    ? Colors.white12
-                                                    : Colors.grey.shade300),
-                                            foregroundColor: canManageUsers
-                                                ? Colors.white
-                                                : (context.isDark
-                                                    ? Colors.white38
-                                                    : Colors.grey.shade600),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                            onPressed: () {
+                                              if (!canManageUsers) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(context.l10n
+                                                        .noPermissionForAction),
+                                                    backgroundColor:
+                                                        AppColors.error,
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              _showChangeCategoryDialog(user);
+                                            },
+                                            icon: const Icon(
+                                                Icons.swap_horiz_rounded,
+                                                size: 15),
+                                            label: Text(
+                                                context.l10n.categoryShort),
+                                          );
+                                        }(),
+                                      if (isSuper)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 7),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber
+                                                .withValues(alpha: 0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: Colors.amber
+                                                  .withValues(alpha: 0.35),
                                             ),
                                           ),
-                                          onPressed: () {
-                                            if (!canManageUsers) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(context.l10n
-                                                      .noPermissionForAction),
-                                                  backgroundColor:
-                                                      AppColors.error,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.shield_rounded,
+                                                  size: 15,
+                                                  color: Colors.amber.shade800),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${context.l10n.teamProtected} (${context.l10n.roleSuperAdminBadge})',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.amber.shade800,
                                                 ),
-                                              );
-                                              return;
-                                            }
-                                            _showUnbanDialog(user);
-                                          },
-                                          icon: Icon(
-                                            canManageUsers
-                                                ? Icons.lock_open_rounded
-                                                : Icons.lock_outline,
-                                            size: 15,
+                                              ),
+                                            ],
                                           ),
-                                          label:
-                                              Text(context.l10n.unbanAccount),
-                                        );
-                                      }()
-                                    else
-                                      () {
-                                        final roleProvider =
-                                            Provider.of<RoleProvider>(context,
-                                                listen: false);
-                                        final canManageUsers =
-                                            roleProvider.hasAdminPermission(
-                                                AdminPermission.manageUsers);
-                                        return ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: canManageUsers
-                                                ? AppColors.error
-                                                : (context.isDark
-                                                    ? Colors.white12
-                                                    : Colors.grey.shade300),
-                                            foregroundColor: canManageUsers
-                                                ? Colors.white
-                                                : (context.isDark
-                                                    ? Colors.white38
-                                                    : Colors.grey.shade600),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                        )
+                                      else if (isBanned)
+                                        () {
+                                          final roleProvider =
+                                              Provider.of<RoleProvider>(context,
+                                                  listen: false);
+                                          final canManageUsers =
+                                              roleProvider.hasAdminPermission(
+                                                  AdminPermission.manageUsers);
+                                          return ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: canManageUsers
+                                                  ? AppColors.success
+                                                  : (context.isDark
+                                                      ? Colors.white12
+                                                      : Colors.grey.shade300),
+                                              foregroundColor: canManageUsers
+                                                  ? Colors.white
+                                                  : (context.isDark
+                                                      ? Colors.white38
+                                                      : Colors.grey.shade600),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
-                                          ),
-                                          onPressed: () {
-                                            if (!canManageUsers) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                  content: Text(context.l10n
-                                                      .noPermissionForAction),
-                                                  backgroundColor:
-                                                      AppColors.error,
-                                                ),
-                                              );
-                                              return;
-                                            }
-                                            _showSuspendDialog(user,
-                                                isSuper: isSuper);
-                                          },
-                                          icon: Icon(
-                                            canManageUsers
-                                                ? Icons.block_flipped
-                                                : Icons.lock_outline,
-                                            size: 15,
-                                          ),
-                                          label:
-                                              Text(context.l10n.suspendAccount),
-                                        );
-                                      }(),
-                                  ],
+                                            onPressed: () {
+                                              if (!canManageUsers) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(context.l10n
+                                                        .noPermissionForAction),
+                                                    backgroundColor:
+                                                        AppColors.error,
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              _showUnbanDialog(user);
+                                            },
+                                            icon: Icon(
+                                              canManageUsers
+                                                  ? Icons.lock_open_rounded
+                                                  : Icons.lock_outline,
+                                              size: 15,
+                                            ),
+                                            label:
+                                                Text(context.l10n.unbanAccount),
+                                          );
+                                        }()
+                                      else
+                                        () {
+                                          final roleProvider =
+                                              Provider.of<RoleProvider>(context,
+                                                  listen: false);
+                                          final canManageUsers =
+                                              roleProvider.hasAdminPermission(
+                                                  AdminPermission.manageUsers);
+                                          return ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: canManageUsers
+                                                  ? AppColors.error
+                                                  : (context.isDark
+                                                      ? Colors.white12
+                                                      : Colors.grey.shade300),
+                                              foregroundColor: canManageUsers
+                                                  ? Colors.white
+                                                  : (context.isDark
+                                                      ? Colors.white38
+                                                      : Colors.grey.shade600),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              if (!canManageUsers) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(context.l10n
+                                                        .noPermissionForAction),
+                                                    backgroundColor:
+                                                        AppColors.error,
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              _showSuspendDialog(user,
+                                                  isSuper: isSuper);
+                                            },
+                                            icon: Icon(
+                                              canManageUsers
+                                                 ? Icons.block_flipped
+                                                 : Icons.lock_outline,
+                                              size: 15,
+                                            ),
+                                            label:
+                                                Text(context.l10n.suspendAccount),
+                                          );
+                                        }(),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -2761,12 +2762,14 @@ class _ProviderArrivalStatsWidgetState
                     color: context.themeTextSecondary,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    context.l10n.providerReliability90Days,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: context.themeTextPrimary,
+                  Expanded(
+                    child: Text(
+                      context.l10n.providerReliability90Days,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: context.themeTextPrimary,
+                      ),
                     ),
                   ),
                 ],

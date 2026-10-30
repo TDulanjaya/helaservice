@@ -13,6 +13,7 @@ import '../../../shared/widgets/user_avatar.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/map_launcher.dart';
 import '../../../services/review_service.dart';
+import '../../../services/session_guard.dart';
 import '../../../state/role_provider.dart';
 import 'home_discovery_screen.dart';
 
@@ -24,6 +25,7 @@ class RatingCompletionScreen extends StatefulWidget {
   final String jobTitle;
   final double? totalPrice;
   final String? completionType;
+  final bool returnToPrevious;
 
   const RatingCompletionScreen({
     super.key,
@@ -33,6 +35,7 @@ class RatingCompletionScreen extends StatefulWidget {
     this.jobTitle = '',
     this.totalPrice,
     this.completionType,
+    this.returnToPrevious = false,
   });
 
   @override
@@ -125,18 +128,65 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
         comment: _commentController.text.trim(),
         tipAmountLkr: tipAmount,
       );
-    } catch (_) {}
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (kDebugMode) {
-      debugPrint(
-          '[navdbg] -> customer home from rating_completion_screen.dart');
+      if (widget.returnToPrevious) {
+        Navigator.of(context).pop();
+        return;
+      }
+
+      if (kDebugMode) {
+        debugPrint(
+            '[navdbg] -> customer home from rating_completion_screen.dart');
+      }
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
+        (route) => false,
+      );
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      if (e.code == 'permission-denied') {
+        bool reviewExists = false;
+        try {
+          if (widget.bookingId.isNotEmpty) {
+            final doc = await FirebaseFirestore.instance
+                .collection(FirestorePaths.reviews)
+                .doc(widget.bookingId)
+                .get();
+            reviewExists = doc.exists;
+          }
+        } catch (_) {}
+        if (!mounted) return;
+        if (reviewExists) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.l10n.alreadyRatedThisJob),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          Navigator.of(context).pop();
+          return;
+        }
+        SessionGuard.handlePermissionDenied(e);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.somethingWentWrong),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.somethingWentWrong),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeDiscoveryScreen()),
-      (route) => false,
-    );
   }
 
   @override
@@ -290,6 +340,10 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
               label: context.l10n.done,
               trailingIcon: Icons.arrow_forward,
               onPressed: () {
+                if (widget.returnToPrevious) {
+                  Navigator.of(context).pop();
+                  return;
+                }
                 if (kDebugMode) {
                   debugPrint(
                       '[navdbg] -> customer home from rating_completion_screen.dart');
@@ -435,6 +489,20 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                   _isSaving ? context.l10n.savingProgress : context.l10n.done,
               trailingIcon: Icons.arrow_forward,
               onPressed: _isSaving ? null : _submitReview,
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                child: Text(
+                  context.l10n.skipForNow,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ),
             ),
           ],
           const SizedBox(height: 12),

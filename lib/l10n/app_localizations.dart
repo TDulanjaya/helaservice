@@ -5021,6 +5021,7 @@ abstract class AppLocalizations {
 
   // manual dispatch assigned desc
   String manualDispatchAssignedDesc(
+  // provider
       String provider, String job, String address);
 
   // ledger price status
@@ -5868,6 +5869,7 @@ abstract class AppLocalizations {
 
   // upload photo bytes progress
   String uploadPhotoBytesProgress(
+  // current
       int current, int total, String sentMb, String totalMb);
 
   // uploading video thumbnail
@@ -6733,6 +6735,18 @@ abstract class AppLocalizations {
 
   // visit fee emergency range error
   String get visitFeeEmergencyRangeError;
+
+  // skip for now
+  String get skipForNow;
+
+  // visit only no rating needed
+  String get visitOnlyNoRatingNeeded;
+
+  // already rated this job
+  String get alreadyRatedThisJob;
+
+  // category short
+  String get categoryShort;
 }
 
 class _AppLocalizationsDelegate
@@ -6745,10 +6759,12 @@ class _AppLocalizationsDelegate
   }
 
   @override
+  // is supported
   bool isSupported(Locale locale) =>
       <String>['en', 'si', 'ta'].contains(locale.languageCode);
 
   @override
+  // should reload
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 

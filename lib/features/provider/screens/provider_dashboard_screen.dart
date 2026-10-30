@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart' as pv;
-import '../../../services/review_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../constants/job_status.dart';
 import '../../../models/booking.dart';
@@ -90,6 +89,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   static bool _isTechnicianRadarEqual(Technician? prev, Technician? next) {
     if (identical(prev, next)) return true;
     if (prev == null || next == null) return false;
+
+    // check rating and review count
+    if (prev.rating != next.rating || prev.reviewCount != next.reviewCount) {
+      return false;
+    }
 
     // check category
     if (prev.category.trim() != next.category.trim()) return false;
@@ -829,26 +833,19 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ? '${(((completed - delayedBookings).clamp(0, completed) / completed) * 100).round()}%'
                     : '100%';
 
-                return StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: ReviewService.instance.streamProviderReviews(
-                      FirebaseAuth.instance.currentUser?.uid ?? ''),
-                  builder: (context, reviewSnap) {
-                    if (reviewSnap.hasError) {
-                      SessionGuard.handlePermissionDenied(reviewSnap.error);
+                return StreamBuilder<Technician?>(
+                  stream: _effectiveTechStream(
+                      user?.id ?? FirebaseAuth.instance.currentUser?.uid ?? ''),
+                  builder: (context, techSnap) {
+                    if (techSnap.hasError) {
+                      SessionGuard.handlePermissionDenied(techSnap.error);
                     }
-                    final reviews = reviewSnap.data ?? [];
-                    double avgRating = 5.0;
-                    if (reviews.isNotEmpty) {
-                      final total = reviews.fold<double>(
-                        0,
-                        (prev, r) =>
-                            prev + ((r['rating'] as num?)?.toDouble() ?? 5.0),
-                      );
-                      avgRating = total / reviews.length;
-                    }
-                    final ratingStr = reviews.isNotEmpty
-                        ? avgRating.toStringAsFixed(1)
-                        : (completed > 0 ? '5.0' : context.l10n.newLabel);
+                    final tech = techSnap.data;
+                    final hasReviews =
+                        tech != null && tech.reviewCount > 0 && tech.rating != null;
+                    final ratingStr = hasReviews
+                        ? tech.rating!.toStringAsFixed(1)
+                        : context.l10n.newLabel;
 
                     return Row(
                       children: [
@@ -860,9 +857,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         const SizedBox(width: 8),
                         _StatCard(
                           icon: Icons.star_rounded,
-                          value: (reviews.isNotEmpty || completed > 0)
-                              ? ratingStr
-                              : context.l10n.newLabel,
+                          value: ratingStr,
                           sub: context.l10n.rating,
                         ),
                         const SizedBox(width: 8),

@@ -2268,5 +2268,9 @@
   "confirmEmergencyInspectBookingDesc": "{name} அவர்களுக்கு அவசர கோரிக்கை அனுப்பப்படும். பரிசோதனைக்கு பின் விலை நிர்ணயிக்கப்படும்.",
   "removeVisitFeeEmergencyConfirm": "வருகைக் கட்டணத்தை நீக்குவது அவசர அழைப்பை முடக்கும். தொடரவா?",
   "visitFeeEmergencyHint": "அவசர அழைப்பிற்கு தேவை, எ.கா. 1000 (1 - 20,000)",
-  "visitFeeEmergencyRangeError": "பார்வை கட்டணம் ரூ. 1 முதல் 20,000 வரை இருக்க வேண்டும்"
+  "visitFeeEmergencyRangeError": "பார்வை கட்டணம் ரூ. 1 முதல் 20,000 வரை இருக்க வேண்டும்",
+  "skipForNow": "இப்போதைக்குத் தவிர்க்கவும்",
+  "visitOnlyNoRatingNeeded": "வருகை மட்டும், மதிப்பீடு தேவையில்லை",
+  "alreadyRatedThisJob": "நீங்கள் ஏற்கனவே இந்த வேலையை மதிப்பிட்டுள்ளீர்கள்",
+  "categoryShort": "வகை"
 }

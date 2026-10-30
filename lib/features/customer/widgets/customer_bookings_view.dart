@@ -1595,6 +1595,27 @@ class _JobHistoryDetailModal extends StatelessWidget {
                       ],
                     ),
                   ),
+                ] else if (booking.completionType == 'visit_only') ...[
+                  AppCard(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded,
+                            size: 18, color: context.themeTextSecondary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            context.l10n.visitOnlyNoRatingNeeded,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.themeTextSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ] else ...[
                   PrimaryButton(
                     label: context.l10n.rateServiceProvider,
@@ -1615,6 +1636,9 @@ class _JobHistoryDetailModal extends StatelessWidget {
                         return;
                       }
                       if (context.mounted) {
+                        final totalPrice = booking.finalAmount ??
+                            booking.approvedTotalLkr?.toDouble() ??
+                            booking.agreedPrice;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -1623,8 +1647,9 @@ class _JobHistoryDetailModal extends StatelessWidget {
                               bookingId: booking.id,
                               jobRequestId: booking.jobRequestId ?? '',
                               jobTitle: booking.title,
-                              totalPrice: booking.agreedPrice,
+                              totalPrice: totalPrice,
                               completionType: booking.completionType,
+                              returnToPrevious: true,
                             ),
                           ),
                         );

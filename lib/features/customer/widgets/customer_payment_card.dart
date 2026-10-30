@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../models/booking.dart';
 import '../../../models/booking_extra.dart';
+import '../../../models/technician.dart';
 import '../../../repositories/booking_repository.dart';
+import '../../../repositories/technician_repository.dart';
+import '../screens/rating_completion_screen.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/ticket_error_l10n.dart';
@@ -24,30 +27,75 @@ class _CustomerPaymentCardState extends State<CustomerPaymentCard> {
   bool _isLoading = false;
 
   Future<void> _handleConfirmPayment() async {
+    final nav = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final cashPaymentConfirmedText = context.l10n.cashPaymentConfirmed;
+    final somethingWentWrongText = context.l10n.somethingWentWrong;
+
     setState(() => _isLoading = true);
     try {
       await BookingRepository().confirmPayment(widget.booking.id);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(cashPaymentConfirmedText),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      debugPrint('confirmPaid error: $e');
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(somethingWentWrongText),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+
+    bool updatedCalled = false;
+    try {
+      final freshBooking =
+          await BookingRepository().getBookingById(widget.booking.id) ??
+              widget.booking;
+      final shouldOpenRating = freshBooking.completionType != 'visit_only' &&
+          freshBooking.rating == null;
+
+      Technician? tech;
+      if (shouldOpenRating) {
+        tech = await TechnicianRepository().getById(freshBooking.providerId);
+      }
+
+      updatedCalled = true;
       widget.onUpdated?.call();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.cashPaymentConfirmed),
-            backgroundColor: AppColors.success,
+
+      if (shouldOpenRating && tech != null && nav.mounted) {
+        final totalPrice = freshBooking.finalAmount ??
+            freshBooking.approvedTotalLkr?.toDouble() ??
+            freshBooking.agreedPrice;
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => RatingCompletionScreen(
+              technician: tech!,
+              bookingId: freshBooking.id,
+              jobRequestId: freshBooking.jobRequestId ?? '',
+              jobTitle: freshBooking.title,
+              totalPrice: totalPrice,
+              completionType: freshBooking.completionType,
+              returnToPrevious: true,
+            ),
           ),
         );
       }
     } catch (e) {
-      debugPrint('confirmPaid error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.somethingWentWrong),
-            backgroundColor: AppColors.error,
-          ),
-        );
+      debugPrint('openRatingAfterPayment error: $e');
+      if (!updatedCalled) {
+        widget.onUpdated?.call();
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 

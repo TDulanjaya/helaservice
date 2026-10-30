@@ -2268,5 +2268,9 @@
   "confirmEmergencyInspectBookingDesc": "{name} වෙත හදිසි පිටත් කිරීමේ ඉල්ලීමක් යවනු ඇත. පරීක්ෂාවෙන් පසු මිල තීරණය වේ.",
   "removeVisitFeeEmergencyConfirm": "පැමිණීමේ ගාස්තුව ඉවත් කිරීමෙන් හදිසි සේවා ඇමතුම් ක්‍රියාවිරහිත වේ. ඉදිරියට යනවාද?",
   "visitFeeEmergencyHint": "හදිසි සේවා ඇමතුම් සඳහා අවශ්‍යයි, උදා. 1000 (1 - 20,000)",
-  "visitFeeEmergencyRangeError": "පැමිණීමේ ගාස්තුව රු. 1 සහ 20,000 අතර විය යුතුය"
+  "visitFeeEmergencyRangeError": "පැමිණීමේ ගාස්තුව රු. 1 සහ 20,000 අතර විය යුතුය",
+  "skipForNow": "දැනට මඟහරින්න",
+  "visitOnlyNoRatingNeeded": "පැමිණීම පමණක්, ඇගයීමක් අවශ්‍ය නැත",
+  "alreadyRatedThisJob": "ඔබ දැනටමත් මෙම සේවාව අගයා ඇත",
+  "categoryShort": "ප්‍රවර්ගය"
 }

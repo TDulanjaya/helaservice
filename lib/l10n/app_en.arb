@@ -3759,5 +3759,9 @@
   },
   "removeVisitFeeEmergencyConfirm": "Removing the visit fee turns off Emergency Callout. Continue?",
   "visitFeeEmergencyHint": "Needed for Emergency Callout, e.g. 1000 (1 - 20,000)",
-  "visitFeeEmergencyRangeError": "Visit fee must be between LKR 1 and 20,000"
+  "visitFeeEmergencyRangeError": "Visit fee must be between LKR 1 and 20,000",
+  "skipForNow": "Skip for now",
+  "visitOnlyNoRatingNeeded": "Visit only, no rating needed",
+  "alreadyRatedThisJob": "You already rated this job",
+  "categoryShort": "Category"
 }

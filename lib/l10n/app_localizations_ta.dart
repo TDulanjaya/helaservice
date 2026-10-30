@@ -7675,4 +7675,17 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get visitFeeEmergencyRangeError =>
       'பார்வை கட்டணம் ரூ. 1 முதல் 20,000 வரை இருக்க வேண்டும்';
+
+  @override
+  String get skipForNow => 'இப்போதைக்குத் தவிர்க்கவும்';
+
+  @override
+  String get visitOnlyNoRatingNeeded => 'வருகை மட்டும், மதிப்பீடு தேவையில்லை';
+
+  @override
+  String get alreadyRatedThisJob =>
+      'நீங்கள் ஏற்கனவே இந்த வேலையை மதிப்பிட்டுள்ளீர்கள்';
+
+  @override
+  String get categoryShort => 'வகை';
 }

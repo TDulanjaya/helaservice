@@ -28,6 +28,7 @@ import '../../../services/api_client.dart';
 import '../../../services/error_reporter.dart';
 import '../../../constants/app_config.dart';
 import '../../../constants/firestore_paths.dart';
+import '../../../constants/job_status.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/permission_utils.dart';
 import '../../../utils/ticket_error_l10n.dart';
@@ -752,6 +753,47 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
 
     final defaultCustomerRole = context.l10n.roleCustomer;
 
+    // prompt user before closing quotes on repost
+    if (widget.prefillJob != null &&
+        widget.prefillJob!.status == JobRequestStatus.open &&
+        widget.prefillJob!.quoteCount > 0) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            ctx.l10n.repostJobTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            ctx.l10n.repostOpenPostWithQuotesWarning(
+                widget.prefillJob!.quoteCount),
+            style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(ctx.l10n.repost),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
     _submitGeneration++;
     final currentGen = _submitGeneration;
     final hasMediaToUpload = _photos.isNotEmpty || _processedVideo != null;
@@ -1136,7 +1178,11 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
         return;
       }
 
-      final requestId = await JobRequestRepository().createJobRequest(request);
+      // link previous post id when reposting
+      final requestId = await JobRequestRepository().createJobRequest(
+        request,
+        repostedFromId: widget.prefillJob?.id,
+      );
 
       // notify without blocking
       unawaited(NotificationService.instance

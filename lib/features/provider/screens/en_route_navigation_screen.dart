@@ -605,6 +605,27 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                         return;
                       }
 
+                      // pre-flight check: booking must be in progress
+                      if (b.status != JobStatus.inProgress) {
+                        setDialogState(() {
+                          errorMessage = context.l10n.markArrivalFirst;
+                        });
+                        return;
+                      }
+
+                      // pre-flight check: price must be approved for estimate or inspect
+                      final isEstimateOrInspect =
+                          b.quoteType == 'estimate' || b.quoteType == 'inspect';
+                      if (isEstimateOrInspect &&
+                          completionType != 'visit_only' &&
+                          b.priceStatus != 'approved') {
+                        setDialogState(() {
+                          errorMessage =
+                              context.l10n.confirmPriceWithCustomerFirst;
+                        });
+                        return;
+                      }
+
                       final enteredAmount = double.tryParse(
                             amountController.text
                                 .replaceAll(RegExp(r'[^0-9.]'), ''),
@@ -616,6 +637,13 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                           enteredAmount > b.agreedPrice! * 5) {
                         setDialogState(() {
                           errorMessage = context.l10n.finalAmountExceedsLimit;
+                        });
+                        return;
+                      }
+
+                      if (enteredAmount <= 0) {
+                        setDialogState(() {
+                          errorMessage = context.l10n.invalidFinalAmount;
                         });
                         return;
                       }
@@ -651,8 +679,28 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
                       } else {
                         setDialogState(() {
                           isSubmitting = false;
-                          errorMessage = result.errorMessage ??
-                              'Incorrect PIN. Please re-check with customer.';
+                          if (result.errorCode == 'not_in_progress') {
+                            errorMessage = context.l10n.markArrivalFirst;
+                          } else if (result.errorCode == 'price_not_confirmed') {
+                            errorMessage =
+                                context.l10n.confirmPriceWithCustomerFirst;
+                          } else if (result.errorCode == 'network_error') {
+                            errorMessage = context.l10n.networkErrorTryAgain;
+                          } else if (result.errorCode == 'too_many_attempts') {
+                            errorMessage = context.l10n.tooManyWrongPins;
+                          } else if (result.errorCode == 'invalid_amount') {
+                            errorMessage = context.l10n.invalidFinalAmount;
+                          } else if (result.errorCode == 'invalid_id' ||
+                              result.errorCode == 'not_found') {
+                            errorMessage = context.l10n.bookingOrJobNotFound;
+                          } else if (result.errorCode == 'incorrect_pin') {
+                            errorMessage = context.l10n
+                                .incorrectPinAttemptsUsed(result.attempts, 5);
+                          } else {
+                            errorMessage = result.errorMessage ??
+                                context.l10n
+                                    .incorrectPinAttemptsUsed(result.attempts, 5);
+                          }
                         });
                       }
                     },

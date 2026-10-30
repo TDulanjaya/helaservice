@@ -167,6 +167,8 @@ class _RepostSheetActions extends StatefulWidget {
 
 class _RepostSheetActionsState extends State<_RepostSheetActions> {
   bool _isSubmitting = false;
+  bool _isCheckingLimit = true;
+  bool _repostLimitReached = false;
   double _progressFraction = 0.0;
   String? _progressText;
   String? _errorMessage;
@@ -178,6 +180,64 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
     final initialError = widget.getScheduleError();
     if (initialError != null) {
       _errorMessage = initialError;
+    }
+    _checkDailyRepostLimit();
+  }
+
+  // check how many times customer reposted today
+  Future<void> _checkDailyRepostLimit() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (mounted) setState(() => _isCheckingLimit = false);
+      return;
+    }
+
+    try {
+      final limitsDoc = await FirebaseFirestore.instance
+          .collection('app_config')
+          .doc('limits')
+          .get();
+      final maxReposts =
+          (limitsDoc.data()?['maxRepostsPerDay'] as num?)?.toInt() ?? 5;
+
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+
+      final snap = await FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .where('customerId', isEqualTo: uid)
+          .limit(100)
+          .get();
+
+      int todayReposts = 0;
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final renewedAt = (data['renewedAt'] as Timestamp?)?.toDate();
+        if (renewedAt != null && !renewedAt.isBefore(startOfToday)) {
+          todayReposts++;
+          continue;
+        }
+        final repostedFromId = data['repostedFromId'] as String?;
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        if (repostedFromId != null &&
+            repostedFromId.isNotEmpty &&
+            createdAt != null &&
+            !createdAt.isBefore(startOfToday)) {
+          todayReposts++;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _isCheckingLimit = false;
+          _repostLimitReached = todayReposts >= maxReposts;
+        });
+      }
+    } catch (e) {
+      debugPrint('[RepostSheet] daily limit check error: ');
+      if (mounted) {
+        setState(() => _isCheckingLimit = false);
+      }
     }
   }
 
@@ -273,11 +333,41 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
           ],
           const SizedBox(height: 12),
         ],
+        if (_repostLimitReached) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline,
+                    color: AppColors.warning, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.repostDailyLimitReached,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (!_isSubmitting) ...[
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _handleRepostNow,
+              onPressed: (_repostLimitReached || _isCheckingLimit) ? null : _handleRepostNow,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -297,7 +387,7 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: _handleEditDetailsFirst,
+              onPressed: (_repostLimitReached || _isCheckingLimit) ? null : _handleEditDetailsFirst,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -317,6 +407,12 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
   }
 
   void _handleEditDetailsFirst() {
+    if (_repostLimitReached) {
+      setState(() {
+        _errorMessage = context.l10n.repostDailyLimitReached;
+      });
+      return;
+    }
     final sched = widget.getSchedule();
     if (sched == null) {
       final scheduleErr = widget.getScheduleError() ??
@@ -349,6 +445,13 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
   }
 
   Future<void> _handleRepostNow() async {
+    if (_repostLimitReached) {
+      setState(() {
+        _errorMessage = context.l10n.repostDailyLimitReached;
+      });
+      return;
+    }
+
     final sched = widget.getSchedule();
     if (sched == null) {
       final scheduleErr = widget.getScheduleError() ??
@@ -380,17 +483,55 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
       }
     }
 
-    // renew expired post
-    final isExpiredWithMedia = widget.booking == null &&
-        widget.request.status == JobRequestStatus.expired &&
-        !widget.request.isPhotosRemoved;
+    // confirm closing old quotes if any exist
+    if (widget.request.quoteCount > 0) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            ctx.l10n.repostJobTitle,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            ctx.l10n.repostOpenPostWithQuotesWarning(widget.request.quoteCount),
+            style: TextStyle(color: ctx.themeTextSecondary, fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(ctx.l10n.repost),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
 
-    if (isExpiredWithMedia) {
+    // expired post with no booking renews in place
+    final isExpiredNoBooking = widget.booking == null &&
+        (widget.request.status == JobRequestStatus.expired ||
+            widget.request.isExpired);
+
+    if (isExpiredNoBooking) {
       await _renewExpiredPost(sched);
       return;
     }
 
-    // or create fresh post
+    // cancelled post or cancelled booking creates new post
     await _createNewPost(sched);
   }
 
@@ -689,8 +830,8 @@ class _RepostSheetActionsState extends State<_RepostSheetActions> {
         quoteCount: 0,
       );
 
-      final newRequestId =
-          await JobRequestRepository().createJobRequest(newJob);
+      final newRequestId = await JobRequestRepository()
+          .createJobRequest(newJob, repostedFromId: widget.request.id);
 
       // send job_posted notification
       unawaited(NotificationService.instance

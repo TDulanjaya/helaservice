@@ -1,10 +1,21 @@
-import 'dart:typed_data';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants/firestore_paths.dart';
 import 'notification_service.dart';
 import 'storage_service.dart';
 import 'session_guard.dart';
+import 'error_reporter.dart';
+
+// typed exception for missing room on send
+class ChatRoomMissingException implements Exception {
+  final String roomId;
+  const ChatRoomMissingException(this.roomId);
+
+  @override
+  String toString() => 'ChatRoomMissingException: room $roomId does not exist';
+}
 
 // chat message model with optional photo support
 class ChatMessageModel {
@@ -193,60 +204,85 @@ class ChatService {
     String? user1Phone,
     String? user2Phone,
   }) async {
-    final ids = [userId1, userId2]..sort();
-    final chatId = '${ids[0]}_${ids[1]}';
+    try {
+      final ids = [userId1, userId2]..sort();
+      final chatId = '${ids[0]}_${ids[1]}';
 
-    final docRef = _db.collection(FirestorePaths.chatRooms).doc(chatId);
-    final doc = await docRef.get();
+      final docRef = _db.collection(FirestorePaths.chatRooms).doc(chatId);
+      final doc = await docRef.get();
 
-    if (!doc.exists) {
-      await docRef.set({
-        'participants': ids,
-        'participantNames': {userId1: user1Name, userId2: user2Name},
-        'participantRoles': {
-          if (user1Role != null && user1Role.isNotEmpty) userId1: user1Role,
-          if (user2Role != null && user2Role.isNotEmpty) userId2: user2Role,
-        },
-        'participantPhones': {
-          if (user1Phone != null && user1Phone.isNotEmpty) userId1: user1Phone,
-          if (user2Phone != null && user2Phone.isNotEmpty) userId2: user2Phone,
-        },
-        'jobRequestId': jobRequestId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastMessage': '',
-        'lastMessageAt': FieldValue.serverTimestamp(),
-        'unreadCounts': {userId1: 0, userId2: 0},
-        'lastReadAt': {
-          userId1: FieldValue.serverTimestamp(),
-          userId2: FieldValue.serverTimestamp(),
-        },
-      });
-    } else {
-      final updates = <String, dynamic>{};
-      if (user1Name.isNotEmpty) {
-        updates['participantNames.$userId1'] = user1Name;
+      if (!doc.exists) {
+        await docRef.set({
+          'participants': ids,
+          'participantNames': {userId1: user1Name, userId2: user2Name},
+          'participantRoles': {
+            if (user1Role != null && user1Role.isNotEmpty) userId1: user1Role,
+            if (user2Role != null && user2Role.isNotEmpty) userId2: user2Role,
+          },
+          'participantPhones': {
+            if (user1Phone != null && user1Phone.isNotEmpty) userId1: user1Phone,
+            if (user2Phone != null && user2Phone.isNotEmpty) userId2: user2Phone,
+          },
+          'jobRequestId': jobRequestId,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastMessage': '',
+          'lastMessageAt': FieldValue.serverTimestamp(),
+          'unreadCounts': {userId1: 0, userId2: 0},
+          'lastReadAt': {
+            userId1: FieldValue.serverTimestamp(),
+            userId2: FieldValue.serverTimestamp(),
+          },
+        });
+      } else {
+        final updates = <String, dynamic>{};
+        if (user1Name.isNotEmpty) {
+          updates['participantNames.$userId1'] = user1Name;
+        }
+        if (user2Name.isNotEmpty) {
+          updates['participantNames.$userId2'] = user2Name;
+        }
+        if (user1Role != null && user1Role.isNotEmpty) {
+          updates['participantRoles.$userId1'] = user1Role;
+        }
+        if (user2Role != null && user2Role.isNotEmpty) {
+          updates['participantRoles.$userId2'] = user2Role;
+        }
+        if (user1Phone != null && user1Phone.isNotEmpty) {
+          updates['participantPhones.$userId1'] = user1Phone;
+        }
+        if (user2Phone != null && user2Phone.isNotEmpty) {
+          updates['participantPhones.$userId2'] = user2Phone;
+        }
+        if (updates.isNotEmpty) {
+          await docRef.update(updates);
+        }
       }
-      if (user2Name.isNotEmpty) {
-        updates['participantNames.$userId2'] = user2Name;
+
+      return chatId;
+    } catch (e) {
+      debugPrint('[ChatService] getOrCreateChatRoom error: $e');
+      unawaited(ErrorReporter.report(
+        screen: 'chat_service',
+        action: 'get_or_create_chat_room',
+        error: e,
+      ));
+      if (e is FirebaseException) {
+        unawaited(SessionGuard.handlePermissionDenied(e));
       }
-      if (user1Role != null && user1Role.isNotEmpty) {
-        updates['participantRoles.$userId1'] = user1Role;
-      }
-      if (user2Role != null && user2Role.isNotEmpty) {
-        updates['participantRoles.$userId2'] = user2Role;
-      }
-      if (user1Phone != null && user1Phone.isNotEmpty) {
-        updates['participantPhones.$userId1'] = user1Phone;
-      }
-      if (user2Phone != null && user2Phone.isNotEmpty) {
-        updates['participantPhones.$userId2'] = user2Phone;
-      }
-      if (updates.isNotEmpty) {
-        await docRef.update(updates);
-      }
+      rethrow;
     }
+  }
 
-    return chatId;
+  // check if chat room exists in firestore
+  Future<bool> checkRoomExists(String chatRoomId) async {
+    if (chatRoomId.isEmpty) return false;
+    try {
+      final doc =
+          await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).get();
+      return doc.exists;
+    } catch (_) {
+      return false;
+    }
   }
 
   // stream chat rooms for user
@@ -313,61 +349,80 @@ class ChatService {
     String? imageUrl,
     String type = 'text',
   }) async {
-    final batch = _db.batch();
+    try {
+      final docRef = _db.collection(FirestorePaths.chatRooms).doc(chatRoomId);
+      final docSnap = await docRef.get();
+      // make sure chat room doc exists before batch write
+      if (!docSnap.exists) {
+        throw ChatRoomMissingException(chatRoomId);
+      }
 
-    final msgRef = _db
-        .collection(FirestorePaths.chatRooms)
-        .doc(chatRoomId)
-        .collection(FirestorePaths.messages)
-        .doc();
+      final batch = _db.batch();
 
-    final previewText = text.trim().isNotEmpty
-        ? text.trim()
-        : (imageUrl != null ? 'photo' : '');
+      final msgRef = docRef.collection(FirestorePaths.messages).doc();
 
-    batch.set(msgRef, {
-      'senderId': senderId,
-      'senderName': senderName,
-      'text': text.trim(),
-      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-      'type': type,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+      final previewText = text.trim().isNotEmpty
+          ? text.trim()
+          : (imageUrl != null ? 'photo' : '');
 
-    final docSnap =
-        await _db.collection(FirestorePaths.chatRooms).doc(chatRoomId).get();
-    final participants = (docSnap.data()?['participants'] as List?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
-    final recipientUid =
-        participants.firstWhere((p) => p != senderId, orElse: () => '');
+      batch.set(msgRef, {
+        'senderId': senderId,
+        'senderName': senderName,
+        'text': text.trim(),
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+        'type': type,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-    final roomUpdates = <String, dynamic>{
-      'lastMessage': previewText,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastSenderId': senderId,
-      'unreadCounts.$senderId': 0,
-      'lastReadAt.$senderId': FieldValue.serverTimestamp(),
-    };
+      final participants = (docSnap.data()?['participants'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [];
+      final recipientUid =
+          participants.firstWhere((p) => p != senderId, orElse: () => '');
 
-    if (recipientUid.isNotEmpty) {
-      roomUpdates['unreadCounts.$recipientUid'] = FieldValue.increment(1);
-    }
+      // update last message preview and unread counts
+      final roomUpdates = <String, dynamic>{
+        'lastMessage': previewText,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastSenderId': senderId,
+        'unreadCounts.$senderId': 0,
+        'lastReadAt.$senderId': FieldValue.serverTimestamp(),
+      };
 
-    batch.update(
-      _db.collection(FirestorePaths.chatRooms).doc(chatRoomId),
-      roomUpdates,
-    );
+      if (recipientUid.isNotEmpty) {
+        roomUpdates['unreadCounts.$recipientUid'] = FieldValue.increment(1);
+      }
 
-    await batch.commit();
+      batch.update(docRef, roomUpdates);
 
-    // send push alert to recipient
-    if (recipientUid.isNotEmpty) {
-      NotificationService.instance.sendNotification(
-        event: 'chat_message',
-        docId: chatRoomId,
-      );
+      await batch.commit();
+
+      // send push alert to recipient
+      if (recipientUid.isNotEmpty) {
+        unawaited(NotificationService.instance
+            .sendNotification(
+          event: 'chat_message',
+          docId: chatRoomId,
+        )
+            .catchError((e) {
+          debugPrint('[ChatService] notify error: $e');
+          return false;
+        }));
+      }
+    } on ChatRoomMissingException {
+      rethrow;
+    } catch (e) {
+      debugPrint('[ChatService] sendMessage error: $e');
+      unawaited(ErrorReporter.report(
+        screen: 'chat_service',
+        action: 'send_message',
+        error: e,
+      ));
+      if (e is FirebaseException) {
+        unawaited(SessionGuard.handlePermissionDenied(e));
+      }
+      rethrow;
     }
   }
 

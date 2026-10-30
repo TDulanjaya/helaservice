@@ -30,6 +30,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'en_route_navigation_screen.dart';
+import 'provider_booking_history_screen.dart';
 import 'provider_profile_screen.dart';
 import 'submit_quote_sheet.dart';
 import '../widgets/provider_approval_gate.dart';
@@ -65,11 +66,140 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   late int _navIndex;
   bool _sortByClosest = true;
   double? _selectedRadiusKm;
+  Stream<List<Booking>>? _bookingsStream;
+
+  Stream<Technician?>? _techStream;
+  String? _techStreamUid;
+  Stream<List<JobRequest>>? _jobsStream;
+  String? _currentCategory;
+  List<JobRequest> _lastRequests = const [];
+  Stream<List<Quote>>? _providerQuotesStream;
+  String? _providerQuotesUid;
+  List<Quote> _lastProviderQuotes = const [];
+
+  // check if provider radar needs refresh
+  static bool _isTechnicianRadarEqual(Technician? prev, Technician? next) {
+    if (identical(prev, next)) return true;
+    if (prev == null || next == null) return false;
+
+    // 1. Category
+    if (prev.category.trim() != next.category.trim()) return false;
+
+    // 2. Base location and service radius
+    final prevBaseLat = prev.baseLat ?? prev.latitude;
+    final prevBaseLng = prev.baseLng ?? prev.longitude;
+    final nextBaseLat = next.baseLat ?? next.latitude;
+    final nextBaseLng = next.baseLng ?? next.longitude;
+    if (prevBaseLat != nextBaseLat || prevBaseLng != nextBaseLng) return false;
+    if (prev.serviceRadiusKm != next.serviceRadiusKm) return false;
+    if (prev.baseArea != next.baseArea || prev.baseAddress != next.baseAddress) {
+      return false;
+    }
+
+    // 3. Effective location
+    final prevLoc = getEffectiveProviderLocation(prev);
+    final nextLoc = getEffectiveProviderLocation(next);
+    if (prevLoc.source != nextLoc.source) return false;
+
+    if (prevLoc.latitude != null &&
+        prevLoc.longitude != null &&
+        nextLoc.latitude != null &&
+        nextLoc.longitude != null) {
+      final distKm = LocationUtils.calculateDistanceKm(
+        prevLoc.latitude!,
+        prevLoc.longitude!,
+        nextLoc.latitude!,
+        nextLoc.longitude!,
+      );
+      // Ignore minor GPS jitter / ticks under 100m (0.1km)
+      if (distKm >= 0.1) return false;
+    } else if ((prevLoc.latitude == null) != (nextLoc.latitude == null) ||
+        (prevLoc.longitude == null) != (nextLoc.longitude == null)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // stream technician document with radar cache
+  void _initTechStream(String uid) {
+    if (uid.isEmpty) {
+      _techStream = null;
+      _techStreamUid = null;
+      return;
+    }
+    _techStreamUid = uid;
+    _techStream = TechnicianRepository()
+        .streamById(uid)
+        .distinct(_isTechnicianRadarEqual)
+        .asBroadcastStream();
+  }
+
+  Stream<Technician?>? _effectiveTechStream(String uid) {
+    if (_techStream == null || _techStreamUid != uid) {
+      _initTechStream(uid);
+    }
+    return _techStream;
+  }
+
+  // stream nearby open jobs for category
+  void _updateJobsStreamForCategory(String category) {
+    final trimmed = category.trim();
+    if (trimmed.isEmpty) {
+      if (_currentCategory != null || _jobsStream != null) {
+        _currentCategory = null;
+        _jobsStream = null;
+        _lastRequests = const [];
+      }
+      return;
+    }
+    if (_jobsStream == null || _currentCategory != trimmed) {
+      _currentCategory = trimmed;
+      _lastRequests = const [];
+      _jobsStream = JobRequestRepository()
+          .streamOpenRequestsForCategory(trimmed)
+          .asBroadcastStream();
+    }
+  }
+
+  // stream quotes submitted by provider
+  Stream<List<Quote>>? _effectiveProviderQuotesStream(String uid) {
+    if (uid.isEmpty) return null;
+    if (_providerQuotesStream == null || _providerQuotesUid != uid) {
+      _providerQuotesUid = uid;
+      _providerQuotesStream = JobRequestRepository()
+          .streamProviderQuotes(uid)
+          .asBroadcastStream();
+    }
+    return _providerQuotesStream;
+  }
+
+  // stream active bookings for provider
+  void _initBookingsStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      _bookingsStream = BookingRepository()
+          .streamBookingsForProvider(uid)
+          .asBroadcastStream();
+    }
+  }
+
+  Stream<List<Booking>>? get _effectiveBookingsStream {
+    if (_bookingsStream == null) {
+      _initBookingsStream();
+    }
+    return _bookingsStream;
+  }
 
   @override
   void initState() {
     super.initState();
     _navIndex = widget.initialNavIndex;
+    _initBookingsStream();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      _initTechStream(uid);
+    }
     _initProviderTracking();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -213,7 +343,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ? context.l10n.categorySpecialist(CategoryService.instance
             .nameOf(user!.serviceCategory!, context: context))
         : context.l10n.certifiedArtisan;
-    final providerCategory = user?.serviceCategory ?? '';
 
     return Scaffold(
       body: SafeArea(
@@ -578,8 +707,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
             const SizedBox(height: 14),
             StreamBuilder<List<Booking>>(
-              stream: BookingRepository().streamBookingsForProvider(
-                  FirebaseAuth.instance.currentUser?.uid ?? ''),
+              stream: _effectiveBookingsStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   SessionGuard.handlePermissionDenied(snapshot.error);
@@ -643,46 +771,75 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               },
             ),
             const SizedBox(height: 20),
-            if (providerCategory.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: context.themeSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.themeBorder),
-                ),
-                child: Center(
-                  child: Text(
-                    context.l10n.customerRequestsAppearHere,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.themeTextSecondary,
-                      fontSize: 13,
+            StreamBuilder<Technician?>(
+              stream: _effectiveTechStream(user?.id ?? FirebaseAuth.instance.currentUser?.uid ?? ''),
+              builder: (context, techSnap) {
+                if (techSnap.connectionState == ConnectionState.waiting && !techSnap.hasData) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     ),
-                  ),
-                ),
-              )
-            else
-              StreamBuilder<Technician?>(
-                stream: TechnicianRepository().streamById(user?.id ?? ''),
-                builder: (context, techSnap) {
-                  final tech = techSnap.data;
-                  final effectiveLoc = tech != null
-                      ? getEffectiveProviderLocation(tech)
-                      : EffectiveProviderLocation.none;
+                  );
+                }
 
-                  if (effectiveLoc.source == ProviderLocationSource.none) {
-                    return _buildNoBaseLocationCard(context);
-                  }
+                final tech = techSnap.data;
+                final matchingCategory = tech?.category.trim() ?? '';
 
-                  return StreamBuilder<List<JobRequest>>(
-                    stream: JobRequestRepository()
-                        .streamOpenRequestsForCategory(providerCategory),
-                    builder: (context, snapshot) {
+                if (matchingCategory.isEmpty) {
+                  _updateJobsStreamForCategory('');
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: context.themeSurface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.themeBorder),
+                    ),
+                    child: Center(
+                      child: Text(
+                        context.l10n.categoryNotSetContactSupport,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: context.themeTextSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                _updateJobsStreamForCategory(matchingCategory);
+
+                final effectiveLoc = tech != null
+                    ? getEffectiveProviderLocation(tech)
+                    : EffectiveProviderLocation.none;
+
+                if (effectiveLoc.source == ProviderLocationSource.none) {
+                  return _buildNoBaseLocationCard(context);
+                }
+
+                return StreamBuilder<List<JobRequest>>(
+                  stream: _jobsStream,
+                  initialData: _lastRequests.isNotEmpty ? _lastRequests : null,
+                  builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         SessionGuard.handlePermissionDenied(snapshot.error);
                       }
-                      final rawRequests = snapshot.data ?? [];
+                      if (snapshot.hasData && snapshot.data != null) {
+                        _lastRequests = snapshot.data!;
+                      }
+                      final rawRequests = snapshot.data ?? _lastRequests;
+
+                      if (rawRequests.isEmpty && snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(color: AppColors.primary),
+                          ),
+                        );
+                      }
+
                       var requests = rawRequests.where((req) {
                         if (req.status != JobRequestStatus.open &&
                             req.status != 'pending') {
@@ -1005,15 +1162,19 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             )
                           else
                             StreamBuilder<List<Quote>>(
-                              stream: JobRequestRepository()
-                                  .streamProviderQuotes(user?.id ?? ''),
+                              stream: _effectiveProviderQuotesStream(
+                                  user?.id ?? FirebaseAuth.instance.currentUser?.uid ?? ''),
+                              initialData: _lastProviderQuotes.isNotEmpty ? _lastProviderQuotes : null,
                               builder: (context, quotesSnap) {
                                 if (quotesSnap.hasError) {
                                   SessionGuard.handlePermissionDenied(
                                       quotesSnap.error);
                                 }
+                                if (quotesSnap.hasData && quotesSnap.data != null) {
+                                  _lastProviderQuotes = quotesSnap.data!;
+                                }
                                 final quotes =
-                                    quotesSnap.data ?? const <Quote>[];
+                                    quotesSnap.data ?? _lastProviderQuotes;
                                 final quotesMap = <String, Quote>{
                                   for (final q in quotes) q.requestId: q,
                                 };
@@ -1062,26 +1223,47 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     fontSize: 16,
                   ),
                 ),
-                Text(
-                  context.l10n.viewAll,
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProviderBookingHistoryScreen(
+                          bookingsStream: _effectiveBookingsStream,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Text(
+                      context.l10n.viewAll,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             StreamBuilder<List<Booking>>(
-              stream: BookingRepository().streamBookingsForProvider(
-                  FirebaseAuth.instance.currentUser?.uid ?? ''),
+              stream: _effectiveBookingsStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   SessionGuard.handlePermissionDenied(snapshot.error);
                 }
                 final bookings = snapshot.data ?? [];
-                if (bookings.isEmpty) {
+                // sort upcoming bookings by scheduled time
+                final upcomingBookings = bookings
+                    .where((b) => JobStatus.isUpcoming(b.status))
+                    .toList()
+                  ..sort(Booking.compareUpcoming);
+
+                if (upcomingBookings.isEmpty) {
                   return Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -1097,7 +1279,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   );
                 }
                 return Column(
-                  children: bookings
+                  children: upcomingBookings
                       .map((b) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: ActiveBookingCard(booking: b),

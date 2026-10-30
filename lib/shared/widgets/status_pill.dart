@@ -182,8 +182,8 @@ class StatusPill extends StatelessWidget {
         text = label ?? context.l10n.statusDeclined;
         break;
       case StatusPillType.expired:
-        bg = context.themeAmberTint;
-        fg = context.themeAmberText;
+        bg = context.themeSoft;
+        fg = context.themeMuted;
         text = label ?? context.l10n.statusExpired;
         break;
       case StatusPillType.deleted:

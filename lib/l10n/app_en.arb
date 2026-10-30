@@ -793,6 +793,7 @@
   "quickReplyOnMyWay": "On my way, will be there soon.",
   "couldNotConnectChat": "Could not connect to chat",
   "couldNotLoadChat": "Could not load chat",
+  "couldNotOpenChat": "Could not open chat",
   "sendMsgToStartChat": "Send a message to start chatting",
   "typeMessage": "Type a message…",
   "@providerHired": {
@@ -3683,5 +3684,36 @@
     }
   },
   "categoryUpdated": "Service category updated successfully",
-  "locationMustBeInSriLanka": "Location must be in Sri Lanka"
+  "locationMustBeInSriLanka": "Location must be in Sri Lanka",
+  "categoryNotSetContactSupport": "Your service category is not set, contact support",
+  "allBookings": "All Bookings",
+  "bookingHistory": "Booking History",
+  "repostDailyLimitReached": "You reached today's repost limit, try again tomorrow",
+  "repostedFromEarlierPost": "Reposted from an earlier post",
+  "repostedBadge": "REPOSTED",
+  "repostOpenPostWithQuotesWarning": "This post has {count} quotes. Reposting will close them.",
+  "@repostOpenPostWithQuotesWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markArrivalFirst": "Please mark arrival first",
+  "confirmPriceWithCustomerFirst": "Please confirm the price with the customer first",
+  "networkErrorTryAgain": "Network error. Please check your connection and try again.",
+  "incorrectPinAttemptsUsed": "Incorrect PIN ({attempts} of {maxAttempts} attempts used)",
+  "@incorrectPinAttemptsUsed": {
+    "placeholders": {
+      "attempts": {
+        "type": "int"
+      },
+      "maxAttempts": {
+        "type": "int"
+      }
+    }
+  },
+  "tooManyWrongPins": "Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.",
+  "invalidFinalAmount": "Final amount must be greater than 0.",
+  "bookingOrJobNotFound": "Booking or job request not found."
 }

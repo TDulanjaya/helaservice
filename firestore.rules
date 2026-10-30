@@ -555,6 +555,27 @@ service cloud.firestore {
           (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 300));
       }
 
+      // check if write qualifies as a valid job renew
+      function isJobRenew(res, req) {
+        return req.status == 'open' &&
+          req.expiresAt is timestamp &&
+          req.expiresAt > request.time &&
+          req.get('renewedAt', null) == request.time &&
+          req.get('sortAt', null) == request.time &&
+          req.get('quoteCount', 0) == 0 &&
+          (
+            !('mediaDeletedAt' in res) ||
+            (
+              !('mediaDeletedAt' in req) &&
+              req.get('photos', []).size() == 0 &&
+              req.get('photoUrls', []).size() == 0 &&
+              !('video' in req) &&
+              !('videoUrl' in req)
+            )
+          ) &&
+          (res.status == 'expired' || (res.status == 'open' && (!('expiresAt' in res) || res.expiresAt <= request.time)));
+      }
+
       allow read: if isAuthenticated() && (
         resource.data.customerId == request.auth.uid ||
         isAdmin() ||
@@ -576,13 +597,22 @@ service cloud.firestore {
         !('directions' in request.resource.data) &&
         !('accuracyMeters' in request.resource.data) &&
         !('note' in request.resource.data) &&
+        // repost link: must be own post and not already reposted
+        (!('repostedFromId' in request.resource.data) || (
+          request.resource.data.repostedFromId is string &&
+          get(/databases/$(database)/documents/jobRequests/$(request.resource.data.repostedFromId)).data.customerId == request.auth.uid &&
+          !('repostedToId' in get(/databases/$(database)/documents/jobRequests/$(request.resource.data.repostedFromId)).data)
+        )) &&
+        (!('sortAt' in request.resource.data) || request.resource.data.sortAt == request.time) &&
         validJobPhotos(request.resource.data, request.auth.uid) &&
         validJobVideo(request.resource.data, request.auth.uid) &&
         validSchedule(request.resource.data);
       allow update: if isAdmin() ||
         (
           isUserActive() && resource.data.customerId == request.auth.uid &&
-          !changed().hasAny(['customerId', 'quoteCount', 'category']) &&
+          !changed().hasAny(['customerId', 'category']) &&
+          (!changed().hasAny(['quoteCount']) || isJobRenew(resource.data, request.resource.data)) &&
+          (!changed().hasAny(['sortAt']) || isJobRenew(resource.data, request.resource.data)) &&
           (!changed().hasAny(['latitude', 'longitude']) || resource.data.get('quoteCount', 0) == 0) &&
           !('customerPhone' in request.resource.data) &&
           !('address' in request.resource.data) &&
@@ -593,6 +623,14 @@ service cloud.firestore {
           !('directions' in request.resource.data) &&
           !('accuracyMeters' in request.resource.data) &&
           !('note' in request.resource.data) &&
+          // once set repost link cannot be modified or removed
+          request.resource.data.get('repostedFromId', null) == resource.data.get('repostedFromId', null) &&
+          (!('repostedToId' in resource.data) || request.resource.data.get('repostedToId', null) == resource.data.repostedToId) &&
+          (!('repostedToId' in request.resource.data) || ('repostedToId' in resource.data) || (
+            request.resource.data.repostedToId is string &&
+            existsAfter(/databases/$(database)/documents/jobRequests/$(request.resource.data.repostedToId)) &&
+            getAfter(/databases/$(database)/documents/jobRequests/$(request.resource.data.repostedToId)).data.repostedFromId == jobId
+          )) &&
           (!changed().hasAny(['photos']) || validJobPhotos(request.resource.data, resource.data.customerId)) &&
           (!changed().hasAny(['video']) || validJobVideo(request.resource.data, resource.data.customerId)) &&
           (
@@ -611,11 +649,8 @@ service cloud.firestore {
                         request.resource.data.status == 'expired' ||
                         (request.resource.data.status == 'deleted' && resource.data.get('quoteCount', 0) == 0) ||
                         (
-                          // Renew: expired -> open
-                          request.resource.data.status == 'open' &&
-                          !('mediaDeletedAt' in resource.data) &&
-                          request.resource.data.expiresAt is timestamp &&
-                          request.resource.data.expiresAt > request.time &&
+                          // renew: expired -> open
+                          isJobRenew(resource.data, request.resource.data) &&
                           !changed().hasAny(['latitude', 'longitude'])
                         )
                       )
@@ -682,7 +717,15 @@ service cloud.firestore {
           (
             (resource.data.status == 'pending_provider' && request.resource.data.status in ['assigned', 'cancelled', 'open', 'expired']) ||
             (resource.data.status == 'assigned' && request.resource.data.status in ['in_progress', 'cancelled', 'open', 'expired']) ||
-            (resource.data.status == 'in_progress' && request.resource.data.status == 'completed')
+            (
+              // provider completes job request in same batch as valid booking completion
+              resource.data.status in ['assigned', 'in_progress'] &&
+              request.resource.data.status == 'completed' &&
+              'bookingId' in resource.data &&
+              existsAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)) &&
+              getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.status == 'completed' &&
+              getAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.providerId == request.auth.uid
+            )
           ) &&
           (
             request.resource.data.status in ['open', 'expired']
@@ -765,6 +808,14 @@ service cloud.firestore {
             get(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'customerRespondedAt']) &&
             request.resource.data.status in ['accepted', 'declined', 'not_selected']
+          ) ||
+          (
+            // customer closes pending quotes in renew batch
+            getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.customerId == request.auth.uid &&
+            getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.status == 'open' &&
+            getAfter(/databases/$(database)/documents/jobRequests/$(jobId)).data.renewedAt == request.time &&
+            resource.data.status == 'pending' && request.resource.data.status == 'job_closed' &&
+            changed().hasOnly(['status', 'updatedAt'])
           ) ||
           (
             resource.data.providerId == request.auth.uid &&
@@ -1366,7 +1417,8 @@ service cloud.firestore {
     // chat rooms and messages
     match /chatRooms/{roomId} {
       allow read: if isAuthenticated() && (
-        request.auth.uid in resource.data.participants ||
+        request.auth.uid in roomId.split('_') ||
+        (resource != null && request.auth.uid in resource.data.participants) ||
         isAdmin()
       );
       allow create: if isUserActive() &&
@@ -1374,7 +1426,12 @@ service cloud.firestore {
         request.resource.data.participants is list &&
         request.resource.data.participants.size() == 2 &&
         request.auth.uid in request.resource.data.participants &&
-        !request.resource.data.participants.hasAny(['admin_support', 'admin']);
+        !request.resource.data.participants.hasAny(['admin_support', 'admin']) &&
+        roomId == (
+          request.resource.data.participants[0] < request.resource.data.participants[1]
+            ? request.resource.data.participants[0] + '_' + request.resource.data.participants[1]
+            : request.resource.data.participants[1] + '_' + request.resource.data.participants[0]
+        );
       allow update: if isAdmin() || (
         isUserActive() &&
         request.auth.uid in resource.data.participants &&

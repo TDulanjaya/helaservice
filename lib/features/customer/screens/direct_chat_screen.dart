@@ -48,8 +48,13 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   String? _chatRoomId;
   String _currentUserId = '';
   String _currentUserName = '';
+  Future<String>? _roomReady;
+  Stream<List<ChatMessageModel>>? _messagesStream;
   bool _isInitializing = true;
+  bool _initFailed = false;
   bool _isUploadingImage = false;
+  bool _hasRecoveredStream = false;
+  int _initEpoch = 0;
 
   final List<String> _quickReplies = const [
     'Where are you now?',
@@ -62,6 +67,13 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   bool get _isWithAdmin =>
       widget.otherPartyId == 'admin_support' ||
       widget.otherPartyRole?.toLowerCase() == 'admin';
+
+  // check if chat room is ready for messages
+  bool get _isChatReady =>
+      !_isInitializing &&
+      !_initFailed &&
+      _chatRoomId != null &&
+      _messagesStream != null;
 
   @override
   void initState() {
@@ -309,15 +321,91 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     );
   }
 
-  Future<void> _initChatRoom() async {
+  // initialize chat room with retry mechanism
+  Future<String> _initChatRoom() {
+    _initEpoch++;
+    final currentEpoch = _initEpoch;
+
+    setState(() {
+      _isInitializing = true;
+      _initFailed = false;
+      _messagesStream = null;
+      _hasRecoveredStream = false;
+    });
+
+    final future = _doInitChatRoomWithRetries(currentEpoch);
+    setState(() {
+      _roomReady = future;
+    });
+    return future;
+  }
+
+  // retry room setup up to 3 times before error
+  Future<String> _doInitChatRoomWithRetries(int epoch) async {
+    const maxRetries = 3;
+    const retryDelays = [
+      Duration(seconds: 1),
+      Duration(seconds: 2),
+      Duration(seconds: 4),
+    ];
+
+    int retry = 0;
+    while (true) {
+      if (!mounted || epoch != _initEpoch) {
+        throw Exception('Chat initialization superseded');
+      }
+      try {
+        final chatId = await _doInitChatRoom();
+        if (!mounted || epoch != _initEpoch) {
+          throw Exception('Chat initialization superseded');
+        }
+        setState(() {
+          _chatRoomId = chatId;
+          _messagesStream = _chatService.streamMessages(chatId);
+          _isInitializing = false;
+          _initFailed = false;
+        });
+        return chatId;
+      } catch (e) {
+        if (!mounted || epoch != _initEpoch) rethrow;
+        if (retry < maxRetries) {
+          final delay = retryDelays[retry];
+          retry++;
+          debugPrint(
+              '[DirectChatScreen] init failed (retry $retry/$maxRetries in ${delay.inSeconds}s): $e');
+          await Future.delayed(delay);
+          if (!mounted || epoch != _initEpoch) rethrow;
+        } else {
+          debugPrint(
+              '[DirectChatScreen] init failed after $maxRetries retries: $e');
+          if (mounted && epoch == _initEpoch) {
+            setState(() {
+              _isInitializing = false;
+              _initFailed = true;
+              _messagesStream = null;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.couldNotOpenChat),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          rethrow;
+        }
+      }
+    }
+  }
+
+  // fetch or create chat room document
+  Future<String> _doInitChatRoom() async {
     final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
     final currentUser = roleProvider.currentUser;
     final fbUser = FirebaseAuth.instance.currentUser;
     final uid = currentUser?.id ?? fbUser?.uid;
 
     if (uid == null || uid.isEmpty) {
-      if (mounted) setState(() => _isInitializing = false);
-      return;
+      throw Exception('User not authenticated');
     }
 
     _currentUserId = uid;
@@ -328,52 +416,87 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 ? fbUser!.displayName!
                 : context.l10n.roleCustomer);
 
-    // load cached id
-    final ids = [_currentUserId, widget.otherPartyId]..sort();
-    final deterministicChatId = '${ids[0]}_${ids[1]}';
-    if (mounted) {
-      setState(() {
-        _chatRoomId = deterministicChatId;
-        _isInitializing = false;
-      });
-    }
+    final user1Role = currentUser?.role == AppRole.provider
+        ? (currentUser?.serviceCategory?.isNotEmpty == true
+            ? CategoryService.instance
+                .nameOf(currentUser!.serviceCategory!, context: context)
+            : context.l10n.roleServiceProvider)
+        : context.l10n.roleCustomer;
 
+    final chatId = await _chatService.getOrCreateChatRoom(
+      userId1: _currentUserId,
+      userId2: widget.otherPartyId,
+      user1Name: _currentUserName,
+      user2Name: widget.otherPartyName,
+      jobRequestId: widget.jobRequestId,
+      user1Role: user1Role,
+      user2Role: widget.otherPartyRole,
+      user1Phone: currentUser?.phone,
+      user2Phone: widget.otherPartyPhone,
+    );
+
+    // mark room as read on entrance
+    await _chatService.markRoomAsRead(chatId, _currentUserId);
+
+    return chatId;
+  }
+
+  // recheck room and restore messages stream
+  Future<void> _recoverMessagesStream() async {
+    if (!mounted || _chatRoomId == null) return;
     try {
-      final chatId = await _chatService.getOrCreateChatRoom(
-        userId1: _currentUserId,
-        userId2: widget.otherPartyId,
-        user1Name: _currentUserName,
-        user2Name: widget.otherPartyName,
-        jobRequestId: widget.jobRequestId,
-        user1Role: currentUser?.role == AppRole.provider
-            ? (currentUser?.serviceCategory?.isNotEmpty == true
-                ? CategoryService.instance
-                    .nameOf(currentUser!.serviceCategory!, context: context)
-                : context.l10n.roleServiceProvider)
-            : context.l10n.roleCustomer,
-        user2Role: widget.otherPartyRole,
-        user1Phone: currentUser?.phone,
-        user2Phone: widget.otherPartyPhone,
-      );
-
-      if (mounted && _chatRoomId != chatId) {
+      final exists = await _chatService.checkRoomExists(_chatRoomId!);
+      if (exists && mounted) {
         setState(() {
-          _chatRoomId = chatId;
+          _messagesStream = _chatService.streamMessages(_chatRoomId!);
         });
-      }
-
-      // mark room as read on entrance
-      if (_chatRoomId != null) {
-        await _chatService.markRoomAsRead(_chatRoomId!, _currentUserId);
+      } else if (mounted) {
+        _initChatRoom();
       }
     } catch (e) {
-      debugPrint('Chat initialization warning: $e');
+      debugPrint('[DirectChatScreen] recover stream error: $e');
     }
+  }
+
+  // ensure room document is ready before sending
+  Future<String> _ensureRoomCreated() async {
+    final roleProvider = pv.Provider.of<RoleProvider>(context, listen: false);
+    final currentUser = roleProvider.currentUser;
+    final user1Role = currentUser?.role == AppRole.provider
+        ? (currentUser?.serviceCategory?.isNotEmpty == true
+            ? CategoryService.instance
+                .nameOf(currentUser!.serviceCategory!, context: context)
+            : context.l10n.roleServiceProvider)
+        : context.l10n.roleCustomer;
+
+    final chatId = await _chatService.getOrCreateChatRoom(
+      userId1: _currentUserId,
+      userId2: widget.otherPartyId,
+      user1Name: _currentUserName,
+      user2Name: widget.otherPartyName,
+      jobRequestId: widget.jobRequestId,
+      user1Role: user1Role,
+      user2Role: widget.otherPartyRole,
+      user1Phone: currentUser?.phone,
+      user2Phone: widget.otherPartyPhone,
+    );
+    if (mounted) {
+      setState(() {
+        _chatRoomId = chatId;
+        _messagesStream ??= _chatService.streamMessages(chatId);
+      });
+    }
+    return chatId;
   }
 
   // show photo picker sheet
   void _showImagePickerOptions(BuildContext context) {
-    if (_isUploadingImage || _chatRoomId == null) return;
+    if (_isUploadingImage ||
+        _chatRoomId == null ||
+        _isInitializing ||
+        _initFailed) {
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -437,7 +560,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
   // pick and upload photo message
   Future<void> _pickAndSendImage(ImageSource source) async {
-    if (_chatRoomId == null || _currentUserId.isEmpty) return;
+    if (_isUploadingImage) return;
 
     try {
       final picker = ImagePicker();
@@ -452,20 +575,42 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
       setState(() => _isUploadingImage = true);
 
+      if (_roomReady != null) {
+        await _roomReady;
+      }
+      if (_chatRoomId == null) {
+        throw const ChatRoomMissingException('');
+      }
+
       final bytes = await picked.readAsBytes();
-      await _chatService.sendImageMessage(
-        chatRoomId: _chatRoomId!,
-        senderId: _currentUserId,
-        senderName: _currentUserName,
-        imageInput: PickedAttachment(file: picked, bytes: bytes),
-      );
+      final attachment = PickedAttachment(file: picked, bytes: bytes);
+
+      try {
+        await _chatService.sendImageMessage(
+          chatRoomId: _chatRoomId!,
+          senderId: _currentUserId,
+          senderName: _currentUserName,
+          imageInput: attachment,
+        );
+      } on ChatRoomMissingException {
+        debugPrint('[DirectChatScreen] room missing on image send, recreating and retrying');
+        await _ensureRoomCreated();
+        await _chatService.sendImageMessage(
+          chatRoomId: _chatRoomId!,
+          senderId: _currentUserId,
+          senderName: _currentUserName,
+          imageInput: attachment,
+        );
+      }
 
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.failedToUploadImage),
+            content: Text(e is ChatRoomMissingException
+                ? context.l10n.couldNotOpenChat
+                : context.l10n.failedToUploadImage),
             backgroundColor: AppColors.error,
           ),
         );
@@ -484,19 +629,48 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
     super.dispose();
   }
 
-  void _sendMessage(String text) {
+  Future<void> _sendMessage(String text) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || _chatRoomId == null) return;
-
-    _chatService.sendMessage(
-      chatRoomId: _chatRoomId!,
-      senderId: _currentUserId,
-      senderName: _currentUserName,
-      text: trimmed,
-    );
+    if (trimmed.isEmpty) return;
 
     _textController.clear();
-    _scrollToBottom();
+    try {
+      if (_roomReady != null) {
+        await _roomReady;
+      }
+      if (_chatRoomId == null) {
+        throw const ChatRoomMissingException('');
+      }
+
+      try {
+        await _chatService.sendMessage(
+          chatRoomId: _chatRoomId!,
+          senderId: _currentUserId,
+          senderName: _currentUserName,
+          text: trimmed,
+        );
+      } on ChatRoomMissingException {
+        debugPrint('[DirectChatScreen] room missing, recreating and retrying send');
+        await _ensureRoomCreated();
+        await _chatService.sendMessage(
+          chatRoomId: _chatRoomId!,
+          senderId: _currentUserId,
+          senderName: _currentUserName,
+          text: trimmed,
+        );
+      }
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('[DirectChatScreen] send message error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.couldNotOpenChat),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _scrollToBottom() {
@@ -646,7 +820,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                 ],
               ),
             ),
-          if (!_isWithAdmin && widget.jobRequestId != null) ...[
+          if (!_isWithAdmin && widget.jobRequestId != null && _isChatReady) ...[
             const SizedBox(height: 6),
             SizedBox(
               height: 38,
@@ -697,7 +871,7 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_chatRoomId == null) {
+    if (_initFailed || _chatRoomId == null || _messagesStream == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -705,26 +879,99 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
+                color: AppColors.error.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.chat_bubble_outline,
-                  size: 38, color: AppColors.primary),
+              child: const Icon(Icons.error_outline,
+                  size: 38, color: AppColors.error),
             ),
             const SizedBox(height: 12),
-            Text(context.l10n.couldNotLoadChat,
-                style: TextStyle(color: context.themeTextSecondary)),
+            Text(context.l10n.couldNotOpenChat,
+                style: TextStyle(
+                  color: context.themeTextSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                )),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _initChatRoom,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text(context.l10n.retryAction),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ],
         ),
       );
     }
 
     return StreamBuilder<List<ChatMessageModel>>(
-      stream: _chatService.streamMessages(_chatRoomId!),
+      stream: _messagesStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          final isPermissionDenied = snapshot.error is FirebaseException &&
+              (snapshot.error as FirebaseException).code == 'permission-denied';
+
+          // re-subscribe once after confirming room exists
+          if (isPermissionDenied &&
+              !_hasRecoveredStream &&
+              _chatRoomId != null) {
+            _hasRecoveredStream = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _recoverMessagesStream();
+            });
+            return const Center(child: CircularProgressIndicator());
+          }
+
           SessionGuard.handlePermissionDenied(snapshot.error);
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.error_outline,
+                      size: 38, color: AppColors.error),
+                ),
+                const SizedBox(height: 12),
+                Text(context.l10n.couldNotOpenChat,
+                    style: TextStyle(
+                      color: context.themeTextSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    )),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _initChatRoom,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(context.l10n.retryAction),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
+
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
         final messages = snapshot.data ?? [];
 
         if (messages.isEmpty) {
@@ -782,6 +1029,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
   }
 
   Widget _buildInputBar(BuildContext context) {
+    final bool isInputDisabled = !_isChatReady;
+
     return Container(
       padding: EdgeInsets.only(
         left: 10,
@@ -797,19 +1046,22 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.camera_alt_outlined, size: 22),
-            color: context.themeTextSecondary,
+            color: isInputDisabled
+                ? context.themeMuted
+                : context.themeTextSecondary,
             tooltip: context.l10n.sendPhoto,
-            onPressed: _isUploadingImage
+            onPressed: (_isUploadingImage || isInputDisabled)
                 ? null
                 : () => _showImagePickerOptions(context),
           ),
           Expanded(
             child: TextField(
               controller: _textController,
+              enabled: !isInputDisabled,
               minLines: 1,
               maxLines: 3,
               textInputAction: TextInputAction.send,
-              onSubmitted: _sendMessage,
+              onSubmitted: isInputDisabled ? null : _sendMessage,
               style: TextStyle(color: context.themeTextPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: context.l10n.typeMessage,
@@ -826,6 +1078,11 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide(color: context.themeBorder),
                 ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(
+                      color: context.themeBorder.withValues(alpha: 0.5)),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide:
@@ -838,15 +1095,30 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
           Container(
             width: 46,
             height: 46,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary,
+              color: isInputDisabled
+                  ? context.themeSurfaceLow
+                  : AppColors.primary,
             ),
-            child: IconButton(
-              icon:
-                  const Icon(Icons.send, color: AppColors.onPrimary, size: 19),
-              onPressed: () => _sendMessage(_textController.text),
-            ),
+            child: _isInitializing
+                ? const Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(Icons.send,
+                        color: isInputDisabled
+                            ? context.themeMuted
+                            : AppColors.onPrimary,
+                        size: 19),
+                    onPressed: isInputDisabled
+                        ? null
+                        : () => _sendMessage(_textController.text),
+                  ),
           ),
         ],
       ),

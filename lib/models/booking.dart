@@ -729,4 +729,28 @@ class Booking {
       fallbackTime: time,
     );
   }
+
+  // sort upcoming by scheduled time first then created date
+  static int compareUpcoming(Booking a, Booking b) {
+    final aTime = a.scheduledStartAt ?? a.scheduledDate;
+    final bTime = b.scheduledStartAt ?? b.scheduledDate;
+    if (aTime != null && bTime != null) {
+      final cmp = aTime.compareTo(bTime);
+      if (cmp != 0) return cmp;
+    } else if (aTime != null) {
+      return -1;
+    } else if (bTime != null) {
+      return 1;
+    }
+    final aCreated = a.createdAt;
+    final bCreated = b.createdAt;
+    if (aCreated != null && bCreated != null) {
+      return aCreated.compareTo(bCreated);
+    } else if (aCreated != null) {
+      return -1;
+    } else if (bCreated != null) {
+      return 1;
+    }
+    return 0;
+  }
 }

@@ -39,9 +39,27 @@ class JobRequestRepository {
       (_customFirestore ?? FirebaseFirestore.instance)
           .collection(FirestorePaths.jobRequests);
 
-  Future<String> createJobRequest(JobRequest request) async {
+  Future<String> createJobRequest(JobRequest request,
+      {String? repostedFromId}) async {
     final docRef = _col.doc();
     final batch = FirebaseFirestore.instance.batch();
+
+    final sourceRepostId = (repostedFromId != null && repostedFromId.isNotEmpty)
+        ? repostedFromId
+        : request.repostedFromId;
+
+    // fetch old post data if this is a repost
+    Map<String, dynamic>? oldDocData;
+    if (sourceRepostId != null && sourceRepostId.isNotEmpty) {
+      try {
+        final oldSnap = await _col.doc(sourceRepostId).get();
+        if (oldSnap.exists) {
+          oldDocData = oldSnap.data();
+        }
+      } catch (e) {
+        debugPrint('[JobRequestRepo] fetch old post for repost error: $e');
+      }
+    }
 
     // public job request doc with rounded coordinates
     final publicData = request.toMap();
@@ -62,8 +80,31 @@ class JobRequestRepository {
       publicData['longitude'] =
           double.parse(request.longitude!.toStringAsFixed(2));
     }
+    if (sourceRepostId != null && sourceRepostId.isNotEmpty) {
+      publicData['repostedFromId'] = sourceRepostId;
+    }
+    publicData['sortAt'] = FieldValue.serverTimestamp();
+    publicData['quoteCount'] = 0;
 
     batch.set(docRef, publicData);
+
+    // link on old doc in the same batch
+    if (sourceRepostId != null && sourceRepostId.isNotEmpty) {
+      final oldStatus = oldDocData?['status'] as String? ?? '';
+      final oldUpdates = <String, dynamic>{
+        'repostedToId': docRef.id,
+        'repostedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      // no two open posts: if old post is still open, cancel it in the same batch
+      if (oldStatus == JobRequestStatus.open) {
+        oldUpdates['status'] = JobRequestStatus.cancelled;
+        oldUpdates['cancelledAt'] = FieldValue.serverTimestamp();
+        oldUpdates['cancelledBy'] = request.customerId;
+        oldUpdates['cancellationReason'] = 'reposted';
+      }
+      batch.update(_col.doc(sourceRepostId), oldUpdates);
+    }
 
     // private contact doc
     final contactRef = docRef.collection('private').doc('contact');
@@ -120,9 +161,12 @@ class JobRequestRepository {
 
   Stream<List<JobRequest>> streamOpenRequestsForCategory(String category,
       {int limit = 50}) {
+    final cat = category.trim();
+    if (cat.isEmpty) return Stream.value(const []);
     return _col
         .where('status', isEqualTo: JobRequestStatus.open)
-        .where('category', isEqualTo: category)
+        .where('category', isEqualTo: cat)
+        .orderBy('sortAt', descending: true)
         .limit(limit)
         .snapshots()
         .withSessionGuard()
@@ -130,8 +174,8 @@ class JobRequestRepository {
       final items =
           snap.docs.map((d) => JobRequest.fromMap(d.id, d.data())).toList();
       items.sort((a, b) =>
-          (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)));
-      return items;
+          (b.sortAt ?? b.createdAt ?? DateTime(0)).compareTo(a.sortAt ?? a.createdAt ?? DateTime(0)));
+      return items.where((req) => !req.isExpired).toList();
     });
   }
 
@@ -363,7 +407,7 @@ class JobRequestRepository {
     final directions =
         (contactData['directions'] as String?) ?? request.directions;
 
-    final pin = (100000 + Random().nextInt(900000)).toString();
+    final pin = (100000 + Random.secure().nextInt(900000)).toString();
 
     final batch = FirebaseFirestore.instance.batch();
     final bookingRef =
@@ -697,11 +741,17 @@ class JobRequestRepository {
       }
     }
 
+    final oldSnap = await docRef.get();
+    final oldData = oldSnap.data() ?? {};
+    final hasMediaDeleted = oldData.containsKey('mediaDeletedAt');
+
     final data = <String, dynamic>{
       'status': JobRequestStatus.open,
+      'quoteCount': 0,
       'scheduleMode': scheduleMode,
       'bookingType': scheduleMode == 'today' ? 'asap' : 'scheduled',
       'renewedAt': FieldValue.serverTimestamp(),
+      'sortAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'mediaWarningSentAt': FieldValue.delete(),
       'expiresAt': Timestamp.fromDate(resolvedExpiresAt),
@@ -730,12 +780,21 @@ class JobRequestRepository {
     } else {
       data['flexibleWindowDays'] = FieldValue.delete();
     }
-    if (sanitizedPhotos != null) {
-      data['photos'] = sanitizedPhotos.map((p) => p.toMap()).toList();
-      data['photoUrls'] = sanitizedPhotos.map((p) => p.url).toList();
-    }
-    if (dropVideo) {
+    // clear media references if cleanup removed them
+    if (hasMediaDeleted) {
+      data['photos'] = const [];
+      data['photoUrls'] = const [];
       data['video'] = FieldValue.delete();
+      data['videoUrl'] = FieldValue.delete();
+      data['mediaDeletedAt'] = FieldValue.delete();
+    } else {
+      if (sanitizedPhotos != null) {
+        data['photos'] = sanitizedPhotos.map((p) => p.toMap()).toList();
+        data['photoUrls'] = sanitizedPhotos.map((p) => p.url).toList();
+      }
+      if (dropVideo) {
+        data['video'] = FieldValue.delete();
+      }
     }
 
     if (kDebugMode) {
@@ -745,7 +804,21 @@ class JobRequestRepository {
       });
     }
 
-    await docRef.update(data);
+    // close pending quotes and update post in one batch
+    final quotesSnap = await docRef
+        .collection('quotes')
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    final batch = (_customFirestore ?? FirebaseFirestore.instance).batch();
+    for (final qDoc in quotesSnap.docs) {
+      batch.update(qDoc.reference, {
+        'status': 'job_closed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    batch.update(docRef, data);
+    await batch.commit();
 
     unawaited(
       NotificationService.instance

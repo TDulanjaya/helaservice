@@ -4078,6 +4078,12 @@ abstract class AppLocalizations {
   /// **'Could not load chat'**
   String get couldNotLoadChat;
 
+  /// No description provided for @couldNotOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open chat'**
+  String get couldNotOpenChat;
+
   /// No description provided for @sendMsgToStartChat.
   ///
   /// In en, this message translates to:
@@ -13259,6 +13265,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location must be in Sri Lanka'**
   String get locationMustBeInSriLanka;
+
+  /// No description provided for @categoryNotSetContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Your service category is not set, contact support'**
+  String get categoryNotSetContactSupport;
+
+  /// No description provided for @allBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'All Bookings'**
+  String get allBookings;
+
+  /// No description provided for @bookingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking History'**
+  String get bookingHistory;
+
+  /// No description provided for @repostDailyLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached today\'s repost limit, try again tomorrow'**
+  String get repostDailyLimitReached;
+
+  /// No description provided for @repostedFromEarlierPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Reposted from an earlier post'**
+  String get repostedFromEarlierPost;
+
+  /// No description provided for @repostedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'REPOSTED'**
+  String get repostedBadge;
+
+  /// No description provided for @repostOpenPostWithQuotesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This post has {count} quotes. Reposting will close them.'**
+  String repostOpenPostWithQuotesWarning(int count);
+
+  /// No description provided for @markArrivalFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please mark arrival first'**
+  String get markArrivalFirst;
+
+  /// No description provided for @confirmPriceWithCustomerFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm the price with the customer first'**
+  String get confirmPriceWithCustomerFirst;
+
+  /// No description provided for @networkErrorTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Please check your connection and try again.'**
+  String get networkErrorTryAgain;
+
+  /// No description provided for @incorrectPinAttemptsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN ({attempts} of {maxAttempts} attempts used)'**
+  String incorrectPinAttemptsUsed(int attempts, int maxAttempts);
+
+  /// No description provided for @tooManyWrongPins.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.'**
+  String get tooManyWrongPins;
+
+  /// No description provided for @invalidFinalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Final amount must be greater than 0.'**
+  String get invalidFinalAmount;
+
+  /// No description provided for @bookingOrJobNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking or job request not found.'**
+  String get bookingOrJobNotFound;
 }
 
 class _AppLocalizationsDelegate

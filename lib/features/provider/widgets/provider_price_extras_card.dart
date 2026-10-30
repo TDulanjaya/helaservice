@@ -4,6 +4,7 @@ import '../../../models/booking.dart';
 import '../../../models/booking_extra.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../utils/l10n_extension.dart';
+import '../../../constants/job_status.dart';
 
 class ProviderPriceExtrasCard extends StatelessWidget {
   final String bookingId;
@@ -721,6 +722,14 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                         });
                         return;
                       }
+                      // pre-flight check: booking must be in progress
+                      if (b.status != JobStatus.inProgress) {
+                        setDialogState(() {
+                          errorMessage = context.l10n.markArrivalFirst;
+                        });
+                        return;
+                      }
+
                       setDialogState(() {
                         isSubmitting = true;
                         errorMessage = null;
@@ -747,8 +756,27 @@ class ProviderPriceExtrasCard extends StatelessWidget {
                       } else {
                         setDialogState(() {
                           isSubmitting = false;
-                          errorMessage = result.errorMessage ??
-                              context.l10n.somethingWentWrong;
+                          if (result.errorCode == 'not_in_progress') {
+                            errorMessage = context.l10n.markArrivalFirst;
+                          } else if (result.errorCode == 'price_not_confirmed') {
+                            errorMessage =
+                                context.l10n.confirmPriceWithCustomerFirst;
+                          } else if (result.errorCode == 'network_error') {
+                            errorMessage = context.l10n.networkErrorTryAgain;
+                          } else if (result.errorCode == 'too_many_attempts') {
+                            errorMessage = context.l10n.tooManyWrongPins;
+                          } else if (result.errorCode == 'invalid_amount') {
+                            errorMessage = context.l10n.invalidFinalAmount;
+                          } else if (result.errorCode == 'invalid_id' ||
+                              result.errorCode == 'not_found') {
+                            errorMessage = context.l10n.bookingOrJobNotFound;
+                          } else if (result.errorCode == 'incorrect_pin') {
+                            errorMessage = context.l10n
+                                .incorrectPinAttemptsUsed(result.attempts, 5);
+                          } else {
+                            errorMessage = result.errorMessage ??
+                                context.l10n.somethingWentWrong;
+                          }
                         });
                       }
                     },

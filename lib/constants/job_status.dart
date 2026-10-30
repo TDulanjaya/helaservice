@@ -21,6 +21,13 @@ class JobStatus {
 
   static bool isActive(String status) =>
       status == confirmed || status == enRoute || status == inProgress;
+
+  // check if booking is in upcoming active state
+  static bool isUpcoming(String status) =>
+      status == pending ||
+      status == confirmed ||
+      status == enRoute ||
+      status == inProgress;
 }
 
 class JobRequestStatus {

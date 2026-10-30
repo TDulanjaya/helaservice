@@ -2118,6 +2118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotLoadChat => 'Could not load chat';
 
   @override
+  String get couldNotOpenChat => 'Could not open chat';
+
+  @override
   String get sendMsgToStartChat => 'Send a message to start chatting';
 
   @override
@@ -7352,4 +7355,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get locationMustBeInSriLanka => 'Location must be in Sri Lanka';
+
+  @override
+  String get categoryNotSetContactSupport =>
+      'Your service category is not set, contact support';
+
+  @override
+  String get allBookings => 'All Bookings';
+
+  @override
+  String get bookingHistory => 'Booking History';
+
+  @override
+  String get repostDailyLimitReached =>
+      'You reached today\'s repost limit, try again tomorrow';
+
+  @override
+  String get repostedFromEarlierPost => 'Reposted from an earlier post';
+
+  @override
+  String get repostedBadge => 'REPOSTED';
+
+  @override
+  String repostOpenPostWithQuotesWarning(int count) {
+    return 'This post has $count quotes. Reposting will close them.';
+  }
+
+  @override
+  String get markArrivalFirst => 'Please mark arrival first';
+
+  @override
+  String get confirmPriceWithCustomerFirst =>
+      'Please confirm the price with the customer first';
+
+  @override
+  String get networkErrorTryAgain =>
+      'Network error. Please check your connection and try again.';
+
+  @override
+  String incorrectPinAttemptsUsed(int attempts, int maxAttempts) {
+    return 'Incorrect PIN ($attempts of $maxAttempts attempts used)';
+  }
+
+  @override
+  String get tooManyWrongPins =>
+      'Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.';
+
+  @override
+  String get invalidFinalAmount => 'Final amount must be greater than 0.';
+
+  @override
+  String get bookingOrJobNotFound => 'Booking or job request not found.';
 }

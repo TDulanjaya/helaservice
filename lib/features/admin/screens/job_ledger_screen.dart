@@ -1494,21 +1494,48 @@ class _JobLedgerScreenState extends State<JobLedgerScreen> {
                   ),
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  req.status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // show reposted badge if linked to another post
+                  if (req.repostedToId != null &&
+                      req.repostedToId!.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        color: context.themeSoft,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: context.themeBorder),
+                      ),
+                      child: Text(
+                        context.l10n.repostedBadge,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: context.themeTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      req.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

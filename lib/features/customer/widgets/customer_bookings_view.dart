@@ -186,8 +186,10 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
         }
 
         final bookings = snapshot.data ?? [];
+        // filter upcoming bookings and sort by schedule
         final activeBookings =
-            bookings.where((b) => !JobStatus.isTerminal(b.status)).toList();
+            bookings.where((b) => JobStatus.isUpcoming(b.status)).toList()
+              ..sort(Booking.compareUpcoming);
 
         if (activeBookings.isEmpty) {
           return Center(
@@ -603,7 +605,8 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
                   ),
                 ),
               ],
-              if (JobStatus.canCancel(b.status) || b.status == JobStatus.inProgress) ...[
+              if (JobStatus.canCancel(b.status) ||
+                  b.status == JobStatus.inProgress) ...[
                 const SizedBox(width: 8),
                 IconSquareButton(
                   icon: Icons.close_rounded,
@@ -902,8 +905,13 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
 
         final allRequests = snapshot.data ?? [];
         // show open and bidding jobs
+        // hide open requests that have already been reposted
         final openRequests =
-            allRequests.where((r) => r.status == 'open').toList();
+            allRequests
+                .where((r) =>
+                    r.status == 'open' &&
+                    (r.repostedToId == null || r.repostedToId!.isEmpty))
+                .toList();
 
         if (openRequests.isEmpty) {
           return Center(
@@ -1027,9 +1035,11 @@ class _CustomerBookingsViewState extends State<CustomerBookingsView> {
 
             final allRequests = jobSnap.data ?? [];
             final closedJobs = allRequests
+                // exclude history jobs that were already reposted
                 .where((r) =>
                     !r.becameBooking &&
                     !r.hiddenByCustomer &&
+                    (r.repostedToId == null || r.repostedToId!.isEmpty) &&
                     ((r.status == 'expired' || r.status == 'cancelled') ||
                         (r.status == 'deleted' &&
                             r.deletedAt != null &&
@@ -1803,6 +1813,26 @@ class _CustomerJobRequestCard extends StatelessWidget {
               ),
             ),
           ],
+          // show note if post was reposted from earlier request
+          if (request.repostedFromId != null &&
+              request.repostedFromId!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.history_rounded,
+                    size: 13, color: context.themeTextSecondary),
+                const SizedBox(width: 4),
+                Text(
+                  context.l10n.repostedFromEarlierPost,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: context.themeTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (request.photoUrls.isNotEmpty ||
               (request.videoUrl != null && request.videoUrl!.isNotEmpty)) ...[
             const SizedBox(height: 10),
@@ -1904,31 +1934,51 @@ class _CustomerJobRequestCard extends StatelessWidget {
                         ),
                       );
 
-                      final deleteBtn = OutlinedButton.icon(
-                        onPressed: () => request.canDelete
-                            ? _deleteJobPost(context)
-                            : _cancelJob(context),
-                        icon: Icon(
-                          request.canDelete
-                              ? Icons.delete_outline
-                              : Icons.cancel_outlined,
-                          size: 16,
-                          color: AppColors.error,
-                        ),
-                        label: Text(
-                          request.canDelete
-                              ? context.l10n.deleteJobPost
-                              : context.l10n.cancelJobTitle,
-                          style: const TextStyle(color: AppColors.error),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.error),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
+                      // show repost for expired posts otherwise cancel or delete
+                      final secondBtn = request.isExpired
+                          ? ElevatedButton.icon(
+                              onPressed: () => JobRepostSheet.show(
+                                context,
+                                request: request,
+                              ),
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: Text(context.l10n.repost),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            )
+                          : OutlinedButton.icon(
+                              onPressed: () => request.canDelete
+                                  ? _deleteJobPost(context)
+                                  : _cancelJob(context),
+                              icon: Icon(
+                                request.canDelete
+                                    ? Icons.delete_outline
+                                    : Icons.cancel_outlined,
+                                size: 16,
+                                color: AppColors.error,
+                              ),
+                              label: Text(
+                                request.canDelete
+                                    ? context.l10n.deleteJobPost
+                                    : context.l10n.cancelJobTitle,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.error),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            );
 
                       // stack buttons when narrow
                       if (constraints.maxWidth < 360) {
@@ -1936,7 +1986,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
                           children: [
                             SizedBox(width: double.infinity, child: editBtn),
                             const SizedBox(height: 8),
-                            SizedBox(width: double.infinity, child: deleteBtn),
+                            SizedBox(width: double.infinity, child: secondBtn),
                           ],
                         );
                       }
@@ -1944,7 +1994,7 @@ class _CustomerJobRequestCard extends StatelessWidget {
                         children: [
                           Expanded(child: editBtn),
                           const SizedBox(width: 8),
-                          Expanded(child: deleteBtn),
+                          Expanded(child: secondBtn),
                         ],
                       );
                     },

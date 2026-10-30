@@ -2170,6 +2170,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get couldNotLoadChat => 'அரட்டையை ஏற்ற முடியவில்லை';
 
   @override
+  String get couldNotOpenChat => 'அரட்டையைத் திறக்க முடியவில்லை';
+
+  @override
   String get sendMsgToStartChat => 'அரட்டையைத் தொடங்க செய்தி அனுப்பவும்';
 
   @override
@@ -7533,4 +7536,58 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get locationMustBeInSriLanka => 'இடம் இலங்கைக்குள் இருக்க வேண்டும்';
+
+  @override
+  String get categoryNotSetContactSupport =>
+      'உங்கள் சேவை பிரிவு அமைக்கப்படவில்லை, ஆதரவைத் தொடர்பு கொள்ளவும்';
+
+  @override
+  String get allBookings => 'அனைத்து முன்பதிவுகளும்';
+
+  @override
+  String get bookingHistory => 'முன்பதிவு வரலாறு';
+
+  @override
+  String get repostDailyLimitReached =>
+      'இன்றைய மறுபதிவு வரம்பை அடைந்துவிட்டீர்கள், நாளை மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get repostedFromEarlierPost =>
+      'முந்தைய பதிவிலிருந்து மீண்டும் பதிவிடப்பட்டது';
+
+  @override
+  String get repostedBadge => 'மீண்டும் பதிவிடப்பட்டது';
+
+  @override
+  String repostOpenPostWithQuotesWarning(int count) {
+    return 'இந்த இடுகையில் $count விலைப்புள்ளிகள் உள்ளன. மீண்டும் பதிவிடுவது அவற்றை மூடிவிடும்.';
+  }
+
+  @override
+  String get markArrivalFirst => 'முதலில் வருகையைப் பதிவுசெய்யவும்';
+
+  @override
+  String get confirmPriceWithCustomerFirst =>
+      'முதலில் வாடிக்கையாளருடன் கட்டணத்தை உறுதிப்படுத்தவும்';
+
+  @override
+  String get networkErrorTryAgain =>
+      'பிணையப் பிழை. உங்கள் இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.';
+
+  @override
+  String incorrectPinAttemptsUsed(int attempts, int maxAttempts) {
+    return 'தவறான PIN ($maxAttempts இல் $attempts முறை பயன்படுத்தப்பட்டது)';
+  }
+
+  @override
+  String get tooManyWrongPins =>
+      'அதிக தவறான PIN முயற்சிகள். வாடிக்கையாளரிடம் தங்கள் முன்பதிவில் PIN முயற்சிகளை மீட்டமைக்கக் கேட்கவும்.';
+
+  @override
+  String get invalidFinalAmount =>
+      'இறுதித் தொகை 0 ஐ விட அதிகமாக இருக்க வேண்டும்.';
+
+  @override
+  String get bookingOrJobNotFound =>
+      'முன்பதிவு அல்லது பணி கோரிக்கை காணப்படவில்லை.';
 }

@@ -2114,6 +2114,9 @@ class AppLocalizationsSi extends AppLocalizations {
   String get couldNotLoadChat => 'චැට් එක පෙන්වීමට නොහැකි විය';
 
   @override
+  String get couldNotOpenChat => 'චැට් විවෘත කිරීමට නොහැකි විය';
+
+  @override
   String get sendMsgToStartChat => 'සංවාදය ආරම්භ කිරීමට පණිවිඩයක් එවන්න';
 
   @override
@@ -7365,4 +7368,55 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get locationMustBeInSriLanka => 'ස්ථානය ශ්‍රී ලංකාව තුළ තිබිය යුතුය';
+
+  @override
+  String get categoryNotSetContactSupport =>
+      'ඔබේ සේවා කාණ්ඩය සකසා නැත, සහය අංශය අමතන්න';
+
+  @override
+  String get allBookings => 'සියලුම වෙන්කිරීම්';
+
+  @override
+  String get bookingHistory => 'වෙන්කිරීම් ඉතිහාසය';
+
+  @override
+  String get repostDailyLimitReached =>
+      'ඔබ අද දිනට නියමිත නැවත පළකිරීම් සීමාවට ළඟා වී ඇත, හෙට නැවත උත්සාහ කරන්න';
+
+  @override
+  String get repostedFromEarlierPost => 'පෙර දැන්වීමකින් නැවත පළ කරන ලදී';
+
+  @override
+  String get repostedBadge => 'නැවත පළ කළ';
+
+  @override
+  String repostOpenPostWithQuotesWarning(int count) {
+    return 'මෙම දැන්වීමට මිල ගණන් $countක් ලැබී ඇත. නැවත පළ කිරීමෙන් ඒවා වැසී යනු ඇත.';
+  }
+
+  @override
+  String get markArrivalFirst => 'කරුණාකර පළමුව පැමිණීම සටහන් කරන්න';
+
+  @override
+  String get confirmPriceWithCustomerFirst =>
+      'කරුණාකර පළමුව පාරිභෝගිකයා සමඟ මිල තහවුරු කරන්න';
+
+  @override
+  String get networkErrorTryAgain =>
+      'සම්බන්ධතා දෝෂයකි. කරුණාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
+
+  @override
+  String incorrectPinAttemptsUsed(int attempts, int maxAttempts) {
+    return 'වැරදි PIN අංකයකි ($maxAttempts න් $attempts ක් භාවිතා කර ඇත)';
+  }
+
+  @override
+  String get tooManyWrongPins =>
+      'වැරදි PIN අංක උත්සාහයන් වැඩිය. කරුණාකර පාරිභෝගිකයාගෙන් ඔවුන්ගේ වෙන්කිරීමෙන් PIN උත්සාහයන් යළි සකසන ලෙස ඉල්ලන්න.';
+
+  @override
+  String get invalidFinalAmount => 'අවසාන මුදල 0 ට වඩා වැඩි විය යුතුය.';
+
+  @override
+  String get bookingOrJobNotFound => 'වෙන්කිරීම හෝ සේවා ඉල්ලීම හමු නොවීය.';
 }

@@ -16,10 +16,12 @@ class PinVerificationResult {
   final bool success;
   final int attempts;
   final String? errorMessage;
+  final String? errorCode;
   const PinVerificationResult({
     required this.success,
     this.attempts = 0,
     this.errorMessage,
+    this.errorCode,
   });
 }
 
@@ -91,7 +93,7 @@ class BookingRepository {
   Future<String> createBooking(Booking booking) async {
     final currentUid =
         FirebaseAuth.instance.currentUser?.uid ?? booking.customerId;
-    final pin = (100000 + Random().nextInt(900000)).toString();
+    final pin = (100000 + Random.secure().nextInt(900000)).toString();
 
     final batch = FirebaseFirestore.instance.batch();
     final bookingRef = _col.doc();
@@ -621,25 +623,119 @@ class BookingRepository {
     if (cleanPin.length != 6 && cleanPin.length != 4) {
       return const PinVerificationResult(
         success: false,
+        errorCode: 'invalid_pin_length',
         errorMessage: 'PIN must be 6 digits.',
       );
     }
 
     try {
+      if (bookingId.trim().isEmpty) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'invalid_id',
+          errorMessage: 'Booking or job request not found.',
+        );
+      }
+
       final docSnap = await _col.doc(bookingId).get();
       if (!docSnap.exists) {
         return const PinVerificationResult(
           success: false,
-          errorMessage: 'Booking not found.',
+          errorCode: 'not_found',
+          errorMessage: 'Booking or job request not found.',
+        );
+      }
+
+      final bookingMap = docSnap.data() ?? {};
+
+      // pre-flight: booking must be in_progress
+      final bookingStatus = bookingMap['status'] as String? ?? '';
+      if (bookingStatus != JobStatus.inProgress) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'not_in_progress',
+          errorMessage: 'Please mark arrival first',
+        );
+      }
+
+      // pre-flight: job request id must exist
+      final effectiveJobRequestId = (jobRequestId != null && jobRequestId.trim().isNotEmpty)
+          ? jobRequestId.trim()
+          : (bookingMap['jobRequestId'] as String?)?.trim() ?? '';
+      if (effectiveJobRequestId.isEmpty) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'invalid_id',
+          errorMessage: 'Booking or job request not found.',
+        );
+      }
+
+      // pre-flight: check job request exists
+      final jobSnap = await FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc(effectiveJobRequestId)
+          .get();
+      if (!jobSnap.exists) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'invalid_id',
+          errorMessage: 'Booking or job request not found.',
+        );
+      }
+
+      // pre-flight: price must be approved for estimate / inspect
+      final quoteType = bookingMap['quoteType'] as String? ?? '';
+      final priceStatus = bookingMap['priceStatus'] as String? ?? '';
+      final hasPriceStatus = bookingMap.containsKey('priceStatus');
+
+      if ((quoteType == 'estimate' || quoteType == 'inspect') &&
+          completionType != 'visit_only' &&
+          priceStatus != 'approved') {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'price_not_confirmed',
+          errorMessage: 'Please confirm the price with the customer first',
+        );
+      }
+
+      // pre-flight: final amount must be an integer > 0
+      int intFinalAmount = 0;
+      if (hasPriceStatus) {
+        if (completionType == 'visit_only') {
+          final visitFee = (bookingMap['visitFeeLkr'] as num?)?.round() ??
+              (bookingMap['agreedPrice'] as num?)?.round() ??
+              0;
+          intFinalAmount = visitFee;
+        } else {
+          final approvedTotal =
+              (bookingMap['approvedTotalLkr'] as num?)?.round() ??
+                  (bookingMap['agreedPrice'] as num?)?.round() ??
+                  0;
+          intFinalAmount = approvedTotal;
+        }
+      } else {
+        if (finalAmount != null && finalAmount > 0) {
+          intFinalAmount = finalAmount.round();
+        } else {
+          intFinalAmount = (bookingMap['agreedPrice'] as num?)?.round() ?? 0;
+        }
+      }
+
+      if (intFinalAmount <= 0) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'invalid_amount',
+          errorMessage: 'Final amount must be greater than 0.',
         );
       }
 
       final currentAttempts =
-          (docSnap.data()?['pinAttempts'] as num?)?.toInt() ?? 0;
+          (bookingMap['pinAttempts'] as num?)?.toInt() ?? 0;
       if (currentAttempts >= 5) {
         return const PinVerificationResult(
           success: false,
           attempts: 5,
+          errorCode: 'too_many_attempts',
           errorMessage:
               'Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.',
         );
@@ -653,9 +749,6 @@ class BookingRepository {
       // send completion update
       final batch = FirebaseFirestore.instance.batch();
 
-      final bookingMap = docSnap.data() ?? {};
-      final hasPriceStatus = bookingMap.containsKey('priceStatus');
-
       final updateData = <String, dynamic>{
         'status': JobStatus.completed,
         'enteredPin': cleanPin,
@@ -666,21 +759,10 @@ class BookingRepository {
 
       if (hasPriceStatus) {
         updateData['completionType'] = completionType;
-        if (completionType == 'visit_only') {
-          final visitFee = (bookingMap['visitFeeLkr'] as num?)?.toDouble() ??
-              (bookingMap['agreedPrice'] as num?)?.toDouble() ??
-              0.0;
-          updateData['finalAmount'] = visitFee;
-        } else {
-          final approvedTotal =
-              (bookingMap['approvedTotalLkr'] as num?)?.toDouble() ??
-                  (bookingMap['agreedPrice'] as num?)?.toDouble() ??
-                  0.0;
-          updateData['finalAmount'] = approvedTotal;
-        }
+        updateData['finalAmount'] = intFinalAmount;
       } else {
-        if (finalAmount != null && finalAmount > 0) {
-          updateData['finalAmount'] = finalAmount;
+        if (intFinalAmount > 0) {
+          updateData['finalAmount'] = intFinalAmount;
         }
       }
 
@@ -690,16 +772,13 @@ class BookingRepository {
 
       batch.update(_col.doc(bookingId), updateData);
 
-      final reqId = jobRequestId;
-      if (reqId != null && reqId.isNotEmpty) {
-        final reqRef = FirebaseFirestore.instance
-            .collection(FirestorePaths.jobRequests)
-            .doc(reqId);
-        batch.update(reqRef, {
-          'status': JobRequestStatus.completed,
-          'completedAt': FieldValue.serverTimestamp(),
-        });
-      }
+      final reqRef = FirebaseFirestore.instance
+          .collection(FirestorePaths.jobRequests)
+          .doc(effectiveJobRequestId);
+      batch.update(reqRef, {
+        'status': JobRequestStatus.completed,
+        'completedAt': FieldValue.serverTimestamp(),
+      });
 
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
       final action =
@@ -707,12 +786,8 @@ class BookingRepository {
       final title =
           completionType == 'visit_only' ? 'Visit Completed' : 'Job Completed';
       final description = completionType == 'visit_only'
-          ? (finalAmount != null
-              ? 'Visit fee collected: LKR ${finalAmount.toStringAsFixed(0)}'
-              : 'Visit finished and verified with PIN')
-          : (finalAmount != null
-              ? 'Work finished. Cash collected: LKR ${finalAmount.toStringAsFixed(0)}'
-              : 'Work finished and verified with PIN');
+          ? 'Visit fee collected: LKR $intFinalAmount'
+          : 'Work finished. Cash collected: LKR $intFinalAmount';
       addTimelineEventToBatch(
         batch: batch,
         bookingId: bookingId,
@@ -722,7 +797,7 @@ class BookingRepository {
         actorUid: uid,
         actorRole: 'provider',
         metadata: {
-          if (finalAmount != null) 'finalAmount': finalAmount,
+          'finalAmount': intFinalAmount,
           if (paymentNote != null) 'paymentNote': paymentNote,
         },
       );
@@ -738,6 +813,17 @@ class BookingRepository {
       return PinVerificationResult(success: true, attempts: newAttempts);
     } catch (e) {
       debugPrint('[BookingRepository] Complete job error (PIN check): $e');
+
+      if (e is FirebaseException &&
+          (e.code == 'unavailable' || e.code == 'deadline-exceeded')) {
+        return const PinVerificationResult(
+          success: false,
+          errorCode: 'network_error',
+          errorMessage:
+              'Network error. Please check your connection and try again.',
+        );
+      }
+
       int attempts = 1;
       try {
         final snap = await _col.doc(bookingId).get();
@@ -748,6 +834,7 @@ class BookingRepository {
         return const PinVerificationResult(
           success: false,
           attempts: 5,
+          errorCode: 'too_many_attempts',
           errorMessage:
               'Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.',
         );
@@ -755,6 +842,7 @@ class BookingRepository {
       return PinVerificationResult(
         success: false,
         attempts: attempts,
+        errorCode: 'incorrect_pin',
         errorMessage: 'Incorrect PIN ($attempts of 5 attempts used)',
       );
     }

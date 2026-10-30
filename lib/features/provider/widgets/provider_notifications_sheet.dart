@@ -14,7 +14,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/screens/conversations_inbox_screen.dart';
 
-class ProviderNotificationsSheet extends StatelessWidget {
+class ProviderNotificationsSheet extends StatefulWidget {
   const ProviderNotificationsSheet({super.key});
 
   static void show(BuildContext context) {
@@ -27,11 +27,98 @@ class ProviderNotificationsSheet extends StatelessWidget {
   }
 
   @override
+  State<ProviderNotificationsSheet> createState() =>
+      _ProviderNotificationsSheetState();
+}
+
+class _ProviderNotificationsSheetState
+    extends State<ProviderNotificationsSheet> {
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _techStream;
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _queueStream;
+  Stream<List<Quote>>? _quotesStream;
+  Stream<List<JobRequest>>? _jobsStream;
+  String? _currentCategory;
+  List<JobRequest> _lastJobs = const [];
+  List<Quote> _lastQuotes = const [];
+  String? _initializedUid;
+
+  // setup notification streams for technician
+  void _initStreams(String uid) {
+    if (uid.isEmpty) {
+      _techStream = null;
+      _queueStream = null;
+      _quotesStream = null;
+      _jobsStream = null;
+      _currentCategory = null;
+      _initializedUid = null;
+      return;
+    }
+    _initializedUid = uid;
+    _techStream = FirebaseFirestore.instance
+        .collection(FirestorePaths.technicians)
+        .doc(uid)
+        .snapshots()
+        .distinct((prev, next) {
+      final dPrev = prev.data();
+      final dNext = next.data();
+      if (dPrev == null && dNext == null) return true;
+      if (dPrev == null || dNext == null) return false;
+      return dPrev['nicVerified'] == dNext['nicVerified'] &&
+          dPrev['isVerified'] == dNext['isVerified'] &&
+          (dPrev['category'] as String?)?.trim() ==
+              (dNext['category'] as String?)?.trim();
+    }).asBroadcastStream();
+
+    _queueStream = FirebaseFirestore.instance
+        .collection(FirestorePaths.verificationQueue)
+        .doc(uid)
+        .snapshots()
+        .distinct((prev, next) {
+      return prev.data()?['status'] == next.data()?['status'];
+    }).asBroadcastStream();
+
+    _quotesStream = JobRequestRepository()
+        .streamProviderQuotes(uid)
+        .asBroadcastStream();
+  }
+
+  // update jobs stream when category changes
+  void _updateJobsStream(String category) {
+    final cat = category.trim();
+    if (cat.isEmpty) {
+      if (_currentCategory != null || _jobsStream != null) {
+        _currentCategory = null;
+        _jobsStream = null;
+        _lastJobs = const [];
+      }
+      return;
+    }
+    if (_jobsStream == null || _currentCategory != cat) {
+      _currentCategory = cat;
+      _lastJobs = const [];
+      _jobsStream = JobRequestRepository()
+          .streamOpenRequestsForCategory(cat)
+          .asBroadcastStream();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      _initStreams(uid);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
     final user = roleProvider.currentUser;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? (user?.id ?? '');
-    final category = user?.serviceCategory ?? '';
+    if (_techStream == null || _initializedUid != uid) {
+      _initStreams(uid);
+    }
 
     return Container(
       constraints: BoxConstraints(
@@ -110,16 +197,16 @@ class ProviderNotificationsSheet extends StatelessWidget {
             // notification list
             Expanded(
               child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection(FirestorePaths.technicians)
-                    .doc(uid)
-                    .snapshots(),
+                stream: _techStream,
                 builder: (context, techSnap) {
+                  if (techSnap.connectionState == ConnectionState.waiting &&
+                      !techSnap.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    );
+                  }
                   return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection(FirestorePaths.verificationQueue)
-                        .doc(uid)
-                        .snapshots(),
+                    stream: _queueStream,
                     builder: (context, queueSnap) {
                       final techData = techSnap.data?.data();
                       final queueData = queueSnap.data?.data();
@@ -131,21 +218,31 @@ class ProviderNotificationsSheet extends StatelessWidget {
                               queueStatus == 'approved';
 
                       return StreamBuilder<List<Quote>>(
-                        stream:
-                            JobRequestRepository().streamProviderQuotes(uid),
+                        stream: _quotesStream,
+                        initialData:
+                            _lastQuotes.isNotEmpty ? _lastQuotes : null,
                         builder: (context, quotesSnap) {
-                          final quotes = quotesSnap.data ?? [];
+                          if (quotesSnap.hasData && quotesSnap.data != null) {
+                            _lastQuotes = quotesSnap.data!;
+                          }
+                          final quotes = quotesSnap.data ?? _lastQuotes;
                           final acceptedQuotes = quotes
                               .where((q) => q.status == 'accepted')
                               .toList();
 
+                          final techCategory =
+                              (techData?['category'] as String?)?.trim() ?? '';
+                          _updateJobsStream(techCategory);
+
                           return StreamBuilder<List<JobRequest>>(
-                            stream: category.isNotEmpty
-                                ? JobRequestRepository()
-                                    .streamOpenRequestsForCategory(category)
-                                : JobRequestRepository().streamOpenRequests(),
+                            stream: _jobsStream,
+                            initialData:
+                                _lastJobs.isNotEmpty ? _lastJobs : null,
                             builder: (context, jobsSnap) {
-                              final openJobs = jobsSnap.data ?? [];
+                              if (jobsSnap.hasData && jobsSnap.data != null) {
+                                _lastJobs = jobsSnap.data!;
+                              }
+                              final openJobs = jobsSnap.data ?? _lastJobs;
 
                               final items = <Widget>[];
 

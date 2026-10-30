@@ -663,6 +663,7 @@
   "quickReplyOnMyWay": "පැමිණෙමින් සිටිමි, ඉක්මනින් ළඟාවනු ඇත.",
   "couldNotConnectChat": "චැට් වෙත සම්බන්ධ විය නොහැකි විය",
   "couldNotLoadChat": "චැට් එක පෙන්වීමට නොහැකි විය",
+  "couldNotOpenChat": "චැට් විවෘත කිරීමට නොහැකි විය",
   "sendMsgToStartChat": "සංවාදය ආරම්භ කිරීමට පණිවිඩයක් එවන්න",
   "typeMessage": "පණිවිඩයක් ලියන්න…",
   "bookingConfirmedChatStarted": "ඔබගේ වෙන්කිරීම තහවුරුයි. වේලාව සහ ස්ථානය කතා කරගැනීමට {providerName} සමඟ චැට් එකක් ආරම්භ කළා.",
@@ -2220,5 +2221,29 @@
   "confirmChangeCategory": "ප්‍රවර්ගය {from} සිට {to} දක්වා වෙනස් කරන්නද? මෙය ඔවුන්ගේ සක්‍රිය සේවාව සහ රැකියා ගැලපීම වහාම යාවත්කාලීන කරනු ඇත.",
   "tradeWillBeSetTo": "සේවා කාණ්ඩය {trade} ලෙස සකසනු ඇත",
   "categoryUpdated": "සේවා කාණ්ඩය සාර්ථකව යාවත්කාලීන කරන ලදී",
-  "locationMustBeInSriLanka": "ස්ථානය ශ්‍රී ලංකාව තුළ තිබිය යුතුය"
+  "locationMustBeInSriLanka": "ස්ථානය ශ්‍රී ලංකාව තුළ තිබිය යුතුය",
+  "categoryNotSetContactSupport": "ඔබේ සේවා කාණ්ඩය සකසා නැත, සහය අංශය අමතන්න",
+  "allBookings": "සියලුම වෙන්කිරීම්",
+  "bookingHistory": "වෙන්කිරීම් ඉතිහාසය",
+  "repostDailyLimitReached": "ඔබ අද දිනට නියමිත නැවත පළකිරීම් සීමාවට ළඟා වී ඇත, හෙට නැවත උත්සාහ කරන්න",
+  "repostedFromEarlierPost": "පෙර දැන්වීමකින් නැවත පළ කරන ලදී",
+  "repostedBadge": "නැවත පළ කළ",
+  "repostOpenPostWithQuotesWarning": "මෙම දැන්වීමට මිල ගණන් {count}ක් ලැබී ඇත. නැවත පළ කිරීමෙන් ඒවා වැසී යනු ඇත.",
+  "markArrivalFirst": "කරුණාකර පළමුව පැමිණීම සටහන් කරන්න",
+  "confirmPriceWithCustomerFirst": "කරුණාකර පළමුව පාරිභෝගිකයා සමඟ මිල තහවුරු කරන්න",
+  "networkErrorTryAgain": "සම්බන්ධතා දෝෂයකි. කරුණාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
+  "incorrectPinAttemptsUsed": "වැරදි PIN අංකයකි ({maxAttempts} න් {attempts} ක් භාවිතා කර ඇත)",
+  "@incorrectPinAttemptsUsed": {
+    "placeholders": {
+      "attempts": {
+        "type": "int"
+      },
+      "maxAttempts": {
+        "type": "int"
+      }
+    }
+  },
+  "tooManyWrongPins": "වැරදි PIN අංක උත්සාහයන් වැඩිය. කරුණාකර පාරිභෝගිකයාගෙන් ඔවුන්ගේ වෙන්කිරීමෙන් PIN උත්සාහයන් යළි සකසන ලෙස ඉල්ලන්න.",
+  "invalidFinalAmount": "අවසාන මුදල 0 ට වඩා වැඩි විය යුතුය.",
+  "bookingOrJobNotFound": "වෙන්කිරීම හෝ සේවා ඉල්ලීම හමු නොවීය."
 }

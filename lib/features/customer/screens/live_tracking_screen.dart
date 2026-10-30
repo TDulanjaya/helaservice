@@ -83,8 +83,9 @@ class LiveTrackingScreen extends StatelessWidget {
           );
         }
         final bookings = bSnapshot.data ?? [];
+        // pick first upcoming booking for live tracking
         final activeBooking =
-            bookings.where((b) => !JobStatus.isTerminal(b.status)).firstOrNull;
+            bookings.where((b) => JobStatus.isUpcoming(b.status)).firstOrNull;
 
         if (activeBooking == null) {
           return _buildEmptyState(context);
@@ -980,7 +981,8 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
     final minutesOld = updatedAt != null
         ? DateTime.now().difference(updatedAt).inMinutes
         : null;
-    final isStale = updatedAt == null || (minutesOld != null && minutesOld >= 2);
+    final isStale =
+        updatedAt == null || (minutesOld != null && minutesOld >= 2);
     final isLive = _rawLocData != null && !isStale && techPoint != null;
 
     final LatLng? servicePoint = ExactLocationHelper.resolveCustomerPoint(
@@ -1073,7 +1075,8 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
     final minutesOld = updatedAt != null
         ? DateTime.now().difference(updatedAt).inMinutes
         : null;
-    final isStale = updatedAt == null || (minutesOld != null && minutesOld >= 2);
+    final isStale =
+        updatedAt == null || (minutesOld != null && minutesOld >= 2);
     final isLive = docExists && !isStale && techPoint != null;
 
     final LatLng? servicePoint = ExactLocationHelper.resolveCustomerPoint(
@@ -1170,8 +1173,7 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
                           ),
                         ),
                       ),
-                    if (widget.tech.phone.isNotEmpty)
-                      const SizedBox(width: 8),
+                    if (widget.tech.phone.isNotEmpty) const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
@@ -1207,9 +1209,8 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
           customerPoint: servicePoint,
           midPoint: midPoint,
           techName: widget.tech.name,
-          routePoints: (isLive && hasCustomerLocation)
-              ? effectiveRoute?.points
-              : null,
+          routePoints:
+              (isLive && hasCustomerLocation) ? effectiveRoute?.points : null,
           isRouteDashed: effectiveRoute?.isEstimated ?? false,
           isLive: isLive,
           docExists: docExists,
@@ -1225,8 +1226,7 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(children: [
-                  const Icon(Icons.timer,
-                      color: AppColors.primary, size: 22),
+                  const Icon(Icons.timer, color: AppColors.primary, size: 22),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1238,19 +1238,16 @@ class _CustomerTrackingSectionState extends State<_CustomerTrackingSection> {
                       Text(
                           '${context.l10n.arrivingIn} ${context.l10n.durationMins(effectiveRoute.durationMinutes)}',
                           style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800)),
+                              fontSize: 15, fontWeight: FontWeight.w800)),
                     ],
                   ),
                 ]),
                 Row(children: [
                   Icon(Icons.navigation,
-                      size: 16,
-                      color: context.themeTextSecondary),
+                      size: 16, color: context.themeTextSecondary),
                   const SizedBox(width: 4),
                   Text(effectiveRoute.formattedDistance,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                 ]),
               ],
             ),
@@ -1336,10 +1333,9 @@ class _CustomerLiveTrackingMapCardState
     if (oldWidget.routePoints != widget.routePoints ||
         oldWidget.isLive != widget.isLive ||
         oldWidget.hasCustomerLocation != widget.hasCustomerLocation) {
-      _routePointsNotifier.value =
-          (widget.isLive && widget.hasCustomerLocation)
-              ? widget.routePoints
-              : null;
+      _routePointsNotifier.value = (widget.isLive && widget.hasCustomerLocation)
+          ? widget.routePoints
+          : null;
     }
     if (oldWidget.isRouteDashed != widget.isRouteDashed) {
       _isRouteDashedNotifier.value = widget.isRouteDashed;
@@ -1482,10 +1478,9 @@ class _CustomerLiveTrackingMapCardState
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            context.l10n.lastSeenMinsAgo(
-                                widget.minutesOld! > 0
-                                    ? '${widget.minutesOld}'
-                                    : '1'),
+                            context.l10n.lastSeenMinsAgo(widget.minutesOld! > 0
+                                ? '${widget.minutesOld}'
+                                : '1'),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10.5,

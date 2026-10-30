@@ -663,6 +663,7 @@
   "quickReplyOnMyWay": "வழியில் இருக்கிறேன், விரைவில் வந்துவிடுவேன்.",
   "couldNotConnectChat": "அரட்டையுடன் இணைக்க முடியவில்லை",
   "couldNotLoadChat": "அரட்டையை ஏற்ற முடியவில்லை",
+  "couldNotOpenChat": "அரட்டையைத் திறக்க முடியவில்லை",
   "sendMsgToStartChat": "அரட்டையைத் தொடங்க செய்தி அனுப்பவும்",
   "typeMessage": "ஒரு செய்தியை தட்டச்சு செய்க…",
   "bookingConfirmedChatStarted": "உங்கள் முன்பதிவு உறுதி செய்யப்பட்டது. நேரத்தையும் இருப்பிடத்தையும் ஒருங்கிணைக்க {providerName} உடன் நேரடி உரையாடல் தொடங்கப்பட்டுள்ளது.",
@@ -2220,5 +2221,29 @@
   "confirmChangeCategory": "பிரிவை {from} இலிருந்து {to} ஆக மாற்றவா? இது அவர்களின் செயலில் உள்ள வர்த்தகம் மற்றும் பணி பொருத்தத்தை உடனடியாக புதுப்பிக்கும்.",
   "tradeWillBeSetTo": "வர்த்தகம் {trade} என அமைக்கப்படும்",
   "categoryUpdated": "சேவை வகை வெற்றிகரமாக புதுப்பிக்கப்பட்டது",
-  "locationMustBeInSriLanka": "இடம் இலங்கைக்குள் இருக்க வேண்டும்"
+  "locationMustBeInSriLanka": "இடம் இலங்கைக்குள் இருக்க வேண்டும்",
+  "categoryNotSetContactSupport": "உங்கள் சேவை பிரிவு அமைக்கப்படவில்லை, ஆதரவைத் தொடர்பு கொள்ளவும்",
+  "allBookings": "அனைத்து முன்பதிவுகளும்",
+  "bookingHistory": "முன்பதிவு வரலாறு",
+  "repostDailyLimitReached": "இன்றைய மறுபதிவு வரம்பை அடைந்துவிட்டீர்கள், நாளை மீண்டும் முயற்சிக்கவும்",
+  "repostedFromEarlierPost": "முந்தைய பதிவிலிருந்து மீண்டும் பதிவிடப்பட்டது",
+  "repostedBadge": "மீண்டும் பதிவிடப்பட்டது",
+  "repostOpenPostWithQuotesWarning": "இந்த இடுகையில் {count} விலைப்புள்ளிகள் உள்ளன. மீண்டும் பதிவிடுவது அவற்றை மூடிவிடும்.",
+  "markArrivalFirst": "முதலில் வருகையைப் பதிவுசெய்யவும்",
+  "confirmPriceWithCustomerFirst": "முதலில் வாடிக்கையாளருடன் கட்டணத்தை உறுதிப்படுத்தவும்",
+  "networkErrorTryAgain": "பிணையப் பிழை. உங்கள் இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
+  "incorrectPinAttemptsUsed": "தவறான PIN ({maxAttempts} இல் {attempts} முறை பயன்படுத்தப்பட்டது)",
+  "@incorrectPinAttemptsUsed": {
+    "placeholders": {
+      "attempts": {
+        "type": "int"
+      },
+      "maxAttempts": {
+        "type": "int"
+      }
+    }
+  },
+  "tooManyWrongPins": "அதிக தவறான PIN முயற்சிகள். வாடிக்கையாளரிடம் தங்கள் முன்பதிவில் PIN முயற்சிகளை மீட்டமைக்கக் கேட்கவும்.",
+  "invalidFinalAmount": "இறுதித் தொகை 0 ஐ விட அதிகமாக இருக்க வேண்டும்.",
+  "bookingOrJobNotFound": "முன்பதிவு அல்லது பணி கோரிக்கை காணப்படவில்லை."
 }

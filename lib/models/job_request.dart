@@ -91,6 +91,10 @@ class JobRequest {
   final String? scheduledSlot;
   final int? flexibleWindowDays;
   final DateTime? expiresAt;
+  final String? repostedToId;
+  final String? repostedFromId;
+  final DateTime? repostedAt;
+  final DateTime? sortAt;
 
   // local address details kept private
   final double? accuracyMeters;
@@ -143,6 +147,10 @@ class JobRequest {
     this.scheduledSlot,
     this.flexibleWindowDays,
     this.expiresAt,
+    this.repostedToId,
+    this.repostedFromId,
+    this.repostedAt,
+    this.sortAt,
     this.accuracyMeters,
     this.houseNo,
     this.street,
@@ -242,6 +250,13 @@ class JobRequest {
         if (flexibleWindowDays != null)
           'flexibleWindowDays': flexibleWindowDays,
         if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
+        if (repostedToId != null && repostedToId!.isNotEmpty)
+          'repostedToId': repostedToId,
+        if (repostedFromId != null && repostedFromId!.isNotEmpty)
+          'repostedFromId': repostedFromId,
+        if (repostedAt != null)
+          'repostedAt': Timestamp.fromDate(repostedAt!),
+        if (sortAt != null) 'sortAt': Timestamp.fromDate(sortAt!),
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),
@@ -260,6 +275,8 @@ class JobRequest {
     final dat = map['deletedAt'];
     final rnat = map['renewedAt'];
     final mwsa = map['mediaWarningSentAt'];
+    final rpat = map['repostedAt'];
+    final sat = map['sortAt'];
     final prevStat = map['previousStatus'] as String?;
 
     DateTime? resolvedCreatedAt;
@@ -373,6 +390,12 @@ class JobRequest {
       scheduledSlot: map['scheduledSlot'] as String?,
       flexibleWindowDays: (map['flexibleWindowDays'] as num?)?.toInt(),
       expiresAt: resolvedExpiresAt,
+      repostedToId: map['repostedToId'] as String?,
+      repostedFromId: map['repostedFromId'] as String?,
+      repostedAt: rpat is Timestamp ? rpat.toDate() : null,
+      sortAt: sat is Timestamp
+          ? sat.toDate()
+          : (sat is String ? DateTime.tryParse(sat) : resolvedCreatedAt),
     );
   }
 
@@ -419,6 +442,10 @@ class JobRequest {
     String? scheduledSlot,
     int? flexibleWindowDays,
     DateTime? expiresAt,
+    String? repostedToId,
+    String? repostedFromId,
+    DateTime? repostedAt,
+    DateTime? sortAt,
     double? accuracyMeters,
     String? houseNo,
     String? street,
@@ -469,6 +496,10 @@ class JobRequest {
       scheduledSlot: scheduledSlot ?? this.scheduledSlot,
       flexibleWindowDays: flexibleWindowDays ?? this.flexibleWindowDays,
       expiresAt: expiresAt ?? this.expiresAt,
+      repostedToId: repostedToId ?? this.repostedToId,
+      repostedFromId: repostedFromId ?? this.repostedFromId,
+      repostedAt: repostedAt ?? this.repostedAt,
+      sortAt: sortAt ?? this.sortAt,
       accuracyMeters: accuracyMeters ?? this.accuracyMeters,
       houseNo: houseNo ?? this.houseNo,
       street: street ?? this.street,

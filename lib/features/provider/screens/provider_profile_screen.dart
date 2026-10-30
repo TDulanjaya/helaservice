@@ -18,6 +18,7 @@ import '../widgets/certificate_management_sheet.dart';
 import '../widgets/rate_card_sheet.dart';
 import '../../../repositories/booking_repository.dart';
 import '../../../services/category_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../repositories/technician_repository.dart';
 import '../../../services/review_service.dart';
 import '../../../state/theme_provider.dart';
@@ -34,6 +35,7 @@ import '../../../shared/widgets/legal_content_sheet.dart';
 import '../../support/screens/help_support_screen.dart';
 import '../../auth/screens/complete_profile_screen.dart';
 
+// provider profile screen
 class ProviderProfileScreen extends StatefulWidget {
   const ProviderProfileScreen({super.key});
 
@@ -763,7 +765,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           ),
                         ),
                         Text(
-                          '+94 $phone',
+                          AuthService.formatDisplayPhone(phone),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -1015,8 +1017,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 }
 
                 final radiusKm = _localRadiusKm ?? tech.serviceRadiusKm;
-                final isEmergency =
-                    _localEmergencyAvailable ?? tech.emergencyAvailable;
+                final resolvedVisitFee =
+                    ProviderPricingHelper.resolveVisitFee(tech);
+                final isEmergency = _localEmergencyAvailable ??
+                    (tech.emergencyAvailable && resolvedVisitFee > 0);
 
                 return Container(
                   decoration: BoxDecoration(
@@ -1046,12 +1050,49 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                             color: context.themeTextSecondary,
                           ),
                         ),
-                        onChanged: (val) {
-                          final oldVal = isEmergency;
-                          setState(() => _localEmergencyAvailable = val);
+                        onChanged: (val) async {
                           final uid = FirebaseAuth.instance.currentUser?.uid;
                           if (uid == null || uid.isEmpty) return;
                           final messenger = ScaffoldMessenger.of(context);
+
+                          if (val &&
+                              ProviderPricingHelper.resolveVisitFee(tech) <=
+                                  0) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(context.l10n.setVisitFeeFirst),
+                              ),
+                            );
+                            final saved = await RateCardSheet.show(
+                              context,
+                              tech,
+                              initialSelectedMode:
+                                  ProviderPricingHelper.modeVisit,
+                            );
+                            if (saved == true) {
+                              final updatedTech =
+                                  await TechnicianRepository().getById(uid);
+                              if (updatedTech != null &&
+                                  ProviderPricingHelper.resolveVisitFee(
+                                          updatedTech) >
+                                      0) {
+                                if (mounted) {
+                                  setState(
+                                      () => _localEmergencyAvailable = true);
+                                }
+                                await TechnicianRepository()
+                                    .updateEmergencyStatus(uid, true);
+                                if (mounted) {
+                                  setState(
+                                      () => _localEmergencyAvailable = null);
+                                }
+                              }
+                            }
+                            return;
+                          }
+
+                          final oldVal = isEmergency;
+                          setState(() => _localEmergencyAvailable = val);
                           final offlineMsg = context.l10n.savedOfflineSyncLater;
                           final errorMsg =
                               context.l10n.couldNotSaveCheckConnection;

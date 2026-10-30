@@ -21,6 +21,7 @@ import '../../../utils/l10n_extension.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/app_localizations_helpers.dart';
 
+// admin dashboard live map screen
 class DashboardLiveMapScreen extends StatelessWidget {
   const DashboardLiveMapScreen({super.key});
 
@@ -858,6 +859,12 @@ class _LiveTrafficHeatmapCardState extends State<_LiveTrafficHeatmapCard> {
       _latestSnapshot = snapshot;
       _updateMarkers();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateMarkers();
   }
 
   void _onFilterChanged() {

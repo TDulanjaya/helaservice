@@ -1240,7 +1240,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get emergencyCalloutDesc =>
-      'இரவு 8 மணி முதல் காலை 6 மணி வரை 1.5x கட்டணத்தில் அவசர சேவைகளை ஏற்கவும்';
+      'அவசர வேலைகளை ஏற்கவும். சிக்கலை பரிசோதித்த பிறகு நீங்கள் விலையை நிர்ணயிக்கலாம்';
 
   @override
   String get appearance => 'விருப்பத்தேர்வுகள் & தோற்றம்';
@@ -7590,4 +7590,85 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get bookingOrJobNotFound =>
       'முன்பதிவு அல்லது பணி கோரிக்கை காணப்படவில்லை.';
+
+  @override
+  String get confirmPriceFirstNotice => 'முதலில் கட்டணத்தை உறுதிப்படுத்தவும்';
+
+  @override
+  String get waitingCustomerApprovePriceNotice =>
+      'வாடிக்கையாளர் புதிய கட்டணத்தை அங்கீகரிக்கும் வரை காத்திருக்கிறது';
+
+  @override
+  String get customerRejectedPriceNotice =>
+      'வாடிக்கையாளர் கட்டணத்தை நிராகரித்தார். வருகை மட்டும் என முடிக்கவும் அல்லது மீண்டும் முன்மொழியவும்';
+
+  @override
+  String get confirmPriceAction => 'கட்டணத்தை உறுதிப்படுத்தவும்';
+
+  @override
+  String get inspectBookingProposePriceDesc =>
+      'ஆய்வு முன்பதிவு: வாடிக்கையாளர் அங்கீகரிக்க இறுதி கட்டணத்தை முன்மொழியவும்';
+
+  @override
+  String get proposeFinalPriceFirstNotice =>
+      'முதலில் இறுதி கட்டணத்தை முன்மொழியவும்';
+
+  @override
+  String get proposePriceAction => 'கட்டணத்தை முன்மொழியவும்';
+
+  @override
+  String get cannotKeepPriceProposeInstead =>
+      'கட்டணத்தை அப்படியே வைத்திருக்க முடியாது. அதற்குப் பதிலாக புதிய கட்டணத்தை முன்மொழியவும்.';
+
+  @override
+  String get finalPriceLkr => 'இறுதி கட்டணம் (ரூ.)';
+
+  @override
+  String get numberOfHours => 'மணிகளின் எண்ணிக்கை';
+
+  @override
+  String get numberOfDays => 'நாட்களின் எண்ணிக்கை';
+
+  @override
+  String pendingBidsOverlapAcceptedWarning(int count) {
+    return 'ஏற்றுக்கொள்ளப்பட்ட பணியுடன் ஒன்றுடன் ஒன்று சேரும் மேலும் $count நிலுவையிலுள்ள விலைப்புள்ளிகள் உங்களிடம் உள்ளன. அவற்றை மதிப்பாய்வு செய்ய அல்லது திரும்பப் பெற பரிசீலிக்கவும்.';
+  }
+
+  @override
+  String get completedCaps => 'நிறைவு செய்யப்பட்டது';
+
+  @override
+  String get viewBooking => 'முன்பதிவைக் காண்க';
+
+  @override
+  String get bookingCancelledLabel => 'முன்பதிவு ரத்து செய்யப்பட்டது';
+
+  @override
+  String get setVisitFeeFirst =>
+      'முதலில் உங்கள் வருகை / பரிசோதனை கட்டணத்தை அமைக்கவும்';
+
+  @override
+  String inspectionFeeLkr(String fee) {
+    return 'பரிசோதனை கட்டணம் ரூ. $fee';
+  }
+
+  @override
+  String get priceAfterInspection => 'பரிசோதனைக்கு பின் விலை';
+
+  @override
+  String confirmEmergencyInspectBookingDesc(String name) {
+    return '$name அவர்களுக்கு அவசர கோரிக்கை அனுப்பப்படும். பரிசோதனைக்கு பின் விலை நிர்ணயிக்கப்படும்.';
+  }
+
+  @override
+  String get removeVisitFeeEmergencyConfirm =>
+      'வருகைக் கட்டணத்தை நீக்குவது அவசர அழைப்பை முடக்கும். தொடரவா?';
+
+  @override
+  String get visitFeeEmergencyHint =>
+      'அவசர அழைப்பிற்கு தேவை, எ.கா. 1000 (1 - 20,000)';
+
+  @override
+  String get visitFeeEmergencyRangeError =>
+      'பார்வை கட்டணம் ரூ. 1 முதல் 20,000 வரை இருக்க வேண்டும்';
 }

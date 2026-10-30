@@ -1,3 +1,4 @@
+// firestore security rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -905,11 +906,8 @@ service cloud.firestore {
           ('quoteId' in request.resource.data) ||
           (
             exists(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)) &&
-            request.resource.data.visitFeeLkr == (
-              request.resource.data.get('type', 'standard') == 'urgent'
-                ? get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('emergencyRateLkr', get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('baseRateLkr', 0))
-                : get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('visitFeeLkr', get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('baseRateLkr', 0))
-            )
+            request.resource.data.visitFeeLkr ==
+              get(/databases/$(database)/documents/technicians/$(request.resource.data.providerId)).data.get('visitFeeLkr', 0)
           )
         ) &&
         (
@@ -1154,7 +1152,7 @@ service cloud.firestore {
               ('priceStatus' in resource.data && (
                 (
                   request.resource.data.get('completionType', 'normal') == 'visit_only' &&
-                  resource.data.priceStatus == 'rejected' &&
+                  resource.data.priceStatus in ['awaiting_confirmation', 'proposed', 'rejected'] &&
                   request.resource.data.finalAmount is int &&
                   request.resource.data.finalAmount > 0 &&
                   request.resource.data.finalAmount <= resource.data.get('visitFeeLkr', 0) + resource.data.get('travelCostLkr', 0)

@@ -1205,7 +1205,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get emergencyCalloutDesc =>
-      'ප.ව. 8 සිට පෙ.ව. 6 දක්වා හදිසි සේවා සඳහා 1.5x ගාස්තුවක් හිමිවේ';
+      'හදිසි වැඩ භාරගන්න. ගැටලුව පරීක්ෂා කිරීමෙන් පසු ඔබ මිල තීරණය කරන්න';
 
   @override
   String get appearance => 'මනාප සහ පෙනුම';
@@ -7419,4 +7419,83 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get bookingOrJobNotFound => 'වෙන්කිරීම හෝ සේවා ඉල්ලීම හමු නොවීය.';
+
+  @override
+  String get confirmPriceFirstNotice => 'පළමුව මිල තහවුරු කරන්න';
+
+  @override
+  String get waitingCustomerApprovePriceNotice =>
+      'පාරිභෝගිකයා නව මිල අනුමත කරන තෙක් රැඳී සිටියි';
+
+  @override
+  String get customerRejectedPriceNotice =>
+      'පාරිභෝගිකයා මිල ප්‍රතික්ෂේප කළේය. පැමිණීම පමණක් ලෙස අවසන් කරන්න හෝ නැවත යෝජනා කරන්න';
+
+  @override
+  String get confirmPriceAction => 'මිල තහවුරු කරන්න';
+
+  @override
+  String get inspectBookingProposePriceDesc =>
+      'පරීක්ෂා කිරීමේ වෙන්කිරීම: පාරිභෝගිකයාට අනුමත කිරීම සඳහා අවසාන මිල යෝජනා කරන්න';
+
+  @override
+  String get proposeFinalPriceFirstNotice => 'පළමුව අවසාන මිල යෝජනා කරන්න';
+
+  @override
+  String get proposePriceAction => 'මිල යෝජනා කරන්න';
+
+  @override
+  String get cannotKeepPriceProposeInstead =>
+      'මිල එලෙසම තබා ගත නොහැක. කරුණාකර ඒ වෙනුවට නව මිලක් යෝජනා කරන්න.';
+
+  @override
+  String get finalPriceLkr => 'අවසාන මිල (රු.)';
+
+  @override
+  String get numberOfHours => 'පැය ගණන';
+
+  @override
+  String get numberOfDays => 'දින ගණන';
+
+  @override
+  String pendingBidsOverlapAcceptedWarning(int count) {
+    return 'පිළිගත් කාර්යයක් සමඟ ගැටෙන වෙනත් බලාපොරොත්තු වන මිල ගණන් $countක් ඔබ සතුව ඇත. ඒවා සමාලෝචනය කිරීම හෝ ඉවත් කර ගැනීම සලකා බලන්න.';
+  }
+
+  @override
+  String get completedCaps => 'සම්පූර්ණ කරන ලදි';
+
+  @override
+  String get viewBooking => 'වෙන්කිරීම බලන්න';
+
+  @override
+  String get bookingCancelledLabel => 'වෙන්කිරීම අවලංගු කරන ලදි';
+
+  @override
+  String get setVisitFeeFirst => 'පළමුව ඔබේ පැමිණීමේ / පරීක්ෂණ ගාස්තුව සකසන්න';
+
+  @override
+  String inspectionFeeLkr(String fee) {
+    return 'පරීක්ෂණ ගාස්තුව රු. $fee';
+  }
+
+  @override
+  String get priceAfterInspection => 'පරීක්ෂාවෙන් පසු මිල';
+
+  @override
+  String confirmEmergencyInspectBookingDesc(String name) {
+    return '$name වෙත හදිසි පිටත් කිරීමේ ඉල්ලීමක් යවනු ඇත. පරීක්ෂාවෙන් පසු මිල තීරණය වේ.';
+  }
+
+  @override
+  String get removeVisitFeeEmergencyConfirm =>
+      'පැමිණීමේ ගාස්තුව ඉවත් කිරීමෙන් හදිසි සේවා ඇමතුම් ක්‍රියාවිරහිත වේ. ඉදිරියට යනවාද?';
+
+  @override
+  String get visitFeeEmergencyHint =>
+      'හදිසි සේවා ඇමතුම් සඳහා අවශ්‍යයි, උදා. 1000 (1 - 20,000)';
+
+  @override
+  String get visitFeeEmergencyRangeError =>
+      'පැමිණීමේ ගාස්තුව රු. 1 සහ 20,000 අතර විය යුතුය';
 }

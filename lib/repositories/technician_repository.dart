@@ -5,6 +5,7 @@ import '../utils/provider_location_helper.dart';
 import '../utils/provider_pricing_helper.dart';
 import '../services/session_guard.dart';
 
+// technician repository for database operations
 class TechnicianRepository {
   final _col =
       FirebaseFirestore.instance.collection(FirestorePaths.technicians);

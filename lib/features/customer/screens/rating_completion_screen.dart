@@ -16,6 +16,7 @@ import '../../../services/review_service.dart';
 import '../../../state/role_provider.dart';
 import 'home_discovery_screen.dart';
 
+// customer rating screen
 class RatingCompletionScreen extends StatefulWidget {
   final Technician technician;
   final String bookingId;
@@ -248,7 +249,7 @@ class _RatingCompletionScreenState extends State<RatingCompletionScreen> {
                   ],
                 ),
                 const Divider(height: 20),
-                if (widget.totalPrice != null) ...[
+                if (widget.totalPrice != null && widget.totalPrice! > 0) ...[
                   _CostRow(context.l10n.totalPaid,
                       'LKR ${widget.totalPrice!.toStringAsFixed(0)}',
                       bold: true),

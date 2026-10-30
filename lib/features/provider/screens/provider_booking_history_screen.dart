@@ -13,10 +13,9 @@ import '../../../utils/l10n_extension.dart';
 import '../../admin/widgets/booking_timeline_sheet.dart';
 import 'en_route_navigation_screen.dart';
 
+// provider booking history screen
 class ProviderBookingHistoryScreen extends StatefulWidget {
-  final Stream<List<Booking>>? bookingsStream;
-
-  const ProviderBookingHistoryScreen({super.key, this.bookingsStream});
+  const ProviderBookingHistoryScreen({super.key});
 
   @override
   State<ProviderBookingHistoryScreen> createState() =>
@@ -25,15 +24,19 @@ class ProviderBookingHistoryScreen extends StatefulWidget {
 
 class _ProviderBookingHistoryScreenState
     extends State<ProviderBookingHistoryScreen> {
-  // 0: all, 1: upcoming, 2: completed, 3: cancelled/declined
+  // filter index for all upcoming completed and cancelled
   int _selectedFilter = 0;
+  late final Stream<List<Booking>> _bookingsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _bookingsStream = BookingRepository().streamBookingsForProvider(uid);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final stream = widget.bookingsStream ??
-        BookingRepository().streamBookingsForProvider(uid);
-
     return Scaffold(
       backgroundColor: context.themeBg,
       appBar: AppBar(
@@ -43,7 +46,7 @@ class _ProviderBookingHistoryScreenState
         ),
       ),
       body: StreamBuilder<List<Booking>>(
-        stream: stream,
+        stream: _bookingsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
@@ -53,9 +56,28 @@ class _ProviderBookingHistoryScreenState
           if (snapshot.hasError) {
             SessionGuard.handlePermissionDenied(snapshot.error);
             return Center(
-              child: Text(
-                '${snapshot.error}',
-                style: TextStyle(color: context.themeTextSecondary),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 40,
+                      color: context.themeDanger,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      context.l10n.somethingWentWrong,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.themeTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -208,7 +230,11 @@ class _ProviderBookingHistoryCard extends StatelessWidget {
                     builder: (_) => EnRouteNavigationScreen(booking: b),
                   ),
                 )
-            : null,
+            : () => BookingTimelineSheet.show(
+                  context,
+                  bookingId: b.id,
+                  bookingTitle: b.title,
+                ),
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

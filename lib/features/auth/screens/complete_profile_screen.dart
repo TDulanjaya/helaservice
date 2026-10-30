@@ -35,6 +35,7 @@ import '../../../constants/firestore_paths.dart';
 import '../../provider/widgets/certificate_upload_section.dart';
 import 'role_choice_screen.dart';
 
+// complete profile screen
 class CompleteProfileScreen extends StatefulWidget {
   final UserProfile? initialProfile;
   final AppRole? targetRole;
@@ -100,7 +101,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     final rawName = profile?.displayName ?? '';
     final cleanName = rawName.contains('@') ? '' : rawName;
     _nameController = TextEditingController(text: cleanName);
-    _phoneController.text = profile?.phone ?? '';
+    String initialPhone = profile?.phone ?? '';
+    while (initialPhone.startsWith('+94') || initialPhone.startsWith('94')) {
+      if (initialPhone.startsWith('+94')) {
+        initialPhone = initialPhone.substring(3).trim();
+      } else if (initialPhone.startsWith('94')) {
+        initialPhone = initialPhone.substring(2).trim();
+      }
+    }
+    if (initialPhone.startsWith('0')) {
+      initialPhone = initialPhone.substring(1).trim();
+    }
+    _phoneController.text = initialPhone;
 
     if (_selectedRole == AppRole.provider) {
       _addressController.text = profile?.address ?? '';

@@ -55,6 +55,7 @@ GoogleSignInDecision decideGoogleSignIn({
   return GoogleSignInDecision.createProfile;
 }
 
+// auth service for user authentication and session management
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -73,16 +74,35 @@ class AuthService {
 
   static String formatSriLankanPhoneNumber(String input) {
     String clean = input.replaceAll(RegExp(r'[\s\-()]'), '');
-    if (clean.startsWith('+94')) {
-      return clean;
+    while (clean.startsWith('+94') || clean.startsWith('94')) {
+      if (clean.startsWith('+94')) {
+        clean = clean.substring(3);
+      } else if (clean.startsWith('94')) {
+        clean = clean.substring(2);
+      }
     }
     if (clean.startsWith('0')) {
       clean = clean.substring(1);
     }
-    if (clean.startsWith('94')) {
-      return '+$clean';
-    }
     return '+94$clean';
+  }
+
+  // format phone number for clean UI display without duplicate country code
+  static String formatDisplayPhone(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    String clean = raw.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+    while (clean.startsWith('+94') || clean.startsWith('94')) {
+      if (clean.startsWith('+94')) {
+        clean = clean.substring(3);
+      } else if (clean.startsWith('94')) {
+        clean = clean.substring(2);
+      }
+    }
+    if (clean.startsWith('0')) {
+      clean = clean.substring(1);
+    }
+    if (clean.isEmpty) return '';
+    return '+94 $clean';
   }
 
   Future<UserProfile> signInWithEmailAndPassword({

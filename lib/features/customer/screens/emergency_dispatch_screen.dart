@@ -19,6 +19,7 @@ import '../../../repositories/saved_address_repository.dart';
 import '../../../repositories/user_repository.dart';
 import '../../../models/saved_address.dart';
 import '../../../services/analytics_service.dart';
+import '../../../services/category_service.dart';
 import '../../../state/role_provider.dart';
 import '../../../utils/location_utils.dart';
 import '../../../utils/permission_utils.dart';
@@ -30,6 +31,7 @@ import '../../../models/job_location.dart';
 import '../../../shared/widgets/job_location_picker.dart';
 import '../../../utils/customer_location_prefs.dart';
 import '../../../utils/location_search_helper.dart';
+import '../../../utils/provider_pricing_helper.dart';
 import 'live_tracking_screen.dart';
 
 // emergency dispatch screen for urgent callouts within fifteen kilometers
@@ -79,7 +81,11 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory ?? '';
+    final initial = widget.initialCategory?.trim() ?? '';
+    final resolved = initial.isNotEmpty
+        ? CategoryService.instance.resolveCategoryId(initial)
+        : '';
+    _selectedCategory = resolved.isNotEmpty ? resolved : initial;
     _categoriesStream = _categoryRepo.streamLiveCategories();
     _techStream = _techRepo.streamApprovedTechnicians();
     _initSavedAddressesStream(FirebaseAuth.instance.currentUser?.uid);
@@ -89,7 +95,9 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _resolveUserLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _resolveUserLocation();
+    });
   }
 
   @override
@@ -242,7 +250,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         }
       }
     } catch (_) {
-      // 1. check last known position within 10 minutes
+      // check last known position within 10 minutes
       try {
         final last = await Geolocator.getLastKnownPosition();
         if (last != null) {
@@ -264,7 +272,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         }
       } catch (_) {}
 
-      // 2. check saved customer home location
+      // check saved customer home location
       final homeLoc = await CustomerLocationPrefs.getHomeLocation();
       if (homeLoc != null &&
           LocationSearchHelper.isWithinSriLanka(
@@ -401,16 +409,6 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
   }
 
   void _confirmEmergencyCallout(BuildContext context, Technician tech) async {
-    if (tech.emergencyRateLkr <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.emergencyRateUnavailable),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
     if (_userLat == null || _userLng == null) {
       final picked = await JobLocationPicker.pickLocation(
         context,
@@ -436,7 +434,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
     }
 
     if (!context.mounted) return;
-    final rateLkr = tech.emergencyRateLkr;
+    final inspectionFee = ProviderPricingHelper.resolveVisitFee(tech);
     final addressController = TextEditingController(text: _userAddress);
     final notesController = TextEditingController();
 
@@ -513,10 +511,14 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  context.l10n.confirmEmergencyBookingDesc(
-                    tech.name,
-                    rateLkr.toString(),
-                  ),
+                  inspectionFee > 0
+                      ? context.l10n.confirmEmergencyBookingDesc(
+                          tech.name,
+                          inspectionFee.toString(),
+                        )
+                      : context.l10n.confirmEmergencyInspectBookingDesc(
+                          tech.name,
+                        ),
                   style: TextStyle(
                     fontSize: 13,
                     color: context.themeTextSecondary,
@@ -622,7 +624,6 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             Navigator.pop(ctx);
                             await _executeEmergencyBooking(
                               tech: tech,
-                              rateLkr: rateLkr,
                               address: currentAddress,
                               notes: notesController.text.trim(),
                             );
@@ -653,7 +654,6 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
 
   Future<void> _executeEmergencyBooking({
     required Technician tech,
-    required int rateLkr,
     required String address,
     required String notes,
   }) async {
@@ -676,6 +676,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
       }
 
       final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      final inspectionFee = ProviderPricingHelper.resolveVisitFee(tech);
 
       final booking = Booking(
         id: '',
@@ -695,8 +696,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         relativeTime: '',
         customerLatitude: _userLat!,
         customerLongitude: _userLng!,
-        estRate: 'LKR $rateLkr',
-        agreedPrice: rateLkr.toDouble(),
+        estRate: inspectionFee > 0 ? 'LKR $inspectionFee' : '',
+        agreedPrice: inspectionFee.toDouble(),
         time: '',
         entryInstructions: notes,
         createdAt: DateTime.now(),
@@ -704,9 +705,9 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
         expiresAt: DateTime.now().add(const Duration(minutes: 3)),
         quoteType: 'inspect',
         priceStatus: 'awaiting_confirmation',
-        visitFeeLkr: rateLkr,
+        visitFeeLkr: inspectionFee,
         travelCostLkr: 0,
-        estimatedTotalLkr: rateLkr,
+        estimatedTotalLkr: inspectionFee,
       );
 
       final bookingId = await _bookingRepo.createBooking(booking);
@@ -839,7 +840,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
               ),
             ),
 
-            // customer location badge when pin is set, or GPS fallback UI if pin/GPS failed
+            // customer location badge when pin is set or fallback if failed
             if (_userLat != null && _userLng != null) ...[
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -1225,9 +1226,12 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                         ),
                       ),
                       ...categories.map((cat) {
-                        final catName = cat.name;
+                        final localized = CategoryService.instance
+                            .nameOf(cat.id, context: context);
+                        final catName =
+                            localized.isNotEmpty ? localized : cat.name;
                         final isSelected = _selectedCategory.toLowerCase() ==
-                            catName.toLowerCase();
+                            cat.id.toLowerCase();
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
@@ -1245,7 +1249,7 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                             ),
                             onSelected: (_) => setState(
                               () =>
-                                  _selectedCategory = isSelected ? '' : catName,
+                                  _selectedCategory = isSelected ? '' : cat.id,
                             ),
                           ),
                         );
@@ -1271,14 +1275,12 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                   final filtered = allTechs.where((t) {
                     if (!t.online) return false;
                     if (!t.emergencyAvailable) return false;
+                    if (ProviderPricingHelper.resolveVisitFee(t) <= 0) return false;
                     if (_selectedCategory.isNotEmpty) {
-                      final matchesCategory = t.category
-                              .toLowerCase()
-                              .contains(_selectedCategory.toLowerCase()) ||
-                          t.title
-                              .toLowerCase()
-                              .contains(_selectedCategory.toLowerCase());
-                      if (!matchesCategory) return false;
+                      if (t.category.trim().toLowerCase() !=
+                          _selectedCategory.trim().toLowerCase()) {
+                        return false;
+                      }
                     }
                     if (_userLat != null && _userLng != null) {
                       final dist = _getDistanceKm(t);
@@ -1353,7 +1355,8 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                       final distKm = _getDistanceKm(tech);
                       final etaMins =
                           distKm != null ? _calculateEtaMinutes(distKm) : null;
-                      final rateLkr = tech.emergencyRateLkr;
+                      final inspectionFee =
+                          ProviderPricingHelper.resolveVisitFee(tech);
 
                       return Container(
                         padding: const EdgeInsets.all(16),
@@ -1510,21 +1513,12 @@ class _EmergencyDispatchScreenState extends State<EmergencyDispatchScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      context.l10n.emergencyCalloutRate,
+                                      context.l10n.inspectionFeeLkr(
+                                          inspectionFee.toString()),
                                       style: TextStyle(
-                                        fontSize: 11,
-                                        color: context.themeTextSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      rateLkr > 0 ? 'LKR $rateLkr' : '-',
-                                      style: TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 13.5,
                                         fontWeight: FontWeight.w800,
-                                        color: rateLkr > 0
-                                            ? AppColors.error
-                                            : context.themeMuted,
+                                        color: context.themeTextPrimary,
                                       ),
                                     ),
                                   ],

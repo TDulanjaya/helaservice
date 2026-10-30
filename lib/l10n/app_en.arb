@@ -382,7 +382,7 @@
   "autoDetectGps": "Auto-Detect & Update Current GPS",
   "jobDispatchSettings": "Job Dispatch Settings",
   "emergencyCallout": "Emergency Night Callout",
-  "emergencyCalloutDesc": "Accept urgent visits between 8 PM - 6 AM at 1.5x surge rate",
+  "emergencyCalloutDesc": "Accept urgent jobs. You set the price after you inspect the problem",
   "appearance": "Preferences & Appearance",
   "themeMode": "Appearance & Theme",
   "currentTheme": "Current",
@@ -3715,5 +3715,48 @@
   },
   "tooManyWrongPins": "Too many wrong PINs. Ask the customer to reset the PIN attempts in their booking.",
   "invalidFinalAmount": "Final amount must be greater than 0.",
-  "bookingOrJobNotFound": "Booking or job request not found."
+  "bookingOrJobNotFound": "Booking or job request not found.",
+  "confirmPriceFirstNotice": "Confirm the price first",
+  "waitingCustomerApprovePriceNotice": "Waiting for the customer to approve the new price",
+  "customerRejectedPriceNotice": "Customer rejected the price. Complete as visit only or propose again",
+  "confirmPriceAction": "Confirm Price",
+  "inspectBookingProposePriceDesc": "Inspect booking: propose the final price for the customer to approve",
+  "proposeFinalPriceFirstNotice": "Propose the final price first",
+  "proposePriceAction": "Propose Price",
+  "cannotKeepPriceProposeInstead": "Cannot keep price. Please propose a new price instead.",
+  "finalPriceLkr": "Final price (LKR)",
+  "numberOfHours": "Number of hours",
+  "numberOfDays": "Number of days",
+  "pendingBidsOverlapAcceptedWarning": "{count, plural, =1{You have 1 other pending bid overlapping an accepted job. Consider reviewing or withdrawing it.} other{You have {count} other pending bids overlapping an accepted job. Consider reviewing or withdrawing them.}}",
+  "@pendingBidsOverlapAcceptedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "completedCaps": "COMPLETED",
+  "viewBooking": "View booking",
+  "bookingCancelledLabel": "Booking cancelled",
+  "setVisitFeeFirst": "Set your visit / inspection fee first",
+  "inspectionFeeLkr": "Inspection fee LKR {fee}",
+  "@inspectionFeeLkr": {
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "priceAfterInspection": "Price after inspection",
+  "confirmEmergencyInspectBookingDesc": "An urgent dispatch request will be sent to {name}. Price will be agreed after inspection.",
+  "@confirmEmergencyInspectBookingDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeVisitFeeEmergencyConfirm": "Removing the visit fee turns off Emergency Callout. Continue?",
+  "visitFeeEmergencyHint": "Needed for Emergency Callout, e.g. 1000 (1 - 20,000)",
+  "visitFeeEmergencyRangeError": "Visit fee must be between LKR 1 and 20,000"
 }

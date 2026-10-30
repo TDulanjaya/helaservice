@@ -36,6 +36,7 @@ import '../../../services/call_service.dart';
 import '../../../shared/widgets/reschedule_sheet.dart';
 import '../../../shared/widgets/job_photos_sheet.dart';
 
+// customer live tracking screen
 class LiveTrackingScreen extends StatelessWidget {
   final Technician? technician;
   final Booking? booking;
@@ -559,11 +560,12 @@ class LiveTrackingScreen extends StatelessWidget {
                           Text(context.l10n.directPayCash,
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700, fontSize: 13)),
-                          Text(
-                              'LKR ${tech.baseRateLkr} ${context.l10n.inspectionFeeNotice}',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: context.themeTextSecondary)),
+                          if ((currentBooking?.visitFeeLkr ?? 0) > 0)
+                            Text(
+                                'LKR ${currentBooking!.visitFeeLkr} ${context.l10n.inspectionFeeNotice}',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: context.themeTextSecondary)),
                         ],
                       ),
                     ),
@@ -629,21 +631,28 @@ class LiveTrackingScreen extends StatelessWidget {
                   PrimaryButton(
                     label: context.l10n.jobFinishedRatePay,
                     leadingIcon: Icons.check_circle,
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => RatingCompletionScreen(
-                          technician: tech,
-                          bookingId: currentBooking.id,
-                          jobRequestId: currentBooking.jobRequestId ?? '',
-                          jobTitle: currentBooking.title.isNotEmpty == true
-                              ? currentBooking.title
-                              : tech.title,
-                          totalPrice: currentBooking.agreedPrice ??
-                              tech.baseRateLkr.toDouble(),
-                          completionType: currentBooking.completionType,
+                    onPressed: () {
+                      final rawPrice = currentBooking.finalAmount ??
+                          currentBooking.approvedTotalLkr?.toDouble() ??
+                          currentBooking.agreedPrice;
+                      final totalPrice =
+                          (rawPrice != null && rawPrice > 0) ? rawPrice : null;
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => RatingCompletionScreen(
+                            technician: tech,
+                            bookingId: currentBooking.id,
+                            jobRequestId: currentBooking.jobRequestId ?? '',
+                            jobTitle: currentBooking.title.isNotEmpty == true
+                                ? currentBooking.title
+                                : tech.title,
+                            totalPrice: totalPrice,
+                            completionType: currentBooking.completionType,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
               ],
             ),
@@ -1296,7 +1305,6 @@ class _CustomerLiveTrackingMapCardState
   late final ValueNotifier<List<LatLng>?> _routePointsNotifier;
   late final ValueNotifier<bool> _isRouteDashedNotifier;
   ModalRoute? _fullScreenRoute;
-  bool _initialized = false;
 
   @override
   void initState() {
@@ -1312,10 +1320,7 @@ class _CustomerLiveTrackingMapCardState
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      _markersNotifier.value = _buildMarkers();
-    }
+    _markersNotifier.value = _buildMarkers();
   }
 
   @override

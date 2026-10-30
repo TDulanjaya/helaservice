@@ -1207,7 +1207,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emergencyCalloutDesc =>
-      'Accept urgent visits between 8 PM - 6 AM at 1.5x surge rate';
+      'Accept urgent jobs. You set the price after you inspect the problem';
 
   @override
   String get appearance => 'Preferences & Appearance';
@@ -7406,4 +7406,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingOrJobNotFound => 'Booking or job request not found.';
+
+  @override
+  String get confirmPriceFirstNotice => 'Confirm the price first';
+
+  @override
+  String get waitingCustomerApprovePriceNotice =>
+      'Waiting for the customer to approve the new price';
+
+  @override
+  String get customerRejectedPriceNotice =>
+      'Customer rejected the price. Complete as visit only or propose again';
+
+  @override
+  String get confirmPriceAction => 'Confirm Price';
+
+  @override
+  String get inspectBookingProposePriceDesc =>
+      'Inspect booking: propose the final price for the customer to approve';
+
+  @override
+  String get proposeFinalPriceFirstNotice => 'Propose the final price first';
+
+  @override
+  String get proposePriceAction => 'Propose Price';
+
+  @override
+  String get cannotKeepPriceProposeInstead =>
+      'Cannot keep price. Please propose a new price instead.';
+
+  @override
+  String get finalPriceLkr => 'Final price (LKR)';
+
+  @override
+  String get numberOfHours => 'Number of hours';
+
+  @override
+  String get numberOfDays => 'Number of days';
+
+  @override
+  String pendingBidsOverlapAcceptedWarning(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'You have $count other pending bids overlapping an accepted job. Consider reviewing or withdrawing them.',
+      one:
+          'You have 1 other pending bid overlapping an accepted job. Consider reviewing or withdrawing it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get completedCaps => 'COMPLETED';
+
+  @override
+  String get viewBooking => 'View booking';
+
+  @override
+  String get bookingCancelledLabel => 'Booking cancelled';
+
+  @override
+  String get setVisitFeeFirst => 'Set your visit / inspection fee first';
+
+  @override
+  String inspectionFeeLkr(String fee) {
+    return 'Inspection fee LKR $fee';
+  }
+
+  @override
+  String get priceAfterInspection => 'Price after inspection';
+
+  @override
+  String confirmEmergencyInspectBookingDesc(String name) {
+    return 'An urgent dispatch request will be sent to $name. Price will be agreed after inspection.';
+  }
+
+  @override
+  String get removeVisitFeeEmergencyConfirm =>
+      'Removing the visit fee turns off Emergency Callout. Continue?';
+
+  @override
+  String get visitFeeEmergencyHint =>
+      'Needed for Emergency Callout, e.g. 1000 (1 - 20,000)';
+
+  @override
+  String get visitFeeEmergencyRangeError =>
+      'Visit fee must be between LKR 1 and 20,000';
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +30,8 @@ import '../../../constants/firestore_paths.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import '../../admin/widgets/booking_timeline_sheet.dart';
 import 'en_route_navigation_screen.dart';
 import 'provider_booking_history_screen.dart';
 import 'provider_profile_screen.dart';
@@ -45,6 +48,7 @@ import '../../../services/live_location_service.dart';
 import '../../../utils/provider_location_helper.dart';
 import '../../../utils/schedule_helpers.dart';
 
+// provider dashboard screen
 class ProviderDashboardScreen extends StatefulWidget {
   final int initialNavIndex;
   final String? openJobRequestId;
@@ -67,6 +71,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   bool _sortByClosest = true;
   double? _selectedRadiusKm;
   Stream<List<Booking>>? _bookingsStream;
+  StreamSubscription<List<Booking>>? _bookingsSub;
+  List<Booking> _lastBookings = const [];
 
   Stream<Technician?>? _techStream;
   String? _techStreamUid;
@@ -75,17 +81,21 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   List<JobRequest> _lastRequests = const [];
   Stream<List<Quote>>? _providerQuotesStream;
   String? _providerQuotesUid;
+  StreamSubscription<List<Quote>>? _providerQuotesSub;
   List<Quote> _lastProviderQuotes = const [];
+  final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+      _jobRequestSubs = {};
+  final Map<String, JobRequest> _cachedJobRequests = {};
 
   // check if provider radar needs refresh
   static bool _isTechnicianRadarEqual(Technician? prev, Technician? next) {
     if (identical(prev, next)) return true;
     if (prev == null || next == null) return false;
 
-    // 1. Category
+    // check category
     if (prev.category.trim() != next.category.trim()) return false;
 
-    // 2. Base location and service radius
+    // check base location and radius
     final prevBaseLat = prev.baseLat ?? prev.latitude;
     final prevBaseLng = prev.baseLng ?? prev.longitude;
     final nextBaseLat = next.baseLat ?? next.latitude;
@@ -96,7 +106,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       return false;
     }
 
-    // 3. Effective location
+    // check effective location
     final prevLoc = getEffectiveProviderLocation(prev);
     final nextLoc = getEffectiveProviderLocation(next);
     if (prevLoc.source != nextLoc.source) return false;
@@ -111,7 +121,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         nextLoc.latitude!,
         nextLoc.longitude!,
       );
-      // Ignore minor GPS jitter / ticks under 100m (0.1km)
+      // ignore small gps jitter under 100 meters
       if (distKm >= 0.1) return false;
     } else if ((prevLoc.latitude == null) != (nextLoc.latitude == null) ||
         (prevLoc.longitude == null) != (nextLoc.longitude == null)) {
@@ -163,13 +173,76 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   // stream quotes submitted by provider
-  Stream<List<Quote>>? _effectiveProviderQuotesStream(String uid) {
-    if (uid.isEmpty) return null;
-    if (_providerQuotesStream == null || _providerQuotesUid != uid) {
+  void _initProviderQuotesStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      if (_providerQuotesStream != null && _providerQuotesUid == uid) return;
+      _providerQuotesSub?.cancel();
       _providerQuotesUid = uid;
-      _providerQuotesStream = JobRequestRepository()
+      final stream = JobRequestRepository()
           .streamProviderQuotes(uid)
           .asBroadcastStream();
+      _providerQuotesStream = stream;
+      _providerQuotesSub = stream.listen((quotes) {
+        if (!mounted) return;
+        setState(() {
+          _lastProviderQuotes = quotes;
+        });
+        _syncJobRequestsForQuotes(quotes);
+      });
+    }
+  }
+
+  // listen to job request docs for each quote
+  void _syncJobRequestsForQuotes(List<Quote> quotes) {
+    final activeRequestIds = quotes
+        .map((q) => q.requestId.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    // cancel and remove stale subscriptions
+    final staleIds = _jobRequestSubs.keys
+        .where((id) => !activeRequestIds.contains(id))
+        .toList();
+    for (final id in staleIds) {
+      _jobRequestSubs[id]?.cancel();
+      _jobRequestSubs.remove(id);
+      _cachedJobRequests.remove(id);
+    }
+
+    // start listeners for new request ids
+    for (final reqId in activeRequestIds) {
+      if (_jobRequestSubs.containsKey(reqId)) continue;
+
+      try {
+        final sub = FirebaseFirestore.instance
+            .collection(FirestorePaths.jobRequests)
+            .doc(reqId)
+            .snapshots()
+            .listen(
+          (snap) {
+            if (!mounted) return;
+            if (snap.exists && snap.data() != null) {
+              setState(() {
+                _cachedJobRequests[reqId] =
+                    JobRequest.fromMap(snap.id, snap.data()!);
+              });
+            }
+          },
+          onError: (e) {
+            debugPrint('[ProviderDashboard] Error reading jobRequest $reqId: $e');
+          },
+        );
+        _jobRequestSubs[reqId] = sub;
+      } catch (e) {
+        debugPrint('[ProviderDashboard] Failed to subscribe to jobRequest $reqId: $e');
+      }
+    }
+  }
+
+  Stream<List<Quote>>? get _effectiveProviderQuotesStream {
+    if (_providerQuotesStream == null) {
+      _initProviderQuotesStream();
     }
     return _providerQuotesStream;
   }
@@ -178,9 +251,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   void _initBookingsStream() {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     if (uid.isNotEmpty) {
-      _bookingsStream = BookingRepository()
+      _bookingsSub?.cancel();
+      final stream = BookingRepository()
           .streamBookingsForProvider(uid)
           .asBroadcastStream();
+      _bookingsStream = stream;
+      _bookingsSub = stream.listen((bookings) {
+        _lastBookings = bookings;
+      });
     }
   }
 
@@ -196,6 +274,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     super.initState();
     _navIndex = widget.initialNavIndex;
     _initBookingsStream();
+    _initProviderQuotesStream();
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     if (uid.isNotEmpty) {
       _initTechStream(uid);
@@ -256,7 +335,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ProviderTrackingService.instance.startOnlineTracking(uid);
         }
 
-        // resume live tracking for active en-route booking (once per app start, approved providers only)
+        // resume live tracking for active booking once per app start
         if (!_hasCheckedEnRouteResume && tech.isApproved) {
           _hasCheckedEnRouteResume = true;
           _checkAndResumeEnRouteBooking(uid);
@@ -292,6 +371,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
   @override
   void dispose() {
+    _bookingsSub?.cancel();
+    _providerQuotesSub?.cancel();
+    for (final sub in _jobRequestSubs.values) {
+      sub.cancel();
+    }
+    _jobRequestSubs.clear();
     ProviderTrackingService.instance.stopOnlineTracking();
     super.dispose();
   }
@@ -708,6 +793,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             const SizedBox(height: 14),
             StreamBuilder<List<Booking>>(
               stream: _effectiveBookingsStream,
+              initialData: _lastBookings.isNotEmpty ? _lastBookings : null,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   SessionGuard.handlePermissionDenied(snapshot.error);
@@ -1162,8 +1248,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             )
                           else
                             StreamBuilder<List<Quote>>(
-                              stream: _effectiveProviderQuotesStream(
-                                  user?.id ?? FirebaseAuth.instance.currentUser?.uid ?? ''),
+                              stream: _effectiveProviderQuotesStream,
                               initialData: _lastProviderQuotes.isNotEmpty ? _lastProviderQuotes : null,
                               builder: (context, quotesSnap) {
                                 if (quotesSnap.hasError) {
@@ -1228,9 +1313,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => ProviderBookingHistoryScreen(
-                          bookingsStream: _effectiveBookingsStream,
-                        ),
+                        builder: (_) => const ProviderBookingHistoryScreen(),
                       ),
                     );
                   },
@@ -1252,6 +1335,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             const SizedBox(height: 10),
             StreamBuilder<List<Booking>>(
               stream: _effectiveBookingsStream,
+              initialData: _lastBookings.isNotEmpty ? _lastBookings : null,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   SessionGuard.handlePermissionDenied(snapshot.error);
@@ -1304,29 +1388,43 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   Widget _buildMyQuotesView(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
       body: SafeArea(
         child: StreamBuilder<List<Quote>>(
-          stream: JobRequestRepository().streamProviderQuotes(uid),
+          stream: _effectiveProviderQuotesStream,
+          initialData:
+              _lastProviderQuotes.isNotEmpty ? _lastProviderQuotes : null,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               SessionGuard.handlePermissionDenied(snapshot.error);
             }
             final quotes = snapshot.data ?? [];
 
-            final pendingQuotes =
-                quotes.where((q) => q.status == 'pending').toList();
-            final acceptedQuotes =
-                quotes.where((q) => q.status == 'accepted').toList();
-            final pastQuotes = quotes
-                .where((q) =>
-                    q.status == 'not_selected' ||
-                    q.status == 'withdrawn' ||
-                    q.status == 'job_closed' ||
-                    q.status == 'cancelled_by_provider' ||
-                    q.status == 'declined')
-                .toList();
+            final acceptedQuotes = <Quote>[];
+            final completedQuotes = <Quote>[];
+            final pendingQuotes = <Quote>[];
+            final pastQuotes = <Quote>[];
+
+            for (final q in quotes) {
+              if (q.status == 'accepted') {
+                final jr = _cachedJobRequests[q.requestId];
+                final jrStatus = jr?.status;
+                if (jrStatus == JobStatus.completed) {
+                  completedQuotes.add(q);
+                } else if (jrStatus == JobStatus.cancelled ||
+                    jrStatus == 'open' ||
+                    jrStatus == 'expired' ||
+                    jrStatus == 'reposted') {
+                  pastQuotes.add(q);
+                } else {
+                  acceptedQuotes.add(q);
+                }
+              } else if (q.status == 'pending') {
+                pendingQuotes.add(q);
+              } else {
+                pastQuotes.add(q);
+              }
+            }
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(
@@ -1379,7 +1477,8 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'You have ${pendingWithClash.length} other pending bid(s) overlapping an accepted job. Consider reviewing or withdrawing them.',
+                                context.l10n.pendingBidsOverlapAcceptedWarning(
+                                    pendingWithClash.length),
                                 style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -1419,13 +1518,29 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   if (acceptedQuotes.isNotEmpty) ...[
                     _sectionHeader(context, context.l10n.acceptedCaps,
                         const Color(0xFF22C55E), acceptedQuotes.length),
-                    ...acceptedQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                    ...acceptedQuotes.map((q) => _QuoteHistoryTile(
+                          quote: q,
+                          jobRequest: _cachedJobRequests[q.requestId],
+                        )),
+                    const SizedBox(height: 16),
+                  ],
+                  if (completedQuotes.isNotEmpty) ...[
+                    _sectionHeader(context, context.l10n.completedCaps,
+                        const Color(0xFF10B981), completedQuotes.length),
+                    ...completedQuotes.map((q) => _QuoteHistoryTile(
+                          quote: q,
+                          jobRequest: _cachedJobRequests[q.requestId],
+                          isCompletedSection: true,
+                        )),
                     const SizedBox(height: 16),
                   ],
                   if (pendingQuotes.isNotEmpty) ...[
                     _sectionHeader(context, context.l10n.pendingResponseCaps,
                         AppColors.primary, pendingQuotes.length),
-                    ...pendingQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                    ...pendingQuotes.map((q) => _QuoteHistoryTile(
+                          quote: q,
+                          jobRequest: _cachedJobRequests[q.requestId],
+                        )),
                     const SizedBox(height: 16),
                   ],
                   if (pastQuotes.isNotEmpty) ...[
@@ -1434,7 +1549,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         context.l10n.myBidsPastTab.toUpperCase(),
                         context.themeTextSecondary,
                         pastQuotes.length),
-                    ...pastQuotes.map((q) => _QuoteHistoryTile(quote: q)),
+                    ...pastQuotes.map((q) => _QuoteHistoryTile(
+                          quote: q,
+                          jobRequest: _cachedJobRequests[q.requestId],
+                          isPastSection: true,
+                        )),
                   ],
                 ],
               ],
@@ -2540,10 +2659,35 @@ class _JobRequestCard extends StatelessWidget {
   }
 }
 
+// quote history tile for provider quotes
 class _QuoteHistoryTile extends StatelessWidget {
   final Quote quote;
-  const _QuoteHistoryTile({required this.quote});
+  final JobRequest? jobRequest;
+  final bool isCompletedSection;
+  final bool isPastSection;
 
+  const _QuoteHistoryTile({
+    required this.quote,
+    this.jobRequest,
+    this.isCompletedSection = false,
+    this.isPastSection = false,
+  });
+
+  // resolve title for quote card
+  String _resolveTitle(BuildContext context) {
+    if (jobRequest != null && jobRequest!.title.trim().isNotEmpty) {
+      return jobRequest!.title.trim();
+    }
+    final cat = (jobRequest != null && jobRequest!.category.trim().isNotEmpty)
+        ? jobRequest!.category.trim()
+        : quote.providerTrade.trim();
+    if (cat.isNotEmpty) {
+      return CategoryService.instance.nameOf(cat, context: context);
+    }
+    return context.l10n.genericService;
+  }
+
+  // open customer chat screen
   Future<void> _openCustomerChat(BuildContext context) async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     try {
@@ -2585,6 +2729,7 @@ class _QuoteHistoryTile extends StatelessWidget {
     }
   }
 
+  // cancel active quote booking
   Future<void> _cancelQuote(BuildContext context) async {
     Booking? booking;
     try {
@@ -2637,6 +2782,42 @@ class _QuoteHistoryTile extends StatelessWidget {
     }
   }
 
+  // open completed booking timeline
+  Future<void> _viewCompletedBooking(
+      BuildContext context, String displayTitle) async {
+    String? bId = jobRequest?.bookingId;
+    if (bId == null || bId.isEmpty) {
+      try {
+        final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        final bSnap = await FirebaseFirestore.instance
+            .collection(FirestorePaths.bookings)
+            .where('jobRequestId', isEqualTo: quote.requestId)
+            .where('providerId', isEqualTo: currentUid)
+            .limit(1)
+            .get();
+        if (bSnap.docs.isNotEmpty) {
+          bId = bSnap.docs.first.id;
+        }
+      } catch (e) {
+        debugPrint('[ProviderDashboard] view booking error: $e');
+      }
+    }
+
+    if (!context.mounted) return;
+    if (bId != null && bId.isNotEmpty) {
+      BookingTimelineSheet.show(
+        context,
+        bookingId: bId,
+        bookingTitle: displayTitle,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.somethingWentWrong)),
+      );
+    }
+  }
+
+  // withdraw pending bid
   Future<void> _withdrawBid(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -2694,24 +2875,63 @@ class _QuoteHistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAccepted = quote.status == 'accepted';
+    final displayTitle = _resolveTitle(context);
+    final isBookingCancelled = isPastSection && quote.status == 'accepted';
+    final isAccepted =
+        !isCompletedSection && !isPastSection && quote.status == 'accepted';
     final isPending = quote.status == 'pending';
-    final statusColor = switch (quote.status) {
-      'accepted' => const Color(0xFF22C55E),
-      'declined' || 'not_selected' => context.themeTextSecondary,
-      'cancelled_by_provider' => AppColors.error,
-      'withdrawn' => AppColors.warning,
-      'job_closed' => AppColors.error,
-      _ => AppColors.primary,
-    };
-    final statusIcon = switch (quote.status) {
-      'accepted' => Icons.check_circle_rounded,
-      'declined' || 'not_selected' => Icons.cancel_outlined,
-      'cancelled_by_provider' => Icons.cancel_rounded,
-      'withdrawn' => Icons.remove_circle_outline,
-      'job_closed' => Icons.close_rounded,
-      _ => Icons.hourglass_top_rounded,
-    };
+
+    final Color statusColor;
+    final IconData statusIcon;
+    final String statusLabel;
+
+    if (isCompletedSection) {
+      statusColor = const Color(0xFF10B981);
+      statusIcon = Icons.check_circle_rounded;
+      statusLabel = context.l10n.completedCaps;
+    } else if (isBookingCancelled) {
+      statusColor = AppColors.error;
+      statusIcon = Icons.cancel_outlined;
+      statusLabel = context.l10n.bookingCancelledLabel.toUpperCase();
+    } else if (isAccepted) {
+      statusColor = const Color(0xFF22C55E);
+      statusIcon = Icons.check_circle_rounded;
+      statusLabel =
+          LocalizedData.getStatus(context, quote.status).toUpperCase();
+    } else {
+      statusColor = switch (quote.status) {
+        'declined' || 'not_selected' => context.themeTextSecondary,
+        'cancelled_by_provider' => AppColors.error,
+        'withdrawn' => AppColors.warning,
+        'job_closed' => AppColors.error,
+        _ => AppColors.primary,
+      };
+      statusIcon = switch (quote.status) {
+        'declined' || 'not_selected' => Icons.cancel_outlined,
+        'cancelled_by_provider' => Icons.cancel_rounded,
+        'withdrawn' => Icons.remove_circle_outline,
+        'job_closed' => Icons.close_rounded,
+        _ => Icons.hourglass_top_rounded,
+      };
+      statusLabel =
+          LocalizedData.getStatus(context, quote.status).toUpperCase();
+    }
+
+    final String subtitleText;
+    if (isCompletedSection) {
+      final completedDate =
+          jobRequest?.completedAt ?? quote.updatedAt ?? quote.createdAt;
+      if (completedDate != null) {
+        final locale = Localizations.localeOf(context).languageCode;
+        final dateStr = DateFormat('d MMM yyyy', locale).format(completedDate);
+        subtitleText = context.l10n.completedOn(dateStr);
+      } else {
+        subtitleText = '';
+      }
+    } else {
+      subtitleText =
+          '${context.l10n.etaLabel}: ${quote.etaMinutes} ${context.l10n.minsUnit}${quote.notes.isNotEmpty ? " · ${quote.notes}" : ""}';
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -2720,10 +2940,10 @@ class _QuoteHistoryTile extends StatelessWidget {
         color: context.themeSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isAccepted
-              ? const Color(0xFF22C55E).withValues(alpha: 0.4)
+          color: (isAccepted || isCompletedSection)
+              ? statusColor.withValues(alpha: 0.4)
               : context.themeBorder,
-          width: isAccepted ? 1.5 : 1,
+          width: (isAccepted || isCompletedSection) ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
@@ -2753,6 +2973,16 @@ class _QuoteHistoryTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+                      displayTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
                       'LKR ${quote.quotedPrice.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
@@ -2760,16 +2990,18 @@ class _QuoteHistoryTile extends StatelessWidget {
                         letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${context.l10n.etaLabel}: ${quote.etaMinutes} ${context.l10n.minsUnit}${quote.notes.isNotEmpty ? " · ${quote.notes}" : ""}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: context.themeTextSecondary,
+                    if (subtitleText.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitleText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: context.themeTextSecondary,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -2781,7 +3013,7 @@ class _QuoteHistoryTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  LocalizedData.getStatus(context, quote.status).toUpperCase(),
+                  statusLabel,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -2824,7 +3056,21 @@ class _QuoteHistoryTile extends StatelessWidget {
               ),
             ),
           ],
-          if (isAccepted) ...[
+          if (isCompletedSection) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: PrimaryButton(
+                    label: context.l10n.viewBooking,
+                    leadingIcon: Icons.receipt_long_rounded,
+                    onPressed: () =>
+                        _viewCompletedBooking(context, displayTitle),
+                  ),
+                ),
+              ],
+            ),
+          ] else if (isAccepted) ...[
             const SizedBox(height: 12),
             Row(
               children: [

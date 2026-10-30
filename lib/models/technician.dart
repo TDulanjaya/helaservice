@@ -52,6 +52,7 @@ class WorkingDaySchedule {
       };
 }
 
+// technician model representation
 class Technician {
   final String id;
   final String name;
@@ -115,12 +116,7 @@ class Technician {
   bool hasPricingMode(String mode) => resolvedPricingModes.contains(mode);
 
   int get effectiveVisitFeeLkr =>
-      ProviderPricingHelper.resolveVisitFee(
-        modes: resolvedPricingModes,
-        visitFeeLkr: visitFeeLkr,
-        baseRateLkr: baseRateLkr,
-      ) ??
-      0;
+      ProviderPricingHelper.resolveVisitFee(this);
 
   // active location based on online state
   EffectiveProviderLocation get effectiveLocation =>
@@ -172,7 +168,7 @@ class Technician {
     this.banReason,
     this.isVerified = false,
     this.status = '',
-    this.emergencyAvailable = true,
+    this.emergencyAvailable = false,
     this.serviceRadiusKm = 25.0,
     this.workingHours = const {},
   });
@@ -516,7 +512,7 @@ class Technician {
       banReason: map['banReason'] as String?,
       isVerified: map['isVerified'] == true,
       status: (map['status'] as String?) ?? '',
-      emergencyAvailable: map['emergencyAvailable'] ?? true,
+      emergencyAvailable: map['emergencyAvailable'] ?? false,
       serviceRadiusKm: (map['serviceRadiusKm'] as num?)?.toDouble() ?? 25.0,
       workingHours: parsedWorkingHours.isNotEmpty
           ? parsedWorkingHours

@@ -22,7 +22,9 @@ import '../../../shared/widgets/legal_content_sheet.dart';
 import '../../auth/screens/complete_profile_screen.dart';
 import '../../support/screens/help_support_screen.dart';
 import '../../provider/screens/provider_pending_screen.dart';
+import '../../../services/auth_service.dart';
 
+// customer profile screen
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
 
@@ -31,7 +33,18 @@ class CustomerProfileScreen extends StatelessWidget {
     final user = roleProvider.currentUser;
 
     final nameController = TextEditingController(text: user?.displayName ?? '');
-    final phoneController = TextEditingController(text: user?.phone ?? '');
+    String initialPhone = user?.phone ?? '';
+    while (initialPhone.startsWith('+94') || initialPhone.startsWith('94')) {
+      if (initialPhone.startsWith('+94')) {
+        initialPhone = initialPhone.substring(3).trim();
+      } else if (initialPhone.startsWith('94')) {
+        initialPhone = initialPhone.substring(2).trim();
+      }
+    }
+    if (initialPhone.startsWith('0')) {
+      initialPhone = initialPhone.substring(1).trim();
+    }
+    final phoneController = TextEditingController(text: initialPhone);
 
     showModalBottomSheet(
       context: context,
@@ -110,9 +123,13 @@ class CustomerProfileScreen extends StatelessWidget {
                 label: context.l10n.save,
                 onPressed: () {
                   if (user != null) {
+                    final rawPhone = phoneController.text.trim();
+                    final formattedPhone = rawPhone.isNotEmpty
+                        ? AuthService.formatSriLankanPhoneNumber(rawPhone)
+                        : '';
                     final updated = user.copyWith(
                       displayName: nameController.text.trim(),
-                      phone: phoneController.text.trim(),
+                      phone: formattedPhone,
                     );
                     roleProvider.completeUserProfile(updated);
                   }
@@ -480,7 +497,7 @@ class CustomerProfileScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Text(
                         phone.isNotEmpty
-                            ? '+94 $phone'
+                            ? AuthService.formatDisplayPhone(phone)
                             : context.l10n.phoneNotSet,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,

@@ -22,6 +22,7 @@ import 'features/admin/admin_shell.dart';
 import 'utils/l10n_extension.dart';
 import 'utils/provider_routing_helper.dart';
 
+// app splash screen
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -37,7 +38,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     SessionGuard.enterAuthScreen();
-    _resolveDestination();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _resolveDestination();
+    });
   }
 
   @override

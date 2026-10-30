@@ -46,6 +46,7 @@ class MediaUploadException implements Exception {
   String toString() => message;
 }
 
+// post job request screen
 class PostJobRequestScreen extends StatefulWidget {
   final JobRequest? editJob;
   final JobRequest? prefillJob;
@@ -2082,7 +2083,9 @@ class _PostJobRequestScreenState extends State<PostJobRequestScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const EmergencyDispatchScreen(),
+                        builder: (_) => EmergencyDispatchScreen(
+                          initialCategory: _selectedCategory,
+                        ),
                       ),
                     );
                   },

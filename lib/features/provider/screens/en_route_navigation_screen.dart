@@ -30,6 +30,7 @@ import '../../../utils/location_utils.dart';
 import '../../../utils/exact_location_helper.dart';
 import '../../shared/widgets/booking_cancellation_sheet.dart';
 
+// provider en route navigation screen
 class EnRouteNavigationScreen extends StatefulWidget {
   final Booking? booking;
   const EnRouteNavigationScreen({super.key, this.booking});
@@ -54,6 +55,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
   Future<JobRequest?>? _jobRequestFuture;
   String? _loadedJobRequestId;
+  Stream<Booking?>? _bookingStream;
+  final GlobalKey _priceExtrasKey = GlobalKey();
 
   void _ensureJobRequestLoaded(String? jobRequestId) {
     if (jobRequestId == null || jobRequestId.isEmpty) return;
@@ -68,9 +71,23 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   void initState() {
     super.initState();
     _ensureJobRequestLoaded(widget.booking?.jobRequestId);
+    if (widget.booking != null && widget.booking!.id.isNotEmpty) {
+      _bookingStream = BookingRepository().streamBooking(widget.booking!.id);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLiveTracking();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EnRouteNavigationScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.booking?.id != oldWidget.booking?.id) {
+      _bookingStream = (widget.booking != null && widget.booking!.id.isNotEmpty)
+          ? BookingRepository().streamBooking(widget.booking!.id)
+          : null;
+    }
+    _ensureJobRequestLoaded(widget.booking?.jobRequestId);
   }
 
   // start live location tracking and listen to position updates
@@ -113,7 +130,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
       String? freshStatus;
       String? customerId = widget.booking?.customerId;
 
-      // 1. read the booking fresh from Firestore
+      // read booking from firestore
       try {
         final doc = await FirebaseFirestore.instance
             .collection(FirestorePaths.bookings)
@@ -276,8 +293,8 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
   void dispose() {
     _positionSub?.cancel();
     _positionSub = null;
-    // do not stop tracking here; tracking is bound to the booking lifecycle
-    // and will auto-stop when no longer en route, or explicitly on arrival/completion/cancellation
+    // do not stop tracking here because tracking follows booking lifecycle
+    // it stops automatically on arrival or completion or cancellation
     super.dispose();
   }
 
@@ -407,323 +424,43 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
     }
   }
 
-  Future<void> _promptCompletionPin(BuildContext context,
-      {String? defaultCompletionType}) async {
-    final b = widget.booking;
-    if (b == null || b.id.isEmpty) return;
-
-    final isRejected = b.priceStatus == 'rejected';
-    String completionType =
-        defaultCompletionType ?? (isRejected ? 'visit_only' : 'normal');
-    final normalAmount = b.approvedTotalLkr != null && b.approvedTotalLkr! > 0
-        ? b.approvedTotalLkr!.toStringAsFixed(0)
-        : (b.agreedPrice != null && b.agreedPrice! > 0
-            ? b.agreedPrice!.toStringAsFixed(0)
-            : '');
-    final visitDue = (b.visitFeeLkr ?? 0) + (b.travelCostLkr ?? 0);
-    final visitOnlyAmount = visitDue > 0
-        ? visitDue.toString()
-        : (b.agreedPrice != null && b.agreedPrice! > 0
-            ? b.agreedPrice!.toStringAsFixed(0)
-            : '1500');
-
-    final pinController = TextEditingController();
-    final amountController = TextEditingController(
-        text: isRejected ? visitOnlyAmount : normalAmount);
-    final noteController = TextEditingController();
-    bool isSubmitting = false;
-    String? errorMessage;
+  Future<void> _promptCompletionPin(
+    BuildContext context, {
+    String? defaultCompletionType,
+    Booking? currentBooking,
+  }) async {
+    final initialB = currentBooking ?? widget.booking;
+    if (initialB == null || initialB.id.isEmpty) return;
 
     await showDialog<void>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: ctx.themeSurface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              const Icon(Icons.verified_outlined,
-                  color: AppColors.primary, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.verifyAndFinish,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+      builder: (ctx) => _VerifyAndFinishDialog(
+        initialBooking: initialB,
+        bookingStream: _bookingStream,
+        defaultCompletionType: defaultCompletionType,
+        onScrollToPriceExtras: () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_priceExtrasKey.currentContext != null) {
+              Scrollable.ensureVisible(
+                _priceExtrasKey.currentContext!,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+                alignment: 0.1,
+              );
+            }
+          });
+        },
+        onCompleted: () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10n.jobCompletedSuccessfully),
+                backgroundColor: AppColors.success,
               ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Text(context.l10n.completionTypeNormal,
-                            style: const TextStyle(fontSize: 12)),
-                        selected: completionType == 'normal',
-                        onSelected: isRejected
-                            ? null
-                            : (sel) {
-                                if (sel) {
-                                  setDialogState(() {
-                                    completionType = 'normal';
-                                    amountController.text = normalAmount;
-                                  });
-                                }
-                              },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Text(context.l10n.completionTypeVisitOnly,
-                            style: const TextStyle(fontSize: 12)),
-                        selected: completionType == 'visit_only',
-                        onSelected: (sel) {
-                          if (sel) {
-                            setDialogState(() {
-                              completionType = 'visit_only';
-                              amountController.text = visitOnlyAmount;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  completionType == 'visit_only'
-                      ? context.l10n.visitFeeOnlyDescription
-                      : context.l10n.payProviderDirectlyTip,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: ctx.themeTextSecondary,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  context.l10n.pinCode,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: pinController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 8,
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: '••••••',
-                    filled: true,
-                    fillColor: ctx.themeSurfaceLow,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: ctx.themeBorder),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  context.l10n.cashReceived,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: amountController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    prefixText: 'LKR ',
-                    filled: true,
-                    fillColor: ctx.themeSurfaceLow,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: ctx.themeBorder),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  context.l10n.paymentNoteOptional,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: noteController,
-                  decoration: InputDecoration(
-                    hintText: context.l10n.paymentNoteHint,
-                    filled: true,
-                    fillColor: ctx.themeSurfaceLow,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: ctx.themeBorder),
-                    ),
-                  ),
-                ),
-                if (errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    errorMessage!,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
-              child: Text(context.l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () async {
-                      final pin = pinController.text.trim();
-                      if (pin.length != 6 && pin.length != 4) {
-                        setDialogState(() {
-                          errorMessage = context.l10n.pleaseEnterSixDigits;
-                        });
-                        return;
-                      }
-
-                      // pre-flight check: booking must be in progress
-                      if (b.status != JobStatus.inProgress) {
-                        setDialogState(() {
-                          errorMessage = context.l10n.markArrivalFirst;
-                        });
-                        return;
-                      }
-
-                      // pre-flight check: price must be approved for estimate or inspect
-                      final isEstimateOrInspect =
-                          b.quoteType == 'estimate' || b.quoteType == 'inspect';
-                      if (isEstimateOrInspect &&
-                          completionType != 'visit_only' &&
-                          b.priceStatus != 'approved') {
-                        setDialogState(() {
-                          errorMessage =
-                              context.l10n.confirmPriceWithCustomerFirst;
-                        });
-                        return;
-                      }
-
-                      final enteredAmount = double.tryParse(
-                            amountController.text
-                                .replaceAll(RegExp(r'[^0-9.]'), ''),
-                          ) ??
-                          (b.agreedPrice ?? 0);
-
-                      if (b.agreedPrice != null &&
-                          b.agreedPrice! > 0 &&
-                          enteredAmount > b.agreedPrice! * 5) {
-                        setDialogState(() {
-                          errorMessage = context.l10n.finalAmountExceedsLimit;
-                        });
-                        return;
-                      }
-
-                      if (enteredAmount <= 0) {
-                        setDialogState(() {
-                          errorMessage = context.l10n.invalidFinalAmount;
-                        });
-                        return;
-                      }
-
-                      setDialogState(() {
-                        isSubmitting = true;
-                        errorMessage = null;
-                      });
-
-                      final result =
-                          await BookingRepository().verifyAndCompleteJob(
-                        bookingId: b.id,
-                        enteredPin: pin,
-                        jobRequestId: b.jobRequestId,
-                        finalAmount: enteredAmount > 0 ? enteredAmount : null,
-                        paymentNote: noteController.text.trim(),
-                        completionType: completionType,
-                      );
-
-                      if (result.success) {
-                        unawaited(LiveLocationService.instance.stopTracking());
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text(context.l10n.jobCompletedSuccessfully),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                          Navigator.pop(context);
-                        }
-                      } else {
-                        setDialogState(() {
-                          isSubmitting = false;
-                          if (result.errorCode == 'not_in_progress') {
-                            errorMessage = context.l10n.markArrivalFirst;
-                          } else if (result.errorCode == 'price_not_confirmed') {
-                            errorMessage =
-                                context.l10n.confirmPriceWithCustomerFirst;
-                          } else if (result.errorCode == 'network_error') {
-                            errorMessage = context.l10n.networkErrorTryAgain;
-                          } else if (result.errorCode == 'too_many_attempts') {
-                            errorMessage = context.l10n.tooManyWrongPins;
-                          } else if (result.errorCode == 'invalid_amount') {
-                            errorMessage = context.l10n.invalidFinalAmount;
-                          } else if (result.errorCode == 'invalid_id' ||
-                              result.errorCode == 'not_found') {
-                            errorMessage = context.l10n.bookingOrJobNotFound;
-                          } else if (result.errorCode == 'incorrect_pin') {
-                            errorMessage = context.l10n
-                                .incorrectPinAttemptsUsed(result.attempts, 5);
-                          } else {
-                            errorMessage = result.errorMessage ??
-                                context.l10n
-                                    .incorrectPinAttemptsUsed(result.attempts, 5);
-                          }
-                        });
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: isSubmitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(context.l10n.verifyAndFinish),
-            ),
-          ],
-        ),
+            );
+            Navigator.pop(context);
+          }
+        },
       ),
     );
   }
@@ -909,10 +646,12 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
           ),
           const SizedBox(height: 14),
           ProviderPriceExtrasCard(
+            key: _priceExtrasKey,
             bookingId: booking.id,
             onCompleteVisitOnly: () => _promptCompletionPin(
               context,
               defaultCompletionType: 'visit_only',
+              currentBooking: booking,
             ),
           ),
           const SizedBox(height: 10),
@@ -950,7 +689,10 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
               context.l10n.completeJobEnterPin,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
             ),
-            onPressed: () => _promptCompletionPin(context),
+            onPressed: () => _promptCompletionPin(
+              context,
+              currentBooking: booking,
+            ),
           ),
         ],
       );
@@ -1153,7 +895,7 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
       );
     }
 
-    // Default en_route: check zone
+    // check arrival zone
     int distanceM = 999999;
     int accuracyM = 15;
     if (_currentGpsPosition != null &&
@@ -1239,9 +981,9 @@ class _EnRouteNavigationScreenState extends State<EnRouteNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.booking != null && widget.booking!.id.isNotEmpty) {
+    if (_bookingStream != null) {
       return StreamBuilder<Booking?>(
-        stream: BookingRepository().streamBooking(widget.booking!.id),
+        stream: _bookingStream,
         initialData: widget.booking,
         builder: (context, snapshot) {
           final booking = snapshot.data ?? widget.booking;
@@ -1934,12 +1676,18 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
   @override
   void initState() {
     super.initState();
-    _markersNotifier = ValueNotifier<List<AppMapMarker>>(_buildMarkers());
+    _markersNotifier = ValueNotifier<List<AppMapMarker>>([]);
     _routePointsNotifier = ValueNotifier<List<LatLng>?>(
         widget.hasCustomerLocation && widget.techPoint != null
             ? widget.route.points
             : null);
     _isRouteEstimatedNotifier = ValueNotifier<bool>(widget.route.isEstimated);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _markersNotifier.value = _buildMarkers();
   }
 
   @override
@@ -2193,6 +1941,509 @@ class _ProviderEnRouteMapCardState extends State<_ProviderEnRouteMapCard> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _VerifyAndFinishDialog extends StatefulWidget {
+  final Booking initialBooking;
+  final Stream<Booking?>? bookingStream;
+  final String? defaultCompletionType;
+  final VoidCallback? onScrollToPriceExtras;
+  final VoidCallback? onCompleted;
+
+  const _VerifyAndFinishDialog({
+    required this.initialBooking,
+    required this.bookingStream,
+    this.defaultCompletionType,
+    this.onScrollToPriceExtras,
+    this.onCompleted,
+  });
+
+  @override
+  State<_VerifyAndFinishDialog> createState() => _VerifyAndFinishDialogState();
+}
+
+class _VerifyAndFinishDialogState extends State<_VerifyAndFinishDialog> {
+  late final TextEditingController _pinController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _noteController;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+  String? _completionTypeOverride;
+  String? _lastAutoAmountKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinController = TextEditingController();
+    _amountController = TextEditingController();
+    _noteController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Booking?>(
+      stream: widget.bookingStream,
+      initialData: widget.initialBooking,
+      builder: (ctx, snapshot) {
+        final b = snapshot.data ?? widget.initialBooking;
+        final isRejected = b.priceStatus == 'rejected';
+        final isEstimateOrInspect =
+            b.quoteType == 'estimate' || b.quoteType == 'inspect';
+        final isPriceApproved = b.priceStatus == 'approved';
+
+        final visitDue = (b.visitFeeLkr ?? 0) + (b.travelCostLkr ?? 0);
+        final canDoVisitOnly = visitDue > 0;
+        final visitOnlyAmount = visitDue > 0 ? visitDue.toString() : '0';
+
+        final completionType = _completionTypeOverride ??
+            widget.defaultCompletionType ??
+            ((isRejected && canDoVisitOnly) ? 'visit_only' : 'normal');
+
+        final isVisitOnly = canDoVisitOnly && completionType == 'visit_only';
+        final isNormalBlocked =
+            isEstimateOrInspect && !isPriceApproved && !isVisitOnly;
+
+        final normalAmount =
+            b.approvedTotalLkr != null && b.approvedTotalLkr! > 0
+                ? b.approvedTotalLkr!.toStringAsFixed(0)
+                : (b.agreedPrice != null && b.agreedPrice! > 0
+                    ? b.agreedPrice!.toStringAsFixed(0)
+                    : '');
+
+        final autoKey =
+            '$completionType:${b.priceStatus}:${isVisitOnly ? visitOnlyAmount : normalAmount}';
+        if (_lastAutoAmountKey != autoKey) {
+          _lastAutoAmountKey = autoKey;
+          _amountController.text =
+              isVisitOnly ? visitOnlyAmount : normalAmount;
+        }
+
+        String noticeText = '';
+        bool showConfirmPriceButton = false;
+        if (isNormalBlocked) {
+          if (b.priceStatus == 'proposed') {
+            noticeText = context.l10n.waitingCustomerApprovePriceNotice;
+          } else if (b.priceStatus == 'rejected') {
+            noticeText = context.l10n.customerRejectedPriceNotice;
+          } else {
+            if (b.quoteType == 'inspect') {
+              noticeText = context.l10n.proposeFinalPriceFirstNotice;
+            } else {
+              noticeText = context.l10n.confirmPriceFirstNotice;
+            }
+            showConfirmPriceButton = true;
+          }
+        }
+
+        return AlertDialog(
+          backgroundColor: ctx.themeSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.verified_outlined,
+                color: AppColors.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.verifyAndFinish,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (canDoVisitOnly) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: Text(
+                            context.l10n.completionTypeNormal,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          selected: completionType == 'normal',
+                          onSelected: (sel) {
+                            if (sel) {
+                              setState(() {
+                                _completionTypeOverride = 'normal';
+                                _amountController.text = normalAmount;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: Text(
+                            context.l10n.completionTypeVisitOnly,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          selected: completionType == 'visit_only',
+                          onSelected: (sel) {
+                            if (sel) {
+                              setState(() {
+                                _completionTypeOverride = 'visit_only';
+                                _amountController.text = visitOnlyAmount;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                Text(
+                  completionType == 'visit_only'
+                      ? context.l10n.visitFeeOnlyDescription
+                      : context.l10n.payProviderDirectlyTip,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: ctx.themeTextSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (isNormalBlocked) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: AppColors.warning,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                noticeText,
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.warning,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (showConfirmPriceButton) ...[
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.arrow_downward_rounded,
+                                size: 14,
+                              ),
+                              label: Text(
+                                b.quoteType == 'inspect'
+                                    ? context.l10n.proposePriceAction
+                                    : context.l10n.confirmPriceAction,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                widget.onScrollToPriceExtras?.call();
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+                Text(
+                  context.l10n.pinCode,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _pinController,
+                  enabled: !_isSubmitting && !isNormalBlocked,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 8,
+                    color: isNormalBlocked
+                        ? ctx.themeTextSecondary.withValues(alpha: 0.5)
+                        : null,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: isNormalBlocked ? '------' : '••••••',
+                    filled: true,
+                    fillColor: isNormalBlocked
+                        ? ctx.themeSurfaceLow.withValues(alpha: 0.5)
+                        : ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.cashReceived,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _amountController,
+                  enabled: !_isSubmitting && !isNormalBlocked,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: InputDecoration(
+                    prefixText: 'LKR ',
+                    filled: true,
+                    fillColor: isNormalBlocked
+                        ? ctx.themeSurfaceLow.withValues(alpha: 0.5)
+                        : ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  context.l10n.paymentNoteOptional,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _noteController,
+                  enabled: !_isSubmitting && !isNormalBlocked,
+                  decoration: InputDecoration(
+                    hintText: context.l10n.paymentNoteHint,
+                    filled: true,
+                    fillColor: isNormalBlocked
+                        ? ctx.themeSurfaceLow.withValues(alpha: 0.5)
+                        : ctx.themeSurfaceLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: ctx.themeBorder),
+                    ),
+                  ),
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: _isSubmitting ? null : () => Navigator.pop(ctx),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: (_isSubmitting || isNormalBlocked)
+                  ? null
+                  : () async {
+                      final pin = _pinController.text.trim();
+                      if (pin.length != 6 && pin.length != 4) {
+                        setState(() {
+                          _errorMessage =
+                              context.l10n.pleaseEnterSixDigits;
+                        });
+                        return;
+                      }
+
+                      // booking must be in progress
+                      if (b.status != JobStatus.inProgress) {
+                        setState(() {
+                          _errorMessage = context.l10n.markArrivalFirst;
+                        });
+                        return;
+                      }
+
+                      // price must be approved for estimate or inspect
+                      if (isEstimateOrInspect &&
+                          completionType != 'visit_only' &&
+                          b.priceStatus != 'approved') {
+                        setState(() {
+                          _errorMessage =
+                              context.l10n.confirmPriceWithCustomerFirst;
+                        });
+                        return;
+                      }
+
+                      final enteredAmount = double.tryParse(
+                            _amountController.text
+                                .replaceAll(RegExp(r'[^0-9.]'), ''),
+                          ) ??
+                          (b.agreedPrice ?? 0);
+
+                      if (b.agreedPrice != null &&
+                          b.agreedPrice! > 0 &&
+                          enteredAmount > b.agreedPrice! * 5) {
+                        setState(() {
+                          _errorMessage =
+                              context.l10n.finalAmountExceedsLimit;
+                        });
+                        return;
+                      }
+
+                      if (enteredAmount <= 0) {
+                        setState(() {
+                          _errorMessage =
+                              context.l10n.invalidFinalAmount;
+                        });
+                        return;
+                      }
+
+                      setState(() {
+                        _isSubmitting = true;
+                        _errorMessage = null;
+                      });
+
+                      final result =
+                          await BookingRepository().verifyAndCompleteJob(
+                        bookingId: b.id,
+                        enteredPin: pin,
+                        jobRequestId: b.jobRequestId,
+                        finalAmount:
+                            enteredAmount > 0 ? enteredAmount : null,
+                        paymentNote: _noteController.text.trim(),
+                        completionType: completionType,
+                      );
+
+                      if (result.success) {
+                        unawaited(
+                            LiveLocationService.instance.stopTracking());
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        widget.onCompleted?.call();
+                      } else {
+                        if (mounted) {
+                          setState(() {
+                            _isSubmitting = false;
+                            if (result.errorCode == 'invalid_pin_length') {
+                              _errorMessage =
+                                  context.l10n.pleaseEnterSixDigits;
+                            } else if (result.errorCode ==
+                                'not_in_progress') {
+                              _errorMessage = context.l10n.markArrivalFirst;
+                            } else if (result.errorCode ==
+                                'price_not_confirmed') {
+                              _errorMessage = context
+                                  .l10n.confirmPriceWithCustomerFirst;
+                            } else if (result.errorCode ==
+                                'network_error') {
+                              _errorMessage =
+                                  context.l10n.networkErrorTryAgain;
+                            } else if (result.errorCode ==
+                                'too_many_attempts') {
+                              _errorMessage = context.l10n.tooManyWrongPins;
+                            } else if (result.errorCode ==
+                                'invalid_amount') {
+                              _errorMessage =
+                                  context.l10n.invalidFinalAmount;
+                            } else if (result.errorCode == 'invalid_id' ||
+                                result.errorCode == 'not_found' ||
+                                result.errorCode == 'job_not_found') {
+                              _errorMessage =
+                                  context.l10n.bookingOrJobNotFound;
+                            } else if (result.errorCode ==
+                                'incorrect_pin') {
+                              _errorMessage = context.l10n
+                                  .incorrectPinAttemptsUsed(
+                                      result.attempts, 5);
+                            } else {
+                              _errorMessage = result.errorMessage ??
+                                  context.l10n.somethingWentWrong;
+                            }
+                          });
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(context.l10n.verifyAndFinish),
+            ),
+          ],
+        );
+      },
     );
   }
 }

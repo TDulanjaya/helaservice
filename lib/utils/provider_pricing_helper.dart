@@ -1,3 +1,6 @@
+import '../models/technician.dart';
+
+// provider pricing helper for rates and modes
 class ProviderPricingHelper {
   ProviderPricingHelper._();
 
@@ -72,15 +75,20 @@ class ProviderPricingHelper {
     return inferred;
   }
 
-  static int? resolveVisitFee({
-    required List<String> modes,
-    int? visitFeeLkr,
-    int? baseRateLkr,
-  }) {
-    if (!modes.contains(modeVisit)) return null;
-    if (visitFeeLkr != null && visitFeeLkr >= 0) return visitFeeLkr;
-    if ((baseRateLkr ?? 0) > 0) return baseRateLkr;
-    return null;
+  // resolve inspection visit fee matching firestore rules exactly
+  static int resolveVisitFee(dynamic source) {
+    if (source == null) return 0;
+    if (source is Technician) {
+      final fee = source.visitFeeLkr;
+      if (fee != null && fee > 0) return fee;
+      return 0;
+    }
+    if (source is Map) {
+      final fee = source['visitFeeLkr'];
+      if (fee != null && fee is num && fee > 0) return fee.toInt();
+      return 0;
+    }
+    return 0;
   }
 
   static int? resolveFixedPricePrefill({

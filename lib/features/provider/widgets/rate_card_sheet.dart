@@ -6,17 +6,30 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../utils/l10n_extension.dart';
 import '../../../utils/provider_pricing_helper.dart';
 
+// rate card sheet for service pricing
 class RateCardSheet extends StatefulWidget {
   final Technician technician;
+  final String? initialSelectedMode;
 
-  const RateCardSheet({super.key, required this.technician});
+  const RateCardSheet({
+    super.key,
+    required this.technician,
+    this.initialSelectedMode,
+  });
 
-  static Future<void> show(BuildContext context, Technician technician) {
-    return showModalBottomSheet(
+  static Future<bool?> show(
+    BuildContext context,
+    Technician technician, {
+    String? initialSelectedMode,
+  }) {
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => RateCardSheet(technician: technician),
+      builder: (ctx) => RateCardSheet(
+        technician: technician,
+        initialSelectedMode: initialSelectedMode,
+      ),
     );
   }
 
@@ -29,7 +42,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
   late final TextEditingController _hourlyRateController;
   late final TextEditingController _dailyRateController;
   late final TextEditingController _perKmController;
-  late final TextEditingController _emergencyRateController;
   late List<String> _pricingModes;
   bool _saving = false;
 
@@ -38,6 +50,10 @@ class _RateCardSheetState extends State<RateCardSheet> {
     super.initState();
     final t = widget.technician;
     _pricingModes = List<String>.from(t.resolvedPricingModes);
+    if (widget.initialSelectedMode != null &&
+        !_pricingModes.contains(widget.initialSelectedMode)) {
+      _pricingModes.add(widget.initialSelectedMode!);
+    }
     _visitFeeController = TextEditingController(
       text: t.visitFeeLkr?.toString() ??
           (t.baseRateLkr > 0 ? t.baseRateLkr.toString() : ''),
@@ -51,9 +67,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
     _perKmController = TextEditingController(
       text: t.perKmRateLkr?.toString() ?? '',
     );
-    _emergencyRateController = TextEditingController(
-      text: t.emergencyRateLkr > 0 ? t.emergencyRateLkr.toString() : '',
-    );
   }
 
   @override
@@ -62,7 +75,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
     _hourlyRateController.dispose();
     _dailyRateController.dispose();
     _perKmController.dispose();
-    _emergencyRateController.dispose();
     super.dispose();
   }
 
@@ -77,11 +89,20 @@ class _RateCardSheetState extends State<RateCardSheet> {
     int? visitFee;
     if (_pricingModes.contains(ProviderPricingHelper.modeVisit)) {
       visitFee = int.tryParse(_visitFeeController.text.trim());
+      final minFee = widget.technician.emergencyAvailable
+          ? 1
+          : ProviderPricingHelper.minVisitFee;
       if (visitFee == null ||
-          visitFee < ProviderPricingHelper.minVisitFee ||
+          visitFee < minFee ||
           visitFee > ProviderPricingHelper.maxVisitFee) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.visitFeeRangeError)),
+          SnackBar(
+            content: Text(
+              widget.technician.emergencyAvailable
+                  ? context.l10n.visitFeeEmergencyRangeError
+                  : context.l10n.visitFeeRangeError,
+            ),
+          ),
         );
         return;
       }
@@ -126,7 +147,37 @@ class _RateCardSheetState extends State<RateCardSheet> {
       }
     }
 
-    final emergency = int.tryParse(_emergencyRateController.text.trim());
+    final int newVisitFee =
+        (_pricingModes.contains(ProviderPricingHelper.modeVisit) &&
+                (visitFee ?? 0) > 0)
+            ? visitFee!
+            : 0;
+    final bool turningEmergencyOff =
+        widget.technician.emergencyAvailable && newVisitFee == 0;
+
+    if (turningEmergencyOff) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(context.l10n.removeVisitFeeEmergencyConfirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(context.l10n.continueText),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -137,10 +188,15 @@ class _RateCardSheetState extends State<RateCardSheet> {
         hourlyRateLkr: hourly,
         dailyRateLkr: daily,
         perKmRateLkr: perKm,
-        emergencyRateLkr: emergency,
       );
+      if (turningEmergencyOff) {
+        await TechnicianRepository().updateEmergencyStatus(
+          widget.technician.id,
+          false,
+        );
+      }
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.rateCardUpdatedSuccess),
@@ -307,7 +363,9 @@ class _RateCardSheetState extends State<RateCardSheet> {
               _buildField(
                 controller: _visitFeeController,
                 label: context.l10n.standardVisitFeeWithCurrency,
-                hint: context.l10n.visitFeeOptionalHint,
+                hint: widget.technician.emergencyAvailable
+                    ? context.l10n.visitFeeEmergencyHint
+                    : context.l10n.visitFeeOptionalHint,
                 icon: Icons.meeting_room_outlined,
               ),
               const SizedBox(height: 12),
@@ -339,16 +397,6 @@ class _RateCardSheetState extends State<RateCardSheet> {
                 label: context.l10n.travelRateWithUnit,
                 hint: context.l10n.perKmRateHint,
                 icon: Icons.directions_car_outlined,
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (widget.technician.emergencyRateLkr > 0) ...[
-              const SizedBox(height: 4),
-              _buildField(
-                controller: _emergencyRateController,
-                label: context.l10n.emergencyCalloutRate,
-                hint: context.l10n.hintAmount,
-                icon: Icons.warning_amber_rounded,
               ),
               const SizedBox(height: 12),
             ],

@@ -342,6 +342,8 @@ class _DirectChatScreenState extends State<DirectChatScreen> {
 
   // retry room setup up to 3 times before error
   Future<String> _doInitChatRoomWithRetries(int epoch) async {
+    // wait short delay so init completes before accessing context
+    await Future<void>.delayed(Duration.zero);
     const maxRetries = 3;
     const retryDelays = [
       Duration(seconds: 1),

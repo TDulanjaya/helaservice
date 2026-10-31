@@ -7,6 +7,7 @@ import '../../../state/role_provider.dart';
 import '../../../shared/widgets/role_switch_sheet.dart';
 import '../../../app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/booking.dart';
 import '../../../models/technician.dart';
 import '../../../models/user_profile.dart';
@@ -49,6 +50,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   bool _updatingLocation = false;
   Stream<Technician?>? _techStream;
   String _subscribedUid = '';
+  Future<String?>? _kycNicFuture;
+  String _kycNicUid = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _initKycNicFuture(uid);
+  }
 
   // cache technician stream
   void _initTechStream(String uid) {
@@ -57,6 +67,40 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       _techStream = uid.isNotEmpty
           ? TechnicianRepository().streamById(uid)
           : const Stream.empty();
+    }
+  }
+
+  // cache kyc nic future
+  void _initKycNicFuture(String uid) {
+    if (_kycNicUid != uid) {
+      _kycNicUid = uid;
+      _kycNicFuture = uid.isNotEmpty ? _fetchKycNic(uid) : Future.value(null);
+    }
+  }
+
+  // fetch kyc nic from private collection
+  Future<String?> _fetchKycNic(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('technicians')
+          .doc(uid)
+          .collection('private')
+          .doc('kyc')
+          .get();
+      if (!doc.exists) return null;
+      final data = doc.data();
+      if (data == null) return null;
+      final nic = (data['nic'] as String?)?.trim();
+      if (nic != null && nic.isNotEmpty) return nic;
+      final nicNum = (data['nicNumber'] as String?)?.trim();
+      if (nicNum != null && nicNum.isNotEmpty) return nicNum;
+      return null;
+    } on FirebaseException catch (e) {
+      debugPrint('[ProviderProfileScreen] error loading kyc nic: ${e.code}');
+      return null;
+    } catch (_) {
+      debugPrint('[ProviderProfileScreen] unexpected error loading kyc nic');
+      return null;
     }
   }
 
@@ -401,7 +445,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   Widget build(BuildContext context) {
     final roleProvider = pv.Provider.of<RoleProvider>(context);
     final user = roleProvider.currentUser;
-    _initTechStream(user?.id ?? '');
+    final uid = user?.id ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+    _initTechStream(uid);
+    _initKycNicFuture(uid);
 
     final displayName = user?.displayName.isNotEmpty == true
         ? user!.displayName
@@ -410,7 +456,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     final phone = user?.phone?.isNotEmpty == true ? user!.phone! : '';
     final category = user?.serviceCategory ?? '';
     final district = user?.district ?? context.l10n.cdmSriLanka;
-    final nic = user?.nic?.isNotEmpty == true ? user!.nic! : '';
     final resolvedCatName =
         CategoryService.instance.nameOf(category, context: context);
     final categoryName = resolvedCatName.isNotEmpty
@@ -659,15 +704,30 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                           color: context.themeTextSecondary,
                         ),
                       ),
-                      Text(
-                        nic.isNotEmpty
-                            ? _maskNic(nic)
-                            : context.l10n.notProvided,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
+                      FutureBuilder<String?>(
+                        future: _kycNicFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+                          final nicVal = snapshot.data;
+                          final hasNic = nicVal != null && nicVal.isNotEmpty;
+                          return Text(
+                            hasNic
+                                ? _maskNic(nicVal)
+                                : context.l10n.notProvided,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -985,8 +1045,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => CompleteProfileScreen(
@@ -995,6 +1055,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                                   ),
                                 ),
                               );
+                              if (mounted && uid.isNotEmpty) {
+                                setState(() {
+                                  _kycNicFuture = _fetchKycNic(uid);
+                                });
+                              }
                             },
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: AppColors.primary),

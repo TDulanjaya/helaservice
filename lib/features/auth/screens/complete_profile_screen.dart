@@ -152,7 +152,39 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         _nicController.text = NicValidator.cleanNic(existingNic);
       }
     }
+    if (_selectedRole == AppRole.provider &&
+        _nicController.text.trim().isEmpty) {
+      _loadExistingKycNic();
+    }
     _recoverLostPhoto();
+  }
+
+  // load private kyc nic for provider
+  Future<void> _loadExistingKycNic() async {
+    final uid = AuthService().currentFirebaseUser?.uid;
+    if (uid == null || uid.isEmpty) return;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection(FirestorePaths.technicians)
+          .doc(uid)
+          .collection('private')
+          .doc('kyc')
+          .get();
+      if (!doc.exists || !mounted) return;
+      final data = doc.data();
+      if (data == null) return;
+      final nic = (data['nic'] as String?)?.trim() ??
+          (data['nicNumber'] as String?)?.trim();
+      if (nic != null && nic.isNotEmpty && _nicController.text.trim().isEmpty) {
+        setState(() {
+          _nicController.text = NicValidator.cleanNic(nic);
+        });
+      }
+    } on FirebaseException catch (e) {
+      debugPrint('[CompleteProfileScreen] error loading kyc nic: ${e.code}');
+    } catch (_) {
+      debugPrint('[CompleteProfileScreen] unexpected error loading kyc nic');
+    }
   }
 
   static const String _pendingPhotoSlotKey = 'profile_pending_photo_slot';

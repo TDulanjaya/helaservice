@@ -307,7 +307,27 @@ class _NicVerificationScreenState extends State<NicVerificationScreen> {
       final profile = roleProvider.currentUser;
       final uid = authUser?.uid ?? (profile?.id ?? '');
 
-      final cleanNic = NicValidator.cleanNic(profile?.nic);
+      var cleanNic = NicValidator.cleanNic(profile?.nic);
+      if (cleanNic.isEmpty && uid.isNotEmpty) {
+        try {
+          final kycSnap = await FirebaseFirestore.instance
+              .collection(FirestorePaths.technicians)
+              .doc(uid)
+              .collection('private')
+              .doc('kyc')
+              .get();
+          if (kycSnap.exists) {
+            final kycData = kycSnap.data();
+            final fallbackNic = (kycData?['nic'] as String?) ??
+                (kycData?['nicNumber'] as String?);
+            cleanNic = NicValidator.cleanNic(fallbackNic);
+          }
+        } on FirebaseException catch (e) {
+          debugPrint('[NicVerificationScreen] error loading kyc nic: ${e.code}');
+        } catch (_) {
+          debugPrint('[NicVerificationScreen] unexpected error loading kyc nic');
+        }
+      }
 
       await FirebaseFirestore.instance
           .collection(FirestorePaths.verificationQueue)
